@@ -73,9 +73,8 @@ a spec to be faithful.
 State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (Section~\ref{sec:operational-models}).
 Despite its simplicity, our model captures not only application invariants,
-but also general-purpose consistency definitions such as linearizability and
-causal consistency (Appendix~\ref{app:registers}), and transactional isolation
-levels (Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
+but also general-purpose consistency definitions (Appendix~\ref{app:registers},
+Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
 As a system runs, possibilities narrow: the spec's table loses rows.
 Newly-arrived input removes rows that cannot be reached by extending that input;
@@ -91,27 +90,29 @@ the polls for an election rules out consideration of any future ballots.
 The model provides clean definitions for the key ingredients of CALM:
 Consistency and Monotonicity.  A spec is \emph{consistent} when all its possible
 executions are \emph{confluent}: states reached along different paths can be
-brought to a common state.  We will see that this definition is general,
-accommodating narrower notions from prior literature.
+brought to a common state.  We will see that this definition is general.  The spec is a parameter:
+specs and confluence together capture a range of classical consistency models,
+from linearizability, through serializability and other transactional isolation
+levels, to the eventual consistency guarantees of replicated data.
 
-For a spec that permits one output per input, the possibility table is a
+For a spec that permits exactly one output per input, the possibility table is a
 function, and monotonicity is standard: $i\InputOrd j$ implies
 $f(i)\OutputOrd f(j)$.  \emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem})
 proves that consistency is equivalent to monotonicity in this setting, which
 covers prior CALM work and CRDT state.  Many specs are nondeterministic: leader
 election and transaction scheduling permit several outputs for one input.
 These need a second invariant: whatever outputs different runs choose at the
-same input, some permitted output must \outrel them all.  Together, the two
+same input, some permitted output must \outrelbase them all.  Together, the two
 invariants make every output decision incidental, and we call the pair
 \emph{Lifted Monotonicity}.  \emph{Complete CALM} (Section~\ref{sec:complete-calm-theorem})
-proves that consistency is equivalent to Lifted Monotonicity.
+proves the CALM acronym in this new light: Consistency is equivalent to Lifted Monotonicity.
 
 What of coordination?  A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, agreement protocols,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independently of the mechanism used.
 A system that omits a required \commitment can become inconsistent; one that
-makes more coordinates needlessly.  In a composition, \emph{Proper Coordination}
+makes more coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
@@ -140,8 +141,8 @@ We make contributions in four categories:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
 \noindent
-\emph{3. Constructive results for coordination.} We define \commitments to
-        capture how systems exclude possibilities that no alternative covers,
+\emph{3. Constructive results for coordination.} We define \commitments,
+        the underlying contracts that coordination mechanisms can enforce,
         and identify exactly the \commitments a non-monotone spec requires.
         Specs compose by equijoin, and Proper Coordination identifies the stage
         that must make the \commitments, certifying that later stages need

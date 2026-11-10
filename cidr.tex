@@ -222,9 +222,8 @@ a spec to be faithful.
 State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (\S\ref{sec:scope}).
 Despite its simplicity, our model captures not only application invariants,
-but also general-purpose consistency definitions such as linearizability,
-causal consistency, and transactional isolation levels
-(\S\ref{sec:complete-cap}, \S\ref{sec:hat-instance}, and \extended).
+but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
+\S\ref{sec:hat-instance}, and \extended).
 
 As a system runs, possibilities narrow: the spec's table loses rows.
 Newly-arrived input removes rows that cannot be reached by extending that input;
@@ -240,8 +239,10 @@ the polls for an election rules out consideration of any future ballots.
 The model provides clean definitions for the key ingredients of CALM:
 Consistency and Monotonicity.  A spec is \emph{consistent} when all its possible
 executions are \emph{confluent}: states reached along different paths can be
-brought to a common state.  We will see that this definition is general,
-accommodating narrower notions from prior literature.
+brought to a common state.  We will see that this definition is general.  The spec is a parameter:
+specs and confluence together capture a range of classical consistency models,
+from linearizability, through serializability and other transactional isolation
+levels, to the eventual consistency guarantees of replicated data.
 
 For a spec that permits exactly one output per input, the possibility table is a
 function, and monotonicity is standard: $i\InputOrd j$ implies
@@ -288,7 +289,7 @@ We make contributions in four categories:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
 \noindent
-\emph{3. Constructive results for coordination.} We define \commitments, 
+\emph{3. Constructive results for coordination.} We define \commitments,
         the underlying contracts that coordination mechanisms can enforce,
         and identify exactly the \commitments a non-monotone spec requires.
         Specs compose by equijoin, and Proper Coordination identifies the stage

@@ -101,7 +101,7 @@
 }
 
 \begin{abstract}
-When does a distributed system intrinsically need coordination?  Too little
+When does a concurrent system intrinsically need coordination?  Too little
 coordination produces heisenbugs; too much adds latency and sacrifices
 availability.  CALM, CAP, and CRDTs each answer the question for one class of
 programs, consistency models, or design patterns, in formalisms that cannot be
@@ -118,11 +118,11 @@ extends this to nondeterministic specifications, where the test is
 Highly Available Transactions, Invariant Confluence, and later refinements of
 CALM map into the same framework.
 
-Prior CALM results stop at the monotone boundary: for non-monotone
+Prior CALM results stop at monotonicity: for non-monotone
 specifications, they say only that coordination is needed somewhere.  Our
 unified framework offers constructive results on both sides: it says exactly
 how much coordination a specification needs, and where.  A non-monotone
-specification's outputs determine the \commitments required for consistency,
+specification's outputs determine irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
 \emph{Proper Coordination} identifies which stage of a composition must make the
 \commitments and certifies that later stages need none, validating designs such
@@ -251,9 +251,8 @@ a spec to be faithful.
 
 \textcolor{newblue}{State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (\S\ref{sec:scope}).} \textcolor{newblue}{Despite its simplicity, our model captures not only application invariants,
-but also general-purpose consistency definitions such as linearizability,
-causal consistency, and transactional isolation levels
-(\S\ref{sec:complete-cap}, \S\ref{sec:hat-instance}, and \extended).}
+but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
+\S\ref{sec:hat-instance}, and \extended).}
 
 As a system runs, possibilities narrow: the spec's table loses rows. Newly-arrived input removes rows that cannot be reached by extending that input;
 the world has moved on. Coordination mechanisms such as locks and consensus
@@ -268,25 +267,27 @@ the polls for an election rules out consideration of any future ballots.
 The model provides clean definitions for the key ingredients of CALM:
 Consistency and Monotonicity. A spec is \emph{consistent} when all its possible
 executions are \emph{confluent}: states reached along different paths can be
-brought to a common state. We will see that this definition is general,
-accommodating narrower notions from prior literature.
+brought to a common state. We will see that this definition is general. The spec is a parameter:
+specs and confluence together capture a range of classical consistency models,
+from linearizability, through serializability and other transactional isolation
+levels, to the eventual consistency guarantees of replicated data.
 
-For a spec that permits one output per input, the possibility table is a
+For a spec that permits exactly one output per input, the possibility table is a
 function, and monotonicity is standard: $i\InputOrd j$ implies
 $f(i)\OutputOrd f(j)$. \textcolor{newblue}{\emph{Functional CALM} (\S\ref{sec:functional-calm-theorem})
 proves that consistency is equivalent to monotonicity in this setting, which
 covers prior CALM work and CRDT state.} Many specs are nondeterministic: leader
 election and transaction scheduling permit several outputs for one input. These need a second invariant: whatever outputs different runs choose at the
-same input, some permitted output must \outrel them all. Together, the two
+same input, some permitted output must \outrelbase them all. Together, the two
 invariants make every output decision incidental, and we call the pair
 \emph{Lifted Monotonicity}. \textcolor{newblue}{\emph{Complete CALM} (\S\ref{sec:complete-calm-theorem})
-proves that consistency is equivalent to Lifted Monotonicity.}
+proves the CALM acronym in this new light: Consistency is equivalent to Lifted Monotonicity.}
 
 What of coordination? A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, agreement protocols,
 and other mechanisms all enforce \commitments. Our criterion identifies exactly
 the \commitments a spec's outputs require, independently of the mechanism used. A system that omits a required \commitment can become inconsistent; one that
-makes more coordinates needlessly. In a composition, \emph{Proper Coordination}
+makes more coordinates needlessly. In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none. \textcolor{newblue}{In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
@@ -314,8 +315,8 @@ We make contributions in four categories:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
 \noindent
-\emph{3. Constructive results for coordination.} We define \commitments to
-        capture how systems exclude possibilities that no alternative covers,
+\emph{3. Constructive results for coordination.} We define \commitments,
+        the underlying contracts that coordination mechanisms can enforce,
         and identify exactly the \commitments a non-monotone spec requires. Specs compose by equijoin, and Proper Coordination identifies the stage
         that must make the \commitments, certifying that later stages need
         none.
