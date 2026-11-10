@@ -103,7 +103,7 @@ programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.}
 
 \textcolor{reviewed}{We put them on common ground, in a formalism that clarifies the literature and
-offers new results.} \textcolor{reviewed}{A minimalist \spectype is a possibility table listing, for
+offers new results.} \textcolor{reviewed}{A minimalist \spectype is a \emph{possibility table} containing, for
 each input, every output a system may produce, with partial orders on inputs and
 outputs.} \textcolor{reviewed}{It is \emph{consistent} when all its runs are confluent.} \textcolor{reviewed}{\emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: consistency is monotonicity.} \textcolor{reviewed}{\emph{Complete CALM}
@@ -149,16 +149,17 @@ as consensus logs in front of a replicated store.}
 \label{sec:intro}
 
 \textcolor{reviewed}{Concurrent systems rely on coordination mechanisms ranging from mutexes and
-atomic instructions to database locks and consensus protocols.} \textcolor{reviewed}{These
-mechanisms prevent concurrent actions from producing undesirable outcomes, but
-they must be used where they are needed, and only there.} \textcolor{reviewed}{Too little
-coordination produces heisenbugs: rare, timing-dependent anomalies that are hard
-to reproduce.} \textcolor{reviewed}{Too much adds overhead and latency, and in distributed settings
+atomic instructions to database locks and consensus protocols.} \textcolor{reviewed}{These mechanisms
+prevent concurrent actions from producing undesirable outcomes, but they must be
+used where they are needed, and ideally only there.} \textcolor{reviewed}{Too little coordination
+produces heisenbugs: rare, timing-dependent anomalies that are hard to
+reproduce.} \textcolor{reviewed}{Too much adds overhead and latency, and in distributed settings
 sacrifices availability.} \textcolor{reviewed}{So when is coordination avoidable, and when is it
-intrinsically required?} \textcolor{reviewed}{The answers in the literature are partial and
-incompatible: the CALM Theorem covers monotone queries, the CAP theorem
-linearizable registers, and CRDTs semilattice-based data types.} \textcolor{reviewed}{This leaves
-developers guessing.}
+intrinsically required?} \textcolor{reviewed}{CALM~\cite{ameloot2013relational},
+CAP~\cite{gilbert2002cap}, and CRDTs~\cite{shapiro2011crdt} each answer the
+question for one class of programs, consistency models, or design patterns, in
+formalisms that cannot be compared or combined.} \textcolor{reviewed}{This leaves developers
+guessing.}
 
 \textcolor{reviewed}{The CALM Conjecture proposed a crisp, bidirectional criterion:
 consistency can be achieved without coordination exactly when a specification
@@ -232,33 +233,22 @@ election.} \textcolor{reviewed}{Or it can rule out all rows with a given input; 
 the polls for an election rules out consideration of any future ballots.}
 
 \subsection{The Criterion: Lifted Monotonicity}
-\textcolor{reviewed}{With this model in hand, we are ready to define the key aspects of CALM:
-Consistency and Monotonicity.} \textcolor{reviewed}{A spec is \emph{consistent} when
-all its possible executions are \emph{confluent}: states reached along
-different paths can be brought to a common state.} \textcolor{reviewed}{We will see that this definition
-is general, accommodating narrower notions from prior literature.} \textcolor{reviewed}{Monotonicity takes more care, because specs may be nondeterministic.} \textcolor{reviewed}{Our
-criterion has two invariants: the first is always required; the second
-addresses nondeterministic specs.}
+\textcolor{reviewed}{The model provides clean definitions for the key ingredients of CALM:
+Consistency and Monotonicity.} \textcolor{reviewed}{A spec is \emph{consistent} when all its possible
+executions are \emph{confluent}: states reached along different paths can be
+brought to a common state.} \textcolor{reviewed}{We will see that this definition is general,
+accommodating narrower notions from prior literature.}
 
-\textcolor{reviewed}{\emph{Learn and refine.} As execution progresses, input grows: the system learns more from
-the environment.} \textcolor{reviewed}{For specs that permit only one output at each input, the possibility table is a function
-and monotonicity is standard: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{\emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem}) proves that consistency is equivalent to
-monotonicity in this setting.}
-
-
-
-
-
-
-
-
-
-\textcolor{reviewed}{\emph{Choose and align.} Prior work on CALM and CRDTs addresses functional
-settings.} \textcolor{reviewed}{\emph{Nondeterministic specs}, including leader election and transaction
-scheduling, are not functions: many outputs are within spec for a given input.} \textcolor{reviewed}{This requires an additional monotonicity invariant.} \textcolor{reviewed}{When many runs of a system
-choose different outputs for the same input, those choices
-must \outrelbase together---the outputs are \emph{directed}, in order theory terms.} \textcolor{reviewed}{Together, monotonicity under input growth and output choice make all output decisions incidental.} \textcolor{reviewed}{We call the pair of invariants \emph{Lifted Monotonicity}.} \textcolor{reviewed}{\emph{Complete CALM} proves that consistency is equivalent to Lifted
-Monotonicity (Section~\ref{sec:complete-calm-theorem}).}
+\textcolor{reviewed}{For a spec that permits one output per input, the possibility table is a
+function, and monotonicity is standard: $i\InputOrd j$ implies
+$f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{\emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem})
+proves that consistency is equivalent to monotonicity in this setting, which
+covers prior CALM work and CRDT state.} \textcolor{reviewed}{Many specs are nondeterministic: leader
+election and transaction scheduling permit several outputs for one input.} \textcolor{reviewed}{These need a second invariant: whatever outputs different runs choose at the
+same input, some permitted output must \outrel them all.} \textcolor{reviewed}{Together, the two
+invariants make every output decision incidental, and we call the pair
+\emph{Lifted Monotonicity}.} \textcolor{reviewed}{\emph{Complete CALM} (Section~\ref{sec:complete-calm-theorem})
+proves that consistency is equivalent to Lifted Monotonicity.}
 
 \textcolor{reviewed}{What of coordination?} \textcolor{reviewed}{A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, agreement protocols,
