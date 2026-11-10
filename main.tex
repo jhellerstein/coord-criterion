@@ -94,33 +94,32 @@
 }
 
 \begin{abstract}
-When does a distributed system intrinsically need coordination?  The literature
-has lacked a common formalism for the question.  CALM, CAP, and CRDTs answer it
-for one class of programs, consistency models, or design patterns.  Their
-answers cannot be compared or combined, and together they leave basic questions
-open, such as how coordination repairs inconsistency.  We put them on common
-ground.  We define a minimalist \spectype: a
-possibility table that includes, for each input, all outputs a system may
-produce.  Each column carries its own partial order, saying when one input
-\inrel another and when one output \outrel another.  An \spectype is
-\emph{consistent} when all its possible runs are confluent: runs whose inputs have a common
-\indesc can always catch up to a common state.  Possibilities narrow as input
-grows or outputs are emitted. An irrevocable \emph{\commitment} removes
-possibilities not subsumed by those remaining.  Coordination mechanisms such as
-locks and consensus enforce these \commitments.
+When does a distributed system intrinsically need coordination?  Too little
+coordination produces heisenbugs; too much adds latency and sacrifices
+availability.  CALM, CAP, and CRDTs each answer the question for one class of
+programs, consistency models, or design patterns, in formalisms that cannot be
+compared or combined, which leaves developers guessing.
 
-In this unified setting, \emph{Functional CALM} generalizes
-the CALM Theorem from Datalog queries to any function between ordered domains:
-such a specification is consistent exactly when it is monotone: no
-\commitment is required. We then go further: \emph{Complete CALM} handles nondeterministic specifications
-that allow several outputs for the same input, where the test becomes
-\emph{Lifted Monotonicity}: at every input, some permitted output \outrel
-whatever could have been emitted up to that point.
-\emph{Complete CAP} is a corollary: the CAP trade-off arises
-exactly when Lifted Monotonicity fails.
-\emph{Proper Coordination} identifies which stage of a composition must make
-the \commitments, and certifies that later stages need none of their own.  Highly Available Transactions, Invariant
-Confluence, and later refinements of CALM all map into the same framework.
+We put them on common ground, in a formalism that clarifies the literature and
+offers new results.  A minimalist \spectype is a possibility table listing, for
+each input, every output a system may produce, with partial orders on inputs and
+outputs.  It is \emph{consistent} when all its runs are confluent.
+\emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
+between ordered domains: consistency is monotonicity.  \emph{Complete CALM}
+extends this to nondeterministic specifications, where the test is
+\emph{Lifted Monotonicity}, and \emph{Complete CAP} follows as a corollary.
+Highly Available Transactions, Invariant Confluence, and later refinements of
+CALM map into the same framework.
+
+Prior CALM results stop at the monotone boundary: for non-monotone
+specifications, they say only that coordination is needed somewhere.  Our
+unified framework offers constructive results on both sides: it says exactly
+how much coordination a specification needs, and where.  A non-monotone
+specification's outputs determine the \commitments required for consistency,
+enforceable by coordination mechanisms like locks, atomics, or consensus.
+\emph{Proper Coordination} identifies which stage of a composition must make the
+\commitments and certifies that later stages need none, validating designs such
+as consensus logs in front of a replicated store.
 \end{abstract}
 
 \begin{CCSXML}

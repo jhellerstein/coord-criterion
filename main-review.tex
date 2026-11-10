@@ -96,31 +96,29 @@
 
 \begin{abstract}
 
-\textcolor{reviewed}{When does a distributed system intrinsically need coordination?} \textcolor{reviewed}{The literature
-has lacked a common formalism for the question.} \textcolor{reviewed}{CALM, CAP, and CRDTs answer it
-for one class of programs, consistency models, or design patterns.} \textcolor{reviewed}{Their
-answers cannot be compared or combined, and together they leave basic questions
-open, such as how coordination repairs inconsistency.} \textcolor{reviewed}{We put them on common
-ground.} \textcolor{reviewed}{We define a minimalist \spectype: a
-possibility table that includes, for each input, all outputs a system may
-produce.} \textcolor{reviewed}{Each column carries its own partial order, saying when one input
-\inrel another and when one output \outrel another.} \textcolor{reviewed}{An \spectype is
-\emph{consistent} when all its possible runs are confluent: runs whose inputs have a common
-\indesc can always catch up to a common state.} \textcolor{reviewed}{Possibilities narrow as input
-grows or outputs are emitted.} \textcolor{reviewed}{An irrevocable \emph{\commitment} removes
-possibilities not subsumed by those remaining.} \textcolor{reviewed}{Coordination mechanisms such as
-locks and consensus enforce these \commitments.}
+\textcolor{reviewed}{When does a distributed system intrinsically need coordination?} \textcolor{reviewed}{Too little
+coordination produces heisenbugs; too much adds latency and sacrifices
+availability.} \textcolor{reviewed}{CALM, CAP, and CRDTs each answer the question for one class of
+programs, consistency models, or design patterns, in formalisms that cannot be
+compared or combined, which leaves developers guessing.}
 
-\textcolor{reviewed}{In this unified setting, \emph{Functional CALM} generalizes
-the CALM Theorem from Datalog queries to any function between ordered domains:
-such a specification is consistent exactly when it is monotone: no
-\commitment is required.} \textcolor{reviewed}{We then go further: \emph{Complete CALM} handles nondeterministic specifications
-that allow several outputs for the same input, where the test becomes
-\emph{Lifted Monotonicity}: at every input, some permitted output \outrel
-whatever could have been emitted up to that point.} \textcolor{reviewed}{\emph{Complete CAP} is a corollary: the CAP trade-off arises
-exactly when Lifted Monotonicity fails.} \textcolor{reviewed}{\emph{Proper Coordination} identifies which stage of a composition must make
-the \commitments, and certifies that later stages need none of their own.} \textcolor{reviewed}{Highly Available Transactions, Invariant
-Confluence, and later refinements of CALM all map into the same framework.}
+\textcolor{reviewed}{We put them on common ground, in a formalism that clarifies the literature and
+offers new results.} \textcolor{reviewed}{A minimalist \spectype is a possibility table listing, for
+each input, every output a system may produce, with partial orders on inputs and
+outputs.} \textcolor{reviewed}{It is \emph{consistent} when all its runs are confluent.} \textcolor{reviewed}{\emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
+between ordered domains: consistency is monotonicity.} \textcolor{reviewed}{\emph{Complete CALM}
+extends this to nondeterministic specifications, where the test is
+\emph{Lifted Monotonicity}, and \emph{Complete CAP} follows as a corollary.} \textcolor{reviewed}{Highly Available Transactions, Invariant Confluence, and later refinements of
+CALM map into the same framework.}
+
+\textcolor{reviewed}{Prior CALM results stop at the monotone boundary: for non-monotone
+specifications, they say only that coordination is needed somewhere.} \textcolor{reviewed}{Our
+unified framework offers constructive results on both sides: it says exactly
+how much coordination a specification needs, and where.} \textcolor{reviewed}{A non-monotone
+specification's outputs determine the \commitments required for consistency,
+enforceable by coordination mechanisms like locks, atomics, or consensus.} \textcolor{reviewed}{\emph{Proper Coordination} identifies which stage of a composition must make the
+\commitments and certifies that later stages need none, validating designs such
+as consensus logs in front of a replicated store.}
 
 \end{abstract}
 
@@ -2115,23 +2113,23 @@ proposed monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.} Their example is a two-phase set, whose state
 $(\mathit{Add},\mathit{Del})$ merges by componentwise union. The query
 $\mathit{Add}\setminus\mathit{Del}$ can expose added items that are subsequently
-deleted. \textcolor{reviewed}{We make the proposed test precise with Functional CALM.}
+deleted. We make the proposed test precise with Functional CALM.
 
-\textcolor{reviewed}{Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice.} \textcolor{reviewed}{The input is the
+Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice. The input is the
 finite set $U$ of immutable payloads received so far, ordered by inclusion, and
-the replica's state is $s(U)=s_0\sqcup\bigsqcup U$.} Then $U\subseteq V$
+the replica's state is $s(U)=s_0\sqcup\bigsqcup U$. Then $U\subseteq V$
 implies $s(U)\sqsubseteq s(V)$, and $s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$ is the
-least state \outrelpart both~\cite{shapiro2011crdt}. \textcolor{reviewed}{A client observation
-$q:D\to(Y,\preceq_Y)$ gives the client-visible spec $q\circ s$.} \textcolor{reviewed}{By
+least state \outrelpart both~\cite{shapiro2011crdt}. A client observation
+$q:D\to(Y,\preceq_Y)$ gives the client-visible spec $q\circ s$. By
 Functional CALM, $q\circ s$ is consistent exactly when $U\subseteq V$ implies
-$q(s(U))\preceq_Y q(s(V))$.} \textcolor{reviewed}{Monotonicity of $q$ on all of $D$ suffices, but
-$q$ need only be monotone between reachable states.} \textcolor{reviewed}{The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set fails the test: a deleted item grows $U$ and shrinks the answer.} Operation-based CRDTs fit too, with the causally closed set of
+$q(s(U))\preceq_Y q(s(V))$. Monotonicity of $q$ on all of $D$ suffices, but
+$q$ need only be monotone between reachable states. The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set fails the test: a deleted item grows $U$ and shrinks the answer. Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
-\textcolor{reviewed}{CRDT states form a join-semilattice, but $q$ needs less:
+CRDT states form a join-semilattice, but $q$ needs less:
 Complete CALM requires only \emph{some} common \outnoun of query outputs
-(\S\ref{sec:lifted-monotonicity}), not a least one.}
+(\S\ref{sec:lifted-monotonicity}), not a least one.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
