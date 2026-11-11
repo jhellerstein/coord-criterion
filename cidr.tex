@@ -530,7 +530,7 @@ We now make the functional framework precise: functional I/O
 specs and monotonicity, then a transition system that models their
 runs, and finally consistency as confluence of those runs.
 
-\paragraph{Specs and monotonicity.} We begin with specs.
+\paragraph{Specs and monotonicity.} A spec is a table with ordered columns.
 \begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
 A \emph{functional \spectype} is a tuple
@@ -549,7 +549,8 @@ information in $i$, and we say that $j$ \emph{\inrel} $i$, or is an
 \emph{\indesc} of $i$.  In the \emph{output order}, $o\OutputOrd u$ means that
 $u$ subsumes every externally visible claim in $o$, and we say that $u$
 \emph{\outrel} $o$.  A \emph{common \indesc} of several inputs \inrel each of
-them, and a \emph{common \outnoun} of several outputs \outrel each.
+them, and a \emph{common \outnoun} of several outputs \outrel each.  A
+functional spec is monotone when growing input only ever extends its output:
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -562,22 +563,22 @@ $\Spec$ is \emph{monotone} if
 \end{equation}
 \end{definition}
 
-We introduce some compact notation. For a relation $R\subseteq I\times O$, a predicate in square brackets selects
-rows, and commas separate conjuncts: $R[\mathrm{in}\InputGe j,\
-\mathrm{out}\OutputGe o]$ holds the rows whose input \inrel $j$ and whose
-output \outrel $o$.  We say that a row $(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is
-the set of outputs in $R$.
-
-We next define the transition system.
-
 \paragraph{States: remaining possibilities.}
 As illustrated by the non-gray text in Figure~\ref{fig:election-frames}, a
 \emph{specification state} $\sigma=(i,R)$ records the current input and the
 possibilities still open: $i$ is the \emph{current input}, and $R\subseteq P$
 is the \emph{remainder table}.  The table $R$ contains a row at $i$ and only
 rows at \indescs of $i$.  An input $k$ is \emph{legal} when $R$ contains a
-row at $k$.  Rows are never added during execution.  The \emph{canonical state
-at $i$} has received $i$, emitted nothing, and removed no rows:
+row at $k$.  Rows are never added during execution.
+
+To describe tables compactly, a predicate in square brackets selects rows of a
+relation $R\subseteq I\times O$, and commas separate conjuncts:
+$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ holds the rows whose
+input \inrel $j$ and whose output \outrel $o$.  We say that a row $(k,u)$ is
+\emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs in $R$.
+
+The \emph{canonical state at $i$} has received $i$, emitted nothing, and
+removed no rows:
 \begin{equation}
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
@@ -599,8 +600,9 @@ makes $j$ current and drops the rows whose input does not
 \inrelbase $j$.  Because inputs are cumulative, $\mathsf{input}(j)$ then
 $\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
 
-A system controls what it tells the world.  Later outputs must \outrelbase
-earlier ones.
+Inputs arrive from the environment, but outputs are the system's to choose, and
+once emitted they cannot be retracted: later outputs must \outrelbase earlier
+ones.
 
 \begin{definition}[Legal output]
 \label{def:exposable}
@@ -609,7 +611,7 @@ output $o$ is \emph{legal} when every output in the future-output set \outrel
 $o$.
 \end{definition}
 
-Selecting on the output column may require a \commitment.
+An output event selects on the output column, and may require a \commitment.
 
 \begin{definition}[Output event, canonical \commitment]
 \label{def:output-event}
@@ -629,9 +631,8 @@ Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  A
 inputs are no longer legal.  Systems may issue more \commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 such extra \commitments are a system's choice, not the spec's
-(\S\ref{sec:systems}).
-
-An event from a determined state always leads to another determined state.
+(\S\ref{sec:systems}).  An event from a determined state always leads to
+another determined state.
 
 \paragraph{Runs and consistency.}
 We now consider the executions corresponding to a spec.
