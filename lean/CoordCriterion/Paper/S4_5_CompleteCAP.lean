@@ -124,14 +124,14 @@ abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
 
 /-! ### The system and environment assumptions -/
 
-/-- Paragraph after Def. `def:explicit-relation`: "We consider a system, with a
-strategy for each participant that depends only on its local history, and an
-environment that may send any legal input to any participant."  This entry is
+/-- Paragraph after Def. `def:explicit-relation`: "We consider a system whose
+participants each follow a strategy that depends only on their local history,
+and an environment that may send any legal input to any participant."  This entry is
 the system half; the environment half is `«sec:complete-cap/environment»`.
 
 Lean: `System sp D` has a commitment basis and a nondeterministic strategy
 `strat n init p pre e` for every participant count `n`, initial inputs
-`init : Fin n → I`, and participant `p`.  "Depends only on its local history"
+`init : Fin n → I`, and participant `p`.  "Depends only on their local history"
 is the definition of `Produced`: each event of `p` is checked against `p`'s
 own local prefix only. -/
 abbrev «sec:complete-cap/system» (sp : Spec I O) (D : Type) : Type := System sp D
@@ -156,7 +156,7 @@ theorem «sec:complete-cap/environment» (Sys : System sp D) (init : Fin n → I
 /-! ### Definitions `def:local-continuation` (Same-side continuation), `def:partition-notions` (Availability) -/
 
 /-- **Def. `def:local-continuation`** (Same-side continuation).
-"Availability asks that a participant cut off by a partition can still emit
+"Availability asks that, during a partition, each participant can still emit
 every explicit output its state permits."  "Consider a partitioned history
 that the system produces, in which participant `p` ends in state `(i,R)`.  A
 *same-side continuation* for `p` extends that history with events the system
