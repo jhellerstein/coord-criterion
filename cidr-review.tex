@@ -451,15 +451,16 @@ Here, for example, the input sequence $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba
 monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.
 
 \paragraph{Input and determination.}
-Each panel of Figure~\ref{fig:election-frames} captures the specification state: a pair of a \emph{current input}
-and a \emph{remainder table} of rows
-still possible from that input. When $v_2$'s ballot for $b$ arrives, the input event
-$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to passively lose rows whose inputs no
-longer \inrelbase the ballots received; such inputs are now illegal. \textcolor{newblue}{The
-\emph{future-output set} consists of the outputs in the remaining rows at the
-current input and its \indescs: in panel~(b),
-$\{\bot,a,b\}$.} If $v_2$ instead votes for $a$ (panel~(c)), the future-output set is $\{a\}$. The state
-is \emph{determined}; in this case input alone resolved the outcome, without \commitment.
+Each panel of Figure~\ref{fig:election-frames} shows a \emph{specification
+state}: the \emph{current input} and the \emph{remainder table} of rows still
+possible from it. When $v_2$'s ballot for $b$ arrives, the input event
+$\mathsf{input}(ab\cdot)$ produces panel~(b). The table passively loses the rows
+whose inputs do not extend $ab\cdot$, such as $aa\cdot$: those possibilities are
+lost. The \emph{future-output set} is the set of outputs still possible in the
+remainder table: $\{\bot,a,b\}$ in panel~(b). If $v_2$ instead votes for $a$
+(panel~(c)), the future-output set is a singleton, $\{a\}$, and we call such
+states \emph{determined}. In this case, input alone has determined an outcome,
+without \commitment.
 
 \textcolor{newblue}{Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
