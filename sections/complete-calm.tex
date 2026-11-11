@@ -93,7 +93,8 @@ The transaction schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting
 either requires a \commitment that removes the other.  In the traceroute spec,
 every removed route set is \outrelpast by a remaining one that also \outrelbase
 the emitted observation, making its removal \emph{output subsumption} rather
-than \commitment.  Lifted Monotonicity combines directedness, which requires
+than \commitment.  Lifted Monotonicity combines \emph{directedness}, a standard notion from order
+theory, which requires
 common \outnouns within each fiber, with Relational Monotonicity, which
 accounts for input growth.
 
@@ -129,9 +130,10 @@ An \spectype has \emph{directed fibers} when every
 fiber $\fiber{i}$ is directed.
 \end{definition}
 
-A singleton fiber is trivially directed.  As with common \indescs,
-(Section~\ref{sec:functional-specifications}), a common \outnoun need not be
-least: directedness requires some upper bound within the fiber for each finite
+A singleton fiber is trivially directed.  A common \outnoun, like a common
+\indesc, need not be unique or least.  For inputs, two independent transactions
+$u$ and $v$, with schedules ordered by subsequence, have two incomparable
+minimal common \indescs, $uv$ and $vu$.  For outputs, directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
 join-semilattice.  For example, the fiber
 $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,

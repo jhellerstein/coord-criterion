@@ -237,26 +237,6 @@ theorem «def:functional-specification/induced-function» {I O : Type} [PO I] [P
   · rintro ⟨f, hf⟩ i o o' h h'
     exact ((hf i o).1 h).trans ((hf i o').1 h').symm
 
-/-- "Neither need be unique or least: for example, two independent
-transactions `a` and `b`, with schedules ordered by subsequence, have two
-incomparable minimal common input extensions, `ab` and `ba`."
-
-Lean: schedules `Sched T` are lists ordered by `List.Sublist` (a `PO`
-instance); "independent" is read as `a ≠ b`.  Both `ab` and `ba` are common
-input extensions of `a` and `b`, each minimal among common input extensions, and they are
-incomparable. -/
-theorem «sec:functional-specifications/subsequence-example» {T : Type} {a b : T}
-    (hab : a ≠ b) :
-    (∀ s t : Sched T, s ≼ t ↔ s.txs.Sublist t.txs) ∧
-    ((⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
-      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
-        u ≼ ⟨[a, b]⟩ → u = ⟨[a, b]⟩) ∧
-    ((⟨[a]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧
-      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
-        u ≼ ⟨[b, a]⟩ → u = ⟨[b, a]⟩) ∧
-    ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ :=
-  ⟨sched_le_iff, sched_two_minimal hab⟩
-
 /-- **Def. `def:functional-monotonicity`** (Functional monotonicity,
 monotone).  "`Spec`,
 with induced function `f`, is *monotone* if `i ≼ j ⟹ f(i) ≼ f(j)`."

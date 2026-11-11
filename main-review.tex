@@ -541,9 +541,11 @@ externally visible claim in $o$ and may add more, and we say that $u$
 \emph{\outrel} $o$.} In either domain, we call the element above another
 an extension. We write $\InputGe$ and $\OutputGe$ for the converse orders.
 
-\textcolor{reviewed}{A \emph{common \indesc} $j$ of
+A \emph{common \indesc} $j$ of
 $i_1,\ldots,i_k$ is an input that \inrel every $i_r$, and a
-\emph{common \outnoun} of $o_1,\ldots,o_k$ is an output that \outrel each $o_r$.} \textcolor{reviewed}{Neither need be unique or least: for example, two independent transactions $u$ and $v$, with schedules ordered by subsequence, have two incomparable minimal common \indescs, $uv$ and $vu$.} A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
+\emph{common \outnoun} of $o_1,\ldots,o_k$ is an output that \outrel each $o_r$.
+
+A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
 when $w$ \outrel $u$.
 
 \begin{definition}[Functional monotonicity]
@@ -969,7 +971,8 @@ thorough transactional specs.}
 either requires a \commitment that removes the other.} In the traceroute spec,
 every removed route set is \outrelpast by a remaining one that also \outrelbase
 the emitted observation, making its removal \emph{output subsumption} rather
-than \commitment. Lifted Monotonicity combines directedness, which requires
+than \commitment. Lifted Monotonicity combines \emph{directedness}, a standard notion from order
+theory, which requires
 common \outnouns within each fiber, with Relational Monotonicity, which
 accounts for input growth.
 
@@ -1004,11 +1007,12 @@ $X\subseteq F$ is compatible in $F$.}
 fiber $\fiber{i}$ is directed.}
 \end{definition}
 
-\textcolor{reviewed}{A singleton fiber is trivially directed.} \textcolor{reviewed}{As with common \indescs,
-(Section~\ref{sec:functional-specifications}), a common \outnoun need not be
-least: directedness requires some upper bound within the fiber for each finite
+\textcolor{reviewed}{A singleton fiber is trivially directed.} A common \outnoun, like a common
+\indesc, need not be unique or least. For inputs, two independent transactions
+$u$ and $v$, with schedules ordered by subsequence, have two incomparable
+minimal common \indescs, $uv$ and $vu$. For outputs, directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
-join-semilattice.} For example, the fiber
+join-semilattice. For example, the fiber
 $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
 since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$ have two
 incomparable minimal common \outnouns. Compatibility likewise does not require

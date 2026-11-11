@@ -187,8 +187,31 @@ theorem «def:fiber-directedness/singleton» {I O : Type} [PO I] [PO O] {sp : Sp
     (hf : sp.Functional) : sp.DirectedOutputs :=
   functional_directed hf
 
-/-- "The fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` under inclusion is
-directed, since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two
+/-- "A common output extension, like a common input extension, need not be
+unique or least.  For inputs, two independent transactions `u` and `v`, with
+schedules ordered by subsequence, have two incomparable minimal common input
+extensions, `uv` and `vu`."  (Lean names the transactions `a` and `b`.)
+
+Lean: schedules `Sched T` are lists ordered by `List.Sublist` (a `PO`
+instance); "independent" is read as `a ≠ b`.  Both `ab` and `ba` are common
+input extensions of `a` and `b`, each minimal among common input extensions, and they are
+incomparable. -/
+theorem «sec:lifted-monotonicity/subsequence-example» {T : Type} {a b : T}
+    (hab : a ≠ b) :
+    (∀ s t : Sched T, s ≼ t ↔ s.txs.Sublist t.txs) ∧
+    ((⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
+      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
+        u ≼ ⟨[a, b]⟩ → u = ⟨[a, b]⟩) ∧
+    ((⟨[a]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧
+      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
+        u ≼ ⟨[b, a]⟩ → u = ⟨[b, a]⟩) ∧
+    ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ :=
+  ⟨sched_le_iff, sched_two_minimal hab⟩
+
+/-- "For outputs, directedness requires some upper bound within the fiber for
+each finite set, not a least one or a fixed merge operator, so it is weaker
+than a join-semilattice.  For example, the fiber
+`{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` under inclusion is directed, since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two
 incomparable minimal common output extensions.  Compatibility likewise does not
 require comparability: … as `{a,b,c}` and `{a,b,d}` do."  The fiber is the
 type `F5` (all of it). -/

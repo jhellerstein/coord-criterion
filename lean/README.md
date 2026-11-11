@@ -174,7 +174,6 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«sec:election-story/consistency»` | theorem | §2.1: |
 | `«def:functional-specification»` | abbrev | **Def. |
 | `«def:functional-specification/induced-function»` | theorem | "The unique output paired with `i` induces the function `f : |
-| `«sec:functional-specifications/subsequence-example»` | theorem | "Neither need be unique or least: |
 | `«def:functional-monotonicity»` | abbrev | **Def. |
 | `«eq:functional-monotonicity»` | abbrev | **Eq. |
 | `«def:functional-monotonicity/via-f»` | theorem | Def. |
@@ -242,7 +241,8 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:fiber-directedness»` | abbrev | **Def. |
 | `«def:directed-outputs»` | abbrev | **Def. |
 | `«def:fiber-directedness/singleton»` | theorem | After Def. |
-| `«sec:lifted-monotonicity/directed-example»` | theorem | "The fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` under inclusion is directed, since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two incomparab… |
+| `«sec:lifted-monotonicity/subsequence-example»` | theorem | "A common output extension, like a common input extension, need not be unique or least. |
+| `«sec:lifted-monotonicity/directed-example»` | theorem | "For outputs, directedness requires some upper bound within the fiber for each finite set, not a least one or a fixed merge operator, so it is weaker than a… |
 | `«sec:lifted-monotonicity/figure-fibers»` | theorem | "Thus the traceroute fiber is directed: |
 | `«eq:joint-output-order»` | abbrev | **Eq. |
 | `«def:lifted-monotonicity»` | abbrev | **Def. |

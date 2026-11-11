@@ -23,7 +23,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:election-story/consistency»
 #check @CC.Paper.«def:functional-specification»
 #check @CC.Paper.«def:functional-specification/induced-function»
-#check @CC.Paper.«sec:functional-specifications/subsequence-example»
 #check @CC.Paper.«def:functional-monotonicity»
 #check @CC.Paper.«eq:functional-monotonicity»
 #check @CC.Paper.«def:functional-monotonicity/via-f»
@@ -84,6 +83,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:fiber-directedness»
 #check @CC.Paper.«def:directed-outputs»
 #check @CC.Paper.«def:fiber-directedness/singleton»
+#check @CC.Paper.«sec:lifted-monotonicity/subsequence-example»
 #check @CC.Paper.«sec:lifted-monotonicity/directed-example»
 #check @CC.Paper.«sec:lifted-monotonicity/figure-fibers»
 #check @CC.Paper.«eq:joint-output-order»
