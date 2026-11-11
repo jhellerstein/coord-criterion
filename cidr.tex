@@ -953,6 +953,7 @@ removes others, is that removal a \commitment?  The output event itself is
 unchanged from the functional case: at a state $(i,R)$ with $o\in R(i)$,
 $\mathsf{output}(o)$ emits $o$ and keeps the rows whose outputs \outrelbase $o$,
 ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}.
+
 But removing a row $(k,x)$ does not always lose the information in its output.
 If some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
 nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
@@ -960,20 +961,20 @@ would have.  We call this \emph{output subsumption} and put $(k,x)$ in
 $\Subsumed_o$.  Otherwise $(k,x)$ goes in $\Excluded_o$, and the canonical
 \commitment $x_o$ removes it.  If $x_o$ removes every row at $k$, it rules out
 $k$; otherwise it rules out only those outputs.  In the functional case every
-removed row is excluded.  Formal definitions are in \extended.
+removed row is excluded.
 
-Returning to Figure~\ref{fig:nonmonotone-frame},
-emitting $\bot$ under the equality order
-puts the rows for $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs;
-emitting $[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for
-$[B,A]$ in $\Excluded_o$ and rules out that output at $\{A,B\}$; and the
-route sets removed in panel~(g) are in $\Subsumed_o$.
+In the running examples, emitting $\bot$ under the equality order
+(Figure~\ref{fig:nonmonotone-frame}) puts the rows for $aba$ and $abb$ in
+$\Excluded_o$, ruling out those inputs.  Emitting $[A,B]$ in
+Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in $\Excluded_o$,
+ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g) are
+all in $\Subsumed_o$, so emitting there needs no \commitment.
 
-With several outputs at one input, legality is more permissive: an output
-event may remove rows by output subsumption without applying a \commitment.
-As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
-\commitment, exactly when $\Excluded_o$ is empty.
-Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
+Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
+applies no \commitment, that is, when $\Excluded_o$ is empty.  With several
+outputs at one input, this is more permissive than in the functional case,
+since an output event may remove rows by output subsumption without a
+\commitment.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
 remaining output at $j$ have a common \outnoun at $j$.
 
 \subsection{The Complete CALM theorem}
