@@ -380,8 +380,8 @@ abbrev «app:notation/side» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin 
 abbrev «app:notation/explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
 
-/-- *same-side continuation of `p`* — produced using only events on `p`'s
-side, with no new input and no message from another side
+/-- *same-side continuation for `p`* — extends a partitioned history with
+events on `p`'s side alone, with no new input and no message from another side
 (Def. `def:local-continuation`).  Lean: a continuation `ext` of `H` with
 `Produced`, `Partitioned … comp`, `ext q = []` off `p`'s side, and no input
 event. -/

@@ -344,19 +344,24 @@ We consider a system, with a strategy for each participant that depends only on 
 local history, and an environment that may send any legal input to any
 participant.
 
+Availability asks that a participant cut off by a partition can still emit
+every explicit output its state permits.
+
 \begin{definition}[Same-side continuation]
 \label{def:local-continuation}
-A \emph{same-side} continuation of a participant $p$ is one the system can
-produce using only events on the side of the partition containing $p$, with no
-new input and no message from another side.
+Consider a partitioned history that the system produces, in which participant
+$p$ ends in state $(i,R)$.  A \emph{same-side continuation} for $p$ extends that
+history with events the system can produce on $p$'s side alone, with no new
+input and no message from another side.  Participant $p$ can emit $o$ when some same-side continuation for $p$ emits
+$o$.
 \end{definition}
 
 \begin{definition}[Availability]
 \label{def:partition-notions}
 The system has \emph{Availability for $E$} when, in every partitioned history
-it produces, each participant $p$ in state $(i,R)$ has, for each output
-$o\in R(i)\cap E(i)$, some same-side continuation in which $p$ emits $o$.
-\emph{Availability} is shorthand for Availability for $P$.
+it produces, each participant $p$ can emit every output in $R(i)\cap E(i)$,
+where $(i,R)$ is $p$'s final state.  \emph{Availability} is shorthand for
+Availability for $P$.
 \end{definition}
 
 \begin{definition}[Partition Consistency]

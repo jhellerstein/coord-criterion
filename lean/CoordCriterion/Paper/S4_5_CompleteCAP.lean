@@ -155,10 +155,14 @@ theorem «sec:complete-cap/environment» (Sys : System sp D) (init : Fin n → I
 
 /-! ### Definitions `def:local-continuation` (Same-side continuation), `def:partition-notions` (Availability) -/
 
-/-- **Def. `def:local-continuation`** (Same-side continuation).  "A
-*same-side* continuation of a participant `p` is one the system can produce
-using only events on the side of the partition containing `p`, with no new
-input and no message from another side."
+/-- **Def. `def:local-continuation`** (Same-side continuation).
+"Availability asks that a participant cut off by a partition can still emit
+every explicit output its state permits."  "Consider a partitioned history
+that the system produces, in which participant `p` ends in state `(i,R)`.  A
+*same-side continuation* for `p` extends that history with events the system
+can produce on `p`'s side alone, with no new input and no message from another
+side.  Participant `p` can emit `o` when some same-side continuation for `p`
+emits `o`."
 
 Lean: a same-side continuation of `p` is unfolded as `Produced … ∧
 Partitioned … comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧
@@ -170,18 +174,16 @@ abbrev «def:local-continuation» (Sys : System sp D) : Prop :=
 
 /-- **Def. `def:partition-notions`** (Availability).  "The system has
 *Availability for `E`* when, in every partitioned history it produces, each
-participant `p` in state `(i,R)` has, for each output `o ∈ R(i) ∩ E(i)`, some
-same-side continuation in which `p` emits `o`.  *Availability* is shorthand for
-Availability for `P`."
+participant `p` can emit every output in `R(i) ∩ E(i)`, where `(i,R)` is `p`'s
+final state.  *Availability* is shorthand for Availability for `P`."
 
 Lean: `AvailabilityAtEnd Sys` (= `AvailabilityFor sp.P Sys`); for a general
 `E`, use `«def:partition-notions/for»`. -/
 abbrev «def:partition-notions» (Sys : System sp D) : Prop := AvailabilityAtEnd Sys
 
 /-- Def. `def:partition-notions`: "The system has Availability for `E` when,
-in every partitioned history it produces, each participant `p` in state
-`(i,R)` has, for each output `o ∈ R(i) ∩ E(i)`, some same-side continuation
-in which `p` emits `o`." -/
+in every partitioned history it produces, each participant `p` can emit every
+output in `R(i) ∩ E(i)`, where `(i,R)` is `p`'s final state." -/
 abbrev «def:partition-notions/for» (E : Table I O) (Sys : System sp D) : Prop :=
   AvailabilityFor E Sys
 
