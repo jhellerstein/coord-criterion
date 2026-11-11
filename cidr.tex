@@ -280,7 +280,7 @@ We make contributions in four categories:
 \noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
         \spectype[s]. Consistency is defined as
-        confluence of the runs a spec allows, unifying general consistency models,
+        confluence of a spec's runs, unifying general consistency models,
         application-specific requirements, and their distributed executions.
 
 \noindent
@@ -705,8 +705,8 @@ it describes no protocol and promises no delivery or termination.
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-Consistency is defined by a spec's executions, monotonicity by its
-table and orders alone.  Functional CALM shows that these coincide.  Full proofs are in \extended.
+Monotonicity is defined by a spec's table and orders; consistency is defined by
+its runs.  Functional CALM shows that these coincide.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
@@ -715,11 +715,12 @@ monotone.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A monotone $f$ only emits outputs that all of its future outputs \outrelbase,
-so the row $(j,f(j))$ at a common \indesc $j$ survives in every run.
-If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.
-\fullproof
+If $f$ is monotone, each output a run has emitted lies below $f(j)$ at every
+\indesc $j$ of its current input, so the row $(j,f(j))$ survives in every run,
+and the Survivor test (Proposition~\ref{prop:confluence}) gives confluence at
+$j$.  If $f$ is not monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.
+Emitting $f(i)$ removes the only row at $k$, so a run that does so can never be
+reconciled at $k$ with one that receives $k$.  \fullproof
 \end{proof}
 
 \begin{corollary}[State is fixed by input]
