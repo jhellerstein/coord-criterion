@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-621 entries.
+627 entries.
 
 ### §2 Functional CALM
 
@@ -399,6 +399,9 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composite-calm/cancellation»` | theorem | "Third, considering a different order on `M` can make two non-monotone stages both monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
+| `«def:intersection»` | theorem | **Definition `def:intersection`** (Intersection): |
+| `«sec:intersection/not-closed»` | theorem | "Intersection does not preserve Lifted Monotonicity. |
+| `«prop:intersection-bound»` | theorem | **Proposition `prop:intersection-bound`** (Intersection under a monotone bound): |
 
 ### §6 Instances
 
@@ -422,6 +425,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«def:hat-spec»` | abbrev | **Definition `def:hat-spec`** (HAT specification): |
 | `«def:hat-spec/inputs-closed»` | theorem | Def. |
 | `«def:hat-spec/read-rule»` | theorem | Def. |
+| `«def:store-spec»` | theorem | **Definition `def:store-spec`** (Store specification): |
 | `«thm:hat-levels»` | theorem | **Theorem `thm:hat-levels`** (HAT levels): |
 | `«thm:hat-levels/answers-stable»` | theorem | Proof sketch of Thm. |
 | `«thm:hat-levels/lost-update-pair»` | theorem | Proof sketch of Thm. |
@@ -669,6 +673,8 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
+| `«app:intersection/bound»` | theorem | Proof of Proposition `prop:intersection-bound`: |
+| `«app:intersection/example»` | theorem | "In the example of Section `sec:intersection`, both specs satisfy Lifted Monotonicity: |
 | `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run). |
 | `«def:implementation-form»` | abbrev | **Definition `def:implementation-form`** (Implementation form). |
 | `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once its boundary observations are chosen. |

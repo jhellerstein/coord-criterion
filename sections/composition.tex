@@ -213,3 +213,55 @@ copy, merge, or route outputs build arbitrary acyclic graphs.  A graph
 satisfies Lifted Monotonicity when every node does on the outputs offered to
 it, checked node by node much as types are
 (Appendix~\ref{app:dataflow-graphs}).
+
+\subsection{Intersection}
+\label{sec:intersection}
+
+Sequential composition feeds the outputs of one spec to the inputs of the
+next.  Specs can also be combined on a shared interface.  An application spec,
+such as a replicated store that answers reads by a fixed rule, may promise
+nothing about isolation, while a consistency property, such as an isolation
+level, constrains the same reads.  A system that meets both may produce only
+the rows that both permit.
+
+\begin{definition}[Intersection]
+\label{def:intersection}
+Let $\Spec_1=(I,\InputOrd,O,\OutputOrd,P_1)$ and
+$\Spec_2=(I,\InputOrd,O,\OutputOrd,P_2)$ share their ordered domains.  Their
+\emph{intersection} $\Spec_1\cap\Spec_2$ has table $P_1\cap P_2$.  It is an
+\spectype when $P_1\cap P_2$ is total on $I$: every input has an output that
+both permit.
+\end{definition}
+
+The shared domains matter.  As an example, isolation levels are defined on
+histories of reads, writes, and commits, so an application spec must describe
+its inputs and outputs in those terms before it can be intersected with one.
+
+Intersection does not preserve Lifted Monotonicity.  Let $a$ and $b$ be
+incomparable outputs, each below both $c$ and $d$, with $c$ and $d$
+incomparable, and let both specs have a single input.  The fiber $\{a,b,c\}$ is
+directed, since $c$ \outrel each of its members, and so is $\{a,b,d\}$.  The
+intersection of the two fibers, $\{a,b\}$, is not: no output in it \outrel
+both $a$ and $b$.  Two specs that need no \commitment can thus have an
+intersection that does.  A
+monotone bound rules this out.
+
+\begin{proposition}[Intersection under a monotone bound]
+\label{prop:intersection-bound}
+Let $g:I\to O$ be monotone.  Suppose that every output $\Spec_1$ permits at an
+input $j$ lies below $g(j)$, and that $\Spec_1$ and $\Spec_2$ both permit $g(j)$
+at every $j$.  Then $\Spec_1\cap\Spec_2$ is an \spectype and satisfies Lifted
+Monotonicity.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+The intersection permits $g(j)$ at every $j$, so it is total.  An output it
+permits at $i\InputOrd j$ lies below $g(i)$, and $g(i)\OutputOrd g(j)$, so
+$g(j)$ \outrel every output it permits at inputs below $j$.  Full proof in
+Appendix~\ref{app:intersection}.
+\end{proof}
+
+A store whose answers follow a monotone rule therefore stays monotone when
+intersected with any property that admits the rule's answers.
+Section~\ref{sec:hat-instance} uses this construction to assess how various
+isolation specifications intersect with a key-value store.

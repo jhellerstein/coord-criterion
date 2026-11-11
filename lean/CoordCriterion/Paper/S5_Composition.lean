@@ -1,6 +1,7 @@
 import CoordCriterion.Appendix.Guarded
 import CoordCriterion.Appendix.JointMono
 import CoordCriterion.Appendix.Components
+import CoordCriterion.Appendix.Intersection
 
 /-!
 # Paper §5, "Composition and Proper Coordination" (`sections/composition.tex`)
@@ -388,6 +389,51 @@ theorem «sec:composite-calm/reach» :
       ∀ _inst : PO Joint.Mid, ∃ i, ∀ o τ,
         ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output o) τ :=
   Joint.no_order_counterexample
+
+/-! ## Intersection (`sec:intersection`) -/
+
+/-- **Definition `def:intersection`** (Intersection): "Let `𝒮₁ = (I,≼_I,O,≼_O,P₁)`
+and `𝒮₂ = (I,≼_I,O,≼_O,P₂)` share their ordered domains.  Their intersection
+`𝒮₁ ∩ 𝒮₂` has table `P₁ ∩ P₂`.  It is an I/O specification when `P₁ ∩ P₂` is
+total on `I`: every input has an output that both permit."  Lean: `Inter.inter`
+takes the totality of the intersection as an argument. -/
+theorem «def:intersection» {I O : Type} [PO I] [PO O] (s₁ s₂ : Spec I O)
+    (htot : ∀ i, ∃ o, s₁.P i o ∧ s₂.P i o) (i : I) (o : O) :
+    (Inter.inter s₁ s₂ htot).P i o ↔ s₁.P i o ∧ s₂.P i o :=
+  Iff.rfl
+
+/-- "Intersection does not preserve Lifted Monotonicity.  Let `a` and `b` be
+incomparable outputs, each below both `c` and `d`, with `c` and `d`
+incomparable, and let both specs have a single input.  The fiber `{a,b,c}` is
+directed, since `c` extends each of its members, and so is `{a,b,d}`.  The
+intersection of the two fibers, `{a,b}`, is not: no output in it extends both
+`a` and `b`.  Two
+specs that need no commitment can thus have an intersection that does."  Lean:
+`Inter.not_closed` (outputs `Inter.Q4`, input `Unit`); the intersection is total
+(`Inter.sCD_total`); "needs no commitment" and "does" are Lifted Monotonicity
+and its failure, read through Proposition `prop:exposure-boundary`
+(`exposure_boundary`): the intersection has a state reachable without
+commitment with an output that is not legal. -/
+theorem «sec:intersection/not-closed» :
+    Inter.sC.LiftedMono ∧ Inter.sD.LiftedMono ∧
+      ¬ (Inter.inter Inter.sC Inter.sD Inter.sCD_total).LiftedMono ∧
+      ¬ ∀ τ : State (Inter.inter Inter.sC Inter.sD Inter.sCD_total), ReachableCF τ →
+          ∀ o, τ.R τ.cur o → Exposable τ o := by
+  obtain ⟨h1, h2, h3⟩ := Inter.not_closed
+  exact ⟨h1, h2, h3 Inter.sCD_total, fun h => h3 Inter.sCD_total
+    ((liftedMono_iff_commonExpansion _).2 ((exposure_boundary _).2 h))⟩
+
+/-- **Proposition `prop:intersection-bound`** (Intersection under a monotone
+bound): "Let `g : I → O` be monotone.  Suppose that every output `𝒮₁` permits
+at an input `j` lies below `g(j)`, and that `𝒮₁` and `𝒮₂` both permit `g(j)` at
+every `j`.  Then `𝒮₁ ∩ 𝒮₂` is an I/O specification and satisfies Lifted
+Monotonicity."  Lean: `Inter.inter_liftedMono_of_bound`; totality is witnessed
+by `g`. -/
+theorem «prop:intersection-bound» {I O : Type} [PO I] [PO O] (s₁ s₂ : Spec I O) (g : I → O)
+    (hg : Comp.Monotone g) (hb : ∀ j o, s₁.P j o → o ≼ g j) (h₁ : ∀ j, s₁.P j (g j))
+    (h₂ : ∀ j, s₂.P j (g j)) :
+    (Inter.inter s₁ s₂ fun j => ⟨g j, h₁ j, h₂ j⟩).LiftedMono :=
+  Inter.inter_liftedMono_of_bound s₁ s₂ g hg hb h₁ h₂
 
 end Paper
 end CC
