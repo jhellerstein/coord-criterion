@@ -622,16 +622,14 @@ and emits $o$:
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-If $o$ is not legal, the transition applies the \emph{canonical \commitment}
-$x_o$.  For every row it removes, no row remains at the same input.
+If $o$ is not legal, some rows have outputs that do not \outrelbase $o$;
+removing them is the \emph{canonical \commitment} $x_o$.  In a functional table
+each input has one row, so $x_o$ rules out those rows' inputs.
 \end{definition}
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  A
-\commitment removes rows that input alone would preserve; afterward, their
-inputs are no longer legal.  Systems may issue more \commitments than an output
-requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
-such extra \commitments are a system's choice, not the spec's
-(\S\ref{sec:systems}).  An event from a determined state always leads to
+system may also issue \commitments of its own, as the registrar does in
+Figure~\ref{fig:election-frames}(d) (\S\ref{sec:systems}).  An event from a determined state always leads to
 another determined state.
 
 \paragraph{Runs and consistency.}
