@@ -2246,17 +2246,16 @@ Lifted Monotonicity.
 
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
-\textcolor{reviewed}{An input is a history ordered by happens-before: reads, each tagged with its
+An input is a history ordered by happens-before: reads, each tagged with its
 replica; commits, each with its client timestamp and write set; and deliveries
-of committed writes to replicas.} The history preserves
+of committed writes to replicas. The history preserves
 each client's program order and each replica's arrival order, and a
 transaction's reads precede its commit, which precedes its deliveries. Inputs are ordered by downward-closed extension. \textcolor{reviewed}{An output is a set of read
-answers, ordered by inclusion.} For an isolation level $L$, let $\Spec_L$ be
-the specification whose table $P_L$ permits an output at an input when it
-extends to a history that answers every read,
-orders versions by timestamp, and exhibits none of the phenomena that $L$
-proscribes. \textcolor{reviewed}{The explicit relation $E$ holds, at each input, the answers that
-the read rule above gives.}
+answers, ordered by inclusion.} \textcolor{reviewed}{A history is \emph{complete} when it answers
+every read and orders versions by timestamp.} \textcolor{reviewed}{For an isolation level $L$, the table $P_L$ of $\Spec_L$ contains
+an output at an input when the input extends to a complete history that includes the output and exhibits
+none of the phenomena that $L$ proscribes.} \textcolor{reviewed}{The explicit relation $E$
+contains, at each input, the output that the read rule above gives.}
 \end{definition}
 
 \begin{definition}[Store specification]
@@ -2277,14 +2276,15 @@ Monotonicity when $\Spec_L$ admits the read rule's answers.
 
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
-\textcolor{reviewed}{Suppose each transaction's timestamp exceeds that of every version it reads.} For read uncommitted and read committed, $E\subseteq P_L$ and
+\textcolor{reviewed}{Suppose each transaction's timestamp exceeds that of every version it reads.} \textcolor{reviewed}{For read uncommitted and read committed, $E\subseteq P_L$ and
 $\Spec_{\mathrm{st}}\cap\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
-satisfies Lifted Monotonicity for $E$, and by Complete CAP these levels stay
-available and consistent through partitions. \textcolor{reviewed}{For any level that proscribes
+satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
+Availability for $E$ and Partition Consistency.} \textcolor{reviewed}{For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
-serializability, $\Spec_{\mathrm{st}}\cap\Spec_L$ fails Lifted Monotonicity,
-and no explicit relation that answers every read satisfies Lifted Monotonicity
-for it.}
+serializability, $\Spec_{\mathrm{st}}\cap\Spec_L$ does not satisfy Lifted
+Monotonicity, and $\Spec_L$ does not satisfy Lifted Monotonicity for any
+explicit relation $E$ that answers every read; hence no system for $\Spec_L$
+has Availability for such an $E$ and Partition Consistency.}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
@@ -2299,15 +2299,15 @@ $\Spec_{\mathrm{st}}\cap\Spec_L$ once both transactions are in the input. The st
 intersection with $\Spec_L$.
 \end{proof}
 
-\textcolor{reviewed}{The timestamp condition is required, emending an error in the pseudocode of
+\textcolor{reviewed}{The timestamp condition is required, correcting an error in the pseudocode of
 the extended HAT paper~\cite{bailis2013hatextended}.} \textcolor{reviewed}{That paper's pseudocode
 fixes each transaction's timestamp when it begins.} \textcolor{reviewed}{A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
 is ordered before the version it read: a G1c cycle, which read committed
 proscribes.} \textcolor{reviewed}{The algorithm as written therefore does not guarantee read
 committed.} \textcolor{reviewed}{Our framework exposed the problem directly as we were writing this
-up, since the read rule's answer at such an input is not in $P_{\mathrm{RC}}$.} \textcolor{reviewed}{Taking each timestamp at commit, above every version read, repairs the spec and
-hence the algorithm.}
+up, since the read rule's output at such an input is not in $P_{\mathrm{RC}}$.} \textcolor{reviewed}{Taking each timestamp at commit, above every version read, repairs the
+algorithm.}
 
 Session guarantees, which Bailis et al.\ achieve under sticky availability,
 are deployments in our terms (Proposition~\ref{thm:complete-cap-deployment});

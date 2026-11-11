@@ -1631,40 +1631,42 @@ with the highest-timestamped committed write of the item it has received.\cxbar{
 
 \color{black}\begin{definition}[HAT specification]
 \label{def:hat-spec}
-\cxtag{155}{N/L}\cxbar{155}{0.9 0.45 0}{s}An input is a history, ordered by happens-before, of three kinds of events:
-reads, each tagged with its replica; commits, each with its timestamp and write
-set; and deliveries of committed writes to replicas.  One input \inrel another
-when it adds events, none of which happens before an event already present.  An
-output is a set of read answers, ordered by inclusion.  For an isolation level
-$L$, defined by the phenomena it proscribes~\cite{adya1999weakconsistency}, the
-table $P_L$ of $\Spec_L$ permits a set of answers at an input when the input
-extends to a history that answers every read, orders versions by timestamp, and
-exhibits none of those phenomena.  The explicit relation $E$ holds, at each
-input, the answers that the read rule above gives.\cxbar{155}{0.9 0.45 0}{e}
+\cxtag{155}{N/L}\cxbar{155}{0.9 0.45 0}{s}An input is a history: a set of events, partially ordered by happens-before,
+of three kinds.  A read is tagged with its replica; a commit carries its
+timestamp and write set; a delivery brings a committed write to a replica.  One
+input \inrel another when it adds events, none of which happens before an event
+already present.  An output is a set of read answers, ordered by inclusion.  An
+isolation level $L$ is defined by the phenomena it
+proscribes~\cite{adya1999weakconsistency}.  A history is \emph{complete} when it answers every read and orders versions by
+timestamp.  The table $P_L$ of $\Spec_L$ contains an output at an input when
+the input extends to a complete history that includes the output and exhibits
+none of the phenomena that $L$ proscribes.  The explicit relation $E$
+contains, at each input, the output that the read rule above gives.\cxbar{155}{0.9 0.45 0}{e}
 \end{definition}
 
 \color{black}\begin{theorem}[HAT levels]
 \label{thm:hat-levels}
 \cxtag{156}{N/L}\cxbar{156}{0.9 0.45 0}{s}Suppose each transaction's timestamp exceeds that of every version it reads.
 For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
-satisfies Lifted Monotonicity for $E$, so by Complete CAP these levels stay
-available and consistent through partitions.  For any level that proscribes
+satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
+Availability for $E$ and Partition Consistency.  For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
-serializability, no explicit relation that answers every read satisfies
-Lifted Monotonicity for it.\cxbar{156}{0.9 0.45 0}{e}
+serializability, $\Spec_L$ does not satisfy Lifted Monotonicity for any
+explicit relation $E$ that answers every read; hence no system for $\Spec_L$
+has Availability for such an $E$ and Partition Consistency.\cxbar{156}{0.9 0.45 0}{e}
 \end{theorem}
 \proofinfull
 
-\color{orange!90!black}\cxtag{157}{O/L}\cxbar{157}{0.9 0.45 0}{s}The timestamp condition is required, emending an error in the pseudocode of
+\color{orange!90!black}\cxtag{157}{O/L}\cxbar{157}{0.9 0.45 0}{s}The timestamp condition is required, correcting an error in the pseudocode of
 the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
 is ordered before the version it read: a G1c cycle, which read committed
 proscribes.  The algorithm as written therefore does not guarantee read
 committed.  Our framework exposed the problem directly as we were writing this
-up, since the read rule's answer at such an input is not in $P_{\mathrm{RC}}$.
-Taking each timestamp at commit, above every version read, repairs the spec and
-hence the algorithm.  Details are in \extended.\cxbar{157}{0.9 0.45 0}{e}
+up, since the read rule's output at such an input is not in $P_{\mathrm{RC}}$.
+Taking each timestamp at commit, above every version read, repairs the
+algorithm.  Details are in \extended.\cxbar{157}{0.9 0.45 0}{e}
 
 \color{black}\cxtag{158}{N/M}\cxbar{158}{0.4 0.4 1}{s}Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent

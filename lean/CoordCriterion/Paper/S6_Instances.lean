@@ -293,19 +293,21 @@ to replicas.  The history preserves each client's program order and each
 replica's arrival order, and a transaction's reads precede its commit, which
 precedes its deliveries.  Inputs are ordered by
 downward-closed extension.  An output is a set of read answers, ordered by
-inclusion.  For an isolation level `L`, the table `P_L` of `𝒮_L` permits an output at an input
-when it extends to a history that answers every read, orders versions by
-timestamp, and exhibits none of the phenomena that `L` proscribes.  The
-explicit relation `E` holds, at each input, the answers that the read rule
-above gives."  (CIDR version:
-"An input is a history ordered by happens-before: reads tagged with their
-replica, commits with their timestamp and write set, and deliveries of
-committed writes to replicas.  Inputs are ordered by
-downward-closed extension, and outputs are sets of read answers, ordered by
-inclusion.  For an isolation level `L`, defined by the phenomena it
-proscribes, let `𝒮_L` have table `P_L`, which permits an output when it extends to a history that answers
-every read, orders versions by timestamp, and exhibits none of them.  The
-explicit relation `E` holds, at each input, the answers the read rule gives.")
+inclusion.  A history is *complete* when it answers every read and orders
+versions by timestamp.  For an isolation level `L`, the table `P_L` of `𝒮_L`
+contains an output at an input when the input extends to a complete history
+that includes the output and exhibits none of the phenomena that `L`
+proscribes.  The explicit relation `E` contains, at each input, the output
+that the read rule above gives."  (CIDR version:
+"An input is a history: a set of events, partially ordered by happens-before,
+of three kinds.  A read is tagged with its replica; a commit carries its
+timestamp and write set; a delivery brings a committed write to a replica.  One
+input extends another when it adds events, none of which happens before an
+event already present.  An output is a set of read answers, ordered by
+inclusion.  An isolation level `L` is defined by the phenomena it proscribes.
+A history is complete when …" as above.)  A complete history is `HATSpec.CH`;
+`P_L` contains `F` when `F ≼ H.facts` for some complete `H` avoiding the
+phenomena (`HATSpec.specP`).
 Lean: inputs `HATSpec.Inp true` (events `rd`, `cm`, `dl`; legality `WF` plus
 the timestamp condition of Thm. `thm:hat-levels`, so that the theorem's
 hypothesis is part of the input domain; of program order only "reads precede
@@ -365,11 +367,13 @@ theorem «def:store-spec» :
 /-- **Theorem `thm:hat-levels`** (HAT levels): "Suppose each transaction's
 timestamp exceeds that of every version it reads.  For read uncommitted and
 read committed, `E ⊆ P_L` and `𝒮_st ∩ 𝒮_L` satisfies Lifted Monotonicity, so
-`𝒮_L` satisfies Lifted Monotonicity for `E`, and by Complete CAP these levels
-stay available and consistent through partitions.  For any level that
-proscribes Lost Update, including snapshot isolation, repeatable read, and
-serializability, `𝒮_st ∩ 𝒮_L` fails Lifted Monotonicity, and no explicit
-relation that answers every read satisfies Lifted Monotonicity for it."  Lean:
+`𝒮_L` satisfies Lifted Monotonicity for `E`, so some system for `𝒮_L` has
+Availability for `E` and Partition Consistency.  For any level that proscribes
+Lost Update, including snapshot isolation, repeatable read, and
+serializability, `𝒮_st ∩ 𝒮_L` does not satisfy Lifted Monotonicity, and `𝒮_L`
+does not satisfy Lifted Monotonicity for any explicit relation `E` that
+answers every read; hence no system for `𝒮_L` has Availability for such an
+`E` and Partition Consistency."  Lean:
 (1) for `L ∈ {RU, RC}`, `E ⊆ P_L`, Lifted Monotonicity of the intersection
 (`HATSpec.store_inter_rc`), Lifted Monotonicity for `E`
 (`CAP.ConsistentOn`), and some system with Availability for `E` and
@@ -445,16 +449,16 @@ theorem «thm:hat-levels/lost-update-pair» :
   ⟨fun _ h => HATSpec.i1_ver h, fun _ h => HATSpec.i2_ver h, HATSpec.le_hJ _ HATSpec.hk1,
     HATSpec.le_hJ _ HATSpec.hk2, fun H h => HATSpec.lu_cycle H h⟩
 
-/-- "The timestamp condition is required, emending an error in the pseudocode of
+/-- "The timestamp condition is required, correcting an error in the pseudocode of
 the extended HAT paper.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
 is ordered before the version it read: a G1c cycle, which read committed
 proscribes.  The algorithm as written therefore does not guarantee read
 committed.  Our framework exposed the problem directly as we were writing this
-up, since the read rule's answer at such an input is not in `P_RC`.
-Taking each timestamp at commit, above every version read, repairs the spec and
-hence the algorithm."  (CIDR adds: "Details are in the full paper.")  Lean: (1) in the specification
+up, since the read rule's output at such an input is not in `P_RC`.
+Taking each timestamp at commit, above every version read, repairs the
+algorithm."  (CIDR adds: "Details are in the full paper.")  Lean: (1) in the specification
 without the timestamp condition (`Inp false`), an input where `T₁` reads
 `T₂`'s version `(1,2)` and then commits `x` with timestamp `(1,1)` has HAT's
 answer outside `P_RC`; (2) the pseudocode itself, run with timestamps fixed at
