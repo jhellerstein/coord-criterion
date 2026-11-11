@@ -151,7 +151,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 65 & 5510\\
+unclassified & 65 & 5501\\
 related-work detail & 4 & 501\\
 formal definition/notation & 8 & 363\\
 signposting & 9 & 358\\
@@ -292,7 +292,7 @@ makes more coordinates needlessly. In a composition of specs, \emph{Proper Coord
 identifies which stage must make the \commitments and certifies that later
 stages need none. \textcolor{newblue}{In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
-(\S\ref{sec:composition}).} \removednote{\textbf{unclassified}, 10 words, rank 82; \textit{Placement determines whether conflicting choices can arise at different participants.}}
+(\S\ref{sec:composition}).} \removednote{\textbf{unclassified}, 10 words, rank 81; \textit{Placement determines whether conflicting choices can arise at different participants.}}
 
 \textcolor{newblue}{Distributed histories are captured under the same consistency criteria as
 centralized ones (\S\ref{sec:distributed-execution}).} \textcolor{newblue}{Complete CAP
@@ -524,14 +524,20 @@ miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
 only with a \commitment.
 
-The need to issue a \commitment is a property solely of the table and its orders. \textcolor{newblue}{Rows $(ab\cdot,\bot)$ and
-$(aba,a)$ have the common \indesc $aba$, but under the equality
-order no output at $aba$ \outrel both outputs $\bot$ and $a$.} A run that emits
-$\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.
+To see why, follow the events. A \emph{run} is a sequence of input and output
+events from a starting state, like the sequences that produce the panels of
+Figure~\ref{fig:election-frames}. Under the equality order, rows
+$(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
+$aba$ \outrel both $\bot$ and $a$. So a run that emits $\bot$ at $ab\cdot$ and
+a run that receives $aba$ and emits $a$ can never be reconciled at $aba$. Without the \commitment, the two runs would diverge for good. The need for a
+\commitment is thus a property of the table and its orders alone, not of any
+system.
 
-Input and output events form a transition system, and the spec is
-consistent when its runs are confluent. \removednote{\textbf{unclassified}, 15 words, rank 74; \textit{For functional tables this corresponds exactly to monotonicity (Section ).}} \textcolor{newblue}{Section~\ref{sec:functional-calm-theorem} shows that for functional tables
-this corresponds exactly to monotonicity.}
+Runs are the foundation of the consistency side of CALM. Input and output
+events form a transition system over specification states, and a spec is
+\emph{consistent} when its runs are \emph{confluent}: runs whose inputs have a
+common \indesc can always be continued to a common state there. Section~\ref{sec:functional-calm-theorem} shows that for functional tables consistency corresponds exactly to
+monotonicity. \removednote{\textbf{unclassified}, 6 words, rank 84; \textit{Appendix collects the notation for reference.}}
 
 \subsection{The functional framework in brief}
 \label{sec:framework-brief}
@@ -554,7 +560,7 @@ output types, and $P\subseteq I\times O$ is its \emph{possibility relation}:
 a typed relation with schema $(\mathrm{in},\mathrm{out})$ in which every
 input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
 (a functional dependency).} \textcolor{newblue}{The unique output paired with $i$ induces a
-function $f:I\to O$.} \removednote{\textbf{unclassified}, 8 words, rank 83; \textit{with [math] We call [math] the input order .}}
+function $f:I\to O$.} \removednote{\textbf{unclassified}, 8 words, rank 82; \textit{with [math] We call [math] the input order .}}
 \end{definition}
 
 \textcolor{newblue}{Because an output may depend on everything a system has received, we model
@@ -567,7 +573,7 @@ and may add more, and we say that $u$ \emph{\outrel} $o$. \removednote{\textbf{u
 \emph{common \outnoun} of $o_1,\ldots,o_k$ is an output that \outrel each $o_r$. Neither need be
 unique or least: for example, two independent transactions $u$ and $v$, with schedules
 ordered by subsequence, have two incomparable minimal common \indescs, $uv$
-and $vu$. \removednote{\textbf{unclassified}, 17 words, rank 68; \textit{A row [math] is by another row [math] at the same input when [math] [math].}} \removednote{\textbf{unclassified}, 11 words, rank 81; \textit{A functional [math], with induced function [math], is monotone if}} \removednote{\textbf{unclassified}, 15 words, rank 75; \textit{Thus an output emitted on partial input is by the output at every .}}
+and $vu$. \removednote{\textbf{unclassified}, 17 words, rank 68; \textit{A row [math] is by another row [math] at the same input when [math] [math].}} \removednote{\textbf{unclassified}, 11 words, rank 80; \textit{A functional [math], with induced function [math], is monotone if}} \removednote{\textbf{unclassified}, 15 words, rank 74; \textit{Thus an output emitted on partial input is by the output at every .}}
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -643,7 +649,7 @@ $x_o$.} For every row it removes, no row remains at the same input. \removednote
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment. \removednote{\textbf{formal caution}, 17 words, rank 70; \textit{The current row [math] remains, since [math] itself, so the event always ends at a state.}} \textcolor{newblue}{A
 \commitment removes rows that input alone would preserve; afterward, their
-inputs are no longer legal.} \removednote{\textbf{unclassified}, 12 words, rank 77; \textit{Canonical of this form are the only this section uses.}} \textcolor{newblue}{Systems may issue more \commitments than an output
+inputs are no longer legal.} \removednote{\textbf{unclassified}, 12 words, rank 76; \textit{Canonical of this form are the only this section uses.}} \textcolor{newblue}{Systems may issue more \commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 such extra \commitments are a system's choice, not the spec's
 (\S\ref{sec:systems}).} \removednote{\textbf{unclassified}, 133 words, rank 18; \textit{A state is determined when its future-output set has one element: one result remains, whatever legal ...}} \removednote{\textbf{unclassified}, 56 words, rank 32; \textit{When runs take different paths through the spec, can they still be brought to a common ...}; labels def:specification-event, def:transition-system}
@@ -805,12 +811,12 @@ relation $P$ is the spec's \emph{possibility relation} and is total
 on $I$.} A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$. \textcolor{newblue}{The fiber
 $\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
-outputs; the \spectype is \emph{nondeterministic} when some fiber does.} \removednote{\textbf{formal definition/notation}, 7 words, rank 84; \textit{of Section may now contain several outputs.}; labels eq:fiber} A
-functional \spectype is the special case $\fiber{i}=\{f(i)\}$. \removednote{\textbf{unclassified}, 12 words, rank 78; \textit{An is nondeterministic when some fiber contains more than one output.}; labels def:nondeterministic}
+outputs; the \spectype is \emph{nondeterministic} when some fiber does.} \removednote{\textbf{formal definition/notation}, 7 words, rank 83; \textit{of Section may now contain several outputs.}; labels eq:fiber} A
+functional \spectype is the special case $\fiber{i}=\{f(i)\}$. \removednote{\textbf{unclassified}, 12 words, rank 77; \textit{An is nondeterministic when some fiber contains more than one output.}; labels def:nondeterministic}
 \end{definition}
 
 Specification nondeterminism describes permitted results, not a strategy's method of choosing
-among them, and does not by itself imply a \commitment. \removednote{\textbf{unclassified}, 12 words, rank 79; \textit{Specification states and input events (Sections and ) apply unchanged to relational tables.}} \textcolor{newblue}{Specification states and input events
+among them, and does not by itself imply a \commitment. \removednote{\textbf{unclassified}, 12 words, rank 78; \textit{Specification states and input events (Sections and ) apply unchanged to relational tables.}} \textcolor{newblue}{Specification states and input events
 (\S\ref{sec:framework-brief}) apply unchanged to relational tables.}
 
 \textcolor{newblue}{Figure~\ref{fig:ambiguity-frames} contrasts two specs with several outputs
@@ -1062,7 +1068,7 @@ directly changes the state.}
 Send and receive events connect the participants' locally ordered runs. Adding
 an edge from each send to its matching receive gives the standard model of a
 distributed history; the transitive closure of these edges and the local orders
-is happens-before. \removednote{\textbf{unclassified}, 12 words, rank 80; \textit{Fix an , participants [math], and an initial input [math] for each.}}
+is happens-before. \removednote{\textbf{unclassified}, 12 words, rank 79; \textit{Fix an , participants [math], and an initial input [math] for each.}}
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
@@ -1732,7 +1738,7 @@ invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}. Their tools pick,
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties. We
 ask what the spec itself requires, independent of any menu of
-levels. \removednote{\textbf{unclassified}, 13 words, rank 76; \textit{Because the canonical are universal (), the answer holds for every mechanism.}} \textcolor{newblue}{By Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.} Our
+levels. \removednote{\textbf{unclassified}, 13 words, rank 75; \textit{Because the canonical are universal (), the answer holds for every mechanism.}} \textcolor{newblue}{By Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.} Our
 composition results need no program logic, and the criteria are exact on
 specs, not conservative. \removednote{\textbf{unclassified}, 54 words, rank 33; \textit{The possibility relation makes the boundary concrete.}}
 
