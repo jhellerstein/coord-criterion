@@ -441,15 +441,16 @@ theorem «thm:hat-levels/lost-update-pair» :
   ⟨fun _ h => HATSpec.i1_ver h, fun _ h => HATSpec.i2_ver h, HATSpec.le_hJ _ HATSpec.hk1,
     HATSpec.le_hJ _ HATSpec.hk2, fun H h => HATSpec.lu_cycle H h⟩
 
-/-- "The timestamp condition is needed.  With timestamps fixed when a
-transaction begins, as in the pseudocode of the extended version of Bailis et
-al., a transaction that reads a version with a higher timestamp and then
-overwrites it forms a G1c cycle, so read committed's read rule is not
-contained in `P_L`.  Taking the timestamp at commit, above every version
-read, removes the cycle."  (CIDR version: "The condition is needed: with
-timestamps fixed at transaction begin, as in the pseudocode of [the extended
-version], a transaction that reads a higher-timestamped version and overwrites
-it forms a G1c cycle.")  Lean: (1) in the specification
+/-- "The timestamp condition is required, emending an error in the pseudocode of
+the extended HAT paper.  That paper's pseudocode
+fixes each transaction's timestamp when it begins.  A transaction can then read
+a version with a higher timestamp than its own and overwrite it, so its write
+is ordered before the version it read: a G1c cycle, which read committed
+proscribes.  The algorithm as written therefore does not guarantee read
+committed.  Our framework exposed the problem directly as we were writing this
+up, since the read rule's answer at such an input is not in `P_RC`.
+Taking each timestamp at commit, above every version read, repairs the spec and
+hence the algorithm."  (CIDR adds: "Details are in the full paper.")  Lean: (1) in the specification
 without the timestamp condition (`Inp false`), an input where `T₁` reads
 `T₂`'s version `(1,2)` and then commits `x` with timestamp `(1,1)` has HAT's
 answer outside `P_RC`; (2) the pseudocode itself, run with timestamps fixed at

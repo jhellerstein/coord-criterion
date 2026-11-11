@@ -1616,10 +1616,16 @@ Lifted Monotonicity for it.
 \end{theorem}
 \proofinfull
 
-The condition is needed: with timestamps fixed at transaction
-begin, as in the pseudocode of~\cite{bailis2013hatextended}, a transaction
-that reads a higher-timestamped version and overwrites it forms a G1c
-cycle.
+The timestamp condition is required, emending an error in the pseudocode of
+the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
+fixes each transaction's timestamp when it begins.  A transaction can then read
+a version with a higher timestamp than its own and overwrite it, so its write
+is ordered before the version it read: a G1c cycle, which read committed
+proscribes.  The algorithm as written therefore does not guarantee read
+committed.  Our framework exposed the problem directly as we were writing this
+up, since the read rule's answer at such an input is not in $P_{\mathrm{RC}}$.
+Taking each timestamp at commit, above every version read, repairs the spec and
+hence the algorithm.  Details are in \extended.
 
 Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent

@@ -429,7 +429,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«thm:hat-levels»` | theorem | **Theorem `thm:hat-levels`** (HAT levels): |
 | `«thm:hat-levels/answers-stable»` | theorem | Proof sketch of Thm. |
 | `«thm:hat-levels/lost-update-pair»` | theorem | Proof sketch of Thm. |
-| `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition is needed. |
+| `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition is required, emending an error in the pseudocode of the extended HAT paper. |
 | `«sec:iconfluence-instance/model»` | abbrev | Sec. |
 | `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
 | `«sec:iconfluence-instance/iconfluent-def»` | theorem | "`T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." Lean: |

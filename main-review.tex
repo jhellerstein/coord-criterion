@@ -2283,12 +2283,15 @@ $\Spec_{\mathrm{st}}\cap\Spec_L$ once both transactions are in the input. The st
 intersection with $\Spec_L$.
 \end{proof}
 
-The timestamp condition is needed. With timestamps fixed when a transaction
-begins, as in the pseudocode of the extended version of Bailis et
-al.~\cite{bailis2013hatextended}, a transaction that reads a version with a
-higher timestamp and then overwrites it forms a G1c cycle, so read
-committed's read rule is not contained in $P_L$. Taking the timestamp at
-commit, above every version read, removes the cycle.
+\textcolor{reviewed}{The timestamp condition is required, emending an error in the pseudocode of
+the extended HAT paper~\cite{bailis2013hatextended}.} \textcolor{reviewed}{That paper's pseudocode
+fixes each transaction's timestamp when it begins.} \textcolor{reviewed}{A transaction can then read
+a version with a higher timestamp than its own and overwrite it, so its write
+is ordered before the version it read: a G1c cycle, which read committed
+proscribes.} \textcolor{reviewed}{The algorithm as written therefore does not guarantee read
+committed.} \textcolor{reviewed}{Our framework exposed the problem directly as we were writing this
+up, since the read rule's answer at such an input is not in $P_{\mathrm{RC}}$.} \textcolor{reviewed}{Taking each timestamp at commit, above every version read, repairs the spec and
+hence the algorithm.}
 
 Session guarantees, which Bailis et al.\ achieve under sticky availability,
 are deployments in our terms (Proposition~\ref{thm:complete-cap-deployment});
