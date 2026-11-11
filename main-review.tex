@@ -1955,20 +1955,20 @@ reaches without \commitment is legal.}
 
 \begin{theorem}[Proper Coordination]
 \label{thm:proper-coordination}
-\textcolor{reviewed}{Fix any system for $\Spec_1$.}
+\textcolor{reviewed}{Let $\Spec_1$ guard $\Spec_2$ in a pipeline.}
 \begin{enumerate}
 \item
 The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
         Monotonicity on the outputs of $\Spec_1$.
 \item
-\textcolor{reviewed}{If it is proper, $\Spec_2|_{\Spec_1}$ can take each output of a run of
-        the system for $\Spec_1$ as its next input and answer it without
-        \commitment.} \textcolor{reviewed}{The result is a canonical run of $P_2\circ P_1$, and
-        composite runs are confluent whenever the underlying runs of that
-        system are.}
+\textcolor{reviewed}{Suppose the pipeline is proper, and fix any system for $\Spec_1$.} \textcolor{reviewed}{Then $\Spec_2|_{\Spec_1}$ can take each output of a run $\rho$ of that
+        system as its next input and answer it without \commitment.} \textcolor{reviewed}{Replacing
+        each output of $\rho$ by these answers, and dropping the \commitment
+        events of $\rho$, gives a canonical run of $P_2\circ P_1$.} \textcolor{reviewed}{Such runs are
+        confluent whenever the runs of the system are.}
 \item
-\textcolor{reviewed}{If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
-        $\Spec_1$ cannot emit some output without a \commitment.}
+\textcolor{reviewed}{If the pipeline is proper and $P_2\circ P_1$ does not satisfy Lifted
+        Monotonicity, some output of $\Spec_1$ needs a \commitment.}
 \end{enumerate}
 \end{theorem}
 
@@ -1986,8 +1986,7 @@ of the composite fails at a canonical state, which is the image of a canonical
 state of $\Spec_1$. Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-\textcolor{reviewed}{The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
-itself a guard for a further stage (Corollary~\ref{cor:pipelines}).} \textcolor{reviewed}{Locks in
+A proper pipeline is itself a guard for a further stage (Corollary~\ref{cor:pipelines}). \textcolor{reviewed}{Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment.}
 

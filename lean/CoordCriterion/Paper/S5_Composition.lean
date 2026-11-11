@@ -121,22 +121,26 @@ theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
       ∀ (m : {m // Joint.Img sp m}) o, (Guard.rest sp sk).P m o ↔ sk.P m.1 o :=
   ⟨Iff.rfl, rfl, fun _ _ => Iff.rfl⟩
 
-/-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Fix any
-system for `𝒮₁`.  (1) The pipeline is proper exactly when `𝒮₂` satisfies
-Lifted Monotonicity on the outputs of `𝒮₁`.  (2) If it is proper, `𝒮₂|_{𝒮₁}`
-can take each output of a run of the system for `𝒮₁` as its next input and
-answer it without commitment.  The result is a canonical run of `P₂ ∘ P₁`, and
-composite runs are confluent whenever the underlying runs of that system are.  (3) If it is proper and `P₂ ∘ P₁` violates
-Lifted Monotonicity, `𝒮₁` cannot emit some output without a commitment."
+/-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Let `𝒮₁`
+guard `𝒮₂` in a pipeline.  (1) The pipeline is proper exactly when `𝒮₂`
+satisfies Lifted Monotonicity on the outputs of `𝒮₁`.  (2) Suppose the
+pipeline is proper, and fix any system for `𝒮₁`.  Then `𝒮₂|_{𝒮₁}` can take
+each output of a run `ρ` of that system as its next input and answer it without
+commitment.  Replacing each output of `ρ` by these answers, and dropping the
+commitment events of `ρ`, gives a canonical run of `P₂ ∘ P₁`.  Such runs are
+confluent whenever the runs of the system are.  (3) If the pipeline is proper
+and `P₂ ∘ P₁` does not satisfy Lifted Monotonicity, some output of `𝒮₁` needs
+a commitment."
 Lean: (1) `Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`),
 with `Guard.proper_iff_consistent` (Complete CALM on `𝒮₂|_{𝒮₁}`).  (2) For
 every run of `𝒮₁` under any basis `B` emitting `m :: ms`:
 `Guard.proper_follows` (the empty-basis `𝒮₂|_{𝒮₁}` starts at `σ(m)`, answers
 `m`, and receives and answers each later output, and the result, `Guard.merge`,
-is a run of `P₂ ∘ P₁`); `Guard.proper_run` (more generally, any empty-basis
+is a run of `P₂ ∘ P₁`; `merge` keeps the input events of `ρ`, replaces each
+output by its answers, and drops commitment events); `Guard.proper_run` (more generally, any empty-basis
 run of `𝒮₂|_{𝒮₁}` that receives each output and answers it any number of
 times gives a run of `P₂ ∘ P₁` whose table contains the join); and
-`Guard.proper_confluent`.  (3) `Guard.proper_needs_commit` ("cannot emit": no
+`Guard.proper_confluent`.  (3) `Guard.proper_needs_commit` ("needs a commitment": no
 such `m'` is a legal output at `σ_{𝒮₁}(i)`, and under the empty basis no output
 event there emits one).  The system for `𝒮₁` enters only through its basis,
 which is arbitrary. -/
@@ -181,8 +185,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
     fun hP fam h1 h2 h3 h4 j hj hS => Guard.proper_confluent hP fam h1 h2 h3 h4 j hj hS,
     fun hP hnot => Guard.proper_needs_commit hP hnot⟩
 
-/-- "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is
-itself a guard for a further stage (Corollary `cor:pipelines`).  Locks in the
+/-- "A proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`).  Locks in the
 key-value store would be pure overhead: by (1), the store restricted to logs
 needs no commitment."  Lean: for the log `𝒫 = Inst.smrS1` and execution
 `Inst.execF δ σ₀`, every log is an output of the log, and the pipeline is

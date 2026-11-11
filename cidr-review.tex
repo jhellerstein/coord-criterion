@@ -1455,18 +1455,20 @@ reaches without \commitment is legal.
 
 \begin{theorem}[Proper Coordination]
 \label{thm:proper-coordination}
-Fix any system for $\Spec_1$.
+Let $\Spec_1$ guard $\Spec_2$ in a pipeline.
 \begin{enumerate}
 \item
 \textcolor{newblue}{The pipeline is proper exactly when $\Spec_2|_{\Spec_1}$ satisfies
         Lifted Monotonicity.}
 \item
-If it is proper, $\Spec_2|_{\Spec_1}$ can take each output of a run of
-  the system for $\Spec_1$ as its next input and answer it without \commitment. The result is a canonical run of $P_2\circ P_1$, and composite runs are
-  confluent whenever the underlying runs of that system are.
+Suppose the pipeline is proper, and fix any system for $\Spec_1$. Then $\Spec_2|_{\Spec_1}$ can take each output of a run $\rho$ of that
+        system as its next input and answer it without \commitment. Replacing
+        each output of $\rho$ by these answers, and dropping the \commitment
+        events of $\rho$, gives a canonical run of $P_2\circ P_1$. Such runs are
+        confluent whenever the runs of the system are.
 \item
-If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
-        $\Spec_1$ cannot emit some output without a \commitment.
+If the pipeline is proper and $P_2\circ P_1$ does not satisfy Lifted
+        Monotonicity, some output of $\Spec_1$ needs a \commitment.
 \end{enumerate}
 \end{theorem}
 
@@ -1475,8 +1477,7 @@ Proposition~\ref{prop:exposure-boundary}) applied to $\Spec_2|_{\Spec_1}$. \text
 full proof of (1) and the proofs of (2) and (3) are in \extended.}
 \end{proof}
 
-\textcolor{newblue}{The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
-itself a guard for a further stage.} Locks in
+\textcolor{newblue}{A proper pipeline is itself a guard for a further stage.} Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment. \removednote{\textbf{unclassified}, 137 words, rank 18; \textit{We call a system for one spec, viewed through a chosen set of sound boundary observations, ...}}
 
