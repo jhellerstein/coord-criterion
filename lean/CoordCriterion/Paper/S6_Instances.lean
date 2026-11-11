@@ -98,20 +98,24 @@ theorem «sec:query-instance/one-fact-version» :
       ¬ QRef.DistinctMono QRef.edgeVals QRef.noCycle2 :=
   ⟨QRef.noCycle2_oneFact, QRef.noCycle2_not_disjointMono, QRef.noCycle2_not_distinctMono⟩
 
-/-- Sec. `sec:query-instance`: "Under inclusion of outputs, with inputs
-extending only by facts at new nodes, a behavior is a relational
-specification.  A transducer computes a behavior if every fair run ends at a
-permitted output, and so implements a sub-behavior `A`. … Their
-characterization, node monotonicity of `A`, is the common-extension condition
-on `A` for two rows at disjoint networks.  Complete CAP extends it to
-overlapping networks"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,
+/-- Sec. `sec:query-instance`: "Ordering outputs by inclusion, and inputs by
+adding facts at new nodes, makes a behavior a relational specification.  A
+transducer computes a behavior if every fair run ends at a permitted output,
+and so implements a sub-behavior `A` of it. … Baccaert and Ketsman call a
+behavior coordination-free when nodes can compute it without a list of all
+nodes, and show that this holds exactly when some such `A` is node monotone.
+Node monotonicity of `A` is the common-extension condition on `A` for two rows
+whose networks share no node.  Complete CAP extends it to networks that
+overlap"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,
 network input extension, so the network `Netw loc H` is read off the input) and a
 behavior is any `Spec` on them.  Node monotonicity is equivalent to the
 common-extension condition for two rows at disjoint networks and any common
 input extension `j` (`QRef.DisjointPairExpansion`); the full common-extension
 condition implies it.  The transducer model, its notion of computing a
 behavior (Inf. Syst. 2026, Def. 4, Lemma 4), and its characterization theorem
-(Def. 6, Thm. 5) are cited, not formalized. -/
+(Def. 6, Thm. 5: the behaviors characterized by Id+Ord transducers are the node
+monotone ones, so by Lemma 4 a behavior is coordination-free exactly when it
+contains a node monotone one) are cited, not formalized. -/
 theorem «sec:query-instance/node-monotonicity» {F N G : Type} (loc : F → N)
     (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)) :
     (QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
