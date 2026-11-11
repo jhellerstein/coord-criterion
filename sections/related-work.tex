@@ -7,7 +7,15 @@ freedom~\cite{hellerstein2010declarative,hellerstein2020keeping}.  Ameloot et
 al.\ proved the correspondence for relational transducers and showed how data
 placement and system knowledge change coordination
 requirements~\cite{ameloot2013relational,ameloot2015weaker}.  That work supplies a language
-and network model for computing queries.  Functional CALM instead isolates the
+and network model for computing queries.  Li and Lee model replicated objects
+with write, merge, and query operations, show that strong eventual consistency
+holds exactly when merge is associative, commutative, and idempotent and a
+write equals merging in its input, and prove CALM in that model: a problem has
+an implementation that is confluent and consistent under partition exactly when
+it is monotone~\cite{li2025coordinationfree}.  Their problems are functions
+from sets of inputs, ordered by inclusion, to a partially ordered set of
+outputs whose order they read as consistency, that is, the functional specs
+whose inputs are sets under inclusion.  Functional CALM instead isolates the
 monotonicity statement for arbitrary functional specs; Complete
 CALM adds specification nondeterminism and the \commitments that resolve it.  Keep CALM
 and CRDT On applies the monotonicity perspective to safe observations of
@@ -56,7 +64,8 @@ commit rule, and sticky availability into our terms; we do not re-derive its
 classification or its protocols.  When the output is the
 database state, invariant confluence and Lifted Monotonicity coincide
 (Proposition~\ref{prop:iconfluence-lm}).  Mahajan et al.'s availability is our
-response side, but we do not derive their bound.
+response side, and with real-time precedence recorded in the input we recover
+both halves of their bound (Appendix~\ref{app:rtc}).
 
 \paragraph{Convergence and consistency semantics.}
 CRDTs derive strong eventual consistency from state- or operation-based
