@@ -164,7 +164,7 @@ can produce on `p`'s side alone, with no new input and no message from another
 side.  Participant `p` can emit `o` when some same-side continuation for `p`
 emits `o`."
 
-Lean: a same-side continuation of `p` is unfolded as `Produced … ∧
+Lean: a same-side continuation for `p` is unfolded as `Produced … ∧
 Partitioned … comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧
 (∀ q j, inp j ∉ ext q)` in the unfolded form of
 `«def:partition-notions/unfolded»`; this entry names the Availability that
@@ -344,10 +344,10 @@ theorem «cor:complete-cap-any-system» (E : Table I O) (hES : ∀ i o, E i o �
 
 /-! ### Remarks after the corollary -/
 
-/-- Full paper: "A system might hope to keep more outputs available by
-issuing commitments, coordinating within each side of a partition.  It
-cannot: Corollary `cor:complete-cap-any-system` holds for every system,
-commitment-free or not."  Lean: the step of the corollary, that Lifted
+/-- Full paper: "A system might hope to keep more outputs available, without
+losing Partition Consistency, by issuing commitments that coordinate within
+each side of a partition.  It cannot: Corollary `cor:complete-cap-any-system`
+holds for every system, whether or not it issues commitments."  Lean: the step of the corollary, that Lifted
 Monotonicity for `E` is necessary, holds for an arbitrary system (any basis,
 any nondeterministic local strategies, so any commitments its output and
 commit events issue). -/
@@ -487,13 +487,16 @@ theorem «sec:complete-cap/gl-no-system» (Sys : System CC.GL.regFullSpec D) :
     ¬ («def:partition-notions» Sys ∧ «def:partition-consistency» Sys) :=
   CC.GL.gilbert_lynch_direct_cap Sys
 
-/-- "The proof needs less than the full hypotheses here, which is why it
-yields Gilbert and Lynch's theorem exactly.  We place `p` and `q` on separate
-sides.  Availability is used only to make `p` acknowledge the write and
-`q` answer the read; each fiber holds a single output, so any response will
-do, which is Gilbert and Lynch's availability.  Partition Consistency is used
-only to demand a common output extension of those two answers, a single
-linearization that explains both, which is Gilbert and Lynch's consistency."
+/-- "In this example, the proof of Corollary `cor:complete-cap-any-system`
+uses only weaker forms of its hypotheses, and these weaker forms are Gilbert
+and Lynch's, which is why it yields their theorem exactly.  We place `p` and
+`q` on separate sides.  Availability is used only to make `p` acknowledge the
+write and `q` answer the read.  Each of their fibers holds a single output, so
+requiring each to emit every permitted output is the same as requiring it to
+respond, which is Gilbert and Lynch's availability.  Partition Consistency is
+used only to demand a common output extension of the two answers.  Such an
+output extension is a single linearization that explains both answers, which
+is Gilbert and Lynch's consistency, and none exists."
 
 Lean: the two-row case of the proof, for outputs forced at their inputs, with
 Answering (each participant can emit *some* output) in place of Availability
@@ -520,7 +523,9 @@ theorem «sec:complete-cap/gilbert-lynch» (Sys : System CC.GL.regFullSpec D) :
     ¬ (AnsweringAtEnd Sys ∧ CommonRefinementAtEnd Sys) :=
   CC.GL.gilbert_lynch_direct Sys
 
-/-- "Appendix `app:cap-response` takes precedence from real time" —
+/-- "In this section the real-time order of the write and the read is part
+of the input.  Appendix `app:cap-response` instead takes that order from the
+execution itself" —
 Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of
 two-participant client histories, consistency at the realized history). -/
 theorem «sec:complete-cap/gl-realized» (Sys : System CC.GL.regSpec D) :

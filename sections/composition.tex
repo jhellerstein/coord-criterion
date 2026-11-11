@@ -121,21 +121,25 @@ A proper pipeline is itself a guard for a further stage (Corollary~\ref{cor:pipe
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment.
 
-We call a system for one spec, viewed through a chosen set of sound
-boundary observations, a \emph{component}.  A component may run as one
-process or as a replicated cluster.  The stages around it observe only its
-admitted boundary runs, each pairing an input with an emitted output
-permitted by its spec.  Components with different specs
-form typed pipelines (Appendix~\ref{app:components}).  The pipeline hides the
-intermediate value and the two component runs; every external pair it
-presents is a row of $P_2\circ P_1$.  A typed pipeline is
-\emph{contract-proper} when it is proper in the sense of
-Definition~\ref{def:proper-coordination}.  Contract properness concerns the
-specs.  \emph{Implementation properness} additionally concerns the
-runs admitted by the selected downstream component.  A downstream
-implementation may still take locks, or admit too few runs to follow its
-upstream.  The maximally permissive empty-basis component for
-$\Spec_2|_{\Spec_1}$ does neither.
+Theorem~\ref{thm:proper-coordination} follows a pipeline event by event,
+with one system per stage.  Stages can also be viewed from outside, so that
+stages with different specs and participants compose without one shared
+history.  We call a system for one spec, seen only
+through its boundary, a \emph{component}.  A component may run as one process
+or as a replicated cluster.  The stages around it observe only its
+\emph{admitted runs}, each pairing an input with an emitted output that its
+spec permits.  Components with different specs form \emph{typed pipelines}
+(Appendix~\ref{app:components}).  A typed pipeline hides the intermediate
+value and both components' runs, and every input--output pair it shows is a
+row of $P_2\circ P_1$.  Properness then has two forms.  A typed pipeline is
+\emph{contract-proper} when the pipeline of its specs is proper
+(Definition~\ref{def:proper-coordination}), which concerns the specs alone.
+\emph{Implementation properness} also depends on the runs that the chosen
+downstream component admits: it holds when no downstream run that follows
+an upstream output applies a \commitment.  A contract-proper downstream component may still take
+locks, or admit too few runs to follow its upstream.  The maximally
+permissive empty-basis component for $\Spec_2|_{\Spec_1}$, which admits every
+run under the empty basis, does neither.
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
@@ -159,20 +163,21 @@ contradict it.  Yet when composed after the capped counter, the pair of
 components needs no \commitment.  When do composed specs erase the need for
 \commitment entirely?
 
-The composite is itself an \spectype.  By Complete CALM, spec $P_2\circ P_1$ is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a \commitment
-(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
-A composite can be jointly monotone, with no stage needing a
-\commitment, in three ways.  The orders on $I$ and $O$ are part of the composite's contract
-with its environment.  The order on $M$ is not: the composite's table never
-mentions it, and some order on $M$ may make both stages monotone.
+The composite is itself an \spectype.  By Complete CALM, it is consistent
+exactly when it satisfies Lifted Monotonicity, and then no output needs a
+\commitment (Theorem~\ref{thm:complete-calm},
+Proposition~\ref{prop:exposure-boundary}).  The orders on $I$ and $O$ are part
+of the composite's contract with its environment.  The order on $M$ is not:
+the composite's table never mentions it, and some order on $M$ may make both
+stages monotone.  A composite can be jointly monotone, with no stage needing a
+\commitment, in three ways.
 
 First, every stage is monotone, as noted above
-(Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+(Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape.  A
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
 compositions of monotone functions are monotone
-(Corollary~\ref{cor:functional-composition}), so
-monotonicity of $q$ on all of the state domain suffices.
+(Corollary~\ref{cor:functional-composition}), so monotonicity of $q$ on the
+whole state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
 monotone.  In the example above, the test fails monotonicity only when the
@@ -184,11 +189,11 @@ is proper, and since the capped counter is itself monotone, neither stage needs
 a \commitment (Proposition~\ref{prop:joint-monotone}(2)).  This is proper
 coordination in which the upstream itself needs no \commitment.
 
-Third, considering a different order on $M$ can make two
-non-monotone stages both monotone.  Order the booleans with false below
-true for $I$, $O$ and $M$.  Consider a double-toggle: two stages that
-each negate a boolean compose to the identity. Neither is monotone, but under the reversed order on
-$M$, both are (Appendix~\ref{app:composition}).
+Third, a different order on $M$ can make two non-monotone stages monotone.
+We order the booleans with false below true for $I$, $O$, and $M$.  In a
+double toggle, two stages that each negate a boolean compose to the identity.
+Neither stage is monotone, but under the reversed order on $M$, both are
+(Appendix~\ref{app:composition}).
 
 \begin{proposition}[Jointly monotone composites]
 \label{prop:joint-monotone}
@@ -207,7 +212,7 @@ consistent and needs no \commitment, in each of the following cases.
 (1) is Lemma~\ref{lem:composition}.  (2) The proof of the lemma uses only
 intermediate values in fibers of $\Spec_1$.  (3) The composite joins the two
 tables on the intermediate value and never compares two of them, so its table
-is the same under a different order.  Apply the lemma under that order.  Full
+is the same under a different order.  The lemma then applies under that order.  Full
 proof in Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -239,7 +244,7 @@ $\Spec_2=(I,\InputOrd,O,\OutputOrd,P_2)$ share their ordered domains.  Their
 both permit.
 \end{definition}
 
-The shared domains matter.  As an example, isolation levels are defined on
+The shared domains matter.  For example, isolation levels are defined on
 histories of reads, writes, and commits, so an application spec must describe
 its inputs and outputs in those terms before it can be intersected with one.
 
@@ -268,6 +273,6 @@ Appendix~\ref{app:intersection}.
 \end{proof}
 
 A store whose answers follow a monotone rule therefore stays monotone when
-intersected with any property that admits the rule's answers.
-Section~\ref{sec:hat-instance} uses this construction to assess how various
-isolation specifications intersect with a key-value store.
+intersected with any property that permits the rule's answers.
+Section~\ref{sec:hat-instance} uses this construction for isolation levels and
+a key-value store.

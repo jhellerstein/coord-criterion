@@ -30,10 +30,12 @@ open CC Classical
 
 variable {I O : Type} [PO I] [PO O]
 
-/-- Proof of Prop. `prop:distributed-consistency`: "The participant runs at any
-cut are a finite family of runs.  Conversely, every finite family of runs is
-the family of participant runs of a message-free history, one participant per
-run, at its final cut." -/
+/-- Proof of Prop. `prop:distributed-consistency`: "A cut is confluent at `j`
+exactly when its participant runs are.  The participant runs at any cut form a
+finite family of runs, so consistency gives distributed consistency.
+Conversely, every finite family of runs is the family of participant runs, at
+the final cut, of a message-free history with one participant per run, so
+distributed consistency gives consistency." -/
 theorem «proof:prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
   Dist.consistent_iff_distConsistent sp D
@@ -110,9 +112,11 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 canonical basis and no commitment events; its strategies emit, by the
 canonical output event `output(o)` …, any output `o` of `E` in the current
 fiber. … so the system has Availability for `E` whatever the spec.  Suppose
-`P` satisfies Lifted Monotonicity for `E`. … For a system that emits only
-canonical output events, that is confluence at `j`, which gives Partition
-Consistency."  Lean: `respSystem E`, a canonical system; Availability for `E`
+`P` satisfies Lifted Monotonicity for `E`.  Every output the canonical system
+emits is the output of a row of `E` whose input lies below the current one …
+Since the system emits only canonical output events, Lemma
+`lem:reconciliation` makes this confluence at `j`, which gives Partition
+Consistency."   Lean: `respSystem E`, a canonical system; Availability for `E`
 holds with no hypothesis on the spec. -/
 theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn sp E) :
     AvailabilityFor E (respSystem (sp := sp) (D := D) E) ∧
@@ -123,7 +127,9 @@ theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn
 /-- Proof of Theorem `thm:complete-cap`, converse: "suppose some system, such
 as the canonical system for `E`, has Availability for `E` and Partition
 Consistency. … take one participant `p_r` per row, starting at input `i_r`,
-each on its own side … By Availability for `E`, each `p_r` can emit `o_r`.
+each on its own side, and, if `k = 1`, a second participant for that row on
+another side, since a partitioned history has at least two sides … By
+Availability for `E`, each `p_r` can emit `o_r`.
 By Partition Consistency, they then reach one state `(j,R)`, which has some
 row `(j,u)` … so `u` extends every `o_r`."  Lean: only a common output
 extension of the emitted outputs is used (implied by Partition

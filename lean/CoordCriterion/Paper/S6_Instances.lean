@@ -50,12 +50,12 @@ it states no claim of its own.
 
 ## Query monotonicity (`sec:query-instance`)
 
-The first paragraph recalls the relational-transducer CALM Theorem ("the CALM
-Theorem of Ameloot et al. proves an operational result for relational
-languages on transducer networks: coordination-free evaluation is possible
-iff a program is monotone … Functional CALM does not replace the details of
-that theorem.  It abstracts the result to a property that can be compared
-with specs outside Datalog.").  The abstraction is
+The first paragraph recalls the relational-transducer CALM Theorem ("The CALM
+Theorem of Ameloot et al. is an operational result for relational languages
+on transducer networks: a program can be evaluated without coordination
+exactly when it is monotone … Functional CALM does not replace the details of
+that theorem.  It restates the result as a property of a spec, which can be
+compared with specs outside Datalog.").  The abstraction is
 `«eq:query-monotonicity»` (§2); the transducer theorem itself is cited, not
 formalized.  The entries below check the mapping of its output extensions into our
 frame (`Instances/QueryRefinements.lean`); the operational statements of
@@ -145,17 +145,18 @@ theorem «sec:query-instance/all-nodes» :
       (graph (fun i : QRef.AllInp => QRef.star i.mem)).Consistent) :=
   ⟨QRef.allInp_complete_maximal, fun B A => QRef.consistentOn_of_maximal B A, QRef.treeAll_star⟩
 
-/-- Sec. `sec:query-instance`: "Pairing off nodes, leaving at most one
-unpaired, is node monotone, yet every `A` pairs `b` with `a` at `{a,b}` and
-with `c` at `{b,c}`."  Lean, with node names as input (`loc = id`, inputs
+/-- Sec. `sec:query-instance`: "The two conditions differ.  Pairing off
+nodes, leaving at most one unpaired, is node monotone.  Yet every `A` pairs
+`b` with `a` at `{a,b}` and with `c` at `{b,c}`, so the condition of
+Complete CAP fails at `{a,b,c}`."  Lean, with node names as input (`loc = id`, inputs
 `QRef.net P`): `QRef.pairing` permits symmetric pairings in which, on a
 finite network, at most one node is unpaired.  It is node monotone, every
 output at a two-node network pairs its nodes, and no total sub-behavior `A`
 has `pairing` satisfy Lifted Monotonicity for it (rows at `{0,1}` and `{1,2}`, common input extension
-`{0,1,2}`).  The surrounding prose (isolated nodes must emit; their
-construction waits for a group to confirm itself; groups sharing a node are
-nested; the group's choice needs a commitment, but placement keeps the conflict
-at the shared node) reads Baccaert and Ketsman's Prop. 9–11 and is not
+`{0,1,2}`).  The surrounding prose (isolated nodes must emit; their nodes may
+wait because delays are finite; their construction waits for a group to
+confirm itself; groups sharing a node are nested; the group's choice needs a
+commitment, but placement keeps the conflict at the shared node) reads Baccaert and Ketsman's Prop. 9–11 and is not
 formalized. -/
 theorem «sec:query-instance/pairing» :
     QRef.NodeMono id QRef.pairing ∧
@@ -348,7 +349,7 @@ are the rows of `E`, and the intersection `𝒮_st ∩ 𝒮_L` (Definition
 `def:intersection`) is the store held to isolation level `L`.  It is total,
 since both permit the empty set of answers.  By Proposition
 `prop:intersection-bound`, the intersection keeps Lifted Monotonicity when
-`𝒮_L` admits the read rule's answers."  Lean: `HATSpec.store`; its fiber at `j`
+`𝒮_L` permits the read rule's answers."  Lean: `HATSpec.store`; its fiber at `j`
 is the subsets of `hatOut j`, so the rows of `E = HATSpec.hatA` are its full
 rows; the store satisfies Lifted Monotonicity (`HATSpec.store_liftedMono`, via
 `HATSpec.hatOut_mono`, which is `«thm:hat-levels/answers-stable»`); the
@@ -604,9 +605,11 @@ an initial state `q₀`, receive transitions for
 state-machine events that accept
 every payload in every state, output transitions that emit an output to a
 client and may change state, internal transitions, and an observation
-`obs : Q → O`.  Each of finitely many clients may send a
-state-machine event with any payload at any time and receives the machine's outputs; a channel carries state-machine events, each at most once, to the machine's input queue, which it consumes
-in order, and may reorder them on the way.  In an execution of the composed
+`obs : Q → O`.  There are finitely many clients.  Each may send a
+state-machine event with any payload at any time, and receives the machine's
+outputs.  A channel carries each state-machine event at most once to the
+machine's input queue, possibly reordering events on the way, and the machine
+consumes the queue in order.  In an execution of the composed
 automaton, *happens-before* is Lamport's order: the transitive closure of the
 local order at the machine and at each client and of the edge from sending a state-machine event to receiving it."
 
@@ -667,7 +670,7 @@ membership, order, and fiber membership together.
 
 The remarks that follow ("This is not a
 distributed execution in the sense of Section `sec:distributed-execution`.
-… Happens-before here only keeps the books: it records which state-machine events each
+… Happens-before here only records which state-machine events each
 client sent after which outputs, so the input remembers what the
 environment's choices depended on.") explain the model and state no claim of
 their own.  The sentence "Distributing the machine is then direct: … among
@@ -709,10 +712,11 @@ observation in the fiber at `h` is reached by a run of the machine that
 receives each state-machine event of `h` once, interleaved with output and internal steps.
 If the channel may reorder and clients observe no outputs, every such run is
 reached, whatever the order of its receives.  (4) The machine's observations
-are confluent across its executions—for executions with inputs `h₁,…,hₖ` and
-any input `h` that occurs and extends each `hᵣ`, some execution with input `h`
-ends in an observation that extends each of theirs—exactly when the induced
-specification satisfies Lifted Monotonicity."
+are confluent across its executions exactly when the induced specification
+satisfies Lifted Monotonicity.  Here confluence means that for executions with
+inputs `h₁,…,hₖ` and any input `h` that occurs and extends each `hᵣ`, some
+execution with input `h` ends in an observation that extends each of
+theirs."
 
 Lean, part by part, for a general machine `G`; a run of the machine is an
 execution `γ` of the machine automaton `IOM.machA G` (its receives

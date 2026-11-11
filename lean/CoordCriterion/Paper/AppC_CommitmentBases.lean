@@ -302,9 +302,10 @@ theorem «cor:reconciliation-any-basis» {sp : Spec I O} {m : Nat} (B B' : Fin m
 
 /-- "The converse of Lemma canonical-equivalent fails: a canonical run need not
 be observably equivalent to any run under a particular system's basis.  That
-basis may lack the commitment an output event requires, and so disable the
-output altogether.  Restricting attention to one system's runs could therefore
-hide non-monotonicity."
+basis may lack the commitment that an output event requires, which disables
+that output. … Looking only at the runs that one system produces could
+therefore hide non-monotonicity, and hide a canonical run that conflicts with
+a commitment." 
 
 Lean: `Dist.spU` has one input and two incomparable outputs; under the empty
 basis `Dist.noCommitmentBasis` (a) the canonical run `output(true)` has no observably
@@ -324,8 +325,8 @@ theorem «app:bases/converse-fails» :
 
 /-! ## Application-specific commitments -/
 
-/-- *Application-specific commitments.*  "Locks and timestamps are commitments
-of this kind: two-phase locking applies a commitment that fixes an order among some
+/-- *Application-specific commitments.*  "Locks and timestamps are examples:
+two-phase locking applies a commitment that fixes an order among some
 transactions, and timestamp assignment places one transaction relative to all others."
 
 Lean: for any transaction specification whose fibers are antichains, the 2PL

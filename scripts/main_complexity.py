@@ -34,13 +34,19 @@ import main_review as mr  # noqa: E402
 OUT = "main-complexity.tex"
 RATINGS = os.path.join("scripts", "main-ratings")
 SHARED = 0.6  # fraction of a paragraph's characters in CIDR sentences
+INITIAL = "--initial" in sys.argv  # show the first-pass ratings r0/c0
 GRAY = "black!45"
 
 
-def input_files():
-    src = open("main.tex").read()
-    return [m.group(1) if m.group(1).endswith(".tex") else m.group(1) + ".tex"
-            for m in re.finditer(r"(?m)^\s*\\input\{([^}]*)\}", src)]
+def input_files(path="main.tex"):
+    """Files \\input by main.tex, in order, including nested inputs."""
+    out = []
+    for m in re.finditer(r"(?m)^\s*\\input\{([^}]*)\}", open(path).read()):
+        name = m.group(1) if m.group(1).endswith(".tex") else m.group(1) + ".tex"
+        if os.path.exists(name):
+            out.append(name)
+            out += input_files(name)
+    return out
 
 
 def paragraphs(path):
@@ -88,8 +94,17 @@ def shared_fraction(par):
     return sum(len(norm(s)) for s in sens if rev(s)) / total
 
 
+def ratings_file(path):
+    """scripts/main-ratings/<basename>.json; an appendix whose basename is also
+    a section file gets <basename>-app.json."""
+    base = os.path.basename(path)[:-4]
+    if path.startswith("appendices/") and os.path.exists(os.path.join("sections", base + ".tex")):
+        base += "-app"
+    return os.path.join(RATINGS, base + ".json")
+
+
 def ratings(path):
-    f = os.path.join(RATINGS, os.path.basename(path)[:-4] + ".json")
+    f = ratings_file(path)
     return json.load(open(f)) if os.path.exists(f) else {}
 
 
@@ -99,15 +114,19 @@ def analyze():
         text, paras = paragraphs(f)
         rt = ratings(f)
         for n, (h, s, e, b) in enumerate(paras, 1):
+            if h < 0:  # the file's opening heading chunk; keeps numbering stable
+                continue
             par = text[h:b]
-            yield f, n, text, (h, s, e, b), par, shared_fraction(par) >= SHARED, \
-                rt.get(str(n), {})
+            r = dict(rt.get(str(n), {}))
+            if INITIAL:
+                r = {"r": r.get("r0", r.get("r")), "c": r.get("c0", r.get("c"))}
+            yield f, n, text, (h, s, e, b), par, shared_fraction(par) >= SHARED, r
 
 
 def main():
     args = sys.argv[1:]
     if "--list" in args:
-        only = [a for a in args if a != "--list"]
+        only = [a for a in args if not a.startswith("--")]
         for f, n, text, (h, s, e, b), par, shared, rt in analyze():
             if shared or (only and f not in only and os.path.basename(f) not in only):
                 continue
@@ -156,7 +175,9 @@ def main():
     def rep(m):
         name = m.group(1) if m.group(1).endswith(".tex") else m.group(1) + ".tex"
         return marked.get(name, open(name).read()) if os.path.exists(name) else m.group(0)
-    res = re.sub(r"(?m)^\s*\\input\{([^}]*)\}", lambda m: rep(m), src)
+    res = src
+    for _ in range(3):  # nested inputs
+        res = re.sub(r"(?m)^\s*\\input\{([^}]*)\}", lambda m: rep(m), res)
     res = res.replace("\\begin{document}", cx.PREAMBLE + "\\begin{document}", 1)
     legend = ("\\noindent{\\small\\textsf{Gray: mostly also in cidr.tex (reviewed there). "
               "Text color, benefit of a rewrite: \\textcolor{%s}{R large}, "
@@ -167,7 +188,8 @@ def main():
                  cx.BAR_COLORS["XL"], cx.BAR_COLORS["L"], cx.BAR_COLORS["M"]))
     res = res.replace("\\maketitle", "\\maketitle\n" + legend, 1)
     res = "\n".join(ln.rstrip() for ln in res.split("\n"))
-    open(OUT, "w").write(res)
+    out_name = OUT.replace(".tex", "-initial.tex") if INITIAL else OUT
+    open(out_name, "w").write(res)
     n_sh = sum(1 for r in rows if r[5])
     print(f"{len(rows)} paragraphs, {n_sh} shared with CIDR, {len(rows) - n_sh} to rate")
 

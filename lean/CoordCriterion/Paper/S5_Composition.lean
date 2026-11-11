@@ -199,19 +199,21 @@ theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt 
   let h := Guard.smr_proper δ σ0 hne
   ⟨h.2.2.2.1, h.2.2.2.2.1⟩
 
-/-- "We call a system for one spec, viewed through a chosen set of
-sound boundary observations, a component.  A component may run as one process
-or as a replicated cluster.  The stages around it observe only its admitted
-boundary runs, each pairing an input with an emitted output permitted by its
-spec.  Components with different specs form typed pipelines
-(Appendix `app:components`).  The pipeline hides the intermediate value and the two
-component runs; every external pair it presents is a row of `P₂ ∘ P₁`.  A
-typed pipeline is contract-proper when it is proper in the sense of
-Definition `def:proper-coordination`.  Contract properness concerns the
-specs.  Implementation properness additionally concerns the runs
-admitted by the selected downstream component.  A downstream implementation
-may still take locks, or admit too few runs to follow its upstream.  The
-maximally permissive empty-basis component for `𝒮₂|_{𝒮₁}` does neither."
+/-- "We call a system for one spec, seen only through its boundary, a
+component.  A component may run as one process or as a replicated cluster.
+The stages around it observe only its admitted runs, each pairing an input
+with an emitted output that its spec permits.  Components with different specs
+form typed pipelines (Appendix `app:components`).  A typed pipeline hides the
+intermediate value and both components' runs, and every input–output pair it
+shows is a row of `P₂ ∘ P₁`.  Properness then has two forms.  A typed pipeline
+is contract-proper when the pipeline of its specs is proper (Definition
+`def:proper-coordination`), which concerns the specs alone.  Implementation
+properness also depends on the runs that the chosen downstream component
+admits: it holds when no downstream run that follows an upstream output
+applies a commitment.  A contract-proper downstream component may still take
+locks, or admit too few runs to follow its upstream.  The maximally permissive
+empty-basis component for `𝒮₂|_{𝒮₁}`, which admits every run under the empty
+basis, does neither."
 Lean: `Components.Component` (Def. `def:component`; systems as components are
 `«app:components/system-is-component»`), `Components.Pipeline.sound` for the
 rows; contract properness is `Components.Pipeline.ContractProper`, equivalent
@@ -255,7 +257,7 @@ theorem «sec:composite-calm/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
   ⟨Comp.seq_liftedMono hP hK, fun _ h => (Guard.pipeline_coordination_free hP hK h).2⟩
 
 /-- "The composite is itself an I/O specification.  By Complete CALM,
-spec `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
+it is consistent exactly when it satisfies Lifted
 Monotonicity, and then no output needs a commitment (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/
 theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
@@ -279,10 +281,10 @@ theorem «sec:composite-calm/middle-order» {I M O : Type} [PO I] [instM : PO M]
       Comp.seq sp1 sp2 :=
   Joint.seq_under inst sp1 sp2
 
-/-- "The CRDT observations of Section `sec:crdt-instance` have this shape: a
+/-- "The CRDT observations of Section `sec:crdt-instance` have this shape.  A
 client query `q` over the replica state `s` is the composition `q ∘ s`, and
 compositions of monotone functions are monotone (Corollary
-`cor:functional-composition`), so monotonicity of `q` on all of the state domain
+`cor:functional-composition`), so monotonicity of `q` on the whole state domain
 suffices."  Lean: the
 corollary applied to `s = Inst.st s₀` (monotone by
 `«sec:crdt-instance/state-monotone»`) and a monotone `q`. -/
@@ -331,11 +333,11 @@ theorem «sec:composite-calm/output-orders» :
       Joint.CEOn (Comp.graph (fun n : Nat => decide (10 ≤ n))) (fun m => ¬ Joint.Big m) :=
   Joint.twoDigit_orders
 
-/-- "Third, considering a different order on `M` can make two non-monotone
-stages both monotone.  Order the booleans with false below true for `I`, `O`
-and `M`.  Consider a double-toggle: two stages that each negate a boolean
-compose to the identity.  Neither is monotone, but under the reversed order on
-`M`, both are (Appendix `app:composition`)."  Lean: `Joint.bool_toggle`
+/-- "Third, a different order on `M` can make two non-monotone stages
+monotone.  We order the booleans with false below true for `I`, `O`, and `M`.
+In a double toggle, two stages that each negate a boolean compose to the
+identity.  Neither stage is monotone, but under the reversed order on `M`,
+both are (Appendix `app:composition`)."  Lean: `Joint.bool_toggle`
 (`Bool` ordered by `Joint.boolPO`, `false ≼ true`; `Joint.Rev` is the reversed
 order; the composite is the identity, and is unchanged by the reversal).  The
 appendix's empty-basis behaviour of the first stage is

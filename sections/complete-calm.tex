@@ -1,8 +1,7 @@
 \section{Complete CALM}
 \label{sec:complete-calm}
 
-We now extend CALM theory to nondeterministic specs, whose fibers may contain
-several outputs.
+We now extend CALM to nondeterministic specs, whose fibers may contain several outputs: we define Lifted Monotonicity (\S\ref{sec:relational-specifications}), lift output events (\S\ref{sec:lifted-output-events}), and prove Complete CALM (\S\ref{sec:complete-calm-theorem}).
 
 \subsection{Nondeterministic specs and Lifted Monotonicity}
 \label{sec:relational-specifications}
@@ -19,20 +18,21 @@ An \emph{\spectype} is
   $P\subseteq I\times O$ is its \emph{possibility relation}.  We depict $P$ as
 a table and call its members rows; it need not be finite.  The relation $P$
   is total on $I$: every input appears in at least one row.  A row $(i,o)\in P$
-  is a possible input/output pair: output $o$ is permitted at input $i$.  The fiber
+  is a possible input/output pair: output $o$ is permitted at input $i$.  As in
+  Section~\ref{sec:functional-specifications}, the fiber at $i$ is
         \begin{equation}
-  \fiber{i}=\{o\in O:(i,o)\in P\}
+  \fiber{i}=\{o\in O:(i,o)\in P\},
   \label{eq:fiber}
         \end{equation}
-of Section~\ref{sec:functional-specifications} may now contain several
-  outputs.  A functional \spectype is the special case $\fiber{i}=\{f(i)\}$.
+  and it may contain several outputs.  A functional \spectype is the special
+  case $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
 \begin{definition}[Nondeterministic \spectype]
 \label{def:nondeterministic}
 An \spectype is \emph{nondeterministic} when some fiber
 contains more than one output.  Specification nondeterminism describes
-permitted results, not a strategy's method of choosing among them, and does not
+which results are permitted, not how a system chooses among them, and does not
 by itself imply a \commitment.
 \end{definition}
 
@@ -89,14 +89,15 @@ thorough transactional specs.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-The transaction schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting
-either requires a \commitment that removes the other.  In the traceroute spec,
-every removed route set is \outrelpast by a remaining one that also \outrelbase
-the emitted observation, making its removal \emph{output subsumption} rather
-than \commitment.  Lifted Monotonicity combines \emph{directedness}, a standard notion from order
-theory, which requires
-common \outnouns within each fiber, with Relational Monotonicity, which
-accounts for input growth.
+In the transaction spec, no output \outrel both $[A,B]$ and $[B,A]$, so
+emitting either requires a \commitment that removes the other.  In the
+traceroute spec, every route set that an output removes is \outrelpast by a
+remaining one that also \outrelbase the emitted observation, so the removal is
+an \emph{output subsumption}, not a \commitment.  Lifted Monotonicity, defined
+below, combines two requirements.  Relational Monotonicity accounts for input
+growth: each output keeps an \outnoun as input \ingrows.  Directedness, a
+standard notion from order theory, asks for common \outnouns within each
+fiber.
 
 \label{sec:lifted-monotonicity}
 \begin{definition}[Relational Monotonicity]
@@ -131,21 +132,23 @@ fiber $\fiber{i}$ is directed.
 \end{definition}
 
 A singleton fiber is trivially directed.  A common \outnoun, like a common
-\indesc, need not be unique or least.  For inputs, two independent transactions
-$u$ and $v$, with schedules ordered by subsequence, have two incomparable
-minimal common \indescs, $uv$ and $vu$.  For outputs, directedness requires some upper bound within the fiber for each finite
-set, not a least one or a fixed merge operator, so it is weaker than a
-join-semilattice.  For example, the fiber
-$\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
-since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$ have two
-incomparable minimal common \outnouns.  Compatibility likewise does not require
-comparability: two incomparable outputs may have a third output in the fiber
-that \outrel both, as $\{a,b,c\}$ and $\{a,b,d\}$ do in the fiber above.  Thus
-the traceroute fiber is directed: the union of finitely many route sets in it is again in the fiber and extends each. The two transaction orders in
-Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
+\indesc, need not be unique or least.  For inputs, take two independent
+transactions $u$ and $v$, with schedules ordered by subsequence: $uv$ and $vu$
+are both minimal common \indescs of $u$ and $v$, and neither \inrel the other.
+For outputs, directedness asks only that each finite set have some common
+\outnoun in the fiber, not a least one or one given by a fixed merge operator,
+so it is weaker than requiring a join-semilattice.  For example, under
+inclusion the fiber $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ is
+directed, since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$
+have two minimal common \outnouns, $\{a,b,c\}$ and $\{a,b,d\}$.  Those two are
+incomparable but compatible, since $\{a,b,c,d\}$ \outrel both: compatibility
+does not require comparability.  The traceroute fiber of
+Figure~\ref{fig:ambiguity-frames}(g) is directed for a simpler reason: finitely
+many of its route sets always have a common \outnoun in the fiber, their union.
+The two transaction orders in panel~(f), by contrast, are incompatible.
 
 \paragraph{Lifted Monotonicity.}
-To state both requirements at once, lift $\OutputOrd$ to sets.  For nonempty
+To state both requirements at once, we lift $\OutputOrd$ to sets.  For nonempty
 $A,B\subseteq O$, define
         \begin{equation}
   A\LiftedOrd B
@@ -155,7 +158,7 @@ $A,B\subseteq O$, define
         \end{equation}
 the \emph{joint refinement lift} of $\OutputOrd$.  We apply it with $A=\fiber{i}$ and
 $B=\fiber{j}$ for $i\InputOrd j$.  When $X$ is a single output $o$, it asks
-that $o$ have a \outnoun in $\fiber{j}$, which is Relational Monotonicity.
+that $o$ have an \outnoun in $\fiber{j}$, which is Relational Monotonicity.
 When $X$ holds several outputs, it asks that they have a common \outnoun in
 $\fiber{j}$; with $j=i$, this is directedness.
 
@@ -172,21 +175,21 @@ under the joint refinement lift:
         \end{equation}
 \end{definition}
 
-With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).  As the reading above shows,
-it implies Relational Monotonicity and the spec has directed fibers;
-conversely, for $i\InputOrd j$ and finite nonempty $X\subseteq\fiber{i}$,
-Relational Monotonicity gives each $x\in X$ a \outnoun in $\fiber{j}$, and
-because the spec has directed fibers, those outputs have a common
-\outnoun in $\fiber{j}$.  So Lifted Monotonicity
-holds exactly when both do.  In powerdomain terms, Relational Monotonicity
-is monotonicity of $i\mapsto\fiber{i}$ under the Hoare
-preorder~\cite{abramsky1994domain}, which asks only that each output in $A$
-have a \outnoun in $B$; the joint refinement lift asks that every finite set of them have
-a common one.  The two agree when $B$ is directed.  Unlike the Hoare preorder,
-the joint refinement lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
-directed, so the transaction fiber of Figure~\ref{fig:ambiguity-frames}(f)
-already fails it at $j=i$.
+With singleton fibers, Lifted Monotonicity is functional monotonicity
+(Definition~\ref{def:functional-monotonicity}).  By the reading above, it
+implies Relational Monotonicity and directed fibers.  Conversely, suppose both
+hold, and take $i\InputOrd j$ and a finite nonempty $X\subseteq\fiber{i}$.
+Relational Monotonicity gives each $x\in X$ an \outnoun in $\fiber{j}$, and
+since $\fiber{j}$ is directed, those \outnouns have a common \outnoun in
+$\fiber{j}$.  So Lifted Monotonicity holds exactly when both do.  In
+powerdomain terms, Relational Monotonicity is monotonicity of
+$i\mapsto\fiber{i}$ under the Hoare preorder~\cite{abramsky1994domain}, which
+asks only that each output in $A$ have an \outnoun in $B$.  The joint
+refinement lift asks that every finite set of them have a common one, and the
+two agree when $B$ is directed.  Unlike the Hoare preorder, the joint
+refinement lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
+directed.  The transaction fiber of Figure~\ref{fig:ambiguity-frames}(f)
+therefore fails it already at $j=i$.
 
 \paragraph{The common-extension condition.}
 Lifted Monotonicity compares an input with its
@@ -213,9 +216,12 @@ if it satisfies the common-extension condition.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Relational Monotonicity carries each $o_r$ to some
-\outnoun in the fiber at $j$, and because the spec has directed
-fibers, those outputs have a common \outnoun there.  Full proof in Appendix~\ref{app:proofs-sec3}.
+Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$
+to some \outnoun in the fiber at $j$, and that fiber is directed, so those
+\outnouns have a common \outnoun there.  Conversely, for $i\InputOrd j$, the
+rows $(i,x)$ for $x$ in a finite $X\subseteq\fiber{i}$ have $j$ as a common
+\indesc, so the condition gives the common \outnoun that Lifted Monotonicity
+asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
 \subsection{Lifted output events}
@@ -236,13 +242,13 @@ event still removes the rows in $\Subsumed_o$, but that removal is not a
 \commitment.  If $x_o$ removes every row at $k$, it rules out the input $k$;
 otherwise it rules out only the excluded outputs at $k$.
 
-These are the cases of Section~\ref{sec:ambiguity-story}: emitting $\bot$ under
-the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows for
-$aba$ and $abb$ in $\Excluded_o$ and rules out those inputs; emitting $[A,B]$
-in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in
-$\Excluded_o$ and rules out that output at $\{A,B\}$; and the route sets removed
-in panel~(g) are in $\Subsumed_o$.  In the functional case, $\Subsumed_o$ is
-empty, so this is the output event of Definition~\ref{def:output-event}.
+These are the cases of Section~\ref{sec:ambiguity-story}.  Emitting $\bot$
+under the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows
+for $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs.  Emitting
+$[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in
+$\Excluded_o$ and rules out that output at $\{A,B\}$.  The route sets removed in
+panel~(g) are in $\Subsumed_o$.  In the functional case $\Subsumed_o$ is empty,
+so this is the output event of Definition~\ref{def:output-event}.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
 With several outputs at one input, legality is more permissive: an output
@@ -255,13 +261,13 @@ As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
-A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
-Equation~\ref{eq:output-action}.  Specification states, input events, runs,
-\commitment-free runs, and consistency are defined as before.  The results of
-Section~\ref{sec:executions} depend on output events only through that equation,
-so the rows-remaining lemma (Lemma~\ref{lem:run-residual}) and survivor test
-(Proposition~\ref{prop:confluence}) apply unchanged.  Thus consistency reduces
-to Lifted Monotonicity.
+Specification states, input events, runs, \commitment-free runs, and
+consistency are defined as before.  The results of Section~\ref{sec:executions}
+use output events only through Equation~\ref{eq:output-action}, which lifted
+output events still satisfy, so the rows-remaining lemma
+(Lemma~\ref{lem:run-residual}) and the Survivor test
+(Proposition~\ref{prop:confluence}) apply unchanged.  With them, Complete CALM
+characterizes consistency by Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -292,12 +298,19 @@ if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Under the common-extension condition, consistency supplies the common \outnoun
-the legal-output test asks for.  Conversely, the legal-output test at canonical
-states, one row at a time, builds the common \outnoun the condition
-asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
+If the common-extension condition holds, the spec is consistent by Complete
+CALM.  Take a reachable state $(i,R)$, an output $o\in R(i)$, a legal \indesc
+$j$ of $i$, and $x\in R(j)$.  Extending a run that reaches $(i,R)$ by
+$\mathsf{output}(o)$, or by $\mathsf{input}(j)$ and then $\mathsf{output}(x)$,
+gives two runs that are confluent at $j$, so some $u\in R(j)$ \outrel both $o$
+and $x$, which makes $o$ legal (Proposition~\ref{prop:exposability}).
+Conversely, if every such output is legal, applying
+Proposition~\ref{prop:exposability} at canonical states, one row at a time,
+builds the common \outnoun that the condition asks for.  Full proof in
+Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
-For functions, both are monotonicity, so Complete CALM and
+For functional specs, Lifted Monotonicity and the common-extension condition
+are both functional monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.

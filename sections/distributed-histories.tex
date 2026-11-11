@@ -13,10 +13,7 @@ participant.
 
 Participants exchange messages by $\mathsf{send}(m)$ and
 $\mathsf{receive}(m)$.  A \emph{message} is a pair $m=(j,d)$ of a cumulative
-input $j$, or $\varnothing$ if it carries none, and arbitrary
-application-specific data $d$; one can envision timestamps, version vectors,
-state identities, and so on.  A receive does not change the specification
-state; a participant at $(i,R)$ that receives $(j,d)$ with
+input $j$, or $\varnothing$ if it carries none, and application-specific data $d$, described below.  A receive does not change the specification state.  A participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
 legal common \indesc $k$ of $i$ and $j$, when one exists.
 
@@ -50,9 +47,7 @@ distributed history and of each send preceding its matching receive.
 
 \begin{definition}[Consistent cut]
 \label{def:consistent-cut}
-A \emph{consistent cut} $C$ is a subset of history events closed under
-happens-before~\cite{lamport1978time,chandy1985distributed}; the standard term
-is unrelated to our notion of consistency.
+A \emph{consistent cut} $C$ is a subset of history events closed under happens-before~\cite{lamport1978time,chandy1985distributed}.  The term is standard and unrelated to our notion of consistency.
 \end{definition}
 
 A consistent cut contains a prefix of each participant's history events, so by
@@ -148,12 +143,7 @@ $(\sigma_1,\sigma_1)$.
 
 A \emph{continuation} of a history at a consistent cut $C$ is a history $H'$
 that extends the history events of $C$ with further history events after
-them.  All of $H'$ is a consistent cut of $H'$, its \emph{final cut}.  A
-consistent cut $C$ is \emph{confluent at} $j$, for a common \indesc $j$ of
-the participants' current inputs, when some continuation at $C$ has a final
-cut with endpoint $\bigl((j,R)\bigr)_{p\in\mathcal N}$ for some $R$: every
-participant ends in the same state $(j,R)$.  History events at different
-participants are independent, so this holds exactly when the participant runs at $C$ are
+them.  All of $H'$ is a consistent cut of $H'$, its \emph{final cut}.  Let $j$ be a common \indesc of the participants' current inputs at a consistent cut $C$.  The cut $C$ is \emph{confluent at} $j$ when some continuation at $C$ has a final cut with endpoint $\bigl((j,R)\bigr)_{p\in\mathcal N}$ for some $R$, so that every participant ends in the same state $(j,R)$.  History events at different participants are independent, so this holds exactly when the participant runs at $C$ are
 confluent at $j$ (Definition~\ref{def:consistency}).
 
 \begin{definition}[Distributed consistency]
@@ -176,14 +166,11 @@ of runs can be placed at separate participants that exchange no messages.  Full 
 
 By Complete CALM, which reduces to Functional CALM with one output per input,
 a spec has distributed consistency exactly when it satisfies Lifted
-Monotonicity.  Under Lifted Monotonicity, this confluence has a concrete witness.  For
-participant runs with common \indesc $j$, the survivor test supplies a
+Monotonicity.  Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common \indesc $j$, the Survivor test (Proposition~\ref{prop:confluence}) supplies a
 $u\in\fiber{j}$ that survives in every endpoint; by
 Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted.  At
 each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
-the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  This is an existence witness in the
-transition system; choosing $u$, communicating it, and scheduling the
-transitions belong to the operational model (\S\ref{sec:scope}).
+the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  The witness shows only that such a state exists in the transition system.  Choosing $u$, communicating it, and scheduling the transitions are left to the operational model (\S\ref{sec:scope}).
 
 For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence:
@@ -197,22 +184,16 @@ regardless of message paths, arrival order, or the outputs they emitted.
 \end{corollary}
 
 \begin{proof}
-Each participant run is a run; apply Corollary~\ref{cor:state-by-input}.
+Each participant run is a run, so Corollary~\ref{cor:state-by-input} applies.
 \end{proof}
 
-This is the convergence that strong eventual
-consistency~\cite{shapiro2011crdt} asks of replicated state---replicas that
-have received the same updates are in equivalent states.  The semilattice merge of CRDTs suffices for it but is not
-needed: here it follows directly from any consistent functional spec.  With several outputs per input
-this fails even for consistent specs: in
-Figure~\ref{fig:ambiguity-frames}(g), a run that emitted $\{s{\to}\texttt{s1}\}$
+This is the convergence that strong eventual consistency~\cite{shapiro2011crdt} asks of replicated state: replicas that have received the same updates are in equivalent states.  CRDTs obtain it from a semilattice merge, which suffices but is not needed, since every consistent functional spec has it.  With several outputs per input, convergence fails even for consistent specs.  In Figure~\ref{fig:ambiguity-frames}(g), a run that emitted $\{s{\to}\texttt{s1}\}$
 has subsumed the route sets that omit it, while a run at the same input that
-emitted nothing keeps them.  Consistency then guarantees that such replicas can
-be reconciled, not that they agree.
+emitted nothing keeps them.  Consistency then guarantees only that such replicas can be reconciled, not that they agree.
 
 \paragraph{Message data.}
 The data $d$ of a message is any application state other than input that a
-participant chooses to send: timestamps, version vectors, non-input-related gossip, votes, etc.  Data
+participant chooses to send, such as timestamps, version vectors, gossip, or votes.  Data
 can influence which history events occur next at the receiver, but it
 never directly changes the receiver's specification state, and nothing in the
 definitions above depends on it.  Section~\ref{sec:systems} calls the

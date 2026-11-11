@@ -25,24 +25,24 @@ through timestamp assignment: $\mathsf{stamp}(B)$ fixes $B$ before any
 transaction not yet stamped.  The
 two narrow the spec differently.
 
-We saw a similar example with elections.  When the registrar of
-Section~\ref{sec:election-story} emits $\bot$, it also closes the polls
-(Figure~\ref{fig:election-frames}(d)), although emitting $\bot$ does not
-require the poll-closing \commitment.  Closing the polls is the registrar's
+The registrar of Section~\ref{sec:election-story} is a similar example.  When
+it emits $\bot$, it also closes the polls (Figure~\ref{fig:election-frames}(d)),
+although emitting $\bot$ does not require that \commitment.  Closing the polls is the registrar's
 design decision, as fixing orderings is 2PL's.
 
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
-canonical \commitment $x_o$ required by an output.  Systems may commit earlier
-or remove additional alternatives, as the examples above do.  We therefore
-allow bespoke system \commitments.  A system dictates a spec and a basis of
-\commitments its participants may issue; each participant's strategy decides
-when and which to apply.
+canonical \commitment $x_o$ that an output requires.  Systems may commit
+earlier or remove more alternatives, as the examples above do, so we let a
+system issue \commitments of its own.  A system for a spec fixes a basis of
+\commitments that its participants may apply, and each participant's strategy
+(Definition~\ref{def:strategy}) decides which to apply and when.
 
 \begin{definition}[\Commitment]
 \label{def:commitment}
-A \emph{\commitment} is a partial function on
-specification states that removes a nonempty set of rows.  No row it removes
-is subsumed by a row that remains at the same input.  Thus, whenever $e(i,R)=(j,R')$, we have $R'\subsetneq R$ and
+A \emph{\commitment} is a partial function $e$ on specification states that
+removes a nonempty set of rows, none of which is \outrelpast by a row that
+remains at the same input.  That is, whenever $e(i,R)=(j,R')$, we have
+$R'\subsetneq R$ and
 \begin{equation}
   (k,u)\in R\setminus R',\ (k,w)\in R'
   \quad\Longrightarrow\quad
@@ -52,11 +52,12 @@ is subsumed by a row that remains at the same input.  Thus, whenever $e(i,R)=(j,
 It leaves the current input unchanged: $j=i$.
 \end{definition}
 
-The ordering \commitment above fits: $\mathsf{order}(A,B)$ removes the serial
-orders with $B$ before $A$, each undominated by a surviving row with $A$
-before $B$.  The canonical \commitments of Section~\ref{sec:lifted-output-events} satisfy this definition too.
+The ordering \commitment above meets this definition: $\mathsf{order}(A,B)$ removes the
+serial orders with $B$ before $A$, and no surviving order with $A$ before $B$
+\outrel any of them.  The canonical \commitments of
+Section~\ref{sec:lifted-output-events} satisfy this definition too.
 
-A system draws its \commitments from a basis.
+A system draws its \commitments from a basis (Definition~\ref{def:system}).
 
 \begin{definition}[System output event]
 \label{def:system-output-event}
@@ -102,9 +103,9 @@ a strategy for every participant.
 
 \begin{definition}[System]
 \label{def:system}
-A \emph{system} consists of a \emph{\commitment basis} $\mathcal B$, a set
-of \commitments shared by all participants, and a strategy $\theta_p$ for
-each participant $p$ whose output and \commitment events apply only
+A \emph{system} consists of a \emph{\commitment basis} $\mathcal B$, which
+is a set of \commitments shared by all participants, and a strategy $\theta_p$
+for each participant $p$, whose output and \commitment events apply only
 \commitments from $\mathcal B$.
 \end{definition}
 
@@ -127,20 +128,19 @@ Systems for different specs compose as components
 (Section~\ref{sec:proper-coordination}).
 
 \paragraph{Two bases on three transactions.}
-We return to the concurrency protocols from the beginning of this
-subsection.  Each basis contains its ordering \commitments along with
-transactional-commit,
-abort, and read \commitments: $\mathcal B_{\mathrm{2PL}}$ with $\mathsf{order}$,
-$\mathcal B_{\mathrm{MVTO}}$ with $\mathsf{stamp}$
-(Appendix~\ref{app:cc-bases}).  Figure~\ref{fig:cc-commitments} shows each
-at work on a three-transaction version of the ordering fiber of
-Figure~\ref{fig:ambiguity-frames}(f).  2PL applies $\mathsf{order}(A,B)$
-when $B$ waits for a lock $A$ holds, leaving $C$'s position open (panel
-(h)); MVTO applies $\mathsf{stamp}(B)$ when $B$ receives the first
-timestamp, placing $B$ first (panel (i)).  Both are \commitments: rows survive
-at the input.  Each is applied in a \commitment event
-$\mathsf{apply}(\gamma)$, and neither is the \commitment $x_o$ of
-Section~\ref{sec:lifted-output-events}.
+We return to the concurrency protocols from the start of this subsection.
+Each protocol's basis contains its ordering \commitments, $\mathsf{order}$ for
+$\mathcal B_{\mathrm{2PL}}$ and $\mathsf{stamp}$ for $\mathcal B_{\mathrm{MVTO}}$,
+together with \commitments for commits, aborts, and reads
+(Appendix~\ref{app:cc-bases}).  Figure~\ref{fig:cc-commitments} shows each at
+work on three transactions, a larger version of the ordering fiber of
+Figure~\ref{fig:ambiguity-frames}(f).  2PL applies $\mathsf{order}(A,B)$ when
+$B$ waits for a lock that $A$ holds, which leaves $C$'s position open
+(panel~(h)).  MVTO applies $\mathsf{stamp}(B)$ when $B$ receives the first
+timestamp, which places $B$ first (panel~(i)).  Both are \commitments that
+leave some rows at the input.  Each is applied in a \commitment event
+$\mathsf{apply}(\gamma)$, and neither is the canonical \commitment $x_o$ of
+an output.
 
 \begin{figure}[t]
   \centering
@@ -181,8 +181,8 @@ Section~\ref{sec:lifted-output-events}.
 A \emph{run under a basis} $\mathcal B$ is one whose output and
 \commitment events apply only \commitments from $\mathcal B$
 (Definition~\ref{def:run-under-basis}).  Locks, timestamps, quorums, and
-consensus differ in how and when they decide.  The next lemma relates their
-runs to a common canonical model.
+consensus differ in how and when they decide.  The next lemma relates runs
+under any such basis to canonical runs.
 
 \begin{lemma}[Observable Equivalence]
 \label{lem:canonical-equivalent}
@@ -196,8 +196,8 @@ event the canonical run keeps every row that $\rho$ keeps.
 \begin{proof}[Proof sketch]
 \Commitment events only remove rows, so dropping them can only keep more.  An
 input or output event applied to a larger table keeps a larger table, and the
-canonical run can
-perform it because the original's rows are among its own.  Full proof in
+canonical run can perform it because the rows of $\rho$ are among its
+own.  Full proof in
 Appendix~\ref{app:bases}.
 \end{proof}
 
@@ -212,9 +212,8 @@ before $C$ before $B$ in a \commitment event, and then emits $[A,C,B]$.  Every
 row whose output \outrel $[A,C,B]$ satisfies 2PL's \commitments, so 2PL
 removed none of them, and after the output both runs keep exactly these rows.
 The tables are equal: the lock made the $A$-before-$B$ decision
-earlier than the output required.  The \commitments required by a spec's outputs
-therefore do not depend on their timing or representation in a system's
-\commitment basis.
+earlier than the output required.  The \commitments a spec's outputs require therefore do not depend on their
+timing or representation in a system's \commitment basis.
 
 The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow (Appendix~\ref{app:bases}).  Systems may constrain their runs arbitrarily, and
@@ -252,7 +251,8 @@ no row at $k$ that \outrel $x$ (Definition~\ref{def:commitment}).  Full proof
 in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
-Familiar coordination mechanisms keep such runs from both occurring.
+Familiar coordination mechanisms, such as locks and consensus, keep two such
+runs from both occurring.
 
 \paragraph{Placement.}
 Whether a coordination mechanism must span participants depends on who can make
@@ -275,8 +275,8 @@ decision whether all owners prepared; it detects whether their \commitments
 agree and aborts when they do not.  It does not make the owners agree.  If the
 coordinator instead aborts on timeout before the last vote arrives, that abort
 applies another \commitment, like closing the polls.  One coordinator can make
-that choice locally.  Replicated coordinators instead use distributed
-agreement, as in Paxos Commit~\cite{gray2006consensus}.
+that choice locally.  Replicated coordinators need distributed agreement to
+make it, as in Paxos Commit~\cite{gray2006consensus}.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
@@ -427,10 +427,10 @@ state at $j$ would need a row that \outrel every participant's output, and
 there is none.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
-A system might hope to keep more outputs available by issuing \commitments,
-coordinating within each side of a partition.  It cannot:
-Corollary~\ref{cor:complete-cap-any-system} holds for every system,
-\commitment-free or not.  For
+A system might hope to keep more outputs available, without losing Partition
+Consistency, by issuing \commitments that coordinate within each side of a
+partition.  It cannot: Corollary~\ref{cor:complete-cap-any-system} holds for
+every system, whether or not it issues \commitments.  For
 $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and
 then the canonical system needs no \commitment at all.
 
@@ -463,17 +463,20 @@ Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
 available and stay consistent across a partition, which is Gilbert and Lynch's
 theorem.
 
-The proof needs less than the full hypotheses here, which
-is why it yields Gilbert and Lynch's theorem exactly.  We place $p$ and $q$ on
-separate sides.  Availability is used only to make $p$ acknowledge the
-write and $q$ answer the read; each fiber holds a single output, so any
-response will do, which is Gilbert and Lynch's availability.  Partition
-Consistency is used only to demand a common \outnoun of those two answers, a
-single linearization that explains both, which is Gilbert and Lynch's
-consistency.  No such \outnoun exists.
+In this example, the proof of Corollary~\ref{cor:complete-cap-any-system}
+uses only weaker forms of its hypotheses, and these weaker forms are Gilbert
+and Lynch's, which is why it yields their theorem exactly.  We place $p$ and
+$q$ on separate sides.  Availability is used only to make $p$ acknowledge the
+write and $q$ answer the read.  Each of their fibers holds a single output, so
+requiring each to emit every permitted output is the same as requiring it to
+respond, which is Gilbert and Lynch's availability.  Partition Consistency is
+used only to demand a common \outnoun of the two answers.  Such an \outnoun is
+a single linearization that explains both answers, which is Gilbert and Lynch's
+consistency, and none exists.
 
-Appendix~\ref{app:cap-response} takes precedence from real time, extends
-Complete CAP to systems that choose their responses when responses are not
-forced, and derives
-the theorem in Gilbert and Lynch's asynchronous model.
+In this section the real-time order of the write and the read is part of the
+input.  Appendix~\ref{app:cap-response} instead takes that order from the
+execution itself, extends Complete CAP to systems that choose their responses
+when responses are not forced, and derives the theorem in Gilbert and Lynch's
+asynchronous model.
 
