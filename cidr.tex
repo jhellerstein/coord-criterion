@@ -664,23 +664,20 @@ current inputs, they can meet only if they still share a possible row at $j$.
 
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
-An \spectype is \emph{consistent} when every finite family of
-runs is confluent: if the runs end at states
-$(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
-inputs, each can be continued to a
-common state with current input $j$.  They are then \emph{confluent at} $j$.
+Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are \emph{confluent at} a
+common \indesc $j$ of their current inputs when each can be continued to one
+common state with current input $j$.  An \spectype is \emph{consistent} when
+every finite family of runs is confluent at every common \indesc of its current
+inputs.
 \end{definition}
 
-Consistency requires confluence at every common \indesc, not merely at some
-later one.  Otherwise conflicting outputs can escape before reconciliation.
-In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
-incomparable.  One run can emit $\bot$ at $ab\cdot$, while another accepts
-$aba$ and can emit $a$.  The runs cannot reconcile at their common \indesc
-$aba$, and waiting cannot retract either output from the environment.  More
-generally, even when later input could reconcile the internal states, the
-environment may already have acted on their outputs through channels the system
-does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time};
-the reconciling input may never arrive.
+Consistency as we define it has to hold after every output, not just
+``eventually''.  An inconsistent output, once emitted, can influence the
+environment, which in turn may generate inputs based on that output, leading to
+unintended consequences.  This is what Lamport calls ``anomalous
+behavior''~\cite{lamport1978time}, and our definitions forbid it.  Waiting for
+later input does not help either, since the input that would reconcile the runs
+may never arrive.
 
 In fact, sharing such a row is also sufficient.
 
