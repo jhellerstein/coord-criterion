@@ -385,7 +385,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone (Section `sec:lifted-monotonicity`)." Lean: |
-| `«sec:proper-coordination/kvs-on-logs»` | theorem | "Return to the replicated store of the opening. |
+| `«sec:proper-coordination/kvs-on-logs»` | theorem | "We return to the replicated store of the opening. |
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/locks-overhead»` | theorem | "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |

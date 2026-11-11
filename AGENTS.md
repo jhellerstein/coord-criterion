@@ -86,6 +86,10 @@ Avoid:
 * Imperative "do X, and Y" constructions ("Compose them…, and…", "Write X
   down, and…", "Model X as Y", "Partition a database…").  Use "Consider…",
   "We model…", "Given…".  Standard proof imperatives ("Let", "Fix") are fine.
+* Bare second-person commands to the reader ("Follow the events", "Take as
+  input…", "Return to the example", "Look at panel (b)"); use "we" ("we can
+  follow the events", "We return to…").  "Consider", "Recall that", "Note
+  that", "Write $X$ for…", and proof imperatives are fine.
 * Results or sections as agents ("the results ask one question"); abstract
   nouns as subjects ("This characterization yields…").
 * Vague "boundary", "object", "machinery", "notion"; generic openers ("central

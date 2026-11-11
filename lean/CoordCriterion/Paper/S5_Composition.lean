@@ -86,7 +86,7 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 
 /-! ## Proper Coordination (`sec:proper-coordination`) -/
 
-/-- "Return to the replicated store of the opening.  The key-value store is
+/-- "We return to the replicated store of the opening.  The key-value store is
 not monotone on its own, but it is monotone on what the log offers: a log
 fixes the order of commands, and a longer log only extends the responses.  The
 log issues a commitment to offer only such inputs, freeing the store from
