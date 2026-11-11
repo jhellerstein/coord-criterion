@@ -1216,19 +1216,18 @@ needs to keep available---are not enough to judge consistency. The spec
 must also model what an observer (e.g., a client) can eventually conclude by collecting
 outputs from multiple participants.
 
-Like Gilbert and Lynch, we can use a replicated register as an example. A register is a simplified key-value store that holds only the
-value of a single key, which suffices for reasoning about properties of a single object. Consider a racing read and write that go to different
-participants. The register is initialized to $v_0$. Participant $p$ receives
-write $w(v)$ and emits its acknowledgment; concurrently, participant $q$
-receives the read $r$ and returns $v_0$. A client may later collect both the
-write acknowledgment and read answer $v_0$. A linearizable register spec has a
-row that allows this situation: that pair of requests forms an input, and the
-combined responses are an output. That row reflects that a linearization may put the
-concurrent read before the write. However, no participant emits this combined
-output, nor is the combined output needed for availability. Nonetheless, it \outrel
-both local outputs, provides a proof of their consistency, and must be in the spec. Had the write finished
-before the read began, no such combined output would exist; we return to this
-case at the end of the section.
+Like Gilbert and Lynch, we use a replicated register as an example. A register is a key-value store with a single key, which is enough to reason
+about one object. The register starts at $v_0$, and a read and a write race at
+different participants. Participant $p$ receives write $w(v)$ and emits its
+acknowledgment; concurrently, participant $q$ receives the read $r$ and emits
+$v_0$. A client may later collect both responses. A linearizable register
+spec has a row for this situation: its input is the pair of requests, and its
+output is the pair of responses. The spec permits the row because a
+linearization may place the concurrent read before the write. No participant
+emits this combined output, and availability does not need it. Still, it
+\outrel both local outputs, which shows that the two are consistent, so the
+spec must contain it. Had the write finished before the read began, no such
+combined output would exist; we return to this case at the end of the section.
 
 We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
