@@ -939,14 +939,17 @@ unchanged from the functional case: at a state $(i,R)$ with $o\in R(i)$,
 $\mathsf{output}(o)$ emits $o$ and keeps the rows whose outputs \outrelbase $o$,
 ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}.
 
-But removing a row $(k,x)$ does not always lose the information in its output.
-If some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
+Removing a row $(k,x)$ does not always lose the information in its output.  If
+some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
 nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
 would have.  We call this \emph{output subsumption} and put $(k,x)$ in
-$\Subsumed_o$.  Otherwise $(k,x)$ goes in $\Excluded_o$, and the canonical
-\commitment $x_o$ removes it.  If $x_o$ removes every row at $k$, it rules out
-$k$; otherwise it rules out only those outputs.  In the functional case every
-removed row is excluded.
+$\Subsumed_o$.  Every other removed row goes in $\Excluded_o$.  With several
+outputs at an input, the canonical \commitment $x_o$ is the removal of the rows
+in $\Excluded_o$ only; the output event still removes the rows in
+$\Subsumed_o$, but that removal is not a \commitment.  If $x_o$ removes every
+row at $k$, it rules out the input $k$; otherwise it rules out only the
+excluded outputs at $k$.  In the functional case every removed row is
+excluded, so $x_o$ is as before.
 
 In the running examples, emitting $\bot$ under the equality order
 (Figure~\ref{fig:nonmonotone-frame}) puts the rows for $aba$ and $abb$ in
@@ -1630,20 +1633,26 @@ the input, both parts of their result follow from Complete CAP (\extended).
 \label{sec:iconfluence-instance}
 
 In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
-is a set of versions, and replicas merge states by union.  A set $T$ of
-transactions is \emph{invariant confluent} for an invariant $\mathcal I$ when
-the merge of any two reachable states satisfies $\mathcal I$.  We construct a
-spec $\Spec_{\mathcal I}$.  An input is a \emph{transaction history}: the
-transactions executed so far, partially ordered by data dependency, so that one
-precedes another when the replica running the second saw the first.  One
-history \inrel another when it adds transactions without changing what the
-earlier ones saw.  The inputs include only histories in which each transaction
-preserves $\mathcal I$ on its replica's state.  An output is a database state,
-ordered by inclusion.  At a history $h$, a replica may choose not to expose
-some transactions, but whatever it does expose must satisfy $\mathcal I$.  So
-the permitted outputs are the states produced by any sub-history $g$ of $h$
-that contains everything its transactions saw and is \emph{valid} in the sense
-that every merge of what $g$ contains satisfies $\mathcal I$.
+is a set of versions, and replicas merge states by union.  Transactions run on
+a replica's state and only add versions.  A state is \emph{reachable} when it
+can be derived from an initial state by running transactions and merging, with
+every state along the way satisfying an invariant $\mathcal I$.  A set $T$ of
+transactions is \emph{invariant confluent} for $\mathcal I$ when the merge of
+any two reachable states satisfies $\mathcal I$.
+
+We construct a spec $\Spec_{\mathcal I}$ from this model.  An input is a
+\emph{transaction history}: the transactions executed so far, partially
+ordered so that one precedes another when the replica running the second saw
+the first.  One history \inrel another when it adds transactions without
+changing what the earlier ones saw.  Only histories in which each transaction
+preserves $\mathcal I$ on its replica's state are inputs.  An output is a
+database state, ordered by inclusion of versions: a later state keeps every
+version of an earlier one.  Call a sub-history \emph{closed} when it contains
+everything its transactions saw, and \emph{valid} when each of its closed
+sub-histories has a state satisfying $\mathcal I$.  At a history $h$,
+$P_{\mathcal I}$ permits the state of any valid closed sub-history of $h$.  A
+replica may thus hold transactions back, but whatever it exposes must be
+valid.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
@@ -1652,10 +1661,12 @@ Monotonicity.
 \end{proposition}
 \proofinfull
 
-In Bailis et al.'s payroll example, two
-replicas each assign ID~7 to a new employee; the history in which neither
-creation saw the other \inrel both one-creation histories, but no state it
-permits \outrel both.
+In Bailis et al.'s payroll example, employee IDs must be unique, yet two
+replicas can concurrently assign the same unused ID (say, 7) to two employees.
+The history in which both replicas made their assignments \inrel each history
+in which only one did.  But every state that \outrel both single-assignment
+states has two employees with ID~7, violating the invariant, so $T$ is not
+invariant confluent.
 
 \subsection{Operational models and scope}
 \label{sec:scope}

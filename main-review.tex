@@ -1104,9 +1104,12 @@ outputs do not. Each removed row $(k,x)$ falls into one of two classes:
 subsumed or excluded. A row $(k,x)$ is placed in $\Subsumed_o$ if some
 $u\in R(k)$ \outrel both $x$ and $o$. Then a later output $u$ reports
 everything $x$ would have, and the removal, an output subsumption, loses
-nothing. \textcolor{reviewed}{Otherwise $(k,x)$ is placed in $\Excluded_o$, and the canonical
-\commitment $x_o$ removes it.} \textcolor{reviewed}{If $x_o$ removes every row at $k$, it rules out
-$k$; otherwise it rules out only those outputs.}
+nothing. \textcolor{reviewed}{Every other removed row is placed in $\Excluded_o$.} \textcolor{reviewed}{With several
+outputs at an input, the canonical \commitment $x_o$ is the removal of the rows
+in $\Excluded_o$ only (Definition~\ref{def:canonical-commitment}); the output
+event still removes the rows in $\Subsumed_o$, but that removal is not a
+\commitment.} \textcolor{reviewed}{If $x_o$ removes every row at $k$, it rules out the input $k$;
+otherwise it rules out only the excluded outputs at $k$.}
 
 These are the cases of Section~\ref{sec:ambiguity-story}: emitting $\bot$ under
 the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows for
@@ -2336,9 +2339,9 @@ of Bailis et al.~\cite{bailis2014coordination}. A database state is a set of
 versions, and replicas merge states by union. Each transaction $t\in T$ runs
 on the state of the replica that executes it and adds the versions it writes,
 so $t(s)\supseteq s$. An initial state $s_0$ satisfies the invariant
-$\mathcal I$. A state is \emph{reachable} when it can be derived from $s_0$ by
+$\mathcal I$. \textcolor{reviewed}{A state is \emph{reachable} when it can be derived from $s_0$ by
 applying transactions and merging states, with every state along the way
-satisfying $\mathcal I$. Every reachable state descends from $s_0$, so $T$ is
+satisfying $\mathcal I$.} Every reachable state descends from $s_0$, so $T$ is
 \emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
 reachable $s_1$ and $s_2$.
 
@@ -2349,8 +2352,8 @@ replica running the second saw the first. Histories are ordered by extension:
 $h'$ \inrel $h$ when $h$ is a downward-closed sub-order of $h'$, so $h'$ adds
 events without changing what the earlier ones saw. We keep the \emph{locally
 valid} histories, in which every transaction step preserves $\mathcal I$ on
-its replica's state. Outputs are database states, ordered by inclusion: a
-later state keeps every version of an earlier one. The table $P_{\mathcal I}$ permits, at input $h$, the state of any downward-closed sub-history of $h$
+its replica's state. \textcolor{reviewed}{Outputs are database states, ordered by inclusion: a
+later state keeps every version of an earlier one.} The table $P_{\mathcal I}$ permits, at input $h$, the state of any downward-closed sub-history of $h$
 that is \emph{valid}: every merge of what it contains satisfies $\mathcal I$. A replica may thus hold transactions back, but whatever it exposes must be
 valid together with everything it contains.
 
