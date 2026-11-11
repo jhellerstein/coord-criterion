@@ -843,22 +843,22 @@ output $f(j)$.}
 
 \textcolor{reviewed}{Monotonicity also governs legality:}
 
-\begin{proposition}[Output-legality boundary]
+\begin{proposition}[No-\commitment test]
 \label{prop:functional-exposure-boundary}
 \textcolor{reviewed}{A functional \spectype is monotone if and only if every output at
 every state reachable without \commitment is legal.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-\textcolor{reviewed}{By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
-states.} At $\sigma_P(i)$, which input alone reaches, $f(i)$ is legal exactly
+By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
+states. At $\sigma_P(i)$, which input alone reaches, $f(i)$ is legal exactly
 when $f$ is monotone at $i$. Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-\textcolor{reviewed}{A monotone spec can thus emit every current output without \commitment.} \textcolor{reviewed}{If a
+A monotone spec can thus emit every current output without \commitment. If a
 spec is non-monotone, then for some $i\InputOrd k$,
 $f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
-$\mathsf{output}(f(i))$ applies $x_{f(i)}$ and excludes input $k$.}
+$\mathsf{output}(f(i))$ applies $x_{f(i)}$ and excludes input $k$.
 
 \textcolor{reviewed}{Functional CALM is the familiar CALM dichotomy stated at the level of the spec
 rather than inside a particular programming language.} \textcolor{reviewed}{Classical CALM fits, with inputs $J$ as sets of facts ordered by
@@ -1012,13 +1012,13 @@ fiber $\fiber{i}$ is directed.}
 $u$ and $v$, with schedules ordered by subsequence, have two incomparable
 minimal common \indescs, $uv$ and $vu$. For outputs, directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
-join-semilattice. For example, the fiber
+join-semilattice. \textcolor{reviewed}{For example, the fiber
 $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
 since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$ have two
-incomparable minimal common \outnouns. Compatibility likewise does not require
+incomparable minimal common \outnouns.} Compatibility likewise does not require
 comparability: two incomparable outputs may have a third output in the fiber
-that \outrel both, as $\{a,b,c\}$ and $\{a,b,d\}$ do in the fiber above. \textcolor{reviewed}{Thus
-the traceroute fiber is directed: the union of finitely many route sets in it is again in the fiber and extends each.} \textcolor{reviewed}{The two transaction orders in
+that \outrel both, as $\{a,b,c\}$ and $\{a,b,d\}$ do in the fiber above. Thus
+the traceroute fiber is directed: the union of finitely many route sets in it is again in the fiber and extends each. \textcolor{reviewed}{The two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.}
 
 \paragraph{Lifted Monotonicity.}
@@ -1108,16 +1108,16 @@ nothing. \textcolor{reviewed}{Otherwise $(k,x)$ is placed in $\Excluded_o$, and 
 \commitment $x_o$ removes it.} \textcolor{reviewed}{If $x_o$ removes every row at $k$, it rules out
 $k$; otherwise it rules out only those outputs.}
 
-\textcolor{reviewed}{These are the cases of Section~\ref{sec:ambiguity-story}: emitting $\bot$ under
+These are the cases of Section~\ref{sec:ambiguity-story}: emitting $\bot$ under
 the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows for
 $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs; emitting $[A,B]$
 in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in
 $\Excluded_o$ and rules out that output at $\{A,B\}$; and the route sets removed
-in panel~(g) are in $\Subsumed_o$.} In the functional case, $\Subsumed_o$ is
+in panel~(g) are in $\Subsumed_o$. In the functional case, $\Subsumed_o$ is
 empty, so this is the output event of Definition~\ref{def:output-event}. Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
-\textcolor{reviewed}{With several outputs at one input, legality is more permissive: an output
-event may remove rows by output subsumption without applying a \commitment.} \textcolor{reviewed}{As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
+With several outputs at one input, legality is more permissive: an output
+event may remove rows by output subsumption without applying a \commitment. \textcolor{reviewed}{As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
 \commitment, exactly when $\Excluded_o$ is empty.} \textcolor{reviewed}{Equivalently, at every legal
 \indesc $j$ of $i$, $o$ and each remaining output at $j$ have a common
 \outnoun at $j$ (Proposition~\ref{prop:exposability}).}
@@ -1125,13 +1125,13 @@ event may remove rows by output subsumption without applying a \commitment.} \te
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
-\textcolor{reviewed}{A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
-Equation~\ref{eq:output-action}.} \textcolor{reviewed}{Specification states, input events, runs,
-\commitment-free runs, and consistency are defined as before.} \textcolor{reviewed}{The results of
+A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
+Equation~\ref{eq:output-action}. Specification states, input events, runs,
+\commitment-free runs, and consistency are defined as before. The results of
 Section~\ref{sec:executions} depend on output events only through that equation,
 so the rows-remaining lemma (Lemma~\ref{lem:run-residual}) and survivor test
-(Proposition~\ref{prop:confluence}) apply unchanged.} \textcolor{reviewed}{Thus consistency reduces
-to Lifted Monotonicity.}
+(Proposition~\ref{prop:confluence}) apply unchanged. Thus consistency reduces
+to Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -1153,22 +1153,22 @@ ordinary monotonicity.}
 
 \textcolor{reviewed}{The same condition governs legality.}
 
-\begin{proposition}[Output-legality boundary]
+\begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
 \textcolor{reviewed}{An \spectype satisfies Lifted Monotonicity if and only
 if every output at every state reachable without \commitment is legal.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-\textcolor{reviewed}{Under the common-extension condition, consistency supplies the common \outnoun
-the legal-output test asks for.} \textcolor{reviewed}{Conversely, the legal-output test at canonical
+Under the common-extension condition, consistency supplies the common \outnoun
+the legal-output test asks for. Conversely, the legal-output test at canonical
 states, one row at a time, builds the common \outnoun the condition
-asks for.} Full proof in Appendix~\ref{app:proofs-sec3}.
+asks for. Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
-\textcolor{reviewed}{For functions, both are monotonicity, so Complete CALM and
+For functions, both are monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
-Proposition~\ref{prop:functional-exposure-boundary}.}
+Proposition~\ref{prop:functional-exposure-boundary}.
 
 \section{Distributed Execution}
 \label{sec:distributed-execution}
@@ -1958,7 +1958,7 @@ The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-\textcolor{reviewed}{(1) is Complete CALM and the output-legality boundary
+\textcolor{reviewed}{(1) is Complete CALM and the no-\commitment test
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary})
 applied to $\Spec_2|_{\Spec_1}$.} (2) The outputs of a run of $\Spec_1$ form a
 chain, since each output event keeps only rows above its output. They are
@@ -1966,7 +1966,7 @@ therefore a valid input sequence for $\Spec_2|_{\Spec_1}$, which by (1) answers
 each without \commitment. The pipeline's run is a run of $P_2\circ P_1$: joining
 each answer with the row of $\Spec_1$ it answers gives a row of the composite. For confluence, confluent runs of $\Spec_1$ share a row above every input the
 downstream runs have taken, and Lifted Monotonicity of $\Spec_2$ at that row
-gives a common answer. (3) The output-legality boundary
+gives a common answer. (3) The no-\commitment test
 of the composite fails at a canonical state, which is the image of a canonical
 state of $\Spec_1$. Full proof in Appendix~\ref{app:composition}.
 \end{proof}
@@ -3705,13 +3705,13 @@ and $G\star F$ are non-monotone.
 
 Suppose first that each bare-read response records the log position it read
 from, as in ``$x=5$ as of entry 17.''  A longer log never contradicts such a
-response, so $G$ is monotone. By Complete CALM and the output-legality boundary,
+response, so $G$ is monotone. By Complete CALM and the no-\commitment test,
 every output of $G$ at every state reachable without \commitment is
 legal, so bare reads need no \commitment of their own. Suppose instead
 that the spec demands the latest value, so that a read of $x$ must
 return the value of $x$ after all of $b$. Then a bare read can be
 contradicted by an entry it has not seen, and $G$ is not monotone. By the
-exposure boundary some output of $G$ then needs a \commitment of the store's
+no-\commitment test some output of $G$ then needs a \commitment of the store's
 own. Implementations typically enforce it by routing reads through the log.
 \end{example}
 

@@ -579,7 +579,7 @@ theorem «cor:state-by-input/input-suffices» {I O : Type} [PO I] [PO O] {sp : S
     (hj : σ.cur ≼ j) : Exec σ [.input j] (canon sp j) :=
   functional_meet_by_input hf hc hrun hj
 
-/-- **Prop. `prop:functional-exposure-boundary`** (Output-legality boundary).  "A
+/-- **Prop. `prop:functional-exposure-boundary`** (No-commitment test).  "A
 functional I/O specification is monotone if and only if every output at
 every state reachable without commitment is a legal output."  "An output at state
 `τ`" is an `o` with `(τ.cur, o) ∈ τ.R`. -/

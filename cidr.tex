@@ -736,25 +736,10 @@ $i$.
 \end{proof}
 
 Knowing the input is therefore enough to know the state, and with it the one
-output.  Monotonicity also governs legality:
-
-\begin{proposition}[Output-legality boundary]
-\label{prop:functional-exposure-boundary}
-A functional \spectype is monotone if and only if every output at
-every state reachable without \commitment is legal.
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
-states. At $\sigma_P(i)$, $f(i)$ is legal exactly
-when $f$ is monotone at $i$.
- \fullproof
-\end{proof}
-
-A monotone spec can thus emit every current output without \commitment. If a
-spec is non-monotone, then for some $i\InputOrd k$,
-$f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
-$\mathsf{output}(f(i))$ must exclude $k$.
+output.  Monotonicity also governs legality: a monotone spec can emit every
+current output without \commitment, while if $f(i)\not\OutputOrd f(k)$ for some
+$i\InputOrd k$, emitting $f(i)$ at $\sigma_P(i)$ must rule out $k$.
+Section~\ref{sec:complete-calm-theorem} states this in general.
 
 This is the familiar CALM dichotomy stated at the level of the spec
 rather than inside a particular programming language.  
@@ -1013,22 +998,22 @@ both theorems hold for distributed histories.
 
 The same condition governs legality.
 
-\begin{proposition}[Output-legality boundary]
+\begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
 An \spectype satisfies Lifted Monotonicity if and only
 if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Under the common-extension condition, consistency supplies the common \outnoun
-the legal-output test asks for.  Conversely, the legal-output test at canonical
-states, one row at a time, builds the common \outnoun the condition
-asks for.  \fullproof
+If the common-extension condition holds, every output at a reachable state has
+a common \outnoun with each remaining output, so it is legal.  Conversely,
+checking legality at canonical states, one row at a time, yields the common
+\outnouns the condition requires.  \fullproof
 \end{proof}
 
-For functions, both are monotonicity, so Complete CALM and
-Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
-Proposition~\ref{prop:functional-exposure-boundary}.
+For functions, Lifted Monotonicity is monotonicity, so Complete CALM and
+Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and its
+legality statement.
 
 % ======================================================================
 \section{Distributed Execution}
@@ -1477,8 +1462,7 @@ Fix any system for $\Spec_1$.
 \end{enumerate}
 \end{theorem}
 
-\begin{proof}[Proof sketch] (1) is Complete CALM and the output-legality
-boundary (Theorem~\ref{thm:complete-calm},
+\begin{proof}[Proof sketch] (1) is Complete CALM and the no-\commitment test (Theorem~\ref{thm:complete-calm},
 Proposition~\ref{prop:exposure-boundary}) applied to $\Spec_2|_{\Spec_1}$. The
 full proof of (1) and the proofs of (2) and (3) are in \extended.
 \end{proof}

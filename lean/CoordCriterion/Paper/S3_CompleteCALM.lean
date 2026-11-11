@@ -365,7 +365,7 @@ theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (sp.Consistent ↔ sp.LiftedMono) ∧ (sp.Consistent ↔ sp.CommonExpansion) :=
   ⟨complete_calm sp, complete_calm_commonExpansion sp⟩
 
-/-- **Prop. `prop:exposure-boundary`** (Output-legality boundary).  "An ordered
+/-- **Prop. `prop:exposure-boundary`** (No-commitment test).  "An ordered
 specification satisfies Lifted Monotonicity if and only if every output at
 every state reachable without commitment is a legal output."  The proof sketch
 goes through the common-extension condition (Prop.

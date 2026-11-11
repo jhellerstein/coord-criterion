@@ -623,7 +623,7 @@ theorem «ex:committed-log-composition» {Cmd Stt R : Type} (δ : Stt → Cmd �
 any deterministic state machine `δ`, read function `rd`, and two distinct
 commands: "As in Example `ex:committed-log-composition`, `F` and `G ⋆ F` are
 non-monotone. … A longer log never contradicts such a response, so `G` is
-monotone.  By Complete CALM and the output-legality boundary, every output of `G` at
+monotone.  By Complete CALM and the no-commitment test, every output of `G` at
 every state reachable without commitment is a legal output, so bare reads need no
 commitment of their own."  Lean: `I = B = Inst.Pfx Cmd`, `A = Comp.Pt`,
 `J = Inst.Pfx Rd`; `logF`, `bareG δ rd σ₀`, whose outputs pair the executed
@@ -640,7 +640,7 @@ theorem «ex:bare-reads» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd → Stt × R
 /-- Inside Example `ex:bare-reads`: "Suppose instead that the specification
 demands the latest value, so that a read of `x` must return the value of `x`
 after all of `b`.  Then a bare read can be contradicted by an entry it has not
-seen, and `G` is not monotone.  By the output-legality boundary some output of `G`
+seen, and `G` is not monotone.  By the no-commitment test some output of `G`
 then needs a commitment of the store's own."  Lean: `latestG δ rd σ₀`
 (untagged responses `(r, v)`, `v` the value after all of `b`); "an entry it has
 not seen" is a command `c` that changes what read `r` returns. -/
