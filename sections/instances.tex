@@ -98,6 +98,13 @@ client timestamp, and versions are ordered by timestamp, last writer wins.
 The system never aborts a transaction on its own.  A replica answers a read
 with the highest-timestamped committed write of the item that it has received.
 
+The HAT results illustrate the intersection reasoning of
+Section~\ref{sec:intersection}.  An isolation level and a store are separate
+specs on the same histories: the level constrains which read answers may
+appear together, and the store answers each read by its read rule.  The store
+held to a level is their intersection, and we ask which intersections satisfy
+Lifted Monotonicity.
+
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
 An input is a history ordered by happens-before: reads, each tagged with its
@@ -121,36 +128,41 @@ of Definition~\ref{def:hat-spec}.  At each input, it permits any subset of the
 answers that the read rule gives.
 \end{definition}
 
-The store promises its read rule and nothing about isolation.  Its full answers
-are the rows of $E$, and the conjunction $\Spec_{\mathrm{st}}\wedge\Spec_L$
-(Definition~\ref{def:conjunction}) is the store held to isolation level $L$.
-It is total, since both permit the empty set of answers.
+The store promises its read rule and nothing about isolation.  It satisfies
+Lifted Monotonicity on its own: a read's answer under the read rule depends
+only on the history preceding it, so later input never changes it, and the rule
+is a monotone function of the input.  Its full answers are the rows of $E$, and
+the intersection $\Spec_{\mathrm{st}}\cap\Spec_L$
+(Definition~\ref{def:intersection}) is the store held to isolation level $L$.
+It is total, since both permit the empty set of answers.  By
+Proposition~\ref{prop:intersection-bound}, the intersection keeps Lifted
+Monotonicity when $\Spec_L$ admits the read rule's answers.
 
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
 Suppose each transaction's timestamp exceeds that of every version it reads.
 For read uncommitted and read committed, $E\subseteq P_L$ and
-$\Spec_{\mathrm{st}}\wedge\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
+$\Spec_{\mathrm{st}}\cap\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
 satisfies Lifted Monotonicity for $E$, and by Complete CAP these levels stay
 available and consistent through partitions.  For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
-serializability, $\Spec_{\mathrm{st}}\wedge\Spec_L$ fails Lifted Monotonicity,
+serializability, $\Spec_{\mathrm{st}}\cap\Spec_L$ fails Lifted Monotonicity,
 and no explicit relation that answers every read satisfies Lifted Monotonicity
 for it.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A read's answer under the read rule depends only on the history preceding
-it, so later input never changes it: the rule is a monotone function of the
-input.  The timestamp condition rules out the dependency cycles of G0 and G1c,
-so $\Spec_L$ permits the rule's answers.  Proposition~\ref{prop:conjunction-bound},
-with the read rule as the bound, gives Lifted Monotonicity of
-$\Spec_{\mathrm{st}}\wedge\Spec_L$, whose rows include those of $E$.  For the
-converse, let two transactions at different replicas each read $x_0$ and write
-$x$.  Each replica's answer is forced, and their union contains a cycle on $x$
-with an anti-dependency, which is Lost Update.  So the store's forced answer at
-one replica has no extension in $\Spec_{\mathrm{st}}\wedge\Spec_L$ once both
-transactions are in the input.
+For read uncommitted and read committed, the timestamp condition rules out the
+dependency cycles of G0 and G1c, so $\Spec_L$ permits the read rule's answers.
+Proposition~\ref{prop:intersection-bound}, with the read rule as the bound,
+gives Lifted Monotonicity of $\Spec_{\mathrm{st}}\cap\Spec_L$, whose rows
+include those of $E$.  For the converse, let two transactions at different
+replicas each read $x_0$ and write $x$.  Each replica's answer is forced, and
+their union contains a cycle on $x$ with an anti-dependency, which is Lost
+Update.  So the store's forced answer at one replica has no extension in
+$\Spec_{\mathrm{st}}\cap\Spec_L$ once both transactions are in the input.
+The store needs no \commitment on its own, so this need comes from the
+intersection with $\Spec_L$.
 \end{proof}
 
 The timestamp condition is needed.  With timestamps fixed when a transaction

@@ -41,13 +41,13 @@ import CoordCriterion.Instances.IOMachineCofinal
 import CoordCriterion.Instances.HATRC
 import CoordCriterion.Instances.HATSpec
 import CoordCriterion.Instances.HATUnion
-import CoordCriterion.Instances.HATConj
+import CoordCriterion.Instances.HATInter
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
 -- §5 and Appendix D composition
 import CoordCriterion.Appendix.Composition
 import CoordCriterion.Appendix.Guarded
-import CoordCriterion.Appendix.Conjunction
+import CoordCriterion.Appendix.Intersection
 import CoordCriterion.Appendix.JointMono
 import CoordCriterion.Appendix.Components
 import CoordCriterion.Appendix.ComponentSystems

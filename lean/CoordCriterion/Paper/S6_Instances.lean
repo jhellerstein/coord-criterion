@@ -6,7 +6,7 @@ import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineCofinal
 import CoordCriterion.Instances.HATSpec
-import CoordCriterion.Instances.HATConj
+import CoordCriterion.Instances.HATInter
 
 /-!
 # Paper §6, "Instances Across the Literature" (`sections/instances.tex`)
@@ -271,7 +271,13 @@ unique client timestamp, and versions are ordered by timestamp, last writer
 wins.  The system never aborts a transaction on its own.  A replica answers a
 read with the highest-timestamped committed write of the item that it has
 received.") fixes the model of `Instances/HATSpec.lean`; the read rule is
-`HATSpec.hatOut`.  The closing sentence on session guarantees ("Session
+`HATSpec.hatOut`.  The next paragraph ("The HAT results illustrate the
+intersection reasoning of Section `sec:intersection`.  An isolation level and a
+store are separate specs on the same histories: the level constrains which
+read answers may appear together, and the store answers each read by its read
+rule.  The store held to a level is their intersection, and we ask which
+intersections satisfy Lifted Monotonicity.") is realized by `HATSpec.store`,
+`HATSpec.spec`, and `Inter.inter` (`«def:store-spec»`, `«thm:hat-levels»`).  The closing sentence on session guarantees ("Session
 guarantees, which Bailis et al. achieve under sticky availability, are
 deployments in our terms (Proposition `thm:complete-cap-deployment`); we do
 not treat them here.") is argued only in prose. -/
@@ -329,35 +335,44 @@ theorem «def:hat-spec/read-rule» :
 specification `𝒮_st` has the inputs and outputs of Definition `def:hat-spec`.
 At each input, it permits any subset of the answers that the read rule
 gives."  And after it: "The store promises its read rule and nothing about
-isolation.  Its full answers are the rows of `E`, and the conjunction
-`𝒮_st ∧ 𝒮_L` (Definition `def:conjunction`) is the store held to isolation
-level `L`.  It is total, since both permit the empty set of answers."  Lean:
-`HATSpec.store`; its fiber at `j` is the subsets of `hatOut j`, so the rows of
-`E = HATSpec.hatA` are its full rows; the conjunction is total
-(`HATSpec.store_conj_total`). -/
+isolation.  It satisfies Lifted Monotonicity on its own: a read's answer under
+the read rule depends only on the history preceding it, so later input never
+changes it, and the rule is a monotone function of the input.  Its full answers
+are the rows of `E`, and the intersection `𝒮_st ∩ 𝒮_L` (Definition
+`def:intersection`) is the store held to isolation level `L`.  It is total,
+since both permit the empty set of answers.  By Proposition
+`prop:intersection-bound`, the intersection keeps Lifted Monotonicity when
+`𝒮_L` admits the read rule's answers."  Lean: `HATSpec.store`; its fiber at `j`
+is the subsets of `hatOut j`, so the rows of `E = HATSpec.hatA` are its full
+rows; the store satisfies Lifted Monotonicity (`HATSpec.store_liftedMono`, via
+`HATSpec.hatOut_mono`, which is `«thm:hat-levels/answers-stable»`); the
+intersection is total (`HATSpec.store_inter_total`); the bound step is
+`«prop:intersection-bound»`. -/
 theorem «def:store-spec» :
     (∀ (j : HATSpec.Inp true) F, (HATSpec.store (lam := true)).P j F ↔ F ≼ HATSpec.hatOut j) ∧
       (∀ j o, HATSpec.hatA j o → (HATSpec.store (lam := true)).P j o) ∧
-      ∀ (L : HATSpec.Level) (j : HATSpec.Inp true),
-        ∃ o, (HATSpec.store (lam := true)).P j o ∧ (HATSpec.spec L).P j o :=
+      (∀ (L : HATSpec.Level) (j : HATSpec.Inp true),
+        ∃ o, (HATSpec.store (lam := true)).P j o ∧ (HATSpec.spec L).P j o) ∧
+      (HATSpec.store (lam := true)).LiftedMono :=
   ⟨fun _ _ => Iff.rfl, fun _ _ h => h ▸ PO.refl _,
-    fun L => HATSpec.store_conj_total (HATSpec.Proscribed L) fun j => HATSpec.serial_clean j L⟩
+    fun L => HATSpec.store_inter_total (HATSpec.Proscribed L) fun j => HATSpec.serial_clean j L,
+    HATSpec.store_liftedMono⟩
 
 /-- **Theorem `thm:hat-levels`** (HAT levels): "Suppose each transaction's
 timestamp exceeds that of every version it reads.  For read uncommitted and
-read committed, `E ⊆ P_L` and `𝒮_st ∧ 𝒮_L` satisfies Lifted Monotonicity, so
+read committed, `E ⊆ P_L` and `𝒮_st ∩ 𝒮_L` satisfies Lifted Monotonicity, so
 `𝒮_L` satisfies Lifted Monotonicity for `E`, and by Complete CAP these levels
 stay available and consistent through partitions.  For any level that
 proscribes Lost Update, including snapshot isolation, repeatable read, and
-serializability, `𝒮_st ∧ 𝒮_L` fails Lifted Monotonicity, and no explicit
+serializability, `𝒮_st ∩ 𝒮_L` fails Lifted Monotonicity, and no explicit
 relation that answers every read satisfies Lifted Monotonicity for it."  Lean:
-(1) for `L ∈ {RU, RC}`, `E ⊆ P_L`, Lifted Monotonicity of the conjunction
-(`HATSpec.store_conj_rc`), Lifted Monotonicity for `E`
+(1) for `L ∈ {RU, RC}`, `E ⊆ P_L`, Lifted Monotonicity of the intersection
+(`HATSpec.store_inter_rc`), Lifted Monotonicity for `E`
 (`CAP.ConsistentOn`), and some system with Availability for `E` and
 Partition Consistency (`CAP.complete_cap_for`); (2) for any proscribed set
 `P` containing Lost Update (avoided by the serial history, so `𝒮_P` is a
-specification), the conjunction `𝒮_st ∧ 𝒮_P` fails Lifted Monotonicity
-(`HATSpec.store_conj_lostUpdate`), and every `E ⊆ P_P` that answers every read fails Lifted
+specification), the intersection `𝒮_st ∩ 𝒮_P` fails Lifted Monotonicity
+(`HATSpec.store_inter_lostUpdate`), and every `E ⊆ P_P` that answers every read fails Lifted
 Monotonicity for `E`, and no system has Availability for `E` and Partition
 Consistency; (3) in particular for SI, RR, and serializability.  The
 hypothesis is the timestamp condition on inputs: under `E`, the version a
@@ -367,13 +382,13 @@ Part (2) holds with or without it. -/
 theorem «thm:hat-levels» (D : Type) :
     (∀ L, L = .RU ∨ L = .RC →
       (∀ i o, HATSpec.hatA i o → (HATSpec.spec (lam := true) L).P i o) ∧
-        (∃ htot, (Conj.conj (HATSpec.store (lam := true)) (HATSpec.spec L) htot).LiftedMono) ∧
+        (∃ htot, (Inter.inter (HATSpec.store (lam := true)) (HATSpec.spec L) htot).LiftedMono) ∧
         CAP.ConsistentOn (HATSpec.spec (lam := true) L) HATSpec.hatA ∧
         ∃ Sys : CAP.System (HATSpec.spec (lam := true) L) D,
           CAP.AvailabilityFor HATSpec.hatA Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
     (∀ (P : (j : HATSpec.Inp true) → HATSpec.CH j → Prop) (hP : ∀ j, ¬ P j (HATSpec.serial j)),
       (∀ j (H : HATSpec.CH j), HATSpec.LostUpdate H → P j H) →
-      (∀ htot, ¬ (Conj.conj (HATSpec.store (lam := true)) (HATSpec.specP P hP) htot).LiftedMono) ∧
+      (∀ htot, ¬ (Inter.inter (HATSpec.store (lam := true)) (HATSpec.specP P hP) htot).LiftedMono) ∧
       ∀ (E : Table (HATSpec.Inp true) (IConf.St HATSpec.Fact)),
         (∀ i o, E i o → (HATSpec.specP P hP).P i o) → (∀ i, ∃ o, E i o) →
         (∀ i o e, E i o → HATSpec.IsRd i e → ∃ v, o (.read e v)) →
@@ -382,18 +397,18 @@ theorem «thm:hat-levels» (D : Type) :
             CAP.AvailabilityFor E Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
     (∀ L, L = .SI ∨ L = .RR ∨ L = .SER → ∀ (j : HATSpec.Inp true) (H : HATSpec.CH j),
       HATSpec.LostUpdate H → HATSpec.Proscribed L j H) :=
-  ⟨fun L hL => let h := HATSpec.rc_available L hL D; ⟨h.1, HATSpec.store_conj_rc L hL, h.2⟩,
-    fun P hP hLU => ⟨fun htot => (HATSpec.store_conj_lostUpdate P hP hLU htot).2,
+  ⟨fun L hL => let h := HATSpec.rc_available L hL D; ⟨h.1, HATSpec.store_inter_rc L hL, h.2⟩,
+    fun P hP hLU => ⟨fun htot => (HATSpec.store_inter_lostUpdate P hP hLU htot).2,
       fun E hES htot hans => HATSpec.lostUpdate_unavailableP P hP hLU D E hES htot hans⟩,
     fun L hL _ H h => HATSpec.proscribes_lostUpdate L hL H h⟩
 
-/-- Proof sketch of Thm. `thm:hat-levels`: "A read's answer under the read
-rule depends only on the history preceding it, so later input never changes
-it: the rule is a monotone function of the input.  The timestamp condition
-rules out the dependency cycles of G0 and G1c, so `𝒮_L` permits the rule's
-answers.  Proposition `prop:conjunction-bound`, with the read rule as the
-bound, gives Lifted Monotonicity of `𝒮_st ∧ 𝒮_L`, whose rows include those of
-`E`."  (The bound step is `HATSpec.store_conj_rc`.)  Lean:
+/-- Proof sketch of Thm. `thm:hat-levels`: "For read uncommitted and read
+committed, the timestamp condition rules out the dependency cycles of G0 and
+G1c, so `𝒮_L` permits the read rule's answers.  Proposition
+`prop:intersection-bound`, with the read rule as the bound, gives Lifted
+Monotonicity of `𝒮_st ∩ 𝒮_L`, whose rows include those of `E`."  (The bound
+step is `HATSpec.store_inter_rc`; monotonicity of the rule, stated with the
+store specification, is the first conjunct here.)  Lean:
 the candidates of a read are the same at every input extension containing it
 (`HATSpec.cand_iff`), so `hatOut` is monotone; under the timestamp condition
 every read- and write-dependency of HAT's history increases timestamps, so
@@ -407,8 +422,10 @@ theorem «thm:hat-levels/answers-stable» :
 transactions at different replicas each read `x₀` and write `x`.  Each
 replica's answer is forced, and their union contains a cycle on `x` with an
 anti-dependency, which is Lost Update.  So the store's forced answer at one
-replica has no extension in `𝒮_st ∧ 𝒮_L` once both transactions are in the
-input."  (The last step is `HATSpec.store_conj_lostUpdate`: the row of `T₂`'s
+replica has no extension in `𝒮_st ∩ 𝒮_L` once both transactions are in the
+input.  The store needs no commitment on its own, so this need comes from the
+intersection with `𝒮_L`."  (The store's own Lifted Monotonicity is
+`HATSpec.store_liftedMono`; the last step is `HATSpec.store_inter_lostUpdate`: the row of `T₂`'s
 answer `x₀` at `i₂` has no extension at the union; `HATSpec.i2_ans`.)  Lean: `T₁` (timestamp `(1,1)`) and
 `T₂` (`(1,2)`) read and write `x` at replicas 0 and 1, with no delivery; at
 each one-transaction input the only version a read may return is `x₀`; in

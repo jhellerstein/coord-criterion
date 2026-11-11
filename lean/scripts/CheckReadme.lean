@@ -220,9 +220,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:composite-calm/cancellation»
 #check @CC.Paper.«prop:joint-monotone»
 #check @CC.Paper.«sec:composite-calm/reach»
-#check @CC.Paper.«def:conjunction»
-#check @CC.Paper.«sec:conjunction/not-closed»
-#check @CC.Paper.«prop:conjunction-bound»
+#check @CC.Paper.«def:intersection»
+#check @CC.Paper.«sec:intersection/not-closed»
+#check @CC.Paper.«prop:intersection-bound»
 #check @CC.Paper.«sec:query-instance/weaker-monotonicity»
 #check @CC.Paper.«sec:query-instance/one-fact-version»
 #check @CC.Paper.«sec:query-instance/node-monotonicity»
@@ -445,8 +445,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«ex:committed-log-composition»
 #check @CC.Paper.«ex:bare-reads»
 #check @CC.Paper.«ex:bare-reads/latest-value»
-#check @CC.Paper.«app:conjunction/bound»
-#check @CC.Paper.«app:conjunction/example»
+#check @CC.Paper.«app:intersection/bound»
+#check @CC.Paper.«app:intersection/example»
 #check @CC.Paper.«def:component»
 #check @CC.Paper.«def:implementation-form»
 #check @CC.Paper.«app:components/system-is-component»

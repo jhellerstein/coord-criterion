@@ -214,8 +214,8 @@ satisfies Lifted Monotonicity when every node does on the outputs offered to
 it, checked node by node much as types are
 (Appendix~\ref{app:dataflow-graphs}).
 
-\subsection{Conjunction}
-\label{sec:conjunction}
+\subsection{Intersection}
+\label{sec:intersection}
 
 Sequential composition feeds the outputs of one spec to the inputs of the
 next.  Specs can also be combined on a shared interface.  An application spec,
@@ -224,45 +224,47 @@ nothing about isolation, while a consistency property, such as an isolation
 level, constrains the same reads.  A system that meets both may produce only
 the rows that both permit.
 
-\begin{definition}[Conjunction]
-\label{def:conjunction}
+\begin{definition}[Intersection]
+\label{def:intersection}
 Let $\Spec_1=(I,\InputOrd,O,\OutputOrd,P_1)$ and
 $\Spec_2=(I,\InputOrd,O,\OutputOrd,P_2)$ share their ordered domains.  Their
-\emph{conjunction} $\Spec_1\wedge\Spec_2$ has table $P_1\cap P_2$.  It is an
+\emph{intersection} $\Spec_1\cap\Spec_2$ has table $P_1\cap P_2$.  It is an
 \spectype when $P_1\cap P_2$ is total on $I$: every input has an output that
 both permit.
 \end{definition}
 
-The shared domains matter.  Isolation levels are defined on histories of
-reads, writes, and commits, so an application spec must describe its inputs
-and outputs in those terms before it can be conjoined with one.  The HAT
-specification of Section~\ref{sec:hat-instance} does so from the start.
+The shared domains matter.  As an example, isolation levels are defined on
+histories of reads, writes, and commits, so an application spec must describe
+its inputs and outputs in those terms before it can be intersected with one.
+The HAT specification of Section~\ref{sec:hat-instance} does so from the
+start.
 
-Conjunction does not preserve Lifted Monotonicity.  Let $a$ and $b$ be
+Intersection does not preserve Lifted Monotonicity.  Let $a$ and $b$ be
 incomparable outputs, each below both $c$ and $d$, with $c$ and $d$
 incomparable, and let both specs have a single input.  The fiber $\{a,b,c\}$ is
-directed, since $c$ \outrel each of its members, and so is $\{a,b,d\}$.  Their
-intersection $\{a,b\}$ is not: no output in it \outrel both $a$ and $b$.  Two
-specs that need no \commitment can thus have a conjunction that does.  A
+directed, since $c$ \outrel each of its members, and so is $\{a,b,d\}$.  The
+intersection of the two fibers, $\{a,b\}$, is not: no output in it \outrel
+both $a$ and $b$.  Two specs that need no \commitment can thus have an
+intersection that does.  A
 monotone bound rules this out.
 
-\begin{proposition}[Conjunction under a monotone bound]
-\label{prop:conjunction-bound}
+\begin{proposition}[Intersection under a monotone bound]
+\label{prop:intersection-bound}
 Let $g:I\to O$ be monotone.  Suppose that every output $\Spec_1$ permits at an
 input $j$ lies below $g(j)$, and that $\Spec_1$ and $\Spec_2$ both permit $g(j)$
-at every $j$.  Then $\Spec_1\wedge\Spec_2$ is an \spectype and satisfies Lifted
+at every $j$.  Then $\Spec_1\cap\Spec_2$ is an \spectype and satisfies Lifted
 Monotonicity.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-The conjunction permits $g(j)$ at every $j$, so it is total.  An output it
+The intersection permits $g(j)$ at every $j$, so it is total.  An output it
 permits at $i\InputOrd j$ lies below $g(i)$, and $g(i)\OutputOrd g(j)$, so
 $g(j)$ \outrel every output it permits at inputs below $j$.  Full proof in
-Appendix~\ref{app:conjunction}.
+Appendix~\ref{app:intersection}.
 \end{proof}
 
 A store whose answers follow a monotone rule therefore stays monotone when
-conjoined with any property that admits the rule's answers.  The HAT levels
-are an instance (Theorem~\ref{thm:hat-levels}).  Read committed admits the
-store's answers, and its conjunction with the store is monotone.  Snapshot
-isolation does not, and its conjunction with the store needs a \commitment.
+intersected with any property that admits the rule's answers.  The HAT levels
+are an instance (Section~\ref{sec:hat-instance}).  Read committed admits the
+store's answers, and its intersection with the store is monotone.  Snapshot
+isolation does not, and its intersection with the store needs a \commitment.

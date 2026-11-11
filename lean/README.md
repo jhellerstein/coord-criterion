@@ -399,9 +399,9 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composite-calm/cancellation»` | theorem | "Third, considering a different order on `M` can make two non-monotone stages both monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
-| `«def:conjunction»` | theorem | **Definition `def:conjunction`** (Conjunction): |
-| `«sec:conjunction/not-closed»` | theorem | "Conjunction does not preserve Lifted Monotonicity. |
-| `«prop:conjunction-bound»` | theorem | **Proposition `prop:conjunction-bound`** (Conjunction under a monotone bound): |
+| `«def:intersection»` | theorem | **Definition `def:intersection`** (Intersection): |
+| `«sec:intersection/not-closed»` | theorem | "Intersection does not preserve Lifted Monotonicity. |
+| `«prop:intersection-bound»` | theorem | **Proposition `prop:intersection-bound`** (Intersection under a monotone bound): |
 
 ### §6 Instances
 
@@ -673,8 +673,8 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
-| `«app:conjunction/bound»` | theorem | Proof of Proposition `prop:conjunction-bound`: |
-| `«app:conjunction/example»` | theorem | "In the example of Section `sec:conjunction`, both specs satisfy Lifted Monotonicity: |
+| `«app:intersection/bound»` | theorem | Proof of Proposition `prop:intersection-bound`: |
+| `«app:intersection/example»` | theorem | "In the example of Section `sec:intersection`, both specs satisfy Lifted Monotonicity: |
 | `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run). |
 | `«def:implementation-form»` | abbrev | **Definition `def:implementation-form`** (Implementation form). |
 | `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once its boundary observations are chosen. |

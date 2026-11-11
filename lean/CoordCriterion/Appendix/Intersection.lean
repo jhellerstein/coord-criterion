@@ -1,44 +1,44 @@
 import CoordCriterion.Appendix.Composition
 
 /-!
-# Conjunction of specifications (Section 5, `sec:conjunction`)
+# Intersection of specifications (Section 5, `sec:intersection`)
 
-Namespace `CC.Conj`.  Two specifications with the same ordered input and
-output domains conjoin: the conjunction permits the rows that both permit.
+Namespace `CC.Inter`.  Two specifications with the same ordered input and
+output domains intersect: the intersection permits the rows that both permit.
 
-* `conj`               — Def. `def:conjunction` (the table `P₁ ∩ P₂`, given totality)
-* `not_closed`         — Lifted Monotonicity is not closed under conjunction
-* `conj_liftedMono_of_bound` — Prop. `prop:conjunction-bound`: a monotone bound
-  that both specifications permit makes the conjunction monotone
+* `inter`               — Def. `def:intersection` (the table `P₁ ∩ P₂`, given totality)
+* `not_closed`         — Lifted Monotonicity is not closed under intersection
+* `inter_liftedMono_of_bound` — Prop. `prop:intersection-bound`: a monotone bound
+  that both specifications permit makes the intersection monotone
 -/
 
 namespace CC
-namespace Conj
+namespace Inter
 
 open CC.Comp (Monotone)
 
 section
 variable {I O : Type} [PO I] [PO O]
 
-/-- The conjunction of two specifications over the same ordered domains, when
+/-- The intersection of two specifications over the same ordered domains, when
 the intersection of their tables is total. -/
-def conj (s₁ s₂ : Spec I O) (htot : ∀ i, ∃ o, s₁.P i o ∧ s₂.P i o) : Spec I O where
+def inter (s₁ s₂ : Spec I O) (htot : ∀ i, ∃ o, s₁.P i o ∧ s₂.P i o) : Spec I O where
   P i o := s₁.P i o ∧ s₂.P i o
   total := htot
 
-/-- **Prop. `prop:conjunction-bound`.**  Let `g` be monotone.  If every output
+/-- **Prop. `prop:intersection-bound`.**  Let `g` be monotone.  If every output
 `s₁` permits at `j` lies below `g j`, and both specifications permit `g j` at
-every `j`, the conjunction is a specification and satisfies Lifted
+every `j`, the intersection is a specification and satisfies Lifted
 Monotonicity. -/
-theorem conj_liftedMono_of_bound (s₁ s₂ : Spec I O) (g : I → O) (hg : Monotone g)
+theorem inter_liftedMono_of_bound (s₁ s₂ : Spec I O) (g : I → O) (hg : Monotone g)
     (hb : ∀ j o, s₁.P j o → o ≼ g j) (h₁ : ∀ j, s₁.P j (g j)) (h₂ : ∀ j, s₂.P j (g j)) :
-    (conj s₁ s₂ fun j => ⟨g j, h₁ j, h₂ j⟩).LiftedMono := by
+    (inter s₁ s₂ fun j => ⟨g j, h₁ j, h₂ j⟩).LiftedMono := by
   intro i j hij X _ hX
   exact ⟨g j, ⟨h₁ j, h₂ j⟩, fun x hx => PO.trans (hb i x (hX x hx).1) (hg i j hij)⟩
 
 end
 
-/-! ## Lifted Monotonicity is not closed under conjunction -/
+/-! ## Lifted Monotonicity is not closed under intersection -/
 
 /-- Four outputs: `a` and `b` incomparable, both below `c` and below `d`;
 `c` and `d` incomparable. -/
@@ -78,13 +78,13 @@ def sD : Spec Unit Q4 where
 theorem q4_below (o u : Q4) (hu : u = .c ∨ u = .d) (ho : o = .a ∨ o = .b ∨ o = u) : o ≼ u := by
   rcases hu with rfl | rfl <;> rcases ho with rfl | rfl | h <;> (try subst h) <;> trivial
 
-/-- **Lifted Monotonicity is not closed under conjunction.**  `sC` and `sD`
+/-- **Lifted Monotonicity is not closed under intersection.**  `sC` and `sD`
 satisfy Lifted Monotonicity (`c` and `d` bound their fibers), but their
-conjunction has the fiber `{a, b}`, and `a` and `b` have no common output
+intersection has the fiber `{a, b}`, and `a` and `b` have no common output
 extension in it. -/
 theorem not_closed :
     sC.LiftedMono ∧ sD.LiftedMono ∧
-      ∀ htot, ¬ (conj sC sD htot).LiftedMono := by
+      ∀ htot, ¬ (inter sC sD htot).LiftedMono := by
   refine ⟨?_, ?_, ?_⟩
   · intro _ _ _ X _ hX
     refine ⟨.c, (by decide : (Q4.c ≠ .d)), fun x hx => ?_⟩
@@ -103,9 +103,9 @@ theorem not_closed :
     have hb := hall .b (by simp)
     cases u <;> simp_all [PO.le, Q4.le, sC, sD]
 
-/-- The conjunction of `sC` and `sD` is total: `a` is in both fibers. -/
+/-- The intersection of `sC` and `sD` is total: `a` is in both fibers. -/
 theorem sCD_total : ∀ i, ∃ o, sC.P i o ∧ sD.P i o :=
   fun _ => ⟨.a, (by decide : Q4.a ≠ .d), (by decide : Q4.a ≠ .c)⟩
 
-end Conj
+end Inter
 end CC
