@@ -1,6 +1,7 @@
 import CoordCriterion.Appendix.Guarded
 import CoordCriterion.Appendix.JointMono
 import CoordCriterion.Appendix.ComponentSystems
+import CoordCriterion.Appendix.Conjunction
 
 /-!
 # Paper App. D, "Proofs and Details for Composition" (`appendices/composition.tex`)
@@ -648,6 +649,33 @@ theorem «ex:bare-reads/latest-value» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd
     ¬ (Inst.latestG δ rd σ0).LiftedMono ∧
       ∃ τ : State (Inst.latestG δ rd σ0), ReachableCF τ ∧ ∃ o, τ.R τ.cur o ∧ ¬ Exposable τ o :=
   ⟨Inst.latestG_not_liftedMono δ rd σ0 hc, Inst.latest_needs_store_commitment δ rd σ0 hc⟩
+
+/-! ## Conjunction (`app:conjunction`) -/
+
+/-- Proof of Proposition `prop:conjunction-bound`: "Since `g(j) ∈ P₁(j) ∩ P₂(j)`
+for every `j`, the table `P₁ ∩ P₂` is total.  Let `i ≼ j` and let
+`X ⊆ P₁(i) ∩ P₂(i)` be finite and nonempty.  Every `x ∈ X` is in `P₁(i)`, so
+`x ≼ g(i)`, and `g(i) ≼ g(j)` since `g` is monotone.  So `g(j) ∈ P₁(j) ∩ P₂(j)`
+extends every member of `X`, which is Lifted Monotonicity."  Lean:
+`Conj.conj_liftedMono_of_bound`. -/
+theorem «app:conjunction/bound» {I O : Type} [PO I] [PO O] (s₁ s₂ : Spec I O) (g : I → O)
+    (hg : Comp.Monotone g) (hb : ∀ j o, s₁.P j o → o ≼ g j) (h₁ : ∀ j, s₁.P j (g j))
+    (h₂ : ∀ j, s₂.P j (g j)) :
+    (Conj.conj s₁ s₂ fun j => ⟨g j, h₁ j, h₂ j⟩).LiftedMono :=
+  Conj.conj_liftedMono_of_bound s₁ s₂ g hg hb h₁ h₂
+
+/-- "In the example of Section `sec:conjunction`, both specs satisfy Lifted
+Monotonicity: with a single input, Lifted Monotonicity is directedness of the
+one fiber, and `c` and `d` bound their fibers.  The conjunction is total, since
+`a` is in both fibers, and its fiber `{a,b}` is not directed.  By Proposition
+`prop:exposure-boundary`, some output of the conjunction at a state reachable
+without commitment is not legal."  Lean: `Conj.not_closed`, `Conj.sCD_total`,
+and `«sec:conjunction/not-closed»`. -/
+theorem «app:conjunction/example» :
+    (∀ i, ∃ o, Conj.sC.P i o ∧ Conj.sD.P i o) ∧
+      Conj.sC.LiftedMono ∧ Conj.sD.LiftedMono ∧
+      ¬ (Conj.conj Conj.sC Conj.sD Conj.sCD_total).LiftedMono :=
+  ⟨Conj.sCD_total, Conj.not_closed.1, Conj.not_closed.2.1, Conj.not_closed.2.2 _⟩
 
 /-! ## Components and typed pipelines (`app:components`) -/
 

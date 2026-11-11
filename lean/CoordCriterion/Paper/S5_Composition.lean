@@ -1,6 +1,7 @@
 import CoordCriterion.Appendix.Guarded
 import CoordCriterion.Appendix.JointMono
 import CoordCriterion.Appendix.Components
+import CoordCriterion.Appendix.Conjunction
 
 /-!
 # Paper §5, "Composition and Proper Coordination" (`sections/composition.tex`)
@@ -388,6 +389,50 @@ theorem «sec:composite-calm/reach» :
       ∀ _inst : PO Joint.Mid, ∃ i, ∀ o τ,
         ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output o) τ :=
   Joint.no_order_counterexample
+
+/-! ## Conjunction (`sec:conjunction`) -/
+
+/-- **Definition `def:conjunction`** (Conjunction): "Let `𝒮₁ = (I,≼_I,O,≼_O,P₁)`
+and `𝒮₂ = (I,≼_I,O,≼_O,P₂)` share their ordered domains.  Their conjunction
+`𝒮₁ ∧ 𝒮₂` has table `P₁ ∩ P₂`.  It is an I/O specification when `P₁ ∩ P₂` is
+total on `I`: every input has an output that both permit."  Lean: `Conj.conj`
+takes the totality of the intersection as an argument. -/
+theorem «def:conjunction» {I O : Type} [PO I] [PO O] (s₁ s₂ : Spec I O)
+    (htot : ∀ i, ∃ o, s₁.P i o ∧ s₂.P i o) (i : I) (o : O) :
+    (Conj.conj s₁ s₂ htot).P i o ↔ s₁.P i o ∧ s₂.P i o :=
+  Iff.rfl
+
+/-- "Conjunction does not preserve Lifted Monotonicity.  Let `a` and `b` be
+incomparable outputs, each below both `c` and `d`, with `c` and `d`
+incomparable, and let both specs have a single input.  The fiber `{a,b,c}` is
+directed, since `c` extends each of its members, and so is `{a,b,d}`.  Their
+intersection `{a,b}` is not: no output in it extends both `a` and `b`.  Two
+specs that need no commitment can thus have a conjunction that does."  Lean:
+`Conj.not_closed` (outputs `Conj.Q4`, input `Unit`); the conjunction is total
+(`Conj.sCD_total`); "needs no commitment" and "does" are Lifted Monotonicity
+and its failure, read through Proposition `prop:exposure-boundary`
+(`exposure_boundary`): the conjunction has a state reachable without
+commitment with an output that is not legal. -/
+theorem «sec:conjunction/not-closed» :
+    Conj.sC.LiftedMono ∧ Conj.sD.LiftedMono ∧
+      ¬ (Conj.conj Conj.sC Conj.sD Conj.sCD_total).LiftedMono ∧
+      ¬ ∀ τ : State (Conj.conj Conj.sC Conj.sD Conj.sCD_total), ReachableCF τ →
+          ∀ o, τ.R τ.cur o → Exposable τ o := by
+  obtain ⟨h1, h2, h3⟩ := Conj.not_closed
+  exact ⟨h1, h2, h3 Conj.sCD_total, fun h => h3 Conj.sCD_total
+    ((liftedMono_iff_commonExpansion _).2 ((exposure_boundary _).2 h))⟩
+
+/-- **Proposition `prop:conjunction-bound`** (Conjunction under a monotone
+bound): "Let `g : I → O` be monotone.  Suppose that every output `𝒮₁` permits
+at an input `j` lies below `g(j)`, and that `𝒮₁` and `𝒮₂` both permit `g(j)` at
+every `j`.  Then `𝒮₁ ∧ 𝒮₂` is an I/O specification and satisfies Lifted
+Monotonicity."  Lean: `Conj.conj_liftedMono_of_bound`; totality is witnessed
+by `g`. -/
+theorem «prop:conjunction-bound» {I O : Type} [PO I] [PO O] (s₁ s₂ : Spec I O) (g : I → O)
+    (hg : Comp.Monotone g) (hb : ∀ j o, s₁.P j o → o ≼ g j) (h₁ : ∀ j, s₁.P j (g j))
+    (h₂ : ∀ j, s₂.P j (g j)) :
+    (Conj.conj s₁ s₂ fun j => ⟨g j, h₁ j, h₂ j⟩).LiftedMono :=
+  Conj.conj_liftedMono_of_bound s₁ s₂ g hg hb h₁ h₂
 
 end Paper
 end CC

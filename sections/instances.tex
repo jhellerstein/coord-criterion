@@ -114,24 +114,43 @@ proscribes.  The explicit relation $E$ holds, at each input, the answers that
 the read rule above gives.
 \end{definition}
 
+\begin{definition}[Store specification]
+\label{def:store-spec}
+The \emph{store specification} $\Spec_{\mathrm{st}}$ has the inputs and outputs
+of Definition~\ref{def:hat-spec}.  At each input, it permits any subset of the
+answers that the read rule gives.
+\end{definition}
+
+The store promises its read rule and nothing about isolation.  Its full answers
+are the rows of $E$, and the conjunction $\Spec_{\mathrm{st}}\wedge\Spec_L$
+(Definition~\ref{def:conjunction}) is the store held to isolation level $L$.
+It is total, since both permit the empty set of answers.
+
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
 Suppose each transaction's timestamp exceeds that of every version it reads.
-For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
-satisfies Lifted Monotonicity for $E$, so by Complete CAP these levels stay
+For read uncommitted and read committed, $E\subseteq P_L$ and
+$\Spec_{\mathrm{st}}\wedge\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
+satisfies Lifted Monotonicity for $E$, and by Complete CAP these levels stay
 available and consistent through partitions.  For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
-serializability, no explicit relation that answers every read satisfies
-Lifted Monotonicity for it.
+serializability, $\Spec_{\mathrm{st}}\wedge\Spec_L$ fails Lifted Monotonicity,
+and no explicit relation that answers every read satisfies Lifted Monotonicity
+for it.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A read's answer under $E$ depends only on the history preceding it, so
-later input never changes it, and the timestamp condition rules out the
-dependency cycles of G0 and G1c.  For the converse, let two transactions at
-different replicas each read $x_0$ and write $x$.  Each replica's answer is
-forced, and their union contains a cycle on $x$ with an anti-dependency,
-which is Lost Update.
+A read's answer under the read rule depends only on the history preceding
+it, so later input never changes it: the rule is a monotone function of the
+input.  The timestamp condition rules out the dependency cycles of G0 and G1c,
+so $\Spec_L$ permits the rule's answers.  Proposition~\ref{prop:conjunction-bound},
+with the read rule as the bound, gives Lifted Monotonicity of
+$\Spec_{\mathrm{st}}\wedge\Spec_L$, whose rows include those of $E$.  For the
+converse, let two transactions at different replicas each read $x_0$ and write
+$x$.  Each replica's answer is forced, and their union contains a cycle on $x$
+with an anti-dependency, which is Lost Update.  So the store's forced answer at
+one replica has no extension in $\Spec_{\mathrm{st}}\wedge\Spec_L$ once both
+transactions are in the input.
 \end{proof}
 
 The timestamp condition is needed.  With timestamps fixed when a transaction

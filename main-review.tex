@@ -2075,6 +2075,59 @@ satisfies Lifted Monotonicity when every node does on the outputs offered to
 it, checked node by node much as types are
 (Appendix~\ref{app:dataflow-graphs}).
 
+\subsection{Conjunction}
+\label{sec:conjunction}
+
+Sequential composition feeds the outputs of one spec to the inputs of the
+next. Specs can also be combined on a shared interface. An application spec,
+such as a replicated store that answers reads by a fixed rule, may promise
+nothing about isolation, while a consistency property, such as an isolation
+level, constrains the same reads. A system that meets both may produce only
+the rows that both permit.
+
+\begin{definition}[Conjunction]
+\label{def:conjunction}
+Let $\Spec_1=(I,\InputOrd,O,\OutputOrd,P_1)$ and
+$\Spec_2=(I,\InputOrd,O,\OutputOrd,P_2)$ share their ordered domains. Their
+\emph{conjunction} $\Spec_1\wedge\Spec_2$ has table $P_1\cap P_2$. It is an
+\spectype when $P_1\cap P_2$ is total on $I$: every input has an output that
+both permit.
+\end{definition}
+
+The shared domains matter. Isolation levels are defined on histories of
+reads, writes, and commits, so an application spec must describe its inputs
+and outputs in those terms before it can be conjoined with one. The HAT
+specification of Section~\ref{sec:hat-instance} does so from the start.
+
+Conjunction does not preserve Lifted Monotonicity. Let $a$ and $b$ be
+incomparable outputs, each below both $c$ and $d$, with $c$ and $d$
+incomparable, and let both specs have a single input. The fiber $\{a,b,c\}$ is
+directed, since $c$ \outrel each of its members, and so is $\{a,b,d\}$. Their
+intersection $\{a,b\}$ is not: no output in it \outrel both $a$ and $b$. Two
+specs that need no \commitment can thus have a conjunction that does. A
+monotone bound rules this out.
+
+\begin{proposition}[Conjunction under a monotone bound]
+\label{prop:conjunction-bound}
+Let $g:I\to O$ be monotone. Suppose that every output $\Spec_1$ permits at an
+input $j$ lies below $g(j)$, and that $\Spec_1$ and $\Spec_2$ both permit $g(j)$
+at every $j$. Then $\Spec_1\wedge\Spec_2$ is an \spectype and satisfies Lifted
+Monotonicity.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+The conjunction permits $g(j)$ at every $j$, so it is total. An output it
+permits at $i\InputOrd j$ lies below $g(i)$, and $g(i)\OutputOrd g(j)$, so
+$g(j)$ \outrel every output it permits at inputs below $j$. Full proof in
+Appendix~\ref{app:conjunction}.
+\end{proof}
+
+A store whose answers follow a monotone rule therefore stays monotone when
+conjoined with any property that admits the rule's answers. The HAT levels
+are an instance (Theorem~\ref{thm:hat-levels}). Read committed admits the
+store's answers, and its conjunction with the store is monotone. Snapshot
+isolation does not, and its conjunction with the store needs a \commitment.
+
 \section{Related Work and Mappings}
 \label{sec:instances}
 \label{sec:related}
@@ -2185,23 +2238,41 @@ proscribes. \textcolor{reviewed}{The explicit relation $E$ holds, at each input,
 the read rule above gives.}
 \end{definition}
 
+\begin{definition}[Store specification]
+\label{def:store-spec}
+The \emph{store specification} $\Spec_{\mathrm{st}}$ has the inputs and outputs
+of Definition~\ref{def:hat-spec}. At each input, it permits any subset of the
+answers that the read rule gives.
+\end{definition}
+
+The store promises its read rule and nothing about isolation. Its full answers
+are the rows of $E$, and the conjunction $\Spec_{\mathrm{st}}\wedge\Spec_L$
+(Definition~\ref{def:conjunction}) is the store held to isolation level $L$. It is total, since both permit the empty set of answers.
+
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
-\textcolor{reviewed}{Suppose each transaction's timestamp exceeds that of every version it reads.} \textcolor{reviewed}{For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
-satisfies Lifted Monotonicity for $E$, so by Complete CAP these levels stay
-available and consistent through partitions.} \textcolor{reviewed}{For any level that proscribes
+\textcolor{reviewed}{Suppose each transaction's timestamp exceeds that of every version it reads.} For read uncommitted and read committed, $E\subseteq P_L$ and
+$\Spec_{\mathrm{st}}\wedge\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
+satisfies Lifted Monotonicity for $E$, and by Complete CAP these levels stay
+available and consistent through partitions. \textcolor{reviewed}{For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
-serializability, no explicit relation that answers every read satisfies
-Lifted Monotonicity for it.}
+serializability, $\Spec_{\mathrm{st}}\wedge\Spec_L$ fails Lifted Monotonicity,
+and no explicit relation that answers every read satisfies Lifted Monotonicity
+for it.}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A read's answer under $E$ depends only on the history preceding it, so
-later input never changes it, and the timestamp condition rules out the
-dependency cycles of G0 and G1c. For the converse, let two transactions at
-different replicas each read $x_0$ and write $x$. Each replica's answer is
-forced, and their union contains a cycle on $x$ with an anti-dependency,
-which is Lost Update.
+A read's answer under the read rule depends only on the history preceding
+it, so later input never changes it: the rule is a monotone function of the
+input. The timestamp condition rules out the dependency cycles of G0 and G1c,
+so $\Spec_L$ permits the rule's answers. Proposition~\ref{prop:conjunction-bound},
+with the read rule as the bound, gives Lifted Monotonicity of
+$\Spec_{\mathrm{st}}\wedge\Spec_L$, whose rows include those of $E$. For the
+converse, let two transactions at different replicas each read $x_0$ and write
+$x$. Each replica's answer is forced, and their union contains a cycle on $x$
+with an anti-dependency, which is Lost Update. So the store's forced answer at
+one replica has no extension in $\Spec_{\mathrm{st}}\wedge\Spec_L$ once both
+transactions are in the input.
 \end{proof}
 
 The timestamp condition is needed. With timestamps fixed when a transaction
@@ -2724,6 +2795,8 @@ rows at $k$.
   component; admitted run & a \commitment basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in P$ & Def.~\ref{def:component}\\
   typed pipeline; feed; external observation & components $C_1,C_2$ joined by feeds, an admitted run of $C_1$ ending at $m$ and one of $C_2$ from $\sigma(m)$; the pair $(i,o)$ a feed shows & Def.~\ref{def:typed-pipeline}\\
   contract-proper; implementation-proper & the pipeline of $\Spec_1$ and $\Spec_2$ is proper; no downstream run of a feed applies a \commitment & Def.~\ref{def:typed-pipeline}\\
+  conjunction $\Spec_1\wedge\Spec_2$ & table $P_1\cap P_2$, for specs sharing their ordered domains & Def.~\ref{def:conjunction}\\
+  store specification $\Spec_{\mathrm{st}}$ & any subset of the HAT read rule's answers & Def.~\ref{def:store-spec}\\
   \bottomrule
 \end{tabular}
 }
@@ -3630,6 +3703,24 @@ contradicted by an entry it has not seen, and $G$ is not monotone. By the
 exposure boundary some output of $G$ then needs a \commitment of the store's
 own. Implementations typically enforce it by routing reads through the log.
 \end{example}
+
+\subsection{Conjunction}
+\label{app:conjunction}
+
+\begin{proof}[Proof of Proposition~\ref{prop:conjunction-bound}]
+Since $g(j)\in P_1(j)\cap P_2(j)$ for every $j$, the table $P_1\cap P_2$ is
+total. Let $i\InputOrd j$ and let $X\subseteq P_1(i)\cap P_2(i)$ be finite and
+nonempty. Every $x\in X$ is in $P_1(i)$, so $x\OutputOrd g(i)$, and
+$g(i)\OutputOrd g(j)$ since $g$ is monotone. So $g(j)\in P_1(j)\cap P_2(j)$
+\outrel every member of $X$, which is Lifted Monotonicity.
+\end{proof}
+
+In the example of Section~\ref{sec:conjunction}, both specs satisfy Lifted
+Monotonicity: with a single input, Lifted Monotonicity is directedness of the
+one fiber, and $c$ and $d$ bound their fibers. The conjunction is total, since
+$a$ is in both fibers, and its fiber $\{a,b\}$ is not directed. By
+Proposition~\ref{prop:exposure-boundary}, some output of the conjunction at a
+state reachable without \commitment is not legal.
 
 \subsection{Components and typed pipelines}
 \label{app:components}
