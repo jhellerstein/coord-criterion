@@ -216,16 +216,12 @@ earlier than the output required.  The \commitments required by a spec's outputs
 therefore do not depend on their timing or representation in a system's
 \commitment basis.
 
-Observable equivalence is one-way only: all system runs have observably
-equivalent canonical runs, but not necessarily vice versa
-(Appendix~\ref{app:bases}).  Note also that observable equivalence is a
-guarantee only on inputs and outputs, not on remainder tables.  A system run's
-\commitments may be more aggressive, removing rows that its canonical run keeps.
-As a result, a spec can be confluent under canonical runs, but a system with
-that spec may not be confluent, for example when it removes a necessary
-common extension.  The registrar is an example.  After closing the polls at
-$ab\cdot$, it cannot accept the late ballot $aba$, although its canonical run,
-which only emits $\bot$, can.
+The converse of the lemma is not true because systems can choose to do less
+than canonical runs allow (Appendix~\ref{app:bases}).  Systems may constrain their runs arbitrarily, and
+their remainder tables may lack rows that their canonical runs keep.  So a spec
+can be confluent while a system for it is not.  The registrar is an example:
+after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$,
+although its canonical run, which only emits $\bot$, can.
 
 The CALM and CAP criteria are about specs and
 their canonical runs.  A system with no \commitment events inherits their
