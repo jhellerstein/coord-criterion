@@ -171,9 +171,7 @@ networks~\cite{ameloot2013relational,hellerstein2020keeping}. A related
 question comes from the CAP conjecture: which consistency guarantees can remain
 available when participants cannot communicate? There, the original proof
 applied in a different restricted setting: linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are invoked
-quite broadly: CALM as a general rule that monotone programs need no
-coordination, CAP as a general constraint on distributed systems. The folklore
+registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are invoked broadly: CALM as a rule that monotone programs need no coordination, CAP as a constraint on distributed systems. The folklore
 outgrew the proofs.
 
 The apparent connection between CALM and CAP was never established in a common
@@ -202,9 +200,8 @@ properly placed.
 In systems, as in life, our possibilities narrow over time. Sometimes the world
 moves on, and possibilities are lost to us. Sometimes possibilities disappear
 because we must decide among them. A decision is incidental when
-every possibility it removes is covered by an alternative that remains. A
-decision is fateful when it rules out a possibility that no remaining
-alternative can cover. When must a system make a fateful decision?
+every possibility it removes is covered by a remaining alternative. A
+decision is fateful when it rules out a possibility that no remaining alternative covers. When must a system make a fateful decision?
 
 We ground the problem in a simple model of \emph{\spectype[s]}, or \emph{specs}
 for short, independent of any language, protocol, or placement. The designer of
@@ -645,11 +642,10 @@ states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
 We compare a system's choices with every behavior the declared spec permits,
-not only the behaviors that system happens to produce.
+not only those the system happens to produce.
 
 Input events keep only rows whose input \inrel the current one, and output
-events keep only rows whose outputs \outrelbase what has been emitted.  Both
-steps are relational selections, and selections commute.
+events keep only rows whose outputs \outrelbase what was emitted.  Both steps are relational selections, which commute.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -758,12 +754,9 @@ and~\ref{sec:crdt-instance} treat both.
 \section{Complete CALM}
 \label{sec:complete-calm}
 
-We now extend CALM theory to nondeterministic specs, whose fibers may contain
-several outputs.  Section~\ref{sec:lifted-monotonicity} defines Lifted
-Monotonicity, Section~\ref{sec:lifted-output-events} lifts output events, and
-Section~\ref{sec:complete-calm-theorem} proves Complete CALM.
+We now extend CALM to nondeterministic specs, whose fibers may contain several outputs: we define Lifted Monotonicity (\S\ref{sec:lifted-monotonicity}), lift output events (\S\ref{sec:lifted-output-events}), and prove Complete CALM (\S\ref{sec:complete-calm-theorem}).
 
-\subsection{Nondeterministic specs and Lifted Monotonicity}
+\subsection{Nondeterminism and Lifted Monotonicity}
 \label{sec:ambiguity-story}
 \label{sec:relational-specifications}
 \label{sec:lifted-monotonicity}
@@ -790,8 +783,7 @@ among them, and does not by itself imply a \commitment. Specification states and
 Figure~\ref{fig:ambiguity-frames} contrasts two specs with several outputs
 in one fiber: serial schedules for two transactions, and route sets observed by a
 traceroute-like tool.  For the discussion here, transaction outputs are simply
-serial schedules, to which executions correspond via equivalence;
-Section~\ref{sec:hat-instance} studies more thorough transactional specs.
+serial schedules, to which executions correspond via equivalence (\S\ref{sec:hat-instance} studies richer transactional specs).
 
 \begin{figure}[t]
   \centering
@@ -870,8 +862,7 @@ $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \begin{definition}[Directed fiber, directed fibers]
 \label{def:fiber-directedness}
 A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
-$X\subseteq F$ is compatible in $F$.  An \spectype has \emph{directed fibers} when every fiber
-$\fiber{i}$ is directed.
+$X\subseteq F$ is compatible in $F$.  A spec has \emph{directed fibers} when every fiber is directed.
 \end{definition}
 
 A singleton fiber is trivially directed.  The traceroute fiber is directed
@@ -934,29 +925,26 @@ common \outnoun there.  \fullproof
 
 To connect our expanded monotonicity definition to consistency, we return to
 runs, where nondeterminism raises a new question: when emitting one output
-removes others, is that removal a \commitment?  The output event itself is
-unchanged from the functional case: at a state $(i,R)$ with $o\in R(i)$,
+removes others, is that removal a \commitment?  The output event is unchanged from the functional case: at a state $(i,R)$ with $o\in R(i)$,
 $\mathsf{output}(o)$ emits $o$ and keeps the rows whose outputs \outrelbase $o$,
-ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}.
+ending at $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).
 
 Removing a row $(k,x)$ does not always lose the information in its output.  If
 some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
 nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
 would have.  We call this \emph{output subsumption} and put $(k,x)$ in
 $\Subsumed_o$.  Every other removed row goes in $\Excluded_o$.  With several
-outputs at an input, the canonical \commitment $x_o$ is the removal of the rows
-in $\Excluded_o$ only; the output event still removes the rows in
+outputs at an input, the canonical \commitment $x_o$ removes only the rows in $\Excluded_o$; the output event still removes the rows in
 $\Subsumed_o$, but that removal is not a \commitment.  If $x_o$ removes every
 row at $k$, it rules out the input $k$; otherwise it rules out only the
 excluded outputs at $k$.  In the functional case every removed row is
 excluded, so $x_o$ is as before.
 
-In the running examples, emitting $\bot$ under the equality order
+In the examples, emitting $\bot$ under the equality order
 (Figure~\ref{fig:nonmonotone-frame}) puts the rows for $aba$ and $abb$ in
 $\Excluded_o$, ruling out those inputs.  Emitting $[A,B]$ in
 Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in $\Excluded_o$,
-ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g) are
-all in $\Subsumed_o$, so emitting there needs no \commitment.
+ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.
 
 Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
 applies no \commitment, that is, when $\Excluded_o$ is empty.  With several
@@ -1106,9 +1094,7 @@ spec.
 \subsection{Systems and canonical runs}
 \label{sec:systems}
 
-A spec describes which behaviors are permitted, but not how a system chooses
-among them.  We now model those choices, and show that a system's inputs and
-outputs always remain those of a canonical run.
+A spec says which behaviors are permitted, not how a system chooses among them.  We now model those choices, and show that a system's inputs and outputs always match a canonical run's.
 
 \begin{figure}[t]
   \centering
@@ -1192,10 +1178,9 @@ although its canonical run, which only emits $\bot$, can.
 
 The CALM and CAP criteria are
 about specs and their canonical runs. A system with no \commitment events
-inherits their confluence directly, since its runs are canonical runs. For a
+inherits their confluence, since its runs are canonical runs. For a
 system with \commitments of its own, showing that it inherits that confluence
-requires an argument about that system, which is outside the scope of this
-paper.
+requires an argument about that system, beyond this paper's scope.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
@@ -1230,9 +1215,7 @@ We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
 participants actually emit.  Outputs in
 $P\setminus E$ are not emitted by participants;
-they remain permitted in $P$ to capture implicit combinations of emitted outputs---e.g.,
-as could be constructed by external observers or clients making sense of explicit outputs
-across participants.
+they remain permitted in $P$ to capture implicit combinations of emitted outputs, for example those an observer or client could assemble from explicit outputs across participants.
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
@@ -1339,8 +1322,7 @@ state at $j$ would need a row that \outrel every participant's output, and
 there is none.
 \end{proof}
 
-For $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity,
-and then the canonical system needs no \commitment.
+For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment.
 
 We return to the voters' spec.  Each voter decides whether it can commit and emits
 its vote, yes or no.  That decision is a \commitment: a voter that votes yes
@@ -1350,9 +1332,7 @@ output during a partition.  Each vote is cast by a different voter, so votes
 emitted on different sides of a partition never conflict (the full paper formalizes this placement as a deployment~\extended), and every
 set of votes an observer may collect is consistent.
 
-A partition does not change the intrinsic \commitments a spec needs; rather,
-it prevents separated participants from jointly enforcing those \commitments
-via coordination.  When Lifted Monotonicity
+A partition does not change the intrinsic \commitments a spec needs; it prevents separated participants from jointly enforcing them through coordination.  When Lifted Monotonicity
 for $E$ fails, some output of $E$ waits for another side, sacrificing
 Availability, or is emitted anyway, sacrificing Partition Consistency.
 
@@ -1453,7 +1433,7 @@ reaches without \commitment is legal.
 
 \begin{theorem}[Proper Coordination]
 \label{thm:proper-coordination}
-Let $\Spec_1$ guard $\Spec_2$ in a pipeline.
+Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
   \item The pipeline is proper exactly when $\Spec_2|_{\Spec_1}$ satisfies
         Lifted Monotonicity.
@@ -1551,9 +1531,9 @@ Baccaert and Ketsman show that a nondeterministic behavior can be computed
 without a list of all nodes exactly when it contains a \emph{node monotone}
 behavior~\cite{baccaert2023dcbq,baccaert2026spectrum}; node monotonicity is the
 common-extension condition for two rows whose networks share no node, and
-Complete CAP extends it to networks that overlap (\extended).
+Complete CAP extends it to networks that overlap~\cite{hellerstein2026completecalmfull}.
 
-\subsection{CRDTs: monotone queries over convergent state}
+\subsection{CRDTs and monotone queries}
 \label{sec:crdt-instance}
 
 A CRDT uses join semilattices to guarantee that replicas that have received
@@ -1605,10 +1585,7 @@ Suppose each transaction's timestamp exceeds that of every version it reads.
 For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
 Availability for $E$ and Partition Consistency.  For any level that proscribes
-Lost Update, including snapshot isolation, repeatable read, and
-serializability, $\Spec_L$ does not satisfy Lifted Monotonicity for any
-explicit relation $E$ that answers every read; hence no system for $\Spec_L$
-has Availability for such an $E$ and Partition Consistency.
+Lost Update, such as snapshot isolation, repeatable read, and serializability, $\Spec_L$ does not satisfy Lifted Monotonicity for any explicit relation $E$ answering every read; hence no system has Availability for such an $E$ and Partition Consistency.
 \end{theorem}
 \proofinfull
 
@@ -1646,14 +1623,10 @@ We construct a spec $\Spec_{\mathcal I}$ from this model.  An input is a
 ordered so that one precedes another when the replica running the second saw
 the first.  One history \inrel another when it adds transactions without
 changing what the earlier ones saw.  Only histories in which each transaction
-preserves $\mathcal I$ on its replica's state are inputs.  An output is a
-database state, ordered by inclusion of versions: a later state keeps every
-version of an earlier one.  Call a sub-history \emph{closed} when it contains
+preserves $\mathcal I$ on its replica's state are inputs.  An output is a database state; a later state keeps every version of an earlier one.  Call a sub-history \emph{closed} when it contains
 everything its transactions saw, and \emph{valid} when each of its closed
 sub-histories has a state satisfying $\mathcal I$.  At a history $h$,
-$P_{\mathcal I}$ permits the state of any valid closed sub-history of $h$.  A
-replica may thus hold transactions back, but whatever it exposes must be
-valid.
+$P_{\mathcal I}$ permits the state of any valid closed sub-history of $h$.  A replica may hold transactions back, but what it exposes must be valid.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
@@ -1664,8 +1637,7 @@ Monotonicity.
 
 In Bailis et al.'s payroll example, employee IDs must be unique, yet two
 replicas can concurrently assign the same unused ID (say, 7) to two employees.
-The history in which both replicas made their assignments \inrel each history
-in which only one did.  But every state that \outrel both single-assignment
+The history with both assignments \inrel each history with only one.  But every state that \outrel both single-assignment
 states has two employees with ID~7, violating the invariant, so $T$ is not
 invariant confluent.
 
@@ -1751,8 +1723,7 @@ for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.  We
 ask what the spec itself requires, independent of any menu of
 levels.  By Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.  Our
-composition results need no program logic, and the criteria are exact on
-specs, not conservative.
+composition results need no program logic, and the criteria are exact on specs.
 
 A limitation of prior CALM work was that it was constructive on only one side of
 its boundary.  Monotone programs need no coordination; for a non-monotone
@@ -1802,8 +1773,7 @@ Because the model makes \commitments explicit, it can also show where a
 composition coordinates (\S\ref{sec:composition}).  A totally ordered log
 and a key-value store are each non-monotone on their own, yet when the log
 guards the store, the log's \commitments are all the composition needs, and
-the store needs none.  Multi-Paxos is one way to distribute those
-\commitments.
+the store needs none.  Multi-Paxos is one way to distribute them.
 
 Complete CAP is the partition form of the same equivalence.  A system can keep
 the outputs selected by a spec's explicit relation available, and
