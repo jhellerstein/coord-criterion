@@ -1795,14 +1795,13 @@ sets to arbitrary input and output orders.
 
 Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
-Monotonicity with directed fibers.  When it fails, some reachable output
-requires a \commitment.  At each input it changes, a \commitment either empties
-the fiber or removes particular output rows.  Because \commitments are explicit, the model
-can also check where a composition coordinates
-(\S\ref{sec:composition}).  A totally ordered log and a
-key-value store are both non-monotone at their ordinary specs, yet
-when the log guards the store, the log's \commitments are all the composition
-needs and the store makes none.  Multi-Paxos is one way to distribute those
+Monotonicity with directed fibers.  When the test fails, some reachable output
+requires a \commitment, which rules out an input or some of its outputs.
+Because the model makes \commitments explicit, it can also show where a
+composition coordinates (\S\ref{sec:composition}).  A totally ordered log
+and a key-value store are each non-monotone on their own, yet when the log
+guards the store, the log's \commitments are all the composition needs, and
+the store needs none.  Multi-Paxos is one way to distribute those
 \commitments.
 
 Complete CAP is the partition form of the same equivalence.  A system can keep
