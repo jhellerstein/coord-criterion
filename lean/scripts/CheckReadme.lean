@@ -189,6 +189,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«cor:complete-cap-any-system»
 #check @CC.Paper.«sec:complete-cap/necessity-any-system»
 #check @CC.Paper.«sec:complete-cap/proof-system-commitment-free»
+#check @CC.Paper.«sec:complete-cap/canonical-system-commitment-free»
 #check @CC.Paper.«sec:complete-cap/A-eq-S-no-commitment»
 #check @CC.Paper.«sec:complete-cap/local-row-removal-necessary»
 #check @CC.Paper.«sec:complete-cap/lm-for-A-fails»

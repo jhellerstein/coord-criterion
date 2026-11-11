@@ -258,5 +258,34 @@ theorem canonical_run_contradicts {i k : I} {x : O} (hik : i ≼ k) (hx : sp.P k
   have s2 : Step τ1 (.output x) τ2 := Step.output τ1 τ2 x ⟨hju, PO.refl k⟩ rfl rfl
   exact ⟨τ2, Exec.cons s1 (Exec.cons s2 (Exec.nil _)), rfl⟩
 
+/-- **The canonical system for `P` needs no commitment when `𝒮` is consistent
+on `P`.**  `respSystem sp.P` performs no commitment event, and every output it
+emits is exposable at the emitting participant's state, so its output events
+apply no commitment. -/
+theorem respSystem_P_commitmentFree (hcons : ConsistentOn sp sp.P) {N : Nat}
+    {init : Fin N → I} {H : History sp D N}
+    (hp : Produced (respSystem (sp := sp) (D := D) sp.P) N init H) :
+    (∀ p γ, LEv.commitment γ ∉ H p) ∧
+    ∀ p a o b, H p = a ++ LEv.out o :: b →
+      ∀ σ, LRun (canon sp (init p)) a σ → Exposable σ o := by
+  refine ⟨fun p γ hmem => ?_, fun p a o b hH σ hrun => ?_⟩
+  · obtain ⟨a, b, hH⟩ := List.append_of_mem hmem
+    have := (hp p a (.commitment γ) b hH).2
+    simp [respSystem, respF, LEv.erase] at this
+  · obtain ⟨_, hAo, hge⟩ := hp p a (.out o) b hH
+    obtain ⟨hcur, hres, _, _⟩ :=
+      rinv_of_produced sp.P (compliant_of_eq_append (hp p) hH) hrun
+    rw [← hcur] at hAo
+    intro k x hx _
+    obtain ⟨hSx, hk, hex⟩ := (hres k x).1 hx
+    obtain ⟨u, hSu, hall⟩ := hcons [(σ.cur, o), (k, x)]
+      (by intro r hr; simp at hr; rcases hr with rfl | rfl <;> assumption) k
+      (by intro r hr; simp at hr; rcases hr with rfl | rfl
+          · exact hk
+          · exact PO.refl k)
+    have hou : o ≼ u := hall (σ.cur, o) (by simp)
+    have hxu : x ≼ u := hall (k, x) (by simp)
+    exact ⟨u, (hres k u).2 ⟨hSu, hk, fun e he => PO.trans (hex e he) hxu⟩, hou, hxu⟩
+
 end CAP
 end CC

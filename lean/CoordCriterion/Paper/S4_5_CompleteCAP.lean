@@ -322,7 +322,8 @@ theorem «thm:complete-cap» (sp : Spec I O) (D : Type) (E : Table I O)
    fun h => ⟨availabilityFor_resp E, pc_resp E h⟩⟩
 
 /-- "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted
-Monotonicity, and the canonical system needs no commitment" (first half). -/
+Monotonicity, and then the canonical system needs no commitment" (first
+half). -/
 theorem «thm:complete-cap/E-eq-P» (sp : Spec I O) (D : Type) :
     «def:escapes-cap» sp D sp.P ↔ sp.LiftedMono :=
   («thm:complete-cap» sp D sp.P (fun _ _ h => h)).trans
@@ -355,8 +356,9 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
     (hP : «def:partition-consistency» Sys) : «def:lm-for-A» sp E :=
   consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
 
-  /-- "For `E = P`, … the canonical system needs no commitment" (second
-  half).  Lean: with
+  /-- "For `E = P`, … and then the canonical system needs no commitment"
+  (second half; for the canonical system itself see
+  `«sec:complete-cap/canonical-system-commitment-free»`).  Lean: with
   Lifted Monotonicity, the commitment-free system `cfSystem` (empty basis,
   every legal output emitted by `output(o)`) has Availability and Partition
   Consistency, and every history it produces is commitment-free: it has no
@@ -376,6 +378,21 @@ theorem «sec:complete-cap/proof-system-commitment-free» (sp : Spec I O) (D : T
   ⟨⟨(availability_iff_atEnd _).1 (complete_cap_cf sp D h).1,
       (partitionConsistency_iff_atEnd _).1 (complete_cap_cf sp D h).2⟩,
     fun _ _ _ => cfSystem_coordinationFree⟩
+
+/-- "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted
+Monotonicity, and then the canonical system needs no commitment."  Lean: with
+Lifted Monotonicity, the canonical system for `P` (`respSystem sp.P`, the
+system of Def. `def:escapes-cap`) performs no commitment event, and every
+output it emits is exposable at the emitting participant's state, so no output
+event applies a commitment.  Without Lifted Monotonicity the claim fails: the
+canonical system may emit an output that is not exposable. -/
+theorem «sec:complete-cap/canonical-system-commitment-free» (sp : Spec I O) (D : Type)
+    (h : sp.LiftedMono) {N : Nat} {init : Fin N → I} {H : History sp D N}
+    (hp : Produced («sec:complete-cap/canonical-system» sp D sp.P) N init H) :
+    (∀ p γ, LEv.commitment γ ∉ H p) ∧
+    ∀ p a o b, H p = a ++ LEv.out o :: b →
+      ∀ σ, LRun (canon sp (init p)) a σ → Exposable σ o :=
+  respSystem_P_commitmentFree ((liftedMono_iff_commonExpansion sp).1 h) hp
 
   /-- Supporting operational lemma for the full-availability case.  If an output
   event `output(o)` in a receive-free local prefix removes a row by its canonical
