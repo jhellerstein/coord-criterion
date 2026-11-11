@@ -46,8 +46,8 @@ theorem «eq:spec-composition» {I M O : Type} (S1 : Table I M) (S2 : Table M O)
     Comp.tcomp S1 S2 i o ↔ ∃ m, S1 i m ∧ S2 m o :=
   Iff.rfl
 
-/-- "Since `P₁` is total on `I` and `P₂` is total on `M` (it has a row at
-every `m ∈ M`), every `i ∈ I` has a nonempty fiber in `P₂ ∘ P₁`."  Lean: the
+/-- "Every `i ∈ I` has a nonempty fiber in `P₂ ∘ P₁`, since `P₁` is total on
+`I` and `P₂` is total on `M` (it has a row at every `m ∈ M`)."  Lean: the
 composition is the specification `Comp.seq sp1 sp2`, whose table is
 `tcomp`; totality is its `total` field. -/
 theorem «sec:composition/seq-total» {I M O : Type} [PO I] [PO M] [PO O]

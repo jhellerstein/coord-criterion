@@ -381,7 +381,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
 | `«eq:spec-composition»` | theorem | Eq. |
-| `«sec:composition/seq-total»` | theorem | "Since `P₁` is total on `I` and `P₂` is total on `M` (it has a row at every `m ∈ M`), every `i ∈ I` has a nonempty fiber in `P₂ ∘ P₁`." Lean: |
+| `«sec:composition/seq-total»` | theorem | "Every `i ∈ I` has a nonempty fiber in `P₂ ∘ P₁`, since `P₁` is total on `I` and `P₂` is total on `M` (it has a row at every `m ∈ M`)." Lean: |
 | `«sec:composition/middle-totality-needed»` | theorem | Totality of `P₂` on *all* of `M` is needed (not stated in the paper; it explains the hypothesis above). |
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
