@@ -451,14 +451,14 @@ theorem «sec:complete-cap/deterministic-strategies» (D : Type) :
 
 /-! ### Paragraph "Gilbert and Lynch" -/
 
-/-- "We return to the register example, but add the requirement of
-linearizability regarding real-time precedence: if one operation finishes
-before another begins, every linearization must put the first before the
-second.  Now let the write finish before the read begins.  Every
-linearization must then put the write first, so the read must return `v`, and
-no output extends `q`'s answer `v_0`.  Since Availability requires `p` to
-acknowledge the write and `q` to answer `v_0`, the spec does not satisfy
-Lifted Monotonicity for those outputs."
+/-- "Linearizability respects real-time order: if one operation finishes
+before another begins, every linearization puts the first before the second.
+In the register example, suppose the write finishes before the read begins.
+Every linearization then puts the write first, so the read must return `v`.
+But each of `p` and `q` sees only its own request, and Availability requires
+`p` to acknowledge the write and `q` to answer `v_0`.  No output for the two
+requests together extends both answers, so the spec does not satisfy Lifted
+Monotonicity for them."
 
 Lean: the complete-response register `regFullSpec` (an output is a response
 map, operation id ↦ response, explained by some linearization and answering
@@ -479,15 +479,16 @@ theorem «sec:complete-cap/gl-register» :
     by decide, fun u hu h => CC.GL.hj_noread u hu.1 (h 1 _ (by simp [CC.GL.v0Map])),
     CC.GL.regFullSpec_not_liftedMono⟩
 
-/-- "By Corollary `cor:complete-cap-any-system`, then, no system keeps both outputs available and
-consistent across a partition, which is Gilbert and Lynch's theorem."  Lean: no system for `regFullSpec` has
+/-- "By Corollary `cor:complete-cap-any-system`, no system can keep both
+outputs available and stay consistent across a partition, which is Gilbert and
+Lynch's theorem."  Lean: no system for `regFullSpec` has
 Availability and Partition Consistency. -/
 theorem «sec:complete-cap/gl-no-system» (Sys : System CC.GL.regFullSpec D) :
     ¬ («def:partition-notions» Sys ∧ «def:partition-consistency» Sys) :=
   CC.GL.gilbert_lynch_direct_cap Sys
 
 /-- "The proof needs less than the full hypotheses here, which is why it
-yields Gilbert and Lynch's theorem exactly.  Place `p` and `q` on separate
+yields Gilbert and Lynch's theorem exactly.  We place `p` and `q` on separate
 sides.  Availability is used only to make `p` acknowledge the write and
 `q` answer the read; each fiber holds a single output, so any response will
 do, which is Gilbert and Lynch's availability.  Partition Consistency is used
@@ -510,9 +511,9 @@ theorem «sec:complete-cap/gl-two-row-forced» (Sys : System sp D)
     ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
   cap_two_step_forced Sys hA hC h₁ h₂ hj₁ hj₂
 
-/-- "Their theorem is a case of Complete CAP" … "By Corollary
+/-- "Gilbert and Lynch's theorem is a case of Complete CAP" … "By Corollary
 `cor:complete-cap-any-system`, no system can keep both outputs available and
-stay consistent across a partition.  This is Gilbert and Lynch's theorem.":  no system for the register lets every request receive a response
+stay consistent across a partition, which is Gilbert and Lynch's theorem.":  no system for the register lets every request receive a response
 and keeps the emitted responses reconcilable (explained by one
 linearization). -/
 theorem «sec:complete-cap/gilbert-lynch» (Sys : System CC.GL.regFullSpec D) :

@@ -151,7 +151,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 72 & 6664\\
+unclassified & 72 & 6695\\
 related-work detail & 4 & 501\\
 signposting & 9 & 358\\
 formal definition/notation & 7 & 338\\
@@ -595,7 +595,7 @@ row at $k$.} Rows are never added during execution. \removednote{\textbf{unclass
 relation $R\subseteq I\times O$, and commas separate conjuncts:
 $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ holds the rows whose
 input \inrel $j$ and whose output \outrel $o$.} \textcolor{newblue}{We say that a row $(k,u)$ is
-\emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs in $R$.} \removednote{\textbf{unclassified}, 88 words, rank 26; \textit{A spec describes every permitted input/output pair.}; labels def:residual-state, def:legal-input}
+\emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs in $R$.} \removednote{\textbf{unclassified}, 88 words, rank 27; \textit{A spec describes every permitted input/output pair.}; labels def:residual-state, def:legal-input}
 
 \textcolor{newblue}{The \emph{canonical state at $i$} has received $i$, emitted nothing, and
 removed no rows:}
@@ -685,7 +685,7 @@ $o_1,\ldots,o_m$, its remainder table is \(P[\mathrm{in}\InputGe i,\ \mathrm{out
 common \indesc $j$ of their current inputs when each can be continued to one
 common state with current input $j$.} \textcolor{newblue}{An \spectype is \emph{consistent} when
 every finite family of runs is confluent at every common \indesc of its current
-inputs.} \removednote{\textbf{unclassified}, 116 words, rank 22; \textit{Consistency requires confluence at every common , not merely at some later one.}}
+inputs.} \removednote{\textbf{unclassified}, 116 words, rank 23; \textit{Consistency requires confluence at every common , not merely at some later one.}}
 \end{definition}
 
 \textcolor{newblue}{Consistency as we define it has to hold after every output.} \textcolor{newblue}{An inconsistent
@@ -1359,19 +1359,19 @@ for $E$ fails, some output of $E$ waits for another side, sacrificing
 Availability, or is emitted anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
-Their theorem is a case of Complete CAP. We return to the register example, but
-add the requirement of linearizability regarding real-time precedence: if one
-operation finishes before another begins, every linearization must put the
-first before the second~\cite{herlihy1990linearizability}. Now let the write
-finish before the read begins. Every linearization must then put the write
-first, so the read must return $v$, and no output \outrel $q$'s answer $v_0$. Since Availability requires $p$ to acknowledge the write and $q$ to answer
-$v_0$, the spec does not satisfy Lifted Monotonicity for those outputs. By
+Gilbert and Lynch's theorem is a case of Complete CAP. Linearizability
+respects real-time order: if one operation finishes before another begins,
+every linearization puts the first before the
+second~\cite{herlihy1990linearizability}. In the register example, suppose the
+write finishes before the read begins. Every linearization then puts the write
+first, so the read must return $v$. But each of $p$ and $q$ sees only its own
+request, and Availability requires $p$ to acknowledge the write and $q$ to
+answer $v_0$. No output for the two requests together \outrel both answers, so
+the spec does not satisfy Lifted Monotonicity for them. By
 Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
-available and stay consistent across a partition. This is Gilbert and Lynch's
-theorem. \removednote{\textbf{unclassified}, 88 words, rank 27; \textit{The proof needs less than the full hypotheses here, which is why it yields Gilbert and ...}} \textcolor{newblue}{The full paper takes precedence from real time, extends
-Complete CAP to systems that choose their responses when responses are not
-forced, and derives
-the theorem in Gilbert and Lynch's asynchronous model~\cite{hellerstein2026completecalmfull}.}
+available and stay consistent across a partition, which is Gilbert and Lynch's
+theorem. \removednote{\textbf{unclassified}, 119 words, rank 21; \textit{The proof needs less than the full hypotheses here, which is why it yields Gilbert and ...}} \textcolor{newblue}{The full paper also derives the theorem in Gilbert and Lynch's asynchronous
+model~\cite{hellerstein2026completecalmfull}.}
 
 
 \section{Composition and Proper Coordination}
@@ -1591,7 +1591,7 @@ $L$, defined by the phenomena it proscribes~\cite{adya1999weakconsistency}, the
 table $P_L$ of $\Spec_L$ permits a set of answers at an input when the input
 extends to a history that answers every read, orders versions by timestamp, and
 exhibits none of those phenomena.} The explicit relation $E$ holds, at each
-input, the answers that the read rule above gives. \removednote{\textbf{unclassified}, 119 words, rank 21; \textit{The store specification [math] has the inputs and outputs of Definition .}; labels def:store-spec}
+input, the answers that the read rule above gives. \removednote{\textbf{unclassified}, 119 words, rank 22; \textit{The store specification [math] has the inputs and outputs of Definition .}; labels def:store-spec}
 \end{definition}
 
 \begin{theorem}[HAT levels]
@@ -1601,7 +1601,7 @@ satisfies Lifted Monotonicity for $E$, so by Complete CAP these levels stay
 available and consistent through partitions.} \textcolor{newblue}{For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
 serializability, no explicit relation that answers every read satisfies
-Lifted Monotonicity for it.} \removednote{\textbf{unclassified}, 116 words, rank 24; \textit{For read uncommitted and read committed, the timestamp condition rules out the dependency cycles of G0 ...}}
+Lifted Monotonicity for it.} \removednote{\textbf{unclassified}, 116 words, rank 25; \textit{For read uncommitted and read committed, the timestamp condition rules out the dependency cycles of G0 ...}}
 \end{theorem}
 \textcolor{newblue}{\proofinfull}
 
@@ -1617,7 +1617,7 @@ hence the algorithm. \removednote{\textbf{unclassified}, 22 words, rank 72; \tex
 
 Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent
-system~\cite{mahajan2011consistency}. \removednote{\textbf{related-work detail}, 101 words, rank 25; \textit{Their availability, that every request is eventually answered, is a response obligation in our terms (Appendix ...}} \removednote{\textbf{related-work detail}, 179 words, rank 11; \textit{An invariant is a predicate that every state must satisfy.}} \textcolor{newblue}{With real-time precedence recorded in
+system~\cite{mahajan2011consistency}. \removednote{\textbf{related-work detail}, 101 words, rank 26; \textit{Their availability, that every request is eventually answered, is a response obligation in our terms (Appendix ...}} \removednote{\textbf{related-work detail}, 179 words, rank 11; \textit{An invariant is a predicate that every state must satisfy.}} \textcolor{newblue}{With real-time precedence recorded in
 the input, both halves of their result follow from Complete CAP (\extended).}
 
 \subsection{Invariant confluence}

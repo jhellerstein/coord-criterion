@@ -1839,19 +1839,21 @@ sacrificing Availability, or is emitted anyway, sacrificing Partition
 Consistency.}
 
 \paragraph{Gilbert and Lynch.}
-\textcolor{reviewed}{Their theorem is a case of Complete CAP.} \textcolor{reviewed}{We return to the register example, but
-add the requirement of linearizability regarding real-time precedence: if one
-operation finishes before another begins, every linearization must put the
-first before the second~\cite{herlihy1990linearizability}.} \textcolor{reviewed}{Now let the write
-finish before the read begins.} \textcolor{reviewed}{Every linearization must then put the write
-first, so the read must return $v$, and no output \outrel $q$'s answer $v_0$.} \textcolor{reviewed}{Since Availability requires $p$ to acknowledge the write and $q$ to answer
-$v_0$, the spec does not satisfy Lifted Monotonicity for those outputs.} \textcolor{reviewed}{By
+\textcolor{reviewed}{Gilbert and Lynch's theorem is a case of Complete CAP.} \textcolor{reviewed}{Linearizability
+respects real-time order: if one operation finishes before another begins,
+every linearization puts the first before the
+second~\cite{herlihy1990linearizability}.} \textcolor{reviewed}{In the register example, suppose the
+write finishes before the read begins.} \textcolor{reviewed}{Every linearization then puts the write
+first, so the read must return $v$.} \textcolor{reviewed}{But each of $p$ and $q$ sees only its own
+request, and Availability requires $p$ to acknowledge the write and $q$ to
+answer $v_0$.} \textcolor{reviewed}{No output for the two requests together \outrel both answers, so
+the spec does not satisfy Lifted Monotonicity for them.} \textcolor{reviewed}{By
 Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
-available and stay consistent across a partition.} \textcolor{reviewed}{This is Gilbert and Lynch's
+available and stay consistent across a partition, which is Gilbert and Lynch's
 theorem.}
 
 The proof needs less than the full hypotheses here, which
-is why it yields Gilbert and Lynch's theorem exactly. Place $p$ and $q$ on
+is why it yields Gilbert and Lynch's theorem exactly. We place $p$ and $q$ on
 separate sides. Availability is used only to make $p$ acknowledge the
 write and $q$ answer the read; each fiber holds a single output, so any
 response will do, which is Gilbert and Lynch's availability. Partition

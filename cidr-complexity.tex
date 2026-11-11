@@ -1403,21 +1403,19 @@ for $E$ fails, some output of $E$ waits for another side, sacrificing
 Availability, or is emitted anyway, sacrificing Partition Consistency.\cxbar{131}{0.4 0.4 1}{e}
 
 \paragraph{Gilbert and Lynch.}
-\color{blue!75!black}\cxtag{132}{B/L}\cxbar{132}{0.9 0.45 0}{s}Their theorem is a case of Complete CAP.  We return to the register example, but
-add the requirement of linearizability regarding real-time precedence: if one
-operation finishes before another begins, every linearization must put the
-first before the second~\cite{herlihy1990linearizability}.  Now let the write
-finish before the read begins.  Every linearization must then put the write
-first, so the read must return $v$, and no output \outrel $q$'s answer $v_0$.
-Since Availability requires $p$ to acknowledge the write and $q$ to answer
-$v_0$, the spec does not satisfy Lifted Monotonicity for those outputs.  By
+\color{black}\cxtag{132}{N/M}\cxbar{132}{0.4 0.4 1}{s}Gilbert and Lynch's theorem is a case of Complete CAP.  Linearizability
+respects real-time order: if one operation finishes before another begins,
+every linearization puts the first before the
+second~\cite{herlihy1990linearizability}.  In the register example, suppose the
+write finishes before the read begins.  Every linearization then puts the write
+first, so the read must return $v$.  But each of $p$ and $q$ sees only its own
+request, and Availability requires $p$ to acknowledge the write and $q$ to
+answer $v_0$.  No output for the two requests together \outrel both answers, so
+the spec does not satisfy Lifted Monotonicity for them.  By
 Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
-available and stay consistent across a partition.  This is Gilbert and Lynch's
-theorem.
-The full paper takes precedence from real time, extends
-Complete CAP to systems that choose their responses when responses are not
-forced, and derives
-the theorem in Gilbert and Lynch's asynchronous model~\cite{hellerstein2026completecalmfull}.\cxbar{132}{0.9 0.45 0}{e}
+available and stay consistent across a partition, which is Gilbert and Lynch's
+theorem.  The full paper also derives the theorem in Gilbert and Lynch's asynchronous
+model~\cite{hellerstein2026completecalmfull}.\cxbar{132}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Composition and Proper Coordination}

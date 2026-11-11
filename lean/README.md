@@ -366,10 +366,10 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/local-row-removal-necessary»` | theorem | Supporting example for the voters' remark after Corollary `cor:complete-cap-any-system` (not quoted): |
 | `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another side, sacrificing Availability, or is emitted anyway, sacrificing Partition Con… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
-| `«sec:complete-cap/gl-register»` | theorem | "We return to the register example, but add the requirement of linearizability regarding real-time precedence: |
-| `«sec:complete-cap/gl-no-system»` | theorem | "By Corollary `cor:complete-cap-any-system`, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's the… |
+| `«sec:complete-cap/gl-register»` | theorem | "Linearizability respects real-time order: |
+| `«sec:complete-cap/gl-no-system»` | theorem | "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay consistent across a partition, which is Gilbert and Lynch's t… |
 | `«sec:complete-cap/gl-two-row-forced»` | theorem | "The proof needs less than the full hypotheses here, which is why it yields Gilbert and Lynch's theorem exactly. |
-| `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of Complete CAP" … "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay consistent across… |
+| `«sec:complete-cap/gilbert-lynch»` | theorem | "Gilbert and Lynch's theorem is a case of Complete CAP" … "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay con… |
 | `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |
 | `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |
