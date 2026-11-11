@@ -1145,14 +1145,12 @@ outputs always remain those of a canonical run.
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
 canonical \commitment $x_o$ that an output requires.  Systems may commit
 earlier or remove more: the registrar may close the polls before announcing a
-result, and a lock manager may fix an order before emitting it.  We therefore
-let systems apply their own \commitments, but only in a third kind of event
-alongside $\mathsf{input}(j)$ and $\mathsf{output}(o)$: a \emph{\commitment event}
-$\mathsf{apply}(\gamma)$, which applies a sequence $\gamma$ of \commitments
-and emits nothing.  A \commitment event may precede an output event, which then
-has less to remove.
-% As before, at any input, removing rows rules out their outputs;
-% removing every row at that input rules out the input as well.  
+result, and a lock manager may fix an order before emitting it.  We therefore add a third kind of event alongside $\mathsf{input}(j)$ and
+$\mathsf{output}(o)$.  A \emph{\commitment event} $\mathsf{apply}(\gamma)$
+applies a sequence $\gamma$ of \commitments and emits nothing, and systems may
+choose to apply \commitments this way, independent of inputs or outputs.  When
+a \commitment event precedes an output event, the output event has less left to
+remove.
 
 A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ and a
 possibly nondeterministic \emph{strategy} per participant that picks its next output,
