@@ -357,10 +357,10 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/canonical-never-waits»` | theorem | "The canonical system's participants never wait: |
 | `«sec:complete-cap/lm-for-S»` | theorem | Supporting step for `«thm:complete-cap/E-eq-P»`: |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "A spec escapes CAP for `E` if and only if it satisfies Lifted Monotonicity for `E`." Lean: |
-| `«thm:complete-cap/E-eq-P»` | theorem | "When `E = P`, we can say simply that a spec escapes CAP exactly when it satisfies Lifted Monotonicity." |
+| `«thm:complete-cap/E-eq-P»` | theorem | "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and the canonical system needs no commitment" (first half). |
 | `«cor:complete-cap-any-system»` | theorem | **Corollary `cor:complete-cap-any-system`.** "No system does better than its spec: |
 | `«sec:complete-cap/necessity-any-system»` | theorem | Full paper: |
-| `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P`, the canonical system needs no commitment." Lean: |
+| `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P`, … the canonical system needs no commitment" (second half). |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | Supporting operational lemma for the full-availability case. |
 | `«sec:complete-cap/local-row-removal-necessary»` | theorem | Supporting example for the voters' remark after Corollary `cor:complete-cap-any-system` (not quoted): |
 | `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another side, sacrificing Availability, or is emitted anyway, sacrificing Partition Con… |

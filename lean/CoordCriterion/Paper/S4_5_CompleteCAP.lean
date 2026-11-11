@@ -321,8 +321,8 @@ theorem «thm:complete-cap» (sp : Spec I O) (D : Type) (E : Table I O)
   ⟨fun ⟨hA, hP⟩ => consistentOn_of_availabilityFor E hES _ hA (commonRefinement_of_pc hP),
    fun h => ⟨availabilityFor_resp E, pc_resp E h⟩⟩
 
-/-- "When `E = P`, we can say simply that a spec escapes CAP exactly when it
-satisfies Lifted Monotonicity." -/
+/-- "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted
+Monotonicity, and the canonical system needs no commitment" (first half). -/
 theorem «thm:complete-cap/E-eq-P» (sp : Spec I O) (D : Type) :
     «def:escapes-cap» sp D sp.P ↔ sp.LiftedMono :=
   («thm:complete-cap» sp D sp.P (fun _ _ h => h)).trans
@@ -355,7 +355,8 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
     (hP : «def:partition-consistency» Sys) : «def:lm-for-A» sp E :=
   consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
 
-  /-- "For `E = P`, the canonical system needs no commitment."  Lean: with
+  /-- "For `E = P`, … the canonical system needs no commitment" (second
+  half).  Lean: with
   Lifted Monotonicity, the commitment-free system `cfSystem` (empty basis,
   every legal output emitted by `output(o)`) has Availability and Partition
   Consistency, and every history it produces is commitment-free: it has no

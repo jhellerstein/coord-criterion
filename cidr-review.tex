@@ -1311,15 +1311,17 @@ A spec escapes CAP for $E$ if and only if it satisfies Lifted Monotonicity for
 $E$.
 \end{theorem}
 
-When $E=P$, we can say simply that a spec escapes CAP exactly when it
-satisfies Lifted Monotonicity.
-
 \begin{proof}[Proof sketch]
-If Lifted Monotonicity for $E$ holds, the outputs emitted on all sides have a
-common \outnoun $u$ at each common \indesc $j$, and every participant still has
-the row $(j,u)$, so the participants can meet there. Conversely, put one
-participant per row of $E$ on its own side. Each emits its row's output, and
-Partition Consistency gives those outputs a common \outnoun. \removednote{\textbf{signposting}, 4 words, rank 92; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+Suppose Lifted Monotonicity for $E$ holds, and let $j$ be a common \indesc of
+the participants' current inputs. The outputs emitted on all sides are outputs
+of $E$, so they have a common \outnoun $u$ in $\fiber{j}$. Each participant
+still has the row $(j,u)$, since it makes no \commitments of its own and $u$
+\outrel every output it emitted (Lemma~\ref{lem:run-residual}). So the
+participants can all continue to a common state at $j$. Conversely, take
+finitely many rows of $E$ with a common \indesc $j$, and place one participant
+per row on its own side. Availability lets each participant emit its row's
+output, and Partition Consistency then gives those outputs a common \outnoun in
+$\fiber{j}$. \removednote{\textbf{signposting}, 4 words, rank 92; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \begin{corollary}
@@ -1336,7 +1338,8 @@ more rows than its canonical run, so no participant has a row at $j$ that
 \outrel all of them. \removednote{\textbf{signposting}, 33 words, rank 60; \textit{Full proof in Appendix .}}
 \end{proof}
 
-\textcolor{newblue}{For $E=P$, the canonical system needs no \commitment.}
+\textcolor{newblue}{For $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity,
+and the canonical system needs no \commitment.}
 
 We return to the voters' spec. Each voter decides whether it can commit and emits
 its vote, yes or no. That decision is a \commitment: a voter that votes yes
