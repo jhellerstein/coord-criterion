@@ -23,7 +23,7 @@ one-line references to the library (`CoordCriterion/Appendix/Deployment*.lean`,
 
 Conventions used throughout (see `Appendix/Deployment.lean`, modeling
 row-removing commitments):
-* the participant set `P` is `Fin n`; a deployment is `A : Fin n → Table I O`
+* the participant set `𝒩` is `Fin n`; a deployment is `A : Fin n → Table I O`
   with `A p ⊆ P` (the paper's `E_p` is `A p`);
 * a partition `Π` is a labelling `comp : Fin n → Nat` with at least two
   distinct labels (`IsPartition`); sides are the label classes;
@@ -47,7 +47,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 /-! ## Appendix E: Deployments: One Explicit Relation per Participant -/
 
 /-- **Definition `def:deployment`** (Deployment, emitted rows, partition).
-"A *deployment* over a finite participant set `P` assigns to each `p ∈ P` an
+"A *deployment* over a finite participant set `𝒩` assigns to each `p ∈ 𝒩` an
 explicit relation `E_p ⊆ P`, the rows `p` may emit: `p` performs an output event `output(o)`
 at current input `i` only if `(i,o) ∈ E_p`."
 
@@ -77,7 +77,7 @@ theorem «def:deployment/partition» (comp : Fin n → Nat) :
 
 /-- **Definition `def:participant-run-family`** (Participant run family,
 silent participant, separable run family).  "A *participant run family*
-assigns to each of finitely many participants `p ∈ P` an initial input and a
+assigns to each of finitely many participants `p ∈ 𝒩` an initial input and a
 canonical run whose emitted rows lie in `E_p`.  A participant whose run emits
 no output is *silent*.  The family is *separable under `Π`* when either
 participants on at least two sides emit, or exactly one distinct row is
@@ -235,7 +235,7 @@ theorem «app:deployment/further-examples/condition-fails» {I : Type} [PO I] (i
 section Deployment3
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-- "If `|P| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split
+/-- "If `|𝒩| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split
 across a partition and every single row paired with a silent participant at
 the common input extension; since pairs of rows suffice for the common-extension
 condition (Appendix `app:pairs-suffice`), monotonicity across partitions is
@@ -253,7 +253,7 @@ theorem «app:deployment/full-deployment/pairs-suffice»
 
 /-- **Definition `def:deployment-availability`** (Deployment Availability).
 "Relative to a deployment, a system has *Deployment Availability* when, in
-every partitioned history over `P` it produces, each participant `p`, ending
+every partitioned history over `𝒩` it produces, each participant `p`, ending
 in state `(i,R)`, can emit each output in `R(i) ∩ E_p(i)` in some same-side
 continuation of `p`."
 
@@ -314,7 +314,7 @@ theorem «app:deployment/single-authority/shape» (Dp : Deployment sp n) (p₀ :
   single_authority_shape Dp p₀ hSA F hA comp hs
 
 /-- "… and monotonicity across partitions says only that each such row has an
-input extension at every input extension of its input."  (With `|P| ≥ 2`, so that some
+input extension at every input extension of its input."  (With `|𝒩| ≥ 2`, so that some
 partition exists.) -/
 theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n) (p₀ : Fin n)
     (hSA : SingleAuthority Dp p₀) :
@@ -424,7 +424,7 @@ theorem «app:deployment/unauthorized-refinement» :
       (∀ u, (∀ p r, Emits F p r → r.2 ≼ u) → u = .top) ∧ ∀ p, ¬ triD.A p () .top :=
   unauthorized_refinement
 
-/-- "With `|P| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted
+/-- "With `|𝒩| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted
 Monotonicity, and the proposition is the step behind Theorem
 `thm:complete-cap` with `E = P` stating that separable families are confluent at every
 common input extension exactly when Lifted Monotonicity holds." -/

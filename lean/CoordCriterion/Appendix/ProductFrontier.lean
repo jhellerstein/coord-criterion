@@ -22,7 +22,7 @@ the deployment notions of `CC.Deploy`:
   `Appendix/DeploymentExamples.lean` (`cfg_product_conflict`).
 
 Modeling choices: coordinates are the participants `Fin n` (the paper's
-`∏_{p∈P} V_p(i)`), coordinate `p` ranging over its own poset `W p`; partial
+`∏_{p∈𝒩} V_p(i)`), coordinate `p` ranging over its own poset `W p`; partial
 tuples are ordered coordinate-wise with `none` (`⊥`) below every value.
 Maximality of complete views is used only in the weaker form "the views
 `V_p(i)` at one input form an antichain" (`Antichain`).
@@ -166,7 +166,7 @@ def NormStr.Strict {V : (p : Fin n) → I → W p → Prop} (T : NormStr V) : Pr
 def restrictTo (y : (p : Fin n) → W p) (p : Fin n) : PTd W :=
   ⟨fun q => if q = p then some (y q) else none⟩
 
-/-- **Theorem `thm:product-frontier` (2)** (with `|P| ≥ 2`): no strict,
+/-- **Theorem `thm:product-frontier` (2)** (with `|𝒩| ≥ 2`): no strict,
 normalized, locally conservative strengthening is monotone across partitions
 under its owner deployment.  `sp` is any specification whose table is that of
 `T`. -/
@@ -257,7 +257,7 @@ theorem product_not_liftedMono (V : (p : Fin n) → I → W p → Prop) (hne : �
   · cases ht
   · cases ht; exact hnb ⟨y p, hy p, hvt, hwt⟩
 
-/-- ... and with `A_p = S` for every participant (`|P| ≥ 2`) it is not
+/-- ... and with `A_p = S` for every participant (`|𝒩| ≥ 2`) it is not
 monotone across partitions. -/
 theorem product_full_not_monoAcross (hn : 2 ≤ n) (V : (p : Fin n) → I → W p → Prop)
     (hne : ∀ p i, ∃ v, V p i v) (Dp : Deployment (prodSpec V hne) n)

@@ -243,7 +243,7 @@ def History.Extends (H H' : History I O D n) (C : Pos n → Prop) : Prop :=
   H'.init = H.init ∧ ∀ p k, C (p, k) → (H'.ev p)[k]? = (H.ev p)[k]?
 
 /-- A consistent cut `C` is confluent at `j`: some well-formed continuation's
-final cut has endpoint `((j,R))_{p ∈ P}`. -/
+final cut has endpoint `((j,R))_{p ∈ 𝒩}`. -/
 def History.CutConfluentAt (sp : Spec I O) (H : History I O D n) (C : Pos n → Prop)
     (j : I) : Prop :=
   ∃ H' : History I O D n, H'.WF sp ∧ H.Extends H' C ∧

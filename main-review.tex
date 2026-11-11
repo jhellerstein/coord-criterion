@@ -1184,7 +1184,7 @@ canonical runs, and show where \commitments conflict; Complete CAP follows.
 
 \textcolor{reviewed}{Until now, runs have been independent: each state changes only through that
 run's input and output events.} \textcolor{reviewed}{We now place one such run at each participant in
-a finite set $P$.} \textcolor{reviewed}{Participant $p$ starts in the canonical state
+a finite set $\mathcal N$.} \textcolor{reviewed}{Participant $p$ starts in the canonical state
 $\sigma_P(i_p)$ and still changes its state only through its own specification
 events.} \textcolor{reviewed}{The new ingredient is communication.} \textcolor{reviewed}{Besides learning input directly
 from the environment, a participant can learn cumulative input from another
@@ -1194,10 +1194,10 @@ participant.}
 $\mathsf{receive}(m)$.} A \emph{message} is a pair $m=(j,d)$ of a cumulative
 input $j$, or $\varnothing$ if it carries none, and arbitrary
 application-specific data $d$; one can envision timestamps, version vectors,
-state identities, and so on. \textcolor{reviewed}{A receive does not change the specification
+state identities, and so on. A receive does not change the specification
 state; a participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
-legal common \indesc $k$ of $i$ and $j$, when one exists.}
+legal common \indesc $k$ of $i$ and $j$, when one exists.
 
 \textcolor{reviewed}{Send and receive events connect the participants' locally ordered runs.} \textcolor{reviewed}{Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -1206,7 +1206,7 @@ is happens-before.}
 
 \begin{definition}[Distributed history, history event]
 \label{def:distributed-history}
-Fix an \spectype, participants $P$, and an initial input $i_p$
+Fix an \spectype, participants $\mathcal N$, and an initial input $i_p$
 for each. \textcolor{reviewed}{A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of a
 specification event (Definition~\ref{def:run}), $\mathsf{send}(m)$, or
@@ -1251,7 +1251,7 @@ in local order, form its \emph{participant run}, a run
 \begin{definition}[Endpoint]
 \label{def:endpoint}
 The \emph{endpoint} of a consistent cut $C$ is
-$\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
+$\operatorname{end}(H,C)=(\sigma_p(C))_{p\in\mathcal N}$.
 \end{definition}
 
 \begin{figure}[t]
@@ -1333,7 +1333,7 @@ that extends the history events of $C$ with further history events after
 them. All of $H'$ is a consistent cut of $H'$, its \emph{final cut}. A
 consistent cut $C$ is \emph{confluent at} $j$, for a common \indesc $j$ of
 the participants' current inputs, when some continuation at $C$ has a final
-cut with endpoint $\bigl((j,R)\bigr)_{p\in P}$ for some $R$: every
+cut with endpoint $\bigl((j,R)\bigr)_{p\in\mathcal N}$ for some $R$: every
 participant ends in the same state $(j,R)$. History events at different
 participants are independent, so this holds exactly when the participant runs at $C$ are
 confluent at $j$ (Definition~\ref{def:consistency}).
@@ -2770,7 +2770,7 @@ rows at $k$.
   specification event & an input or output event; in Section~\ref{sec:systems}, also a \commitment event & Defs.~\ref{def:run}, \ref{def:commitment-event}\\
   distributed history; history event & locally ordered specification, send, and receive events & Def.~\ref{def:distributed-history}\\
   happens-before; consistent cut & closure of local orders and send-before-receive; a set of history events closed under it & Def.~\ref{def:distributed-history}\\
-  participant run; endpoint & $p$'s specification events at $C$; $(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:participant-run}\\
+  participant run; endpoint & $p$'s specification events at $C$; $(\sigma_p(C))_{p\in\mathcal N}$ & Def.~\ref{def:participant-run}\\
   continuation; cut confluent at $j$ & a history extending $C$; some continuation brings every participant to one state $(j,R)$ & Sec.~\ref{sec:distributed-consistency}\\
   distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
   \commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
@@ -3930,7 +3930,7 @@ removing those rows from the spec or narrowing the canonical runs against which
 
 \begin{definition}[Deployment, emitted rows, partition]
 \label{def:deployment}
-A \emph{deployment} over a finite participant set $P$ assigns to each $p\in P$
+A \emph{deployment} over a finite participant set $\mathcal N$ assigns to each $p\in\mathcal N$
 an explicit relation $E_p\subseteq P$, the rows $p$ may emit: $p$ performs an output event
 $\mathsf{output}(o)$ (Definition~\ref{def:system-output-event}) at current input
 $i$ only if $(i,o)\in E_p$. The \emph{emitted rows} of a run are the pairs
@@ -3942,7 +3942,7 @@ two or more nonempty sides, as in a partitioned history
 \begin{definition}[Participant run family, silent participant, separable run family]
 \label{def:participant-run-family}
 A \emph{participant run family} assigns to each of finitely many participants
-$p\in P$ an initial input and a canonical run whose emitted rows lie in $E_p$. A participant whose run emits no output is \emph{silent}. The family is
+$p\in\mathcal N$ an initial input and a canonical run whose emitted rows lie in $E_p$. A participant whose run emits no output is \emph{silent}. The family is
 \emph{separable under $\Pi$} when either participants on at least two
 sides emit, or exactly one distinct row is emitted and some silent
 participant lies on another side.
@@ -3979,7 +3979,7 @@ participant. The causal register of Appendix~\ref{app:registers} is a further
 example, with no single authority, of monotonicity across partitions without
 Lifted Monotonicity; it need not satisfy this condition, since a set of rows lacking
 a common \outnoun may also contain rows of other participants. If
-$|P|\ge2$ and $E_p=P$ for every $p$, every pair of rows can be split across a
+$|\mathcal N|\ge2$ and $E_p=P$ for every $p$, every pair of rows can be split across a
 partition and every single row paired with a silent participant at the common
 \indesc; since pairs of rows suffice for the common-extension condition
 (Appendix~\ref{app:pairs-suffice}), monotonicity across partitions is then
@@ -3988,7 +3988,7 @@ Lifted Monotonicity.
 \begin{definition}[Deployment Availability]
 \label{def:deployment-availability}
 Relative to a deployment, a system has \emph{Deployment Availability} when, in
-every partitioned history over $P$ it produces, each participant $p$, ending in
+every partitioned history over $\mathcal N$ it produces, each participant $p$, ending in
 state $(i,R)$, can emit each output in $R(i)\cap E_p(i)$ in some same-side
 continuation of $p$ (Definition~\ref{def:local-continuation}).
 \end{definition}
@@ -4044,7 +4044,7 @@ family of runs of a partitioned history, as Deployment Availability permits,
 have a common \outnoun $u\in\fiber{j}$ at every common \indesc $j$. It does not follow that the deployment authorizes any
 participant to emit $u$; confluence through output events that the deployment
 authorizes would additionally require that authority, a condition we do not
-impose. With $|P|\ge2$ and $E_p=P$ for every $p$, item~(2) is Lifted
+impose. With $|\mathcal N|\ge2$ and $E_p=P$ for every $p$, item~(2) is Lifted
 Monotonicity, and the proposition is the step behind
 Theorem~\ref{thm:complete-cap} with $E=P$ stating that separable families are confluent
 at every common \indesc exactly when Lifted Monotonicity holds.
@@ -4115,7 +4115,7 @@ system, and that real-time causal consistency can~\cite{mahajan2011consistency}.
 property of products of independent views.
 
 \paragraph{Independent products.}
-Fix participants $P$ with $|P|\ge2$. For each $p$ let $(W_p,\le_p)$ be a
+Fix participants $\mathcal N$ with $|\mathcal N|\ge2$. For each $p$ let $(W_p,\le_p)$ be a
 poset and, for each input $i$, let $V_p(i)\subseteq W_p$ be a nonempty
 antichain, the \emph{views} $p$ may expose at $i$. A \emph{partial tuple}
 assigns to each $p$ a value in $W_p$ or $\bot$, ordered coordinate-wise with
@@ -4268,7 +4268,7 @@ that adds no input event.
 
 \begin{definition}[Response Availability]
 \label{def:response-availability}
-A system has \emph{Response Availability} for $(Q_p)_{p\in P}$ when, in every
+A system has \emph{Response Availability} for $(Q_p)_{p\in\mathcal N}$ when, in every
 partitioned history it produces, each participant $p$, ending with current
 input $i$, satisfies two conditions.
 \begin{enumerate}
@@ -4816,7 +4816,7 @@ fixed, competing next epochs would require one as well.
 
 \subsection{$k$-set agreement: no $k$-wise test suffices}
 
-Fix $k\geq1$, distinct participants $p_1,\ldots,p_{k+1}$ in the participant set $P$
+Fix $k\geq1$, distinct participants $p_1,\ldots,p_{k+1}$ in the participant set $\mathcal N$
 (possibly among others), and distinct values $v_1,\ldots,v_{k+1}$ in a value
 set $\mathit{Val}$. An input is a finite set of proposals $(p,v)$, at most one
 per participant, ordered by inclusion; the \emph{proposal input} of $p_r$ is

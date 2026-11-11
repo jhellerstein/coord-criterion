@@ -32,7 +32,7 @@ written out in full; the proofs are one-line references to the library
 documented.
 
 Global reading conventions: sets are predicates, finite families are `List`s
-or functions on `Fin n`, the participant set `P` is `Fin n`, `≼` is the
+or functions on `Fin n`, the participant set `𝒩` is `Fin n`, `≼` is the
 specification's order (`a ≼ b`: `b` extends `a`), a state `(i,R)` is a
 `State sp` with `cur = i` and table `R`, and `R[out ⪰ o]` is `outputTable σ o`.
 -/
@@ -111,7 +111,7 @@ abbrev «def:participant-run» {D : Type} {n : Nat} (sp : Spec I O)
   H.Endpoint sp C σs
 
 /-- **Def. `def:endpoint`** (Endpoint).  "The endpoint of a consistent cut
-`C` is `end(H,C) = (σ_p(C))_{p∈P}`."  Lean: `σs` is the family of final states
+`C` is `end(H,C) = (σ_p(C))_{p∈𝒩}`."  Lean: `σs` is the family of final states
 across participants, i.e. `H.Endpoint sp C σs`. -/
 abbrev «def:endpoint» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) (C : Dist.Pos n → Prop) (σs : Fin n → State sp) : Prop :=
@@ -167,7 +167,7 @@ abbrev «sec:distributed-consistency/continuation» {D : Type} {n : Nat}
   H.Extends H' C
 
 /-- "A consistent cut `C` is confluent at `j` … when some continuation at `C`
-has a final cut with endpoint `((j,R))_{p∈P}` for some `R`." -/
+has a final cut with endpoint `((j,R))_{p∈𝒩}` for some `R`." -/
 abbrev «sec:distributed-consistency/cut-confluent» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) (C : Dist.Pos n → Prop) (j : I) : Prop :=
   H.CutConfluentAt sp C j

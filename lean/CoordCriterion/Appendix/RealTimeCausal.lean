@@ -427,7 +427,7 @@ theorem rtc_locCons (T : NormStr (W := fun _ => SMap α) (RView G))
   refine ⟨z, hbl i (forceRt i hg) rfl (fun a b h => Or.inl h) z hz
     (fun q => rview_back hg (T.sub _ _ hz q)), rview_unique hv (T.sub _ _ hz p)⟩
 
-/-- **Part (2)** (`|P| ≥ 2`): no strict, real-time blind strengthening of the
+/-- **Part (2)** (`|𝒩| ≥ 2`): no strict, real-time blind strengthening of the
 RTC product interface is monotone across partitions under its owner
 deployment. -/
 theorem rtc_strengthening_not_monoAcross (hn : 2 ≤ n)

@@ -278,7 +278,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«fig:participant-runs»` | theorem | **Fig. |
 | `«fig:participant-runs/general»` | theorem | The general form of Fig. |
 | `«sec:distributed-consistency/continuation»` | abbrev | "A continuation of a history at a consistent cut `C` is a history `H'` that extends the history events of `C` with further history events after them." Lean: |
-| `«sec:distributed-consistency/cut-confluent»` | abbrev | "A consistent cut `C` is confluent at `j` … when some continuation at `C` has a final cut with endpoint `((j,R))_{p∈P}` for some `R`." |
+| `«sec:distributed-consistency/cut-confluent»` | abbrev | "A consistent cut `C` is confluent at `j` … when some continuation at `C` has a final cut with endpoint `((j,R))_{p∈𝒩}` for some `R`." |
 | `«sec:distributed-consistency/cut-confluent-iff-runs»` | theorem | "History events at different participants are independent, so this holds exactly when the participant runs at `C` are confluent at `j`." |
 | `«def:distributed-consistency»` | abbrev | **Def. |
 | `«prop:distributed-consistency»` | theorem | **Prop. |
@@ -498,7 +498,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/history-event»` | abbrev | *history event* — (Def. |
 | `«app:notation/happens-before»` | abbrev | *happens-before* — closure of local orders and send-before-receive (Def. |
 | `«app:notation/consistent-cut»` | abbrev | *consistent cut* — a set of history events closed under happens-before (Def. |
-| `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input, output, and commitment events at `C`; `(σ_p(C))_{p ∈ P}` (Def. |
+| `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input, output, and commitment events at `C`; `(σ_p(C))_{p ∈ 𝒩}` (Def. |
 | `«app:notation/continuation»` | abbrev | *continuation* — a history extending `C` (Sec. |
 | `«app:notation/cut-confluent-at»` | abbrev | *cut confluent at `j`* — some continuation brings every participant to one state `(j,R)` (Sec. |
 | `«app:notation/distributed-consistency»` | abbrev | *distributed consistency* — every consistent cut of every history is confluent at every common input extension (Def. |
@@ -710,14 +710,14 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/sufficient-condition»` | theorem | "The same happens whenever each authorized row has an input extension at every input extension of its input and every set of authorized rows lacking a common… |
 | `«app:deployment/further-examples»` | theorem | "The causal register of Appendix `app:registers` is a further example, with no single authority, of monotonicity across partitions without Lifted Monotonicit… |
 | `«app:deployment/further-examples/condition-fails»` | theorem | "… they need not satisfy this condition, since a set of rows lacking a common output extension may also contain rows of other participants." Witness: |
-| `«app:deployment/full-deployment»` | theorem | "If `\|P\| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split across a partition and every single row paired with a silent participant at the co… |
+| `«app:deployment/full-deployment»` | theorem | "If `\|𝒩\| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split across a partition and every single row paired with a silent participant at the co… |
 | `«app:deployment/full-deployment/pairs-suffice»` | theorem | The pairs-suffice step used above (Appendix `app:pairs-suffice`). |
 | `«def:deployment-availability»` | theorem | **Definition `def:deployment-availability`** (Deployment Availability). |
 | `«app:deployment/uniform-availability»` | theorem | "This is Availability for `E_p`, one relation per participant. |
 | `«app:deployment/full-deployment-availability»` | theorem | "… and for `E_p = P` it is Availability." `AvailabilityAt Sys n` is `CAP.Availability` restricted to histories over `Fin n` (`CAP.Availability Sys ↔ ∀ n, Ava… |
 | `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `E_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
-| `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an input extension at every input extension of its input." (With `\|P\| ≥ 2`, so that so… |
+| `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an input extension at every input extension of its input." (With `\|𝒩\| ≥ 2`, so that so… |
 | `«app:deployment/single-authority/not-distributed»` | theorem | "The deployment can prevent the contrary choice from being placed at another participant." Lean: |
 | `«app:deployment/single-authority/coordination»` | theorem | "It does not change the semantic conflict: |
 | `«thm:complete-cap-deployment»` | theorem | **Proposition `thm:complete-cap-deployment`** (Partition compatibility under a deployment). |
@@ -725,7 +725,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
 | `«app:deployment/system-runs»` | theorem | "So if `P` is monotone across partitions, the outputs emitted by a separable family of runs of a partitioned history, as Deployment Availability permits, hav… |
 | `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`; confluence through output events that the deployment authorizes would additio… |
-| `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Theorem `thm:complete-cap` with `E = P`… |
+| `«app:deployment/full-deployment-step»` | theorem | "With `\|𝒩\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Theorem `thm:complete-cap` with `E = P`… |
 | `«app:registers/history»` | abbrev | "An input is a finite operation history `h`: |
 | `«app:registers/history-order»` | theorem | "We set `h ⊑ h'` when the operations of `h` form a causally closed subset of `h'` and `→` restricted to them is the order of `h`." |
 | `«app:registers/no-new-past»` | theorem | "Thus an input extension never adds an operation to the causal past of an existing one." |
