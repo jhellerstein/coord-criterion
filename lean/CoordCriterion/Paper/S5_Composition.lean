@@ -124,9 +124,9 @@ theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
 /-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Fix any
 system for `𝒮₁`.  (1) The pipeline is proper exactly when `𝒮₂` satisfies
 Lifted Monotonicity on the outputs of `𝒮₁`.  (2) If it is proper, `𝒮₂|_{𝒮₁}`
-can take each output of a run of `𝒮₁` as its next input and answer it without
-commitment.  The result is a run of `P₂ ∘ P₁`, and composite runs are
-confluent whenever the underlying runs of `𝒮₁` are.  (3) If it is proper and `P₂ ∘ P₁` violates
+can take each output of a run of the system for `𝒮₁` as its next input and
+answer it without commitment.  The result is a canonical run of `P₂ ∘ P₁`, and
+composite runs are confluent whenever the underlying runs of that system are.  (3) If it is proper and `P₂ ∘ P₁` violates
 Lifted Monotonicity, `𝒮₁` cannot emit some output without a commitment."
 Lean: (1) `Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`),
 with `Guard.proper_iff_consistent` (Complete CALM on `𝒮₂|_{𝒮₁}`).  (2) For

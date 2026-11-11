@@ -402,7 +402,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:bases/composite-commitment»
 #check @CC.Paper.«app:bases/composite-commitment-defined»
 #check @CC.Paper.«def:run-under-basis»
-#check @CC.Paper.«def:canonical-run»
 #check @CC.Paper.«def:run-under-basis/canonical-run»
 #check @CC.Paper.«def:run-under-basis/canonical-runs-are-runs»
 #check @CC.Paper.«app:bases/observably-equivalent»

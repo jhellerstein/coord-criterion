@@ -603,18 +603,18 @@ theorem «sec:systems/neither-is-canonical-commitment» {T K : Type} {A B C : T}
       ∀ o, (canonicalCommitment o).app (Txn.Partial.σ3 k) ≠ some τ) :=
   Txn.Partial.neither_is_canonical_commitment h
 
-/-- "We call the runs of Sections functional-calm–complete-calm canonical runs,
-and a run under a basis `ℬ` is one whose output and commitment events apply
+/-- "A run under a basis `ℬ` is one whose output and commitment events apply
 only commitments from `ℬ` (Definition run-under-basis)."  (Formal definitions:
 `«def:run-under-basis»` in `Paper/AppC_CommitmentBases.lean`.) -/
 abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Observable equivalence.*  "Dropping the commitment events from a run
-under any commitment basis yields its canonical run, which is observably
-equivalent to it: it accepts the same inputs and emits the same outputs, and
-after each event it keeps at least the original's rows."  Proof sketch:
+/-- *Observable equivalence.*  "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis.
+Removing the commitment events from `ρ` gives a canonical run of `𝒮`
+(Definition run) that is observably equivalent to `ρ`: the two accept the same
+inputs and emit the same outputs, and after each event the canonical run keeps
+every row that `ρ` keeps."  Proof sketch:
 "Commitment events only remove rows, so dropping them can only keep more.  An
 input or output event applied to a larger table keeps a larger table, and the
 canonical run can perform it because
@@ -696,8 +696,8 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 
 
 /-- **Proposition `prop:commitment-conflict`** (Commitment conflict).  "Let a
-run from `σ_P(i)` apply a commitment that removes the row `(k,x)`, and let
-another run from `σ_P(i)` issue `input(k)` followed by `output(x)`.  These two runs *conflict*: they are not confluent at `k`."
+run under some commitment basis from `σ_P(i)` apply a commitment that removes
+the row `(k,x)`, and let a canonical run from `σ_P(i)` issue `input(k)` followed by `output(x)`.  These two runs *conflict*: they are not confluent at `k`."
 
 Lean: the first run is a run under any basis `B` reaching `σ`, where the
 commitment `c` takes `σ` to `σc` and removes `(k,x)`.  The first run's final

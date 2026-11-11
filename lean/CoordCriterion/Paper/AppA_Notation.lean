@@ -139,7 +139,7 @@ reaching such a state (Sec. `sec:functional-events`).  Lean:
 `CALM.Determined σ`. -/
 abbrev «app:notation/determined» {sp : Spec I O} (σ : State sp) : Prop := Determined σ
 
-/-- *run* — finite sequence of specification events from a canonical state (Def. `def:run`).
+/-- *canonical run* (*run*) — finite sequence of specification events from a canonical state (Def. `def:run`).
 Lean: `Exec (canon sp i) es τ`; `IsRun τ` for "`τ` ends a run". -/
 abbrev «app:notation/run» {sp : Spec I O} (τ : State sp) : Prop := IsRun τ
 
@@ -338,7 +338,7 @@ abbrev «app:notation/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp)
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *canonical run* — a run of Sections 2–3 (Def. `def:run-under-basis`).
+/-- *canonical run* — a run (Def. `def:run`), seen as a run under the canonical basis.
 Lean: `CanonExec σ es τ` (runs under the canonical basis with no
 commitment events); `CC.canonExec_exec` / `CC.exec_canonExec` identify these with
 `Exec`. -/

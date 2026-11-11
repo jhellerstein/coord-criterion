@@ -178,9 +178,7 @@ Section~\ref{sec:lifted-output-events}.
 \end{figure}
 
 \paragraph{Observable equivalence.}
-We call the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
+A \emph{run under a basis} $\mathcal B$ is one whose output and
 \commitment events apply only \commitments from $\mathcal B$
 (Definition~\ref{def:run-under-basis}).  Locks, timestamps, quorums, and
 consensus differ in how and when they decide.  The next lemma relates their
@@ -188,10 +186,11 @@ runs to a common canonical model.
 
 \begin{lemma}[Observable Equivalence]
 \label{lem:canonical-equivalent}
-Dropping the \commitment events from a run under any \commitment basis
-yields \emph{its canonical run}, which is \emph{observably equivalent} to it: it accepts
-the same inputs and emits the same outputs, and after each event it keeps at
-least the original's rows.
+Let $\rho$ be a run of a system for a spec $\Spec$, under any \commitment
+basis.  Removing the \commitment events from $\rho$ gives a canonical run of
+$\Spec$ (Definition~\ref{def:run}) that is \emph{observably equivalent} to
+$\rho$: the two accept the same inputs and emit the same outputs, and after each
+event the canonical run keeps every row that $\rho$ keeps.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -223,10 +222,12 @@ equivalent canonical runs, but not necessarily vice versa
 guarantee only on inputs and outputs, not on remainder tables.  A system run's
 \commitments may be more aggressive, removing rows that its canonical run keeps.
 As a result, a spec can be confluent under canonical runs, but a system with
-that spec may not be confluent, e.g., if it removes a necessary common
-extension.  The registrar is an example.  After closing the polls at
+that spec may not be confluent, for example when it removes a necessary
+common extension.  The registrar is an example.  After closing the polls at
 $ab\cdot$, it cannot accept the late ballot $aba$, although its canonical run,
-which only emits $\bot$, can.  The CALM and CAP criteria are about specs and
+which only emits $\bot$, can.
+
+The CALM and CAP criteria are about specs and
 their canonical runs.  A system with no \commitment events inherits their
 confluence directly, since its runs are canonical runs.  For a system with
 \commitments of its own, showing that it inherits that confluence requires an
@@ -240,8 +241,8 @@ state at that input.
 
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
-Let a run from $\sigma_P(i)$ apply a \commitment that removes the row
-$(k,x)$, and let another run from $\sigma_P(i)$ issue
+Let a run under some \commitment basis from $\sigma_P(i)$ apply a \commitment
+that removes the row $(k,x)$, and let a canonical run from $\sigma_P(i)$ issue
 $\mathsf{input}(k)$ followed by $\mathsf{output}(x)$.  These two runs
 \emph{conflict}: they are not confluent at $k$.
 \end{proposition}

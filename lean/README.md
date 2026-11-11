@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-627 entries.
+626 entries.
 
 ### §2 Functional CALM
 
@@ -312,8 +312,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«fig:cc-commitments»` | theorem | Fig. |
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
-| `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
-| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Dropping the commitment events from a run under any commitment basis yields its canonical run, which is observably equivalent to it: |
+| `«sec:systems/run-under-basis»` | abbrev | "A run under a basis `ℬ` is one whose output and commitment events apply only commitments from `ℬ` (Definition run-under-basis)." (Formal definitions: |
+| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
 | `«prop:commitment-conflict/second-run»` | theorem | Supporting form of Prop. |
@@ -474,7 +474,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/output-event-excludes»` | abbrev | *commitment* (§2 sense) — an output event that removes rows (Def. |
 | `«app:notation/exposable»` | abbrev | *legal output* — `output(o)` applies no commitment (Def. |
 | `«app:notation/determined»` | abbrev | *determined* — the future-output set has one element; *determination* — reaching such a state (Sec. |
-| `«app:notation/run»` | abbrev | *run* — finite sequence of specification events from a canonical state (Def. |
+| `«app:notation/run»` | abbrev | *canonical run* (*run*) — finite sequence of specification events from a canonical state (Def. |
 | `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
 | `«app:notation/consistent»` | abbrev | *consistent* — every finite family of runs can reach one common state at each common input extension `j` (Def. |
 | `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
@@ -510,7 +510,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/system-output-event»` | abbrev | *system output event* — the lifted output event `output(o)`; when `o` is not legal, its commitment `x_o` must be in the basis (Def. |
 | `«app:notation/commitment-event»` | abbrev | *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of commitments, emits nothing (Def. |
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
-| `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
+| `«app:notation/canonical-run»` | abbrev | *canonical run* — a run (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, no message crosses sides (Def. |
 | `«app:notation/side»` | abbrev | *side* — one of the two or more classes into which a partitioned history divides the participants (Def. |
@@ -623,9 +623,8 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«app:bases/composite-commitment»` | abbrev | Supporting form of Def. |
 | `«app:bases/composite-commitment-defined»` | theorem | Supporting form of Def. |
 | `«def:run-under-basis»` | abbrev | **Def. |
-| `«def:canonical-run»` | abbrev | **Def. |
-| `«def:run-under-basis/canonical-run»` | abbrev | Legacy sub-label pointing at `«def:canonical-run»`. |
-| `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |
+| `«def:run-under-basis/canonical-run»` | abbrev | "Canonical runs (Definition run) are exactly the runs under the canonical basis `ℬ_P` of Definition `def:canonical-commitment-basis` with no commitment event… |
+| `«def:run-under-basis/canonical-runs-are-runs»` | theorem | "Canonical runs (Definition run) are exactly the runs under the canonical basis `ℬ_P` … with no commitment events": |
 | `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment events are dropped: |
 | `«lem:canonical-equivalent»` | theorem | **Lemma Observable Equivalence** (`lem:canonical-equivalent`). |
 | `«cor:reconciliation-any-basis»` | theorem | **Cor. |

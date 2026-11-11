@@ -227,23 +227,20 @@ abbrev «def:run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : Li
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- **Def. `def:canonical-run`** (Canonical run).  "The *canonical runs* are
-the runs under the canonical basis `ℬ_P` of Definition
-`def:canonical-commitment-basis` with no commitment events; they are the runs
-of Sections functional-calm–complete-calm."
+/-- "Canonical runs (Definition run) are exactly the runs under the canonical
+basis `ℬ_P` of Definition `def:canonical-commitment-basis` with no commitment
+events."
 
-Lean: an execution of canonical steps (`CanonStep`) from `σ_P(i)`. -/
-abbrev «def:canonical-run» {sp : Spec I O} (i : I) (es : List (SEvent sp))
-    (τ : State sp) : Prop :=
-  CanonExec (canon sp i) es τ
-
-/-- Legacy sub-label pointing at `«def:canonical-run»`. -/
+Lean: an execution of canonical steps (`CanonStep`) from `σ_P(i)`; see
+`«def:run-under-basis/canonical-runs-are-runs»` for the correspondence with
+runs (`Exec`) and with runs under `ℬ_P`. -/
 abbrev «def:run-under-basis/canonical-run» {sp : Spec I O} (i : I) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   CanonExec (canon sp i) es τ
 
-/-- Def. `def:run-under-basis`: canonical runs "are the runs of Sections
-functional-calm–complete-calm", and they are runs under `ℬ_P`. -/
+/-- "Canonical runs (Definition run) are exactly the runs under the canonical
+basis `ℬ_P` … with no commitment events": canonical-step executions erase to
+runs (`Exec`), every run lifts to one, and each is a run under `ℬ_P`. -/
 theorem «def:run-under-basis/canonical-runs-are-runs» {sp : Spec I O} :
     (∀ {σ τ : State sp} {es : List (SEvent sp)},
       CanonExec σ es τ → Exec σ (es.filterMap SEvent.erase) τ) ∧
@@ -263,10 +260,12 @@ state is fixed by the context. -/
 abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- **Lemma Observable Equivalence** (`lem:canonical-equivalent`).  "Dropping
-the commitment events from a run under any commitment basis yields its
-canonical run, which is observably equivalent to it: it accepts the same inputs and emits
-the same outputs, and after each event it keeps at least the original's rows."
+/-- **Lemma Observable Equivalence** (`lem:canonical-equivalent`).  "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis.
+Removing the commitment events from `ρ` gives a canonical run of `𝒮`
+(Definition run) that is observably equivalent to `ρ`: the two accept the same
+inputs and emit the same outputs, and after each event the canonical run keeps
+every row that `ρ` keeps."
+A run of a system is a run under that system's basis.
 
 Lean: from a run under `B` from `σ_P(i)`, a canonical run from the same
 `σ_P(i)` in `Lockstep` (after each event: erasures agree, current inputs

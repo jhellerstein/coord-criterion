@@ -710,9 +710,9 @@ The \emph{transition system} consists of specification states and
 specification events.
 \end{definition}
 
-\begin{definition}[Run]
+\begin{definition}[Canonical run]
 \label{def:run}
-\textcolor{reviewed}{A \emph{run} is any finite transition sequence of the transition system from the
+\textcolor{reviewed}{A \emph{canonical run}, or just \emph{run}, is any finite transition sequence of the transition system from the
 canonical state $\sigma_P(i)$ at some input $i$.}
 \end{definition}
 
@@ -1358,14 +1358,14 @@ of runs can be placed at separate participants that exchange no messages. Full p
 
 By Complete CALM, which reduces to Functional CALM with one output per input,
 a spec has distributed consistency exactly when it satisfies Lifted
-Monotonicity. Under Lifted Monotonicity, this confluence has a concrete witness. \textcolor{reviewed}{For
+Monotonicity. Under Lifted Monotonicity, this confluence has a concrete witness. For
 participant runs with common \indesc $j$, the survivor test supplies a
 $u\in\fiber{j}$ that survives in every endpoint; by
-Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted.} \textcolor{reviewed}{At
+Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted. \textcolor{reviewed}{At
 each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
-the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).} \textcolor{reviewed}{This is an existence witness in the
+the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).} This is an existence witness in the
 transition system; choosing $u$, communicating it, and scheduling the
-transitions belong to the operational model (\S\ref{sec:scope}).}
+transitions belong to the operational model (\S\ref{sec:scope}).
 
 \textcolor{reviewed}{For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence:}
@@ -1471,8 +1471,8 @@ its predecessors leave, and emits nothing. Since later \commitments only
 remove rows, the sequence as a whole is itself a \commitment.
 \end{definition}
 
-A system applies its own \commitments only in \commitment events. \textcolor{reviewed}{A \commitment event may precede an output event, which then
-has less to remove.} The environment observes nothing from a \commitment event. \Commitment events are a third kind of specification event, so a distributed
+A system applies its own \commitments only in \commitment events. A \commitment event may precede an output event, which then
+has less to remove. The environment observes nothing from a \commitment event. \Commitment events are a third kind of specification event, so a distributed
 history may contain them; Definitions~\ref{def:distributed-history} and~\ref{def:participant-run} apply
 unchanged.
 
@@ -1571,9 +1571,7 @@ Section~\ref{sec:lifted-output-events}.
 \end{figure}
 
 \paragraph{Observable equivalence.}
-We call the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
+A \emph{run under a basis} $\mathcal B$ is one whose output and
 \commitment events apply only \commitments from $\mathcal B$
 (Definition~\ref{def:run-under-basis}). Locks, timestamps, quorums, and
 consensus differ in how and when they decide. The next lemma relates their
@@ -1581,10 +1579,11 @@ runs to a common canonical model.
 
 \begin{lemma}[Observable Equivalence]
 \label{lem:canonical-equivalent}
-\textcolor{reviewed}{Dropping the \commitment events from a run under any \commitment basis
-yields \emph{its canonical run}, which is \emph{observably equivalent} to it: it accepts
-the same inputs and emits the same outputs, and after each event it keeps at
-least the original's rows.}
+\textcolor{reviewed}{Let $\rho$ be a run of a system for a spec $\Spec$, under any \commitment
+basis.} \textcolor{reviewed}{Removing the \commitment events from $\rho$ gives a canonical run of
+$\Spec$ (Definition~\ref{def:run}) that is \emph{observably equivalent} to
+$\rho$: the two accept the same inputs and emit the same outputs, and after each
+event the canonical run keeps every row that $\rho$ keeps.}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -1614,10 +1613,12 @@ equivalent canonical runs, but not necessarily vice versa
 (Appendix~\ref{app:bases}).} \textcolor{reviewed}{Note also that observable equivalence is a
 guarantee only on inputs and outputs, not on remainder tables.} \textcolor{reviewed}{A system run's
 \commitments may be more aggressive, removing rows that its canonical run keeps.} \textcolor{reviewed}{As a result, a spec can be confluent under canonical runs, but a system with
-that spec may not be confluent, e.g., if it removes a necessary common
-extension.} \textcolor{reviewed}{The registrar is an example.} \textcolor{reviewed}{After closing the polls at
+that spec may not be confluent, for example when it removes a necessary
+common extension.} \textcolor{reviewed}{The registrar is an example.} \textcolor{reviewed}{After closing the polls at
 $ab\cdot$, it cannot accept the late ballot $aba$, although its canonical run,
-which only emits $\bot$, can.} \textcolor{reviewed}{The CALM and CAP criteria are about specs and
+which only emits $\bot$, can.}
+
+\textcolor{reviewed}{The CALM and CAP criteria are about specs and
 their canonical runs.} \textcolor{reviewed}{A system with no \commitment events inherits their
 confluence directly, since its runs are canonical runs.} \textcolor{reviewed}{For a system with
 \commitments of its own, showing that it inherits that confluence requires an
@@ -1631,8 +1632,8 @@ state at that input.
 
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
-Let a run from $\sigma_P(i)$ apply a \commitment that removes the row
-$(k,x)$, and let another run from $\sigma_P(i)$ issue
+Let a run under some \commitment basis from $\sigma_P(i)$ apply a \commitment
+that removes the row $(k,x)$, and let a canonical run from $\sigma_P(i)$ issue
 $\mathsf{input}(k)$ followed by $\mathsf{output}(x)$. These two runs
 \emph{conflict}: they are not confluent at $k$.
 \end{proposition}
@@ -1948,9 +1949,10 @@ The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
         Monotonicity on the outputs of $\Spec_1$.
 \item
 \textcolor{reviewed}{If it is proper, $\Spec_2|_{\Spec_1}$ can take each output of a run of
-        $\Spec_1$ as its next input and answer it without \commitment.} \textcolor{reviewed}{The
-        result is a run of $P_2\circ P_1$, and composite runs are confluent
-        whenever the underlying runs of $\Spec_1$ are.}
+        the system for $\Spec_1$ as its next input and answer it without
+        \commitment.} \textcolor{reviewed}{The result is a canonical run of $P_2\circ P_1$, and
+        composite runs are confluent whenever the underlying runs of that
+        system are.}
 \item
 \textcolor{reviewed}{If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
         $\Spec_1$ cannot emit some output without a \commitment.}
@@ -2737,7 +2739,7 @@ rows at $k$.
   output event; \commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; when it removes rows, that removal is a \commitment & Def.~\ref{def:output-event}\\
   legal output & $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
   determined; determination & the future-output set has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
-  run; \commitment-free & finite sequence of specification events from a canonical state; no output event issues a \commitment & Def.~\ref{def:run}\\
+  canonical run (run); \commitment-free & finite sequence of specification events from a canonical state; no output event issues a \commitment & Def.~\ref{def:run}\\
   consistent; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
   \bottomrule
 \end{tabular}
@@ -2778,7 +2780,7 @@ rows at $k$.
     system; basis; produced & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
   system output event & the lifted output event $\mathsf{output}(o)$; when $o$ is not legal, its \commitment $x_o$ must be in the basis & Def.~\ref{def:system-output-event}\\
   \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
-  run under a basis; canonical run & specification events whose \commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
+  run under a basis & specification events whose \commitments come from the basis & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
   conflicting runs & a run applies a \commitment removing $(k,x)$; another issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\
   partitioned history; side; explicit possibility relation $E$ & participants divided into two or more sides, no message crosses sides; $E\subseteq P$, the rows whose outputs participants actually emit & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
@@ -3204,13 +3206,9 @@ events, output events (Definition~\ref{def:system-output-event}), and
 \commitments from $\mathcal B$.
 \end{definition}
 
-\begin{definition}[Canonical run]
-\label{def:canonical-run}
-The \emph{canonical runs} are the runs under the canonical basis
-$\mathcal B_P$ of Definition~\ref{def:canonical-commitment-basis} with no
-\commitment events; they are the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
-\end{definition}
+Canonical runs (Definition~\ref{def:run}) are exactly the runs under the
+canonical basis $\mathcal B_P$ of Definition~\ref{def:canonical-commitment-basis}
+with no \commitment events.
 
 Two runs are \emph{observably equivalent} when they start at the same canonical
 state and agree once \commitment events are dropped. They then accept the same

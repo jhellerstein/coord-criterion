@@ -684,9 +684,9 @@ Figure~\ref{fig:election-frames}(d) (\S\ref{sec:systems}).
 
 \paragraph{Runs and consistency.}
 \color{black}\cxtag{45}{N/M}\cxbar{45}{0.4 0.4 1}{s}We now consider the executions corresponding to a spec.
-\begin{definition}[Specification event, run, \commitment-free]
+\begin{definition}[Specification event, canonical run, \commitment-free]
 \label{def:run}
-Input and output events are \emph{specification events}, or just \emph{events}.  A \emph{run} is a
+Input and output events are \emph{specification events}, or just \emph{events}.  A \emph{canonical run}, or just \emph{run}, is a
 finite sequence of them from the
 canonical state $\sigma_P(i)$ at some input $i$.  It is
 \emph{\commitment-free} when no output event in it applies a \commitment; the
@@ -1217,35 +1217,34 @@ assignment: $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet
 stamped. Both are \commitments, but each leaves different possibilities
 afterward (Figure~\ref{fig:cc-commitments}).\cxbar{105}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{106}{N/S}We call the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}.  The next lemma relates every system run to one of them.
-
-\color{blue!75!black}\begin{lemma}[Observable Equivalence]
+\color{black}\begin{lemma}[Observable Equivalence]
 \label{lem:canonical-equivalent}
-\cxtag{107}{B/L}\cxbar{107}{0.9 0.45 0}{s}Dropping the \commitment events from a run under any \commitment basis
-yields \emph{its canonical run}, which is \emph{observably equivalent} to it: it accepts
-the same inputs and emits the same outputs, and after each event it keeps at
-least the original's rows (\extended).\cxbar{107}{0.9 0.45 0}{e}
+\cxtag{106}{N/M}\cxbar{106}{0.4 0.4 1}{s}Let $\rho$ be a run of a system for a spec $\Spec$, under any \commitment
+basis.  Removing the \commitment events from $\rho$ gives a canonical run of
+$\Spec$ (Definition~\ref{def:run}) that is \emph{observably equivalent} to
+$\rho$: the two accept the same inputs and emit the same outputs, and after each
+event the canonical run keeps every row that $\rho$ keeps (\extended).\cxbar{106}{0.4 0.4 1}{e}
 \end{lemma}
 
-\color{blue!75!black}\cxtag{108}{B/M}\cxbar{108}{0.4 0.4 1}{s}Hence the commitments a spec's outputs require do not depend on their timing or
-representation in a system's \commitment basis.\cxbar{108}{0.4 0.4 1}{e}
+\color{black}\cxtag{107}{N/M}\cxbar{107}{0.4 0.4 1}{s}Hence the \commitments a spec's outputs require do not depend on their timing or
+representation in a system's \commitment basis.\cxbar{107}{0.4 0.4 1}{e}
 
-\color{orange!90!black}\cxtag{109}{O/L}\cxbar{109}{0.9 0.45 0}{s}Observable equivalence is one-way only: all system runs have observably
+\color{orange!90!black}\cxtag{108}{O/L}\cxbar{108}{0.9 0.45 0}{s}Observable equivalence is one-way only: all system runs have observably
 equivalent canonical runs, but not necessarily vice versa. Note also that
 observable equivalence is a guarantee only on inputs and outputs, not on
 remainder tables.  A system run's \commitments may be more aggressive, removing
 rows that its canonical run keeps. As a result, a spec can be confluent under
-canonical runs, but a system with that spec may not be confluent, e.g., if it
-removes a necessary common extension.  The registrar is an example.  After
+canonical runs, but a system with that spec may not be confluent, for example
+when it removes a necessary common extension.  The registrar is an example.  After
 closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$, although
-its canonical run, which only emits $\bot$, can. The CALM and CAP criteria are
+its canonical run, which only emits $\bot$, can.\cxbar{108}{0.9 0.45 0}{e}
+
+\color{black}\cxtag{109}{N/M}\cxbar{109}{0.4 0.4 1}{s}The CALM and CAP criteria are
 about specs and their canonical runs. A system with no \commitment events
 inherits their confluence directly, since its runs are canonical runs. For a
 system with \commitments of its own, showing that it inherits that confluence
 requires an argument about that system, which is outside the scope of this
-paper.\cxbar{109}{0.9 0.45 0}{e}
+paper.\cxbar{109}{0.4 0.4 1}{e}
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
@@ -1502,9 +1501,9 @@ reaches without \commitment is legal.\cxbar{142}{0.4 0.4 1}{e}
   \item The pipeline is proper exactly when $\Spec_2|_{\Spec_1}$ satisfies
         Lifted Monotonicity.
   \item If it is proper, $\Spec_2|_{\Spec_1}$ can take each output of a run of
-  $\Spec_1$ as its next input and answer it without \commitment. The result is a
-  run of $P_2\circ P_1$, and composite runs are confluent whenever the
-  underlying runs of $\Spec_1$ are.
+  the system for $\Spec_1$ as its next input and answer it without \commitment.
+  The result is a canonical run of $P_2\circ P_1$, and composite runs are
+  confluent whenever the underlying runs of that system are.
   \item If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
         $\Spec_1$ cannot emit some output without a \commitment.\cxbar{143}{0.9 0.45 0}{e}
 \end{enumerate}

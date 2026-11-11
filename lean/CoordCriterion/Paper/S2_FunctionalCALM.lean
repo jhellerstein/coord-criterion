@@ -450,7 +450,7 @@ specification states and specification events."  Lean: `State sp` and
 abbrev «def:transition-system» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   ∀ (σ : State sp) (e : Event I O), ∃ τ, Step σ e τ ∨ ¬ ∃ τ, Step σ e τ
 
-/-- **Def. `def:run`** (Run).  "A *run* is any finite transition sequence of
+/-- **Def. `def:run`** (Canonical run).  "A *canonical run*, or just *run*, is any finite transition sequence of
 the transition system from the canonical state `σ_P(i)` at some input `i`."
 The following scope convention says: "We compare a system's choices with every
 behavior the declared spec permits, not only the behaviors that system happens
