@@ -879,8 +879,8 @@ and~\ref{sec:crdt-instance} treat both.}
 \section{Complete CALM}
 \label{sec:complete-calm}
 
-\textcolor{reviewed}{We now extend CALM theory to nondeterministic specs, whose fibers may contain
-several outputs.}
+We now extend CALM theory to nondeterministic specs, whose fibers may contain
+several outputs.
 
 \subsection{Nondeterministic specs and Lifted Monotonicity}
 \label{sec:relational-specifications}
@@ -1822,9 +1822,9 @@ there is none.} Full proof in Appendix~\ref{app:proofs-sec4}.
 A system might hope to keep more outputs available by issuing \commitments,
 coordinating within each side of a partition. It cannot:
 Corollary~\ref{cor:complete-cap-any-system} holds for every system,
-\commitment-free or not. \textcolor{reviewed}{For
+\commitment-free or not. For
 $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and
-then the canonical system needs no \commitment at all.}
+then the canonical system needs no \commitment at all.
 
 \textcolor{reviewed}{We return to the voters' spec.} \textcolor{reviewed}{Each voter decides whether it can commit and emits
 its vote, yes or no.} \textcolor{reviewed}{That decision is a \commitment: a voter that votes yes
@@ -1958,7 +1958,7 @@ reaches without \commitment is legal.}
 
 \begin{theorem}[Proper Coordination]
 \label{thm:proper-coordination}
-\textcolor{reviewed}{Let $\Spec_1$ guard $\Spec_2$ in a pipeline.}
+Let $\Spec_1$ guard $\Spec_2$ in a pipeline.
 \begin{enumerate}
 \item
 The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
@@ -2178,6 +2178,14 @@ domain-disjoint $J$. When the order lets $I\cup J$ \inrelbase $I$ only for
 such $J$, each condition is functional monotonicity. Functional CALM takes
 the order as given.
 
+Li and Lee model replicated objects with write, merge, and query operations,
+show that strong eventual consistency holds exactly when merge is associative,
+commutative, and idempotent and a write equals merging in its input, and prove
+CALM in that model: a problem has an implementation that is confluent and
+consistent under partition exactly when it is monotone~\cite{li2025coordinationfree}. Their problems are functions from sets of inputs, ordered by inclusion, to a
+partially ordered set of outputs whose order they read as consistency, that is,
+the functional specs whose inputs are sets under inclusion.
+
 Baccaert and Ketsman generalize the CALM Theorem to nondeterministic
 \emph{behaviors}, which map facts located at nodes to sets of permitted
 outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}. Ordering outputs by
@@ -2282,12 +2290,12 @@ Monotonicity when $\Spec_L$ admits the read rule's answers.
 \textcolor{reviewed}{Suppose each transaction's timestamp exceeds that of every version it reads.} \textcolor{reviewed}{For read uncommitted and read committed, $E\subseteq P_L$ and
 $\Spec_{\mathrm{st}}\cap\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
-Availability for $E$ and Partition Consistency.} \textcolor{reviewed}{For any level that proscribes
+Availability for $E$ and Partition Consistency.} For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
 serializability, $\Spec_{\mathrm{st}}\cap\Spec_L$ does not satisfy Lifted
 Monotonicity, and $\Spec_L$ does not satisfy Lifted Monotonicity for any
 explicit relation $E$ that answers every read; hence no system for $\Spec_L$
-has Availability for such an $E$ and Partition Consistency.}
+has Availability for such an $E$ and Partition Consistency.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
@@ -2352,8 +2360,8 @@ replica running the second saw the first. Histories are ordered by extension:
 $h'$ \inrel $h$ when $h$ is a downward-closed sub-order of $h'$, so $h'$ adds
 events without changing what the earlier ones saw. We keep the \emph{locally
 valid} histories, in which every transaction step preserves $\mathcal I$ on
-its replica's state. \textcolor{reviewed}{Outputs are database states, ordered by inclusion: a
-later state keeps every version of an earlier one.} The table $P_{\mathcal I}$ permits, at input $h$, the state of any downward-closed sub-history of $h$
+its replica's state. Outputs are database states, ordered by inclusion: a
+later state keeps every version of an earlier one. The table $P_{\mathcal I}$ permits, at input $h$, the state of any downward-closed sub-history of $h$
 that is \emph{valid}: every merge of what it contains satisfies $\mathcal I$. A replica may thus hold transactions back, but whatever it exposes must be
 valid together with everything it contains.
 
