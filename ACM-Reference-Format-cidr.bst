@@ -1042,12 +1042,12 @@ FUNCTION { format.names }
 {
   % Format bibliographical entries with the first author last name first,
   % and subsequent authors with initials followed by last name.
-  % CIDR copy: lists of more than five names print the first name and "et al."
+  % CIDR copy: lists of more than three names print the first name and "et al."
 
   's :=
   #1 'nameptr :=               % nameptr = 1;
   s num.names$ 'numnames :=    % numnames = num.name$(s);
-  numnames #5 >
+  numnames #3 >
     { #1 'namesleft := }
     { numnames 'namesleft := }
   if$
@@ -1080,7 +1080,7 @@ FUNCTION { format.names }
       namesleft #1 - 'namesleft :=      % namesleft =- 1;
     }
   while$
-  numnames #5 >
+  numnames #3 >
     { " {et~al\mbox{.}}" * }
     'skip$
   if$
