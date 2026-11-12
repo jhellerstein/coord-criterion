@@ -581,7 +581,7 @@ $i$} has received $i$, emitted nothing, and removed no rows:
     \label{eq:canonical-state}
 \end{equation}
 
-Two sets of outputs recur throughout: those a table permits at a given input,
+Two sets of outputs recur throughout our discussion: those a table permits at a given input,
 and those it still permits there or once more input arrives.  In panel~(b) of
 Figure~\ref{fig:election-frames}, the first is $\{\bot\}$ at $ab\cdot$, and the
 second, shaded, is $\{\bot,a,b\}$.
@@ -626,37 +626,40 @@ Emitting an output may require a \commitment.
 \begin{definition}[Output event, canonical \commitment]
 \label{def:output-event}
 At a state $(i,R)$ with current output $o$, the \emph{output event}
-$\mathsf{output}(o)$ atomically keeps the rows whose outputs \outrelbase $o$,
-and emits $o$:
+$\mathsf{output}(o)$ atomically keeps only the rows whose outputs \outrelbase $o$,
+and then emits $o$:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
 If $o$ is not legal, some rows have outputs that do not \outrelbase $o$;
 removing them is the \emph{canonical \commitment} $x_o$.  In a functional table
-each input has one row, so $x_o$ rules out those rows' inputs.
+each input has only one row, so $x_o$ rules out those rows' inputs.
 \end{definition}
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  At a
 determined state the current output is the only future output, so it is legal,
-and an event from a determined state always leads to another determined state.
-A system may also issue \commitments of its own, as the registrar does in
-Figure~\ref{fig:election-frames}(d) (\S\ref{sec:systems}).
+and an event from a determined state always leads to another determined state
+with the same output.
+% A system may also issue \commitments of its own, as the registrar does in
+% Figure~\ref{fig:election-frames}(d) (\S\ref{sec:systems}).
 
 \paragraph{Runs and consistency.}
 We now consider the executions corresponding to a spec.
 \begin{definition}[Specification event, canonical run, \commitment-free]
 \label{def:run}
 Input and output events are \emph{specification events}, or just \emph{events}.  A \emph{canonical run}, or just \emph{run}, is a
-finite sequence of them from the
+finite sequence of events from the
 canonical state $\sigma_P(i)$ at some input $i$.  It is
 \emph{\commitment-free} when no output event in it applies a \commitment; the
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
-We compare a system's choices with every behavior the declared spec permits,
+\jmh{Isn't this paragraph premature here?}
+We compare a system's choices with every behavior its declared spec permits,
 not only those the system happens to produce.
 
+\jmh{isn't this first sentence redundant? The final sentence of the paragraph is what matters.}
 Input events keep only rows whose input \inrel the current one, and output
 events keep only rows whose outputs \outrelbase what was emitted.  Both steps are relational selections, which commute.
 
@@ -675,7 +678,7 @@ Different runs may retain different rows.
 Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are \emph{confluent at} a
 common \indesc $j$ of their current inputs when each can be continued to one
 common state with current input $j$.  An \spectype is \emph{consistent} when
-every finite family of runs is confluent at every common \indesc of its current
+every finite family of runs is confluent at every \jmh{really? every?} common \indesc of its current
 inputs.
 \end{definition}
 
@@ -683,7 +686,7 @@ Consistency as we define it has to hold after every output.  An inconsistent
 output, once emitted, can influence the environment, which in turn may generate
 inputs based on that output, leading to unintended consequences.  This is what
 Lamport calls ``anomalous behavior''~\cite{lamport1978time}, and our
-definitions forbid it.  Output orders align our view with the ``eventual
+definitions forbid it.  Nonetheless, output orders align our view with the ``eventual
 consistency'' literature: outputs that can only \outrelbase each other, as in
 CRDTs, are always consistent by our definition.  We discuss CRDTs further in \S\ref{sec:crdt-instance}.
 
@@ -708,7 +711,7 @@ $R_r$.  Conversely, the two events above reach a common state.  \fullproof
 Consistency thus ensures that runs never diverge irreparably: there is no
 ``split brain''.  Whatever events a finite collection of runs contains, at any
 common \indesc of their current inputs, some state is reachable by every run
-and contradicts none of their outputs.  Consistency is a property of the spec:
+and contradicts none of their outputs.  Consistency is a safety property of the spec:
 it describes no protocol and promises no delivery or termination.
 
 \subsection{The Functional CALM theorem}
@@ -740,10 +743,11 @@ along the way.
 \end{corollary}
 \begin{proof}[Proof sketch]
 By monotonicity, the outputs a run emits remove no row at an input extension of
-$i$.
+$i$. \jmh{The following fullproof macro reads oddly.}
 \fullproof
 \end{proof}
 
+\jmh{transition here is abrupt}
 Knowing the input is therefore enough to know the state, and with it the one
 output.  Monotonicity also governs legality: a monotone spec can emit every
 current output without \commitment, while if $f(i)\not\OutputOrd f(k)$ for some
@@ -785,7 +789,7 @@ where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  The
 relation $P$ is the spec's \emph{possibility relation} and is total
 on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
-$\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
+$\fiber{i}=\{o\in O:(i,o)\in P\}$ may contain several
 outputs; the \spectype is \emph{nondeterministic} when some fiber does.  A
 functional \spectype is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
@@ -841,9 +845,9 @@ serial schedules, to which executions correspond via equivalence (\S\ref{sec:hat
 \end{figure}
 
 The two specs behave differently when an output is emitted.  The transaction
-schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting either requires a
+schedules $[A,B]$ and $[B,A]$ are incompatible under equality order, so emitting either requires a
 \commitment that removes the other.  In the traceroute spec, by contrast, every
-removed route set is \outrelpast by a remaining one that also \outrelbase the
+removed route set is \outrelpast by a remaining one that also \outrelbase \jmh{``extended...extend'' reads poorly} the
 emitted observation, so the removal loses nothing and needs no \commitment.
 
 Lifted Monotonicity captures this difference.  It combines two properties:
@@ -879,7 +883,7 @@ A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
 $X\subseteq F$ is compatible in $F$.  A spec has \emph{directed fibers} when every fiber is directed.
 \end{definition}
 
-A singleton fiber is trivially directed.  The traceroute fiber is directed
+A singleton fiber is trivially directed.  Each traceroute fiber is directed
 too: any route sets in it can be merged into one that contains them all, and
 the merged set is also a permitted observation.  The two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
@@ -891,7 +895,7 @@ or least.  In the fiber $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under
 inclusion, for example, $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and
 $\{b\}$ have two incomparable minimal common \outnouns.
 
-\paragraph{Lifted Monotonicity.}
+\paragraph{Lifted Monotonicity.} \jmh{Need a half-line of prose here, or maybe this shouldn't be a named paragraph.}
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
 An \spectype satisfies \emph{Lifted Monotonicity}, and is called
@@ -901,9 +905,10 @@ $X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.
 
 With singleton fibers it is functional monotonicity
 (Definition~\ref{def:functional-monotonicity}). Lifted
-Monotonicity holds exactly when Relational Monotonicity and directed fibers
-both do.
+Monotonicity holds exactly when both Relational Monotonicity and directed fibers
+hold.
 
+\jmh{Flow here is a bit abrupt.}
 \paragraph{The common-extension condition.}
 Lifted Monotonicity compares an input with its
 own input extensions. Runs may emit outputs at incomparable inputs, say
@@ -983,17 +988,21 @@ alone.
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
 An \spectype is consistent if and only if it satisfies Lifted
-Monotonicity, equivalently the common-extension condition.
+Monotonicity.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If the common-extension condition holds, a common \outnoun $u\in P(j)$
+By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds
+if and only if the common-extension condition holds.
+If that condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run.
 If outputs emitted at inputs with a common \indesc $j$ are incompatible in
 $P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.  \fullproof
 \end{proof}
 
+\jmh{we revisited the acronym earlier. only one of the two locations should last, the other
+should be deleted.}
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language.  The new, more general result is Consistency As Lifted Monotonicity.
 The condition that characterizes consistency is now a
