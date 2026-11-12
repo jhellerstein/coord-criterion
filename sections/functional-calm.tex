@@ -96,12 +96,13 @@ the ballots received so far with the permitted result; the column orders say how
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
 $b$.  The output is whichever candidate has two ballots, or $\bot$ while there
-is no winner.  An input is the ballots received so far, written as a
-three-character string with a dot for a ballot not yet received.  For brevity,
+is no winner.  An input is a vector of the ballots received so far, one entry per voter, with a
+dot for a ballot not yet received.  We write it as a string: $ab\cdot$ means
+$v_1$ voted $a$, $v_2$ voted $b$, and $v_3$'s ballot has not arrived.  For brevity,
 the figure shows only inputs \inrelpart $a\cdot\cdot$.
 
 The two orders require thoughtful design.  The \emph{input order}
-must record accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
+must record accumulated ballots: $ab\cdot$ \inrel $a\cdot\cdot$, while
 $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output order} says which
 announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$.
 $\bot$ claims nothing, so either winner

@@ -271,8 +271,7 @@ a spec to be faithful.\cxbar{9}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{10}{N/M}\cxbar{10}{0.4 0.4 1}{s}State-machine-style specs can be projected into this form, by skipping
 operational details that are not externally observable (\S\ref{sec:scope}).
-Despite its simplicity, our model captures not only application invariants,
-but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
+Despite its simplicity, the model captures application invariants and general-purpose consistency definitions (\S\ref{sec:complete-cap},
 \S\ref{sec:hat-instance}).\cxbar{10}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{11}{N/M}\cxbar{11}{0.4 0.4 1}{s}As a system runs, possibilities narrow: the spec's table loses rows.  When new
@@ -348,7 +347,7 @@ partition.  The Gilbert--Lynch theorem follows directly.\cxbar{15}{0.4 0.4 1}{e}
         none.\cxbar{19}{0.4 0.4 1}{e}
 
 \color{black}\noindent
-\cxtag{20}{N/M}\cxbar{20}{0.4 0.4 1}{s}\emph{4. Map of the literature.} Highly Available Transactions, Invariant
+\cxtag{20}{N/M}\cxbar{20}{0.4 0.4 1}{s}\emph{4. A map of the literature.} Highly Available Transactions, Invariant
         Confluence, CRDT observation, and later refinements of CALM are all explained via Complete CALM (\S\ref{sec:instances}).\cxbar{20}{0.4 0.4 1}{e}
 
 \color{black}\vspace{0.5em}
@@ -456,14 +455,15 @@ Figure~\ref{fig:election-frames}.  Each row of the possibility table pairs
 the ballots received so far with the permitted result; the column orders
 say how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
-\color{black}\cxtag{24}{N/S}Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
+\color{black}\cxtag{24}{N/M}\cxbar{24}{0.4 0.4 1}{s}Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
 $b$.  The output is whichever candidate has two ballots, or $\bot$ while there
-is no winner.  An input is the ballots received so far, written as a
-three-character string with a dot for a ballot not yet received.  For brevity,
-the figure shows only inputs \inrelpart $a\cdot\cdot$.
+is no winner.  An input is a vector of the ballots received so far, one entry per voter, with a
+dot for a ballot not yet received.  We write it as a string: $ab\cdot$ means
+$v_1$ voted $a$, $v_2$ voted $b$, and $v_3$'s ballot has not arrived.  For brevity,
+the figure shows only inputs \inrelpart $a\cdot\cdot$.\cxbar{24}{0.4 0.4 1}{e}
 
-\color{blue!75!black}\cxtag{25}{B/M}\cxbar{25}{0.4 0.4 1}{s}The two orders require thoughtful design.  The \emph{input order}
-must record accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
+\color{black}\cxtag{25}{N/M}\cxbar{25}{0.4 0.4 1}{s}The two orders require thoughtful design.  The \emph{input order}
+must record accumulated ballots: $ab\cdot$ \inrel $a\cdot\cdot$, while
 $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output order} says which
 announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$.
 $\bot$ claims nothing, so either winner
