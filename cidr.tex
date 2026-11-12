@@ -79,7 +79,7 @@
   \noalign{\vskip-0.5\arrayrulewidth}}
 % Pointer to the long version (proofs and extended material).
 \newcommand{\extended}{the full paper~\cite{hellerstein2026completecalmfull}}
-\newcommand{\fullproof}{Proof in the full paper~\cite{hellerstein2026completecalmfull}.}
+\newcommand{\fullproof}{The complete proof is in the full paper~\cite{hellerstein2026completecalmfull}.}
 \newcommand{\proofinfull}{\begin{proof}In the full paper~\cite{hellerstein2026completecalmfull}.\end{proof}}
 % CIDR only: omit DOIs and URLs from the bibliography (read by ACM-Reference-Format's .bbl).
 \def\showDOI#1{\unskip}
@@ -655,13 +655,11 @@ canonical state $\sigma_P(i)$ at some input $i$.  It is
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
-\jmh{Isn't this paragraph premature here?}
-We compare a system's choices with every behavior its declared spec permits,
-not only those the system happens to produce.
 
-\jmh{isn't this first sentence redundant? The final sentence of the paragraph is what matters.}
-Input events keep only rows whose input \inrel the current one, and output
-events keep only rows whose outputs \outrelbase what was emitted.  Both steps are relational selections, which commute.
+
+Input and output events are both relational selections, and selections
+commute, so a run's remainder table depends only on its last input and the
+outputs it emitted:
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -678,8 +676,8 @@ Different runs may retain different rows.
 Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are \emph{confluent at} a
 common \indesc $j$ of their current inputs when each can be continued to one
 common state with current input $j$.  An \spectype is \emph{consistent} when
-every finite family of runs is confluent at every \jmh{really? every?} common \indesc of its current
-inputs.
+every finite family of runs is confluent at every common \indesc of its current
+inputs, including inputs that some run's \commitments have ruled out.
 \end{definition}
 
 Consistency as we define it has to hold after every output.  An inconsistent
@@ -743,13 +741,12 @@ along the way.
 \end{corollary}
 \begin{proof}[Proof sketch]
 By monotonicity, the outputs a run emits remove no row at an input extension of
-$i$. \jmh{The following fullproof macro reads oddly.}
+$i$.
 \fullproof
 \end{proof}
 
-\jmh{transition here is abrupt}
-Knowing the input is therefore enough to know the state, and with it the one
-output.  Monotonicity also governs legality: a monotone spec can emit every
+By Corollary~\ref{cor:state-by-input}, knowing the input is enough to know the
+state, and with it the one output.  Monotonicity also governs legality: a monotone spec can emit every
 current output without \commitment, while if $f(i)\not\OutputOrd f(k)$ for some
 $i\InputOrd k$, emitting $f(i)$ at $\sigma_P(i)$ must rule out $k$.
 Section~\ref{sec:complete-calm-theorem} states this in general.
@@ -845,9 +842,9 @@ serial schedules, to which executions correspond via equivalence (\S\ref{sec:hat
 \end{figure}
 
 The two specs behave differently when an output is emitted.  The transaction
-schedules $[A,B]$ and $[B,A]$ are incompatible under equality order, so emitting either requires a
+schedules $[A,B]$ and $[B,A]$ are incompatible under the equality order, so emitting either requires a
 \commitment that removes the other.  In the traceroute spec, by contrast, every
-removed route set is \outrelpast by a remaining one that also \outrelbase \jmh{``extended...extend'' reads poorly} the
+removed route set is contained in a remaining one that also contains the
 emitted observation, so the removal loses nothing and needs no \commitment.
 
 Lifted Monotonicity captures this difference.  It combines two properties:
@@ -895,7 +892,8 @@ or least.  In the fiber $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under
 inclusion, for example, $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and
 $\{b\}$ have two incomparable minimal common \outnouns.
 
-\paragraph{Lifted Monotonicity.} \jmh{Need a half-line of prose here, or maybe this shouldn't be a named paragraph.}
+\paragraph{Lifted Monotonicity.} We combine the two properties into one
+condition.
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
 An \spectype satisfies \emph{Lifted Monotonicity}, and is called
@@ -908,13 +906,12 @@ With singleton fibers it is functional monotonicity
 Monotonicity holds exactly when both Relational Monotonicity and directed fibers
 hold.
 
-\jmh{Flow here is a bit abrupt.}
 \paragraph{The common-extension condition.}
-Lifted Monotonicity compares an input with its
-own input extensions. Runs may emit outputs at incomparable inputs, say
-$o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
-\indesc $j$ of both. The next condition asks exactly that: a common
-\outnoun of $o_1$ and $o_2$ in the fiber at $j$.
+Lifted Monotonicity is stated for one input and its extensions, but runs may
+emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
+Such runs can be reconciled only at a common \indesc $j$ of both, which calls
+for a condition on rows at different inputs: a common \outnoun of $o_1$ and
+$o_2$ in the fiber at $j$.  The two conditions turn out to be equivalent.
 
 \begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
@@ -1001,12 +998,7 @@ $P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.  \fullproof
 \end{proof}
 
-\jmh{we revisited the acronym earlier. only one of the two locations should last, the other
-should be deleted.}
-The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
-logic language.  The new, more general result is Consistency As Lifted Monotonicity.
-The condition that characterizes consistency is now a
-property of a spec: Lifted Monotonicity, which for a function is
+The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
 ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
 both theorems hold for distributed histories.
 
