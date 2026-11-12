@@ -184,22 +184,22 @@ inputs; that removal is a \commitment.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
-for no winner (the \emph{equality order}, under which each element is related only
-to itself).  Then $\bot$ is incompatible with future winners, so emitting it
-requires a \commitment.  That change in the output order is Functional CALM in
-miniature: the original order is monotone, so later outputs \outrelbase every
-earlier one; under the equality order, some outputs can be emitted
-only with a \commitment.
+for no winner. Under this order (known as the \emph{equality order}), $\bot$ is
+incompatible with future winners, so emitting it requires a \commitment.  That
+change in the output order is Functional CALM in miniature: the spec is monotone
+under the original order, so later outputs \outrelbase every earlier one; under
+the equality order it is non-monotone, and some outputs can be emitted only with a \commitment.
 
-To see why, we can follow the events.  A \emph{run} is a sequence of input and output
+To see why, we follow the events.  A \emph{run} is a sequence of input and output
 events from a starting state, like the sequences that produce the panels of
 Figure~\ref{fig:election-frames}.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
 $aba$ \outrel both $\bot$ and $a$.  So a run that emits $\bot$ at $ab\cdot$ and
 a run that receives $aba$ and emits $a$ can never be reconciled at $aba$.
-Without the \commitment, the two runs would diverge for good.  The need for a
-\commitment is thus a property of the table and its orders alone, not of any
-system.
+Emitting $\bot$ is safe only with the \commitment that rules out $aba$ and
+$abb$; without it, the two runs would diverge for good.  This argument uses only
+the table's rows and its two orders, so the need for the \commitment is a
+property of the spec, not of any system that implements it.
 
 Runs are the foundation of the consistency side of CALM.  Input and output
 events form a transition system over specification states, and a spec is
