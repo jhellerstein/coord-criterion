@@ -528,7 +528,7 @@ We now make the functional framework precise: functional I/O
 specs and monotonicity, then a transition system that models their
 runs, and finally consistency as confluence of those runs.
 
-\paragraph{Specs and monotonicity.} A spec is a table with ordered columns.
+\paragraph{Specs: possibilities and their orders.} A spec is a table with ordered columns.
 \begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
 A \emph{functional \spectype} is a tuple
@@ -561,26 +561,26 @@ $\Spec$ is \emph{monotone} if
 \end{equation}
 \end{definition}
 
-\paragraph{States: remaining possibilities.}
-As illustrated by the non-gray text in Figure~\ref{fig:election-frames}, a
-\emph{specification state} $\sigma=(i,R)$ records the current input and the
-possibilities still open: $i$ is the \emph{current input}, and $R\subseteq P$
-is the \emph{remainder table}.  We say that a row $(k,u)$ is \emph{at input}
-$k$: the table $R$ contains a row at $i$ and only rows at \indescs of $i$.  An input $k$ is \emph{legal} when $R$ contains a
-row at $k$.  Rows are never added during execution.
-
-To describe tables compactly, a predicate in square brackets selects rows of a
-relation $R\subseteq I\times O$, and commas separate conjuncts:
+We say that a row $(k,u)$ of a relation $R\subseteq I\times O$ is \emph{at
+input} $k$.  To describe tables compactly, a predicate in square brackets
+selects rows, and commas separate conjuncts:
 $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ holds the rows whose
 input \inrel $j$ and whose output \outrel $o$.  As in relational algebra,
 $\pi_{\mathrm{out}}(R)$ is the set of outputs in $R$.
 
-The \emph{canonical state at $i$} has received $i$, emitted nothing, and
-removed no rows:
+\paragraph{States: remaining possibilities.}
+As illustrated by the non-gray text in Figure~\ref{fig:election-frames}, a
+\emph{specification state} $\sigma=(i,R)$ records the current input and the
+possibilities still open: $i$ is the \emph{current input}, and $R\subseteq P$
+is the \emph{remainder table}.  The table $R$ contains a row at $i$ and only
+rows at \indescs of $i$.  An input $k$ is \emph{legal} when $R$ contains a row
+at $k$.  Rows are never added during execution.  The \emph{canonical state at
+$i$} has received $i$, emitted nothing, and removed no rows:
 \begin{equation}
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
-  \label{eq:canonical-state}
+    \label{eq:canonical-state}
 \end{equation}
+
 Two sets of outputs recur throughout: those a table permits at a given input,
 and those it still permits there or once more input arrives.  In panel~(b) of
 Figure~\ref{fig:election-frames}, the first is $\{\bot\}$ at $ab\cdot$, and the
@@ -643,7 +643,7 @@ and an event from a determined state always leads to another determined state.
 A system may also issue \commitments of its own, as the registrar does in
 Figure~\ref{fig:election-frames}(d) (\S\ref{sec:systems}).
 
-\paragraph{Runs and consistency.}
+\paragraph{Runs: reconciling possibilities.}
 We now consider the executions corresponding to a spec.
 \begin{definition}[Specification event, canonical run, \commitment-free]
 \label{def:run}
@@ -750,7 +750,8 @@ current output without \commitment, while if $f(i)\not\OutputOrd f(k)$ for some
 $i\InputOrd k$, emitting $f(i)$ at $\sigma_P(i)$ must rule out $k$.
 Section~\ref{sec:complete-calm-theorem} states this in general.
 
-This is the familiar CALM dichotomy stated at the level of the spec
+\paragraph{Classical CALM and CRDTs.}
+Functional CALM restates the familiar CALM dichotomy at the level of the spec
 rather than inside a particular programming language.  
 Classical CALM fits, with inputs $J$ as sets of facts ordered by
 inclusion and output views $Q(J)$ ordered by inclusion.  Functional
