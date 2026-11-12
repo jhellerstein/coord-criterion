@@ -305,7 +305,7 @@ be observably equivalent to any run under a particular system's basis.  That
 basis may lack the commitment that an output event requires, which disables
 that output. … Looking only at the runs that one system produces could
 therefore hide non-monotonicity, and hide a canonical run that conflicts with
-a commitment." 
+a commitment."
 
 Lean: `Dist.spU` has one input and two incomparable outputs; under the empty
 basis `Dist.noCommitmentBasis` (a) the canonical run `output(true)` has no observably
