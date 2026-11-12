@@ -416,7 +416,7 @@ the figure shows only inputs \inrelpart $a\cdot\cdot$.
 The two orders require thoughtful design.  The \emph{input order}
 must record accumulated ballots: $ab\cdot$ \inrel $a\cdot\cdot$, while
 $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output order} says which
-announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$. 
+announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$.
 $\bot$ claims nothing, so either winner
 \outrel it, while $a$ and $b$ are incomparable.  In general, the functional table is \emph{monotone}
 when
@@ -753,7 +753,7 @@ Section~\ref{sec:complete-calm-theorem} states this in general.
 
 \paragraph{Classical CALM and CRDTs.}
 Functional CALM restates the familiar CALM dichotomy at the level of the spec
-rather than inside a particular programming language.  
+rather than inside a particular programming language.
 Classical CALM fits, with inputs $J$ as sets of facts ordered by
 inclusion and output views $Q(J)$ ordered by inclusion.  Functional
 monotonicity becomes $J\subseteq J'\Rightarrow Q(J)\subseteq Q(J')$,
@@ -1012,7 +1012,7 @@ if every output at every state reachable without \commitment is legal.
 
 \begin{proof}[Proof sketch]
 If the common-extension condition holds, every output at a reachable state has
-a common \outnoun with each remaining output, so is legal.  Conversely,
+a common \outnoun with each remaining output, so it is legal.  Conversely,
 checking legality at canonical states, row by row, yields the common
 \outnouns the condition requires.  \fullproof
 \end{proof}
@@ -1491,7 +1491,7 @@ Consider the spec for an incrementing counter that is capped at $9$, and
 compose it with a downstream spec for a double-digit threshold test, which
 outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.
 % Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
-% is only a lower bound, and the test is monotone.  
+% is only a lower bound, and the test is monotone.
 % Suppose instead that every answer must be final.
 Suppose that every answer must be final: unchanging in the face of more input.
 Then the output order is equality, and the test cannot
@@ -1726,7 +1726,7 @@ if and only if the program is non-monotone. Ameloot et al.\
 proved it, but only for relational languages, which to date have
 still not become mainstream beyond query processing (more on this below).
 
-This paper moves the declarations one level higher, from queries to their result: all
+This paper moves the declarations one level higher, from queries to specs: all
 that matters about a spec is the mapping from a program's inputs
 to its output. Eliding the query logic frees the analysis from any particular
 language and broadens what can be specified. Prior work focused on implementing
@@ -1786,8 +1786,8 @@ coordination-avoidance literature, and clarifies the intrinsic purpose of coordi
 removing possibilities via \commitments.
 The question of coordination-free consistency becomes clear in this model:
 when must a system make a fateful decision in order to emit an output?
-Functional CALM answers the question for functional specs: runs 
-stay confluent as input arrives exactly when a spec is monotone; no
+Functional CALM answers the question for functional specs: runs
+stay confluent as input arrives exactly when a spec is monotone, and then no
 output needs a \commitment.  This generalizes classic CALM to any function
 from inputs to outputs.
 
@@ -1796,13 +1796,13 @@ for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When the test fails, some reachable output
 requires a \commitment, which rules out an input or some of its outputs.
 Because the model makes \commitments explicit, it can also show where a
-composition coordinates (\S\ref{sec:composition}). 
+composition coordinates (\S\ref{sec:composition}).
 %  A totally ordered log
 % and a key-value store are each non-monotone on their own, yet when the log
 % guards the store, the log's \commitments are all the composition needs, and
 % the store needs none.  Multi-Paxos is one way to distribute them.
 Complete CAP is the partition form of the same equivalence: a spec escapes
-the CAP tradeoff exactly when it satisfies lifted monotonicity for its explicit possibility relation. 
+the CAP tradeoff exactly when it satisfies Lifted Monotonicity for its explicit possibility relation.
 
 Our model of \spectype[s] and \commitments opens a range of new questions.
 One direction
