@@ -51,8 +51,8 @@ it states no claim of its own.
 ## Query monotonicity (`sec:query-instance`)
 
 The first paragraph recalls the relational-transducer CALM Theorem ("The CALM
-Theorem of Ameloot et al. is an operational result for relational languages
-on transducer networks: a program can be evaluated without coordination
+Theorem of Ameloot et al. is stated in a particular operational model,
+relational languages on transducer networks: a program can be evaluated without coordination
 exactly when it is monotone … Functional CALM does not replace the details of
 that theorem.  It restates the result as a property of a spec, which can be
 compared with specs outside Datalog.").  The abstraction is

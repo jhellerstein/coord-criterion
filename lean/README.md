@@ -392,7 +392,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:proper-coordination/kvs-on-logs»` | theorem | "We return to the replicated store of the opening. |
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
-| `«sec:proper-coordination/locks-overhead»` | theorem | "A proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
+| `«sec:proper-coordination/locks-overhead»` | theorem | "Longer pipelines nest: |
 | `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, seen only through its boundary, a component. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |

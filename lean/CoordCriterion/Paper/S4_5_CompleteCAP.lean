@@ -70,9 +70,7 @@ combined output would exist; we return to this case at the end of the section.
 We therefore pair a spec with an *explicit possibility relation* `E ⊆ P`, or
 explicit relation for short: the rows whose outputs participants actually
 emit.  Outputs in `P ∖ E` are not emitted by participants; they remain
-permitted in `P` to capture implicit combinations of emitted outputs—e.g., as
-could be constructed by external observers or clients making sense of explicit
-outputs across participants.
+permitted in `P` to capture implicit combinations of emitted outputs.
 
 Both availability and consistency are judged on histories in which a
 partition separates the participants."  Lean: Theorem `thm:complete-cap`,

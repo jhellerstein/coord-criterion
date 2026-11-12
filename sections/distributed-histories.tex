@@ -15,7 +15,8 @@ Participants exchange messages by $\mathsf{send}(m)$ and
 $\mathsf{receive}(m)$.  A \emph{message} is a pair $m=(j,d)$ of a cumulative
 input $j$, or $\varnothing$ if it carries none, and application-specific data $d$, described below.  A receive does not change the specification state.  A participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
-legal common \indesc $k$ of $i$ and $j$, when one exists.
+legal common \indesc $k$ of $i$ and $j$, when one exists.  Which $k$ to use is
+the system's choice (\S\ref{sec:systems}).
 
 Send and receive events connect the participants' locally ordered runs.  Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -170,7 +171,8 @@ Monotonicity.  Under Lifted Monotonicity, this confluence has a concrete witness
 $u\in\fiber{j}$ that survives in every endpoint; by
 Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted.  At
 each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
-the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  The witness shows only that such a state exists in the transition system.  Choosing $u$, communicating it, and scheduling the transitions are left to the operational model (\S\ref{sec:scope}).
+the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  The witness shows only that such a state exists in the transition system.  Choosing $u$, communicating it, and scheduling the transitions are up to the
+system (\S\ref{sec:systems}).
 
 For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence:

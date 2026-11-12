@@ -728,17 +728,15 @@ specification events.
 canonical state $\sigma_P(i)$ at some input $i$.}
 \end{definition}
 
-\textcolor{reviewed}{We compare a system's choices with every behavior the declared spec permits,
-not only the behaviors that system happens to produce.}
+We compare a system's choices with every behavior the declared spec permits,
+not only the behaviors that system happens to produce.
 
 A run is \emph{\commitment-free} when none of its output events applies a
 \commitment. A state is \emph{reachable without \commitment} when
 some \commitment-free run reaches it.
 
-A run's state has a simple description. \textcolor{reviewed}{Input events keep only rows whose
-input \inrel the current one, and output events keep only rows whose outputs
-\outrelbase what was emitted.} \textcolor{reviewed}{Both steps are relational selections, which
-commute.} Since inputs only \ingrow during a run, the selection for the last
+A run's state has a simple description. Input and output events are both
+relational selections, and selections commute. Since inputs only \ingrow during a run, the selection for the last
 input subsumes the earlier ones.
 
 \begin{lemma}[Rows remaining after a run]
@@ -772,8 +770,8 @@ of those inputs.
 
 \begin{definition}[Consistency]
 \label{def:consistency}
-\textcolor{reviewed}{An \spectype is \emph{consistent} when every finite family of
-runs is confluent at every common \indesc of their current inputs.}
+An \spectype is \emph{consistent} when every finite family of
+runs is confluent at every common \indesc of their current inputs.
 \end{definition}
 
 Consistency requires confluence at every common \indesc, not just at some
@@ -852,8 +850,8 @@ of $i$.} Full proof in Appendix~\ref{app:proofs-sec2}.
 
 To be confluent at a common \indesc $j$, each run therefore needs only the
 single event $\mathsf{input}(j)$, which takes it to $\sigma_P(j)$, the state of a
-run that starts with all of the input. \textcolor{reviewed}{Knowing the input is enough to know the state, and with it the one
-output $f(j)$.}
+run that starts with all of the input. Knowing the input is enough to know the state, and with it the one
+output $f(j)$.
 
 \textcolor{reviewed}{Monotonicity also governs legality:}
 
@@ -1079,11 +1077,10 @@ directed. The transaction fiber of Figure~\ref{fig:ambiguity-frames}(f)
 therefore fails it already at $j=i$.
 
 \paragraph{The common-extension condition.}
-\textcolor{reviewed}{Lifted Monotonicity compares an input with its
-own input extensions.} \textcolor{reviewed}{Runs may emit outputs at incomparable inputs, say
-$o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
-\indesc $j$ of both.} \textcolor{reviewed}{The next condition asks exactly that: a common
-\outnoun of $o_1$ and $o_2$ in the fiber at $j$.}
+\textcolor{reviewed}{Lifted Monotonicity is stated for one input and its extensions, but runs may
+emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.} \textcolor{reviewed}{Such runs can be reconciled only at a common \indesc $j$ of both, which calls
+for a condition on rows at different inputs: a common \outnoun of $o_1$ and
+$o_2$ in the fiber at $j$.} \textcolor{reviewed}{The two conditions turn out to be equivalent.}
 
 \begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
@@ -1155,8 +1152,8 @@ characterizes consistency by Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-\textcolor{reviewed}{An \spectype is consistent if and only if it satisfies Lifted
-Monotonicity, equivalently the common-extension condition.}
+An \spectype is consistent if and only if it satisfies Lifted
+Monotonicity, equivalently the common-extension condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
@@ -1166,9 +1163,7 @@ $P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.} Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
-\textcolor{reviewed}{The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
-logic language.} \textcolor{reviewed}{The new, more general result is Consistency As Lifted Monotonicity.} \textcolor{reviewed}{The condition that characterizes consistency is now a
-property of a spec: Lifted Monotonicity, which for a function is
+\textcolor{reviewed}{The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
 ordinary monotonicity.}
 
 \textcolor{reviewed}{The same condition decides which outputs need a \commitment.}
@@ -1218,9 +1213,10 @@ participant.}
 
 \textcolor{reviewed}{Participants exchange messages by $\mathsf{send}(m)$ and
 $\mathsf{receive}(m)$.} A \emph{message} is a pair $m=(j,d)$ of a cumulative
-input $j$, or $\varnothing$ if it carries none, and application-specific data $d$, described below. \textcolor{reviewed}{A receive does not change the specification state.} A participant at $(i,R)$ that receives $(j,d)$ with
+input $j$, or $\varnothing$ if it carries none, and application-specific data $d$, described below. \textcolor{reviewed}{A receive does not change the specification state.} \textcolor{reviewed}{A participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
-legal common \indesc $k$ of $i$ and $j$, when one exists.
+legal common \indesc $k$ of $i$ and $j$, when one exists.} Which $k$ to use is
+the system's choice (\S\ref{sec:systems}).
 
 \textcolor{reviewed}{Send and receive events connect the participants' locally ordered runs.} \textcolor{reviewed}{Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -1255,7 +1251,7 @@ distributed history and of each send preceding its matching receive.
 
 \begin{definition}[Consistent cut]
 \label{def:consistent-cut}
-A \emph{consistent cut} $C$ is a subset of history events closed under happens-before~\cite{lamport1978time,chandy1985distributed}. The term is standard and unrelated to our notion of consistency.
+A \emph{consistent cut} $C$ is a subset of history events closed under happens-before~\cite{lamport1978time,chandy1985distributed}. \textcolor{reviewed}{The term is standard and unrelated to our notion of consistency.}
 \end{definition}
 
 A consistent cut contains a prefix of each participant's history events, so by
@@ -1378,7 +1374,8 @@ Monotonicity. Under Lifted Monotonicity, this confluence has a concrete witness.
 $u\in\fiber{j}$ that survives in every endpoint; by
 Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted. \textcolor{reviewed}{At
 each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
-the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).} The witness shows only that such a state exists in the transition system. Choosing $u$, communicating it, and scheduling the transitions are left to the operational model (\S\ref{sec:scope}).
+the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).} The witness shows only that such a state exists in the transition system. Choosing $u$, communicating it, and scheduling the transitions are up to the
+system (\S\ref{sec:systems}).
 
 \textcolor{reviewed}{For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence:}
@@ -1617,8 +1614,8 @@ timing or representation in a system's \commitment basis.}
 than canonical runs allow (Appendix~\ref{app:bases}).} \textcolor{reviewed}{Systems may constrain their runs arbitrarily, and
 their remainder tables may lack rows that their canonical runs keep.} \textcolor{reviewed}{So a spec
 can be confluent while a system for it is not.} \textcolor{reviewed}{The registrar is an example:
-after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$,
-although its canonical run, which only emits $\bot$, can.}
+after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$.} \textcolor{reviewed}{Under the original output order, a canonical run can emit $\bot$, accept
+$aba$, and emit $a$.}
 
 \textcolor{reviewed}{The CALM and CAP criteria are about specs and
 their canonical runs.} \textcolor{reviewed}{A system with no \commitment events inherits their
@@ -1706,9 +1703,7 @@ combined output would exist; we return to this case at the end of the section.}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
 participants actually emit.} \textcolor{reviewed}{Outputs in
 $P\setminus E$ are not emitted by participants;
-they remain permitted in $P$ to capture implicit combinations of emitted outputs---e.g.,
-as could be constructed by external observers or clients making sense of explicit outputs
-across participants.}
+they remain permitted in $P$ to capture implicit combinations of emitted outputs.}
 
 \textcolor{reviewed}{Both availability and consistency are judged on histories in which a partition
 separates the participants.}
@@ -1717,7 +1712,8 @@ separates the participants.}
 \label{def:partitioned-history}
 \textcolor{reviewed}{A \emph{partitioned history} divides the participants into two or more
 sides and contains no receive whose matching send lies on another
-side; participants still receive environment input and emit outputs.}
+side.} \textcolor{reviewed}{Participants on the same side may still exchange messages, and every
+participant still receives environment input and emits outputs.}
 \end{definition}
 
 \begin{definition}[Explicit possibility relation]
@@ -1756,6 +1752,9 @@ it produces, each participant $p$ can emit every output in $R(i)\cap E(i)$,
 where $(i,R)$ is $p$'s final state. \textcolor{reviewed}{\emph{Availability} is shorthand for
 Availability for $P$.}
 \end{definition}
+
+\textcolor{reviewed}{Partition Consistency asks that, whatever participants emit on separate sides,
+their states can still be brought to a common state.}
 
 \begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
@@ -1914,9 +1913,8 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.} \text
 \end{equation}
 \textcolor{reviewed}{where $\pi$ and $\Join$ are relational projection and equijoin.} \textcolor{reviewed}{Every $i\in I$
 has a nonempty fiber in $P_2\circ P_1$, since $P_1$ is total on $I$ and $P_2$ is
-total on $M$ (it has a row at every $m\in M$).} \textcolor{reviewed}{When the two specs run as a
-pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
-we say that $\Spec_1$ \emph{guards} $\Spec_2$.} Appendix~\ref{sec:parameterized-composition} gives each spec an input of its
+total on $M$ (it has a row at every $m\in M$).} \textcolor{reviewed}{We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
+its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.} Appendix~\ref{sec:parameterized-composition} gives each spec an input of its
 own as well, as when a store serves reads that bypass the log
 (Example~\ref{ex:bare-reads}).
 
@@ -1973,8 +1971,8 @@ The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
 \textcolor{reviewed}{Suppose the pipeline is proper, and fix any system for $\Spec_1$.} \textcolor{reviewed}{Then $\Spec_2|_{\Spec_1}$ can take each output of a run $\rho$ of that
         system as its next input and answer it without \commitment.} \textcolor{reviewed}{Replacing
         each output of $\rho$ by these answers, and dropping the \commitment
-        events of $\rho$, gives a canonical run of $P_2\circ P_1$.} \textcolor{reviewed}{Such runs are
-        confluent whenever the runs of the system are.}
+        events of $\rho$, gives a canonical run of $P_2\circ P_1$.} Such runs are
+        confluent whenever the runs of the system are.
 \item
 \textcolor{reviewed}{If the pipeline is proper and $P_2\circ P_1$ does not satisfy Lifted
         Monotonicity, some output of $\Spec_1$ needs a \commitment.}
@@ -1995,7 +1993,9 @@ of the composite fails at a canonical state, which is the image of a canonical
 state of $\Spec_1$. Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-A proper pipeline is itself a guard for a further stage (Corollary~\ref{cor:pipelines}). \textcolor{reviewed}{Locks in
+\textcolor{reviewed}{Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
+itself guard a third stage, and the theorem applies again
+(Corollary~\ref{cor:pipelines}).} \textcolor{reviewed}{Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment.}
 
@@ -2030,9 +2030,9 @@ simpler puzzle than our opening one.}
 
 \textcolor{reviewed}{Consider the spec for an incrementing counter that is capped at $9$, and
 compose it with a downstream spec for a double-digit threshold test, which
-outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.} \textcolor{reviewed}{Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
-is only a lower bound, and the test is monotone.} \textcolor{reviewed}{Suppose instead that every
-answer must be final.} \textcolor{reviewed}{Then the output order is equality, and the test cannot
+outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.} Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
+is only a lower bound, and the test is monotone. Suppose instead that every
+answer must be final. \textcolor{reviewed}{Then the output order is equality, and the test cannot
 emit \textsf{false} without a \commitment, since a later count of $10$ would
 contradict it.} \textcolor{reviewed}{Yet when composed after the capped counter, the pair of
 components needs no \commitment.} \textcolor{reviewed}{When do composed specs erase the need for
@@ -2162,8 +2162,9 @@ applying either CALM theorem.}
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-The CALM Theorem of Ameloot et al.\ (\S\ref{sec:functional-calm}) is an
-operational result for relational languages on transducer networks: a program
+The CALM Theorem of Ameloot et al.\ (\S\ref{sec:functional-calm}) is stated in
+a particular operational model, relational languages on transducer networks: a
+program
 can be evaluated without coordination exactly when it is monotone, under that
 model's assumptions about data placement and
 execution~\cite{ameloot2013relational,ameloot2015weaker}. Functional CALM

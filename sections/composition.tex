@@ -36,9 +36,8 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.  Their
 \end{equation}
 where $\pi$ and $\Join$ are relational projection and equijoin.  Every $i\in I$
 has a nonempty fiber in $P_2\circ P_1$, since $P_1$ is total on $I$ and $P_2$ is
-total on $M$ (it has a row at every $m\in M$).  When the two specs run as a
-pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
-we say that $\Spec_1$ \emph{guards} $\Spec_2$.
+total on $M$ (it has a row at every $m\in M$).  We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
+its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.
 Appendix~\ref{sec:parameterized-composition} gives each spec an input of its
 own as well, as when a store serves reads that bypass the log
 (Example~\ref{ex:bare-reads}).
@@ -117,7 +116,9 @@ of the composite fails at a canonical state, which is the image of a canonical
 state of $\Spec_1$.  Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-A proper pipeline is itself a guard for a further stage (Corollary~\ref{cor:pipelines}).  Locks in
+Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
+itself guard a third stage, and the theorem applies again
+(Corollary~\ref{cor:pipelines}).  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment.
 

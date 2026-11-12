@@ -1045,10 +1045,9 @@ Participants exchange messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.
 A \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$ if it
 carries none, and application-specific data $d$, such as timestamps, version
 vectors, or state identifiers.  Receiving a message does not change the
-specification state.  A participant at $(i,R)$ that receives $(j,d)$ may
-incorporate $j$ by its own $\mathsf{input}(k)$, for a legal common \indesc $k$
-of $i$ and $j$ \jmh{do we need to say how $k$ is identified?}; the data $d$ can influence what the system does next
-(\S\ref{sec:systems}) but never changes the state directly.
+specification state.  A participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a legal common \indesc $k$
+of $i$ and $j$.  The system chooses $k$ (\S\ref{sec:systems}); the data $d$ can
+influence that choice but never changes the state directly.
 
 Send and receive events connect the participants' locally ordered runs.  Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -1064,16 +1063,15 @@ receive has a matching send at another participant, and each participant $p$'s
 specification events, in order, form a run from $\sigma_P(i_p)$.  A
 \emph{consistent cut} $C$ is a set of history events closed under
 happens-before: whenever $C$ contains an event, it contains every event that
-happens before it~\cite{lamport1978time,chandy1985distributed}.  (The term is
-unrelated to our consistency.) \jmh{this parenthetical seems awkward inside the definition.}
+happens before it~\cite{lamport1978time,chandy1985distributed}.
 \end{definition}
 
-At a consistent cut $C$, the specification events of $C$ at participant $p$,
+The term is standard and unrelated to our notion of consistency.  At a
+consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, ending in some state
-$\sigma_p$.  A \emph{continuation} at $C$ extends the history events of $C$
-with further history events. \jmh{We don't use "continuation" in cidr.tex for quite a while. Move this?} For a common \indesc $j$ of the participants'
-current inputs, confluence asks whether some continuation brings every
-participant to the same state $(j,R)$.
+$\sigma_p$.  For a common \indesc $j$ of the participants' current inputs,
+confluence asks whether the history can be extended so that every participant
+reaches the same state $(j,R)$.
 
 \begin{corollary}[Complete CALM at consistent cuts]
 \label{cor:distributed-calm}
@@ -1095,8 +1093,8 @@ inputs; by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have
 emitted.  Each participant can then perform $\mathsf{input}(j)$ and
 $\mathsf{output}(u)$ and reach the same state without \commitment
 (Proposition~\ref{prop:exposure-boundary}).  The spec guarantees only that such
-a $u$ exists; choosing it, communicating it, and scheduling the events belong to
-the operational model (\S\ref{sec:scope}).\jmh{why that ref, and not sec:systems?}
+a $u$ exists; choosing it, communicating it, and scheduling the events are up
+to the system (\S\ref{sec:systems}).
 
 For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
@@ -1187,11 +1185,9 @@ representation in a system's \commitment basis.
 The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow.  Systems may constrain their runs arbitrarily, and
 their remainder tables may lack rows that their canonical runs keep.  So a spec
-can be confluent while a system for it is not.  The registrar is an example:
-after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$,
-although its canonical run, which only emits $\bot$, can. \jmh{Should this be "although a
-canonical run can emit $\bot$, accept the late ballot, and emit $a$."  Also, do we need to
-make clear here that we're talking about the original output order, not the equality order?}
+can be confluent while a system for it is not.  The registrar is an example: after closing the polls at $ab\cdot$, it cannot
+accept the late ballot $aba$.  Under the original output order, a canonical run
+can emit $\bot$, accept $aba$, and emit $a$.
 
 The CALM and CAP criteria are
 about specs and their canonical runs. A system with no \commitment events
@@ -1232,8 +1228,7 @@ We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
 participants may actually emit.  Outputs in
 $P\setminus E$ are not emitted by participants;
-they remain permitted in $P$ to capture implicit combinations of emitted outputs, for example those an observer or client could assemble from explicit outputs across participants.
-\jmh{isn't that redundant?}
+they remain permitted in $P$ to capture implicit combinations of emitted outputs.
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
@@ -1241,8 +1236,9 @@ separates the participants.
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
 A \emph{partitioned history} divides the participants into two or more
-sides and contains no receive whose matching send lies on another
-side; participants still receive environment input and emit outputs. \jmh{and same-side messages, right?}
+sides and contains no receive whose matching send lies on another side.
+Same-side messages are allowed, and participants still receive environment
+input and emit outputs.
 \end{definition}
 
 \begin{definition}[Explicit possibility relation]
@@ -1276,7 +1272,8 @@ such history, each participant $p$ can emit every output in $R(i)\cap E(i)$.
 \emph{Availability} is shorthand for Availability for $P$.
 \end{definition}
 
-\jmh{Maybe a sentence of motivation?}
+Partition Consistency asks that the sides' states can still be brought to a
+common state.
 
 \begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
@@ -1328,7 +1325,7 @@ $\fiber{j}$.  \fullproof
 \begin{corollary}
 \label{cor:complete-cap-any-system}
 No system does better than its spec: if some system has Availability for $E$
-and Partition Consistency, its spec escapes CAP for $E$. \jmh{Is this useful? Or trim?}
+and Partition Consistency, its spec escapes CAP for $E$.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
@@ -1410,8 +1407,8 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.  Their
 \end{equation}
 where $\pi$ and $\Join$ are relational projection and equijoin.  Every $i\in I$
 has a nonempty fiber in $P_2\circ P_1$, since $P_1$ is total on $I$ and $P_2$ is
-total on $M$.  When the two specs run as a pipeline \jmh{Does the reader know of any alternative?}, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
-we say that $\Spec_1$ \emph{guards} $\Spec_2$.
+total on $M$.  We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
+its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.
 
 \begin{lemma}[Composition]
 \label{lem:composition}
@@ -1449,7 +1446,7 @@ $\Spec_1$.
 \label{def:proper-coordination}
 A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{proper} when
 $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
-reaches without \commitment is legal. \jmh{this seems fishy -- only applies to pipelines of length 2?}
+reaches without \commitment is legal.
 \end{definition}
 
 \begin{theorem}[Proper Coordination]
@@ -1474,7 +1471,8 @@ Proposition~\ref{prop:exposure-boundary}) applied to $\Spec_2|_{\Spec_1}$. The
 full proof of (1) and the proofs of (2) and (3) are in \extended.
 \end{proof}
 
-A proper pipeline is itself a guard for a further stage. \jmh{I don't know what the preceding sentence means.} Locks in
+Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
+itself guard a third stage, and the theorem applies again (\extended).  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment.
 
@@ -1495,7 +1493,7 @@ outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.
 % Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
 % is only a lower bound, and the test is monotone.  
 % Suppose instead that every answer must be final.
-Suppose that every answer must final: unchanging in the face of more input.
+Suppose that every answer must be final: unchanging in the face of more input.
 Then the output order is equality, and the test cannot
 emit \textsf{false} without a \commitment, since a later count of $10$ would
 contradict it.  Yet when composed after the capped counter, the pair of
@@ -1535,21 +1533,22 @@ and applications to distributed-systems protocols such as registers, $k$-set agr
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-The CALM Theorem of Ameloot et al.\ is an operational result \jmh{is that fair?
-it's far more delarative than many things}: a query can be
+The CALM Theorem of Ameloot et al.\ is stated in a particular operational
+model: a query can be
 evaluated on a network of relational transducers without coordination exactly
 when it is monotone, under that model's assumptions about data placement and
 execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
 restates the result as a property of a spec, so that it can be compared with
-specs outside Datalog; it does not replace the operational details.  Later
+specs outside Datalog; it does not replace the operational details.  Li and
+Lee recently proved the same correspondence directly for functions on set inputs
+under inclusion, among other results~\cite{li2025coordinationfree}.  Earlier
 refinements of the theorem change only the input order.  When transducers know
 how data is placed, more queries become coordination-free; Ameloot et al.\
 characterized these classes by domain-distinct and domain-disjoint
 monotonicity~\cite{ameloot2015weaker,zinn2012weak,zinn2012winmove}.  Each is
 Functional CALM under a sparser input order: a node's input $I$ is extended by
 new facts $J$ only when the placement policy leaves the node unable to rule out
-$J$.  Among other results, Li and Lee prove the case of set inputs under
-inclusion~\cite{li2025coordinationfree}. \jmh{This last sentence feels pasted on.}
+$J$.
 
 Baccaert and Ketsman show that a nondeterministic behavior can be computed
 without a list of all nodes exactly when it contains a \emph{node monotone}
@@ -1560,11 +1559,12 @@ Complete CAP extends it to networks that overlap~\cite{hellerstein2026completeca
 \subsection{CRDTs and monotone queries}
 \label{sec:crdt-instance}
 
-\jmh{maybe backref Lamport's telephone/ anomalous behaviors here?}
+
 A CRDT uses join semilattices to guarantee that replicas that have received
 the same updates converge to the same state.  That guarantee, Strong Eventual
 Consistency, says nothing about what a client observes when it queries a
-replica that has not yet received every update.  Laddad et al.\ proposed
+replica that has not yet received every update.  Such a query risks Lamport's anomalous behavior
+(\S\ref{sec:functional-specifications}).  Laddad et al.\ proposed
 monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
 
