@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-627 entries.
+630 entries.
 
 ### §2 Functional CALM
 
@@ -182,6 +182,9 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:canonical-state»` | abbrev | **Eq. |
 | `«eq:canonical-state/largest»` | theorem | "The *canonical state at `i`* is the state at `i` with no rows removed: |
 | `«eq:canonical-state/input-moves-canonical»` | theorem | "An input event from a canonical state leads to another canonical state." |
+| `«def:fiber»` | abbrev | **Def. |
+| `«def:fiber/upper»` | abbrev | Def. |
+| `«def:fiber/state»` | theorem | Def. |
 | `«eq:input-event»` | abbrev | **Eq. |
 | `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since the remainder table contains only rows at input extensions… |
 | `«sec:functional-events/input-cumulative»` | theorem | "`input(j)` then `input(k)` has the effect of `input(k)` alone; `input(i)` at `(i,R)` has no effect." |
@@ -462,10 +465,10 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/monotone-functional»` | abbrev | *monotone (functional)* — `i ≼ j ⇒ f(i) ≼ f(j)` (Def. |
 | `«app:notation/selection-in»` | abbrev | *selection* — `R[predicate on in, out]` (Sec. |
 | `«app:notation/selection-out»` | abbrev | *selection* `R[out ⪰ o]` (see `«app:notation/selection-in»`). |
-| `«app:notation/in»` | abbrev | *`in(R)`* — the inputs in `R` (Sec. |
-| `«app:notation/out»` | abbrev | *`out(R)`* — the outputs in `R` (Sec. |
+| `«app:notation/in»` | abbrev | *`π_in R`* — the inputs in `R` (Sec. |
+| `«app:notation/out»` | abbrev | *`π_out R`* — the outputs in `R` (Sec. |
 | `«app:notation/fiber»` | abbrev | *row at `k`* — a row `(k,u)` (Sec. |
-| `«app:notation/upper-fiber»` | abbrev | *future-output set* — `out(R[in ⪰ k])` (Sec. |
+| `«app:notation/upper-fiber»` | abbrev | *upper fiber* — `π_out(R[in ⪰ k])` (Def. |
 | `«app:notation/state»` | abbrev | *state `(i,R)`* — current input and remainder table, every row at an input extension of `i` (Def. |
 | `«app:notation/legal»` | abbrev | *legal input* — an input with a row in `R` (Def. |
 | `«app:notation/canonical-state»` | abbrev | *canonical state* — `σ_P(i) = (i, P[in ⪰ i])` (Eq. |
@@ -474,7 +477,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/output-event»` | abbrev | *output event* — `output(o)` keeps `R[out ⪰ o]` and emits `o` (Def. |
 | `«app:notation/output-event-excludes»` | abbrev | *commitment* (§2 sense) — an output event that removes rows (Def. |
 | `«app:notation/exposable»` | abbrev | *legal output* — `output(o)` applies no commitment (Def. |
-| `«app:notation/determined»` | abbrev | *determined* — the future-output set has one element; *determination* — reaching such a state (Sec. |
+| `«app:notation/determined»` | abbrev | *determined* — the upper fiber has one element; *determination* — reaching such a state (Sec. |
 | `«app:notation/run»` | abbrev | *canonical run* (*run*) — finite sequence of specification events from a canonical state (Def. |
 | `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
 | `«app:notation/consistent»` | abbrev | *consistent* — every finite family of runs can reach one common state at each common input extension `j` (Def. |

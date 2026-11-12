@@ -27,7 +27,7 @@ way when an output can be emitted without \commitment.
     $a\cdot a$ & \sh{$a$} \\
     $a\cdot b$ & \sh{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -44,7 +44,7 @@ way when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -61,7 +61,7 @@ way when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{a\}$; determined}\\
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $a$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -78,12 +78,12 @@ way when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot\}$; determined}\\
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
   \caption{The election specification and three states reached from it, limited to rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
-  input and its future-output set.  Gray: lost after an input event; struck
+  input and its upper fiber.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
   and (c) follow input events.  In (d) the registrar closes the polls, a \commitment that emitting
   $\bot$ does not require, and emits $\bot$.}
@@ -120,9 +120,9 @@ state}: the \emph{current input} and the \emph{remainder table} of rows still
 possible from it.  When $v_2$'s ballot for $b$ arrives, the input event
 $\mathsf{input}(ab\cdot)$ produces panel~(b).  The table passively loses the rows
 whose inputs do not extend $ab\cdot$, such as $aa\cdot$: those possibilities are
-lost.  The \emph{future-output set} is the set of outputs still possible in the
+lost.  The \emph{upper fiber} (Definition~\ref{def:fiber}) is the set of outputs still possible in the
 remainder table: $\{\bot,a,b\}$ in panel~(b).  If $v_2$ instead votes for $a$
-(panel~(c)), the future-output set is a singleton, $\{a\}$, and we call such
+(panel~(c)), the upper fiber is a singleton, $\{a\}$, and we call such
 states \emph{determined}.  In this case, input alone has determined an outcome,
 without \commitment.
 
@@ -131,7 +131,7 @@ that receives the ballots and announces the result (Section~\ref{sec:systems}). 
 the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
 closes the polls.  Closing the polls is a \emph{\commitment}: it removes the
 still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$.
-The future-output set becomes $\{\bot\}$, so $\bot$ is the determined result.
+The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result.
 The spec did not require this \commitment: emitting $\bot$ alone would remove
 nothing, since every output still possible extends $\bot$.  Closing the polls is
 the registrar's own fateful decision.
@@ -165,7 +165,7 @@ the registrar's own fateful decision.
       \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
       \bottomrule
     \end{tabular*}
-    {\footnotesize future-output set $\{\bot\}$; determined}
+    {\footnotesize upper fiber $\{\bot\}$; determined}
   \end{minipage}\par\smallskip
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
@@ -177,7 +177,7 @@ the registrar's own fateful decision.
 Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
 rows whose outputs \outrelbase $o$, since later outputs must not contradict it.
 In a functional table, $o$ is a \emph{legal output} when everything in the
-future-output set already \outrel $o$, so the event removes nothing.  Thus
+upper fiber already \outrel $o$, so the event removes nothing.  Thus
 $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  When $o$ is not
 legal, the event removes the rows that conflict with $o$, ruling out their
 inputs; that removal is a \commitment.
@@ -265,12 +265,13 @@ A functional \spectype $\Spec$, with induced function $f$, is
 Thus an output emitted on partial input is \outrelpast by the output at every \indesc.
 
 \paragraph{Relational notation.}
-For a relation $R\subseteq I\times O$, a predicate on the columns
+For a relation $R\subseteq I\times O$, we say that a row $(k,u)$ is
+\emph{at input} $k$.  A predicate on the columns
 $\mathrm{in}$ and $\mathrm{out}$ in square brackets selects rows, and commas
 separate conjuncts: $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the
-table of rows whose input \inrel $j$ and whose output \outrel $o$.  We say that a row
-$(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs that
-appear in $R$.
+table of rows whose input \inrel $j$ and whose output \outrel $o$.  As in
+relational algebra, $\pi_{\mathrm{out}}R$ is the set of outputs that appear in
+$R$.
 
 A spec describes every permitted input/output pair.  During execution,
 input arrives and outputs are emitted, so only some of those pairs remain
@@ -304,13 +305,16 @@ nothing:
 An input event from a canonical state leads to another canonical state, and
 runs start at one.
 
-The \emph{fiber} of a table $R$ at input $k$ is the set of outputs paired
-with $k$: $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  A functional fiber has at
-most one value.
-The \emph{future-output set} at $k$, $\mathrm{out}(R[\mathrm{in}\InputGe k])$,
-collects the outputs in the fibers at $k$ and its \indescs.
-For a state $\sigma=(i, R)$ the future-output set at $i$ is $\mathrm{out}(R)$---the
-outputs still possible.
+\begin{definition}[Fiber, upper fiber]
+\label{def:fiber}
+Let $R$ be a table and $k$ an input.  The \emph{fiber} of $R$ at $k$ is
+$R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
+\emph{upper fiber} of $R$ at $k$ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe
+k])$, the outputs paired with $k$ or any of its \indescs.
+\end{definition}
+
+A functional fiber has at most one value.  For a state $\sigma=(i,R)$, the
+upper fiber at $i$ is $\pi_{\mathrm{out}}R$: every output still possible.
 
 \subsection{Input and output events}
 \label{sec:functional-events}
@@ -344,7 +348,7 @@ output the system may emit.
 \begin{definition}[Legal output]
 \label{def:exposable}
 The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
-future-output set \outrel $o$.
+upper fiber \outrel $o$.
 \end{definition}
 
 Equivalently, as the only row at a legal input $j$ is $(j,f(j))$, $o$ is legal
@@ -382,7 +386,7 @@ Figure~\ref{fig:election-frames}(d), but such extra \commitments are a
 system's choice, not the spec's (Section~\ref{sec:systems}).
 
 \paragraph{Determination.}
-A state is \emph{determined} when its future-output set has one element: one result
+A state is \emph{determined} when its upper fiber has one element: one result
 remains, whatever legal input still arrives.  This is a property of the state
 alone.  Under the functional dependency each input determines its own
 output; a determined state goes further, since its current input determines
