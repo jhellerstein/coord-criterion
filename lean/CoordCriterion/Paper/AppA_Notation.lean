@@ -78,11 +78,11 @@ abbrev «app:notation/selection-in» {sp : Spec I O} (σ : State sp) (j : I) : T
 abbrev «app:notation/selection-out» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   outputTable σ o
 
-/-- *`π_in R`* — the inputs in `R` (Sec. `sec:functional-specifications`).
+/-- *`π_in(R)`* — the inputs in `R` (Sec. `sec:functional-specifications`).
 No library name: statements write `∃ u, R k u`. -/
 abbrev «app:notation/in» (R : Table I O) (k : I) : Prop := ∃ u, R k u
 
-/-- *`π_out R`* — the outputs in `R` (Sec. `sec:functional-specifications`).
+/-- *`π_out(R)`* — the outputs in `R` (Sec. `sec:functional-specifications`).
 No library name: statements write `∃ k, R k o`. -/
 abbrev «app:notation/out» (R : Table I O) (o : O) : Prop := ∃ k, R k o
 

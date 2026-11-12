@@ -309,7 +309,7 @@ abbrev «def:fiber/upper» {I O : Type} [PO I] (R : Table I O) (k : I) : O → P
   fun o => ∃ k', k ≼ k' ∧ R k' o
 
 /-- Def. `def:fiber`: "For a state `(i,R)`, the upper fiber at `i` is
-`π_out R`: every output still possible."  Every row of a state's table is at an
+`π_out(R)`: every output still possible."  Every row of a state's table is at an
 input extension of its current input, so the two descriptions agree. -/
 theorem «def:fiber/state» {I O : Type} [PO I] [PO O] {sp : Spec I O} (σ : State sp)
     (o : O) : «def:fiber/upper» σ.R σ.cur o ↔ ∃ k, σ.R k o :=
@@ -427,7 +427,7 @@ theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O
 
 /-- §2.3 "Determination": "A state is *determined* when its upper fiber has
 one element."  Lean: `CALM.Determined σ` is `∃ o, ∀ k x, σ.R k x → x = o`;
-the upper fiber `π_out R` is nonempty, so this is "has exactly one element". -/
+the upper fiber `π_out(R)` is nonempty, so this is "has exactly one element". -/
 abbrev «sec:functional-events/determined» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) : Prop :=
   Determined σ

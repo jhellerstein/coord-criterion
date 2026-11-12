@@ -465,8 +465,8 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/monotone-functional»` | abbrev | *monotone (functional)* — `i ≼ j ⇒ f(i) ≼ f(j)` (Def. |
 | `«app:notation/selection-in»` | abbrev | *selection* — `R[predicate on in, out]` (Sec. |
 | `«app:notation/selection-out»` | abbrev | *selection* `R[out ⪰ o]` (see `«app:notation/selection-in»`). |
-| `«app:notation/in»` | abbrev | *`π_in R`* — the inputs in `R` (Sec. |
-| `«app:notation/out»` | abbrev | *`π_out R`* — the outputs in `R` (Sec. |
+| `«app:notation/in»` | abbrev | *`π_in(R)`* — the inputs in `R` (Sec. |
+| `«app:notation/out»` | abbrev | *`π_out(R)`* — the outputs in `R` (Sec. |
 | `«app:notation/fiber»` | abbrev | *row at `k`* — a row `(k,u)` (Sec. |
 | `«app:notation/upper-fiber»` | abbrev | *upper fiber* — `π_out(R[in ⪰ k])` (Def. |
 | `«app:notation/state»` | abbrev | *state `(i,R)`* — current input and remainder table, every row at an input extension of `i` (Def. |
