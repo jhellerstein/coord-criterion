@@ -112,9 +112,9 @@ extends this to nondeterministic specifications, where the test is
 CALM map into the same framework.}
 
 \textcolor{reviewed}{Prior CALM results stop at monotonicity: for non-monotone
-specifications, they say only that coordination is needed somewhere.} \textcolor{reviewed}{Our
+specifications, they say only that coordination is needed somewhere.} Our
 unified framework offers constructive results on both sides: it says exactly
-how much coordination a specification needs, and where.} \textcolor{reviewed}{A non-monotone
+how much coordination a specification needs, and where. \textcolor{reviewed}{A non-monotone
 specification's outputs determine irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.} \textcolor{reviewed}{\emph{Proper Coordination} identifies which stage of a composition must make the
 \commitments and certifies that later stages need none, validating designs such
@@ -222,14 +222,17 @@ operational details that are not externally observable (Section~\ref{sec:operati
 but also general-purpose consistency definitions (Appendix~\ref{app:registers},
 Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
-\textcolor{reviewed}{As a system runs, possibilities narrow: the spec's table loses rows.} \textcolor{reviewed}{Newly-arrived input removes rows that cannot be reached by extending that input;
-the world has moved on.} \textcolor{reviewed}{Coordination mechanisms such as locks and consensus
-remove rows by decision.} \textcolor{reviewed}{We call their relevant semantic effect a
-\emph{\commitment}: an irrevocable, fateful system decision.} \textcolor{reviewed}{It can remove a permitted
-output that no remaining output at the same input covers: for example, choosing between two competing candidates
-in a leader election protocol removes the possibility of the loser winning that
-election.} \textcolor{reviewed}{Or it can rule out all rows with a given input; for example, closing
-the polls for an election rules out consideration of any future ballots.}
+\textcolor{reviewed}{As a system runs, possibilities narrow: the spec's table loses rows.} \textcolor{reviewed}{When new
+input arrives, the world has moved on, and rows that cannot be reached by
+extending that input are lost.} \textcolor{reviewed}{When the system decides among possibilities,
+the output order tells us whether the decision is incidental or fateful.} \textcolor{reviewed}{It is
+incidental when every row it removes is covered: some remaining row at the
+same input has an output that \outrel the removed one, so nothing observable is
+lost.} \textcolor{reviewed}{It is fateful otherwise.} \textcolor{reviewed}{Choosing between two candidates in a leader
+election is fateful: no remaining output covers the loser's win.} \textcolor{reviewed}{So is closing
+the polls, which rules out every row with a later ballot.} \textcolor{reviewed}{We call a fateful
+decision a \emph{\commitment}: an irrevocable decision, enforceable by
+coordination mechanisms such as locks and consensus.}
 
 \subsection{The Criterion: Lifted Monotonicity}
 \textcolor{reviewed}{The model provides clean definitions for the key ingredients of CALM:
@@ -879,8 +882,8 @@ and~\ref{sec:crdt-instance} treat both.}
 \section{Complete CALM}
 \label{sec:complete-calm}
 
-\textcolor{reviewed}{We now extend CALM theory to nondeterministic specs, whose fibers may contain
-several outputs.}
+We now extend CALM theory to nondeterministic specs, whose fibers may contain
+several outputs.
 
 \subsection{Nondeterministic specs and Lifted Monotonicity}
 \label{sec:relational-specifications}
@@ -1822,9 +1825,9 @@ there is none.} Full proof in Appendix~\ref{app:proofs-sec4}.
 A system might hope to keep more outputs available by issuing \commitments,
 coordinating within each side of a partition. It cannot:
 Corollary~\ref{cor:complete-cap-any-system} holds for every system,
-\commitment-free or not. \textcolor{reviewed}{For
+\commitment-free or not. For
 $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and
-then the canonical system needs no \commitment at all.}
+then the canonical system needs no \commitment at all.
 
 \textcolor{reviewed}{We return to the voters' spec.} \textcolor{reviewed}{Each voter decides whether it can commit and emits
 its vote, yes or no.} \textcolor{reviewed}{That decision is a \commitment: a voter that votes yes
@@ -1958,7 +1961,7 @@ reaches without \commitment is legal.}
 
 \begin{theorem}[Proper Coordination]
 \label{thm:proper-coordination}
-\textcolor{reviewed}{Let $\Spec_1$ guard $\Spec_2$ in a pipeline.}
+Let $\Spec_1$ guard $\Spec_2$ in a pipeline.
 \begin{enumerate}
 \item
 The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
@@ -2178,6 +2181,14 @@ domain-disjoint $J$. When the order lets $I\cup J$ \inrelbase $I$ only for
 such $J$, each condition is functional monotonicity. Functional CALM takes
 the order as given.
 
+Li and Lee model replicated objects with write, merge, and query operations,
+show that strong eventual consistency holds exactly when merge is associative,
+commutative, and idempotent and a write equals merging in its input, and prove
+CALM in that model: a problem has an implementation that is confluent and
+consistent under partition exactly when it is monotone~\cite{li2025coordinationfree}. Their problems are functions from sets of inputs, ordered by inclusion, to a
+partially ordered set of outputs whose order they read as consistency, that is,
+the functional specs whose inputs are sets under inclusion.
+
 Baccaert and Ketsman generalize the CALM Theorem to nondeterministic
 \emph{behaviors}, which map facts located at nodes to sets of permitted
 outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}. Ordering outputs by
@@ -2282,12 +2293,12 @@ Monotonicity when $\Spec_L$ admits the read rule's answers.
 \textcolor{reviewed}{Suppose each transaction's timestamp exceeds that of every version it reads.} \textcolor{reviewed}{For read uncommitted and read committed, $E\subseteq P_L$ and
 $\Spec_{\mathrm{st}}\cap\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
-Availability for $E$ and Partition Consistency.} \textcolor{reviewed}{For any level that proscribes
+Availability for $E$ and Partition Consistency.} For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
 serializability, $\Spec_{\mathrm{st}}\cap\Spec_L$ does not satisfy Lifted
 Monotonicity, and $\Spec_L$ does not satisfy Lifted Monotonicity for any
 explicit relation $E$ that answers every read; hence no system for $\Spec_L$
-has Availability for such an $E$ and Partition Consistency.}
+has Availability for such an $E$ and Partition Consistency.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
@@ -2352,8 +2363,8 @@ replica running the second saw the first. Histories are ordered by extension:
 $h'$ \inrel $h$ when $h$ is a downward-closed sub-order of $h'$, so $h'$ adds
 events without changing what the earlier ones saw. We keep the \emph{locally
 valid} histories, in which every transaction step preserves $\mathcal I$ on
-its replica's state. \textcolor{reviewed}{Outputs are database states, ordered by inclusion: a
-later state keeps every version of an earlier one.} The table $P_{\mathcal I}$ permits, at input $h$, the state of any downward-closed sub-history of $h$
+its replica's state. Outputs are database states, ordered by inclusion: a
+later state keeps every version of an earlier one. The table $P_{\mathcal I}$ permits, at input $h$, the state of any downward-closed sub-history of $h$
 that is \emph{valid}: every merge of what it contains satisfies $\mathcal I$. A replica may thus hold transactions back, but whatever it exposes must be
 valid together with everything it contains.
 
