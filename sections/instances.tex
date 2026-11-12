@@ -10,14 +10,13 @@ applying either CALM theorem.
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-As previously discussed (\S\ref{sec:functional-calm}),
-the CALM Theorem of Ameloot et al.\ proves an operational result for
-relational languages on transducer networks: coordination-free evaluation is possible
-iff a program is monotone,
-under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.
-Functional CALM does not replace the details of that theorem.  It abstracts
-the result to a property that can be compared with specs outside
-Datalog.
+The CALM Theorem of Ameloot et al.\ (\S\ref{sec:functional-calm}) is an
+operational result for relational languages on transducer networks: a program
+can be evaluated without coordination exactly when it is monotone, under that
+model's assumptions about data placement and
+execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
+does not replace the details of that theorem.  It restates the result as a
+property of a spec, which can be compared with specs outside Datalog.
 
 Subsequent extensions to the original CALM Theorem become changes to the input
 domain and its order, or to the notion of coordination.  Zinn et al.\ gave transducers partial knowledge of how data is
@@ -56,15 +55,16 @@ isolated nodes may be the whole network and must emit.  Baccaert and Ketsman
 call a behavior coordination-free when nodes can compute it without a list of
 all nodes, and show that this holds exactly when some such $A$ is \emph{node
 monotone}.  Node monotonicity of $A$ is the common-extension condition on $A$
-for two rows whose networks share no node.  Complete CAP extends it to networks
-that overlap, since Availability lets no participant wait.  Delays are finite, so their construction waits: a group's smallest node
-chooses once every member confirms the group.  Groups sharing a node are
-nested.  The choice therefore needs a \commitment.  Because the shared node is
-the only participant placed to choose for that group, the conflict does not
-cross participants.  Pairing off nodes, leaving at
-most one unpaired, is node monotone, yet every $A$ pairs $b$ with $a$ at $\{a,b\}$ and
-with $c$ at $\{b,c\}$.  For deterministic behaviors the two conditions
-coincide.
+for two rows whose networks share no node.  Complete CAP extends it to networks that overlap, since Availability lets
+no participant wait.  In Baccaert and Ketsman's model, nodes may wait, because delays are finite.  In
+their construction, a group's smallest node chooses once every member has
+confirmed the group, and groups that share a node are nested.  That choice
+needs a \commitment.  Because the shared node is the only participant placed
+to choose for that group, the conflict stays at one participant.  The two
+conditions differ.  Pairing off nodes, leaving at most one unpaired, is node
+monotone.  Yet every $A$ pairs $b$ with $a$ at $\{a,b\}$ and with $c$ at
+$\{b,c\}$, so the condition of Complete CAP fails at $\{a,b,c\}$.  For
+deterministic behaviors the two conditions coincide.
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
@@ -146,7 +146,7 @@ the intersection $\Spec_{\mathrm{st}}\cap\Spec_L$
 (Definition~\ref{def:intersection}) is the store held to isolation level $L$.
 It is total, since both permit the empty set of answers.  By
 Proposition~\ref{prop:intersection-bound}, the intersection keeps Lifted
-Monotonicity when $\Spec_L$ admits the read rule's answers.
+Monotonicity when $\Spec_L$ permits the read rule's answers.
 
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
@@ -255,8 +255,7 @@ not the transactions alone, decides the outcome: a transaction that is harmless
 after another can, when it runs without seeing it, produce a state whose merge
 with the other's is invalid.
 
-Invariant preservation and transaction availability are different
-specs: $\Spec_{\mathcal I}$ constrains exposed database states, while an
+Invariant preservation and isolation are expressed by different specs: $\Spec_{\mathcal I}$ constrains exposed database states, while an
 isolation level constrains exposed read and commit facts.  Kaki et
 al.~\cite{kaki2018alone} relate the two for a given program: they infer the
 weakest isolation level a store offers under which each transaction still
@@ -294,10 +293,11 @@ machine, its clients, and the channel that carries their state-machine events.  
 $M$ has states $Q$, an initial state $q_0$, receive transitions for
 state-machine events that accept every payload in every state, output transitions that
 emit an output to a client and may change state, internal transitions, and an
-observation $\mathrm{obs}:Q\to O$.  Each of finitely many clients may send a
-state-machine event with any payload at any time and receives the machine's outputs; a
-channel carries state-machine events, each at most once, to the machine's input queue, which
-it consumes in order, and may reorder them on the way.  In an execution of the
+observation $\mathrm{obs}:Q\to O$.  There are finitely many clients.  Each may send a state-machine event with
+any payload at any time, and receives the machine's outputs.  A channel
+carries each state-machine event at most once to the machine's input queue,
+possibly reordering events on the way, and the machine consumes the queue in
+order.  In an execution of the
 composed automaton, \emph{happens-before} is Lamport's
 order~\cite{lamport1978time}: the transitive closure of the local order at the
 machine and at each client and of the edge from sending a state-machine event to receiving
@@ -324,7 +324,7 @@ Section~\ref{sec:distributed-execution}.  The machine is a single
 participant; the clients and the channel are its environment, and outputs
 flow to the environment as in Section~\ref{sec:election-story}, where the
 environment may use an output when choosing later input.  Happens-before here
-only keeps the books: it records which state-machine events each client sent after which
+only records which state-machine events each client sent after which
 outputs, so the input remembers what the environment's choices depended on.
 Distributing the machine is then direct: the clients remain the environment,
 each client's state-machine events are sent to some participant, and among participants
@@ -351,11 +351,12 @@ spec.
         and internal steps.  If the channel may reorder and clients observe no
         outputs, every such run is reached, whatever the order of its
         receives.
-  \item The machine's observations are confluent across its executions---for
-        executions with inputs $h_1,\ldots,h_k$ and any input $h$ that occurs
-        and extends each $h_r$, some execution with input $h$ ends in an
-        observation that \outrel each of theirs---exactly when the induced
-        specification satisfies Lifted Monotonicity.
+  \item The machine's observations are confluent across its executions
+        exactly when the induced specification satisfies Lifted Monotonicity.
+        Here confluence means that for executions with inputs
+        $h_1,\ldots,h_k$ and any input $h$ that occurs and extends each $h_r$,
+        some execution with input $h$ ends in an observation that \outrel
+        each of theirs.
 \end{enumerate}
 \end{proposition}
 
@@ -429,7 +430,7 @@ confluent across its executions.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Use the common-extension form.  Given rows of the induced spec,
+We use the common-extension form.  Given rows of the induced spec, we
 dominate each by a row of $D$, take their common \outnoun in $D$, and realize
 it.  Conversely, rows of $D$ are rows of the induced spec, and their
 common \outnoun there is dominated back into $D$.

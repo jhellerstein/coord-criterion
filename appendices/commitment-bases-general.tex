@@ -8,8 +8,8 @@ Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
 are \commitments (Definition~\ref{def:commitment}) and form a canonical basis,
 and every run under any basis
 has an observably equivalent canonical run that retains at least as many rows
-after each event.  \Commitments are partial functions, so a basis may make an
-\commitment available only at states satisfying a precondition of its own.
+after each event.  Because \commitments are partial functions, a basis may
+offer a \commitment only at the states where its own precondition holds.
 
 \subsection{Lifted output events}
 \label{app:lifted-output-events}
@@ -56,8 +56,9 @@ In panel~(g), the two removed route sets are in $\Subsumed_o$, each
 \outrelpast by a retained route set, so the event subsumes them without
 \commitment.  With one row per input, $\Subsumed_o$ is empty, and $x_o$ rules
 out each input whose row is removed; this is the functional output event of
-Definition~\ref{def:output-event}.  Apart from these, a row leaves the
-remainder table only by input loss (\S\ref{sec:functional-events}).
+Definition~\ref{def:output-event}.  Apart from output subsumption and
+\commitments, a row leaves the remainder table only by input loss
+(\S\ref{sec:functional-events}).
 
 Legality lifts with the event: $o$ is a legal output when $\mathsf{output}(o)$
 applies no \commitment, exactly when $\Excluded_o$ is empty, though the event may
@@ -101,6 +102,10 @@ where $x_o$ is defined at the states with $o\in R(i)$ and $\Excluded_o\neq\varno
 \end{definition}
 
 \paragraph{The canonical \commitment is a \commitment.}
+Definition~\ref{def:commitment} asks that $x_o$ keep the current input, which
+it does, remove a nonempty set of rows, which $\Excluded_o\neq\varnothing$
+ensures, and remove no row that a kept row at the same input \outrel
+(Equation~\ref{eq:commitment-unsubsumed}).  Only the last needs an argument.
 Suppose a removed row $(k,x)\in\Excluded_o$ were \outrelpast by a row $(k,y)$
 that $x_o$ leaves.  Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
 \outrelpast by a row \outrelpart $o$.  By transitivity, $x$ is then
@@ -125,7 +130,7 @@ inputs and emit the same outputs, in the same order, which is all the
 environment observes, although their remainder tables may differ.
 
 \begin{proof}[Proof of Lemma~\ref{lem:canonical-equivalent}]
-Drop the \commitment events from a run under $\mathcal B$.  By induction on
+We drop the \commitment events from a run under $\mathcal B$.  By induction on
 the events, the result is a canonical run whose table $\widehat R$ contains
 the original's table $R$ after each event; both start at the same canonical
 state.  A \commitment event keeps the current input and only removes rows, so
@@ -155,17 +160,17 @@ Lemma~\ref{lem:run-residual} makes $u$ \outrel the outputs of run $r$.
 
 The converse of Lemma~\ref{lem:canonical-equivalent} fails: a canonical run
 need not be observably equivalent to any run under a particular system's
-basis.  That basis may lack the \commitment an
-output event requires, and so disable the output altogether.  Such a system
-still makes sound behavioral choices from $P$, but its strategy does not remove
-the disabled canonical run from the spec.  Restricting attention to the runs
-that one system produces could therefore hide non-monotonicity and hide the
-canonical run that conflicts with a \commitment.  Consistency and the semantic
-effect of \commitments are instead judged against the canonical runs permitted
-by the declared spec.  A behavioral restriction narrows that comparison only
-when it is part of the declared contract.
+basis.  That basis may lack the \commitment that an output event requires,
+which disables that output.  Such a system still chooses only behaviors that
+$P$ permits, and the spec still permits the disabled canonical run.  Looking
+only at the runs that one system produces could therefore hide
+non-monotonicity, and hide a canonical run that conflicts with a \commitment.
+We instead judge consistency, and the effect of \commitments, against the
+canonical runs of the declared spec.  A behavioral restriction narrows that
+comparison only when it is part of the declared contract.
 
 \paragraph{Application-specific \commitments.}
-Locks and timestamps are \commitments of this kind: two-phase locking applies a \commitment that fixes an order among some transactions, and timestamp assignment places one transaction
-relative to all others.  Section~\ref{sec:systems} illustrates both, and
+Locks and timestamps are examples: two-phase locking applies a \commitment
+that fixes an order among some transactions, and timestamp assignment places
+one transaction relative to all others.  Section~\ref{sec:systems} illustrates both, and
 Appendix~\ref{app:cc-bases} writes the two bases down.

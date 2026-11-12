@@ -192,14 +192,14 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:canonical-commitment-functional»` | abbrev | **Def. |
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commitment-iff-excluded»` | theorem | Def. |
-| `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a state." |
+| `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a specification state." |
 | `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments than an output requires, as the registrar does in Figure `fig:election-frames`(d), but such extra commitments are a syste… |
 | `«def:exposable»` | abbrev | **Def. |
 | `«def:exposable/no-commitment»` | theorem | Def. |
-| `«sec:functional-events/functional-exposable»` | theorem | "Equivalently, as the only row at a legal input `j` is `(j, f(j))`, `o` is legal exactly when `f(j)` extends `o` for every legal `j`." |
+| `«sec:functional-events/functional-exposable»` | theorem | "Equivalently, since the only row at a legal input `j` is `(j, f(j))`, `o` is legal exactly when `f(j)` extends `o` for every legal input `j`." |
 | `«sec:functional-events/determined»` | abbrev | §2.3 "Determination": |
 | `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
-| `«sec:functional-events/determination-examples»` | theorem | "A functional spec can therefore have undetermined states, as in panel (b) … An input event may [reach a determined state] by causing the table to lose rows… |
+| `«sec:functional-events/determination-examples»` | theorem | "A functional spec can therefore have undetermined states, as in panel (b) … An input event can do so through input loss, as in panel (c), and a commitment c… |
 | `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state: |
 | `«def:specification-event»` | abbrev | **Def. |
 | `«def:transition-system»` | abbrev | **Def. |
@@ -245,8 +245,8 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:directed-outputs»` | abbrev | **Def. |
 | `«def:fiber-directedness/singleton»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/subsequence-example»` | theorem | "A common output extension, like a common input extension, need not be unique or least. |
-| `«sec:lifted-monotonicity/directed-example»` | theorem | "For outputs, directedness requires some upper bound within the fiber for each finite set, not a least one or a fixed merge operator, so it is weaker than a… |
-| `«sec:lifted-monotonicity/figure-fibers»` | theorem | "Thus the traceroute fiber is directed: |
+| `«sec:lifted-monotonicity/directed-example»` | theorem | "For outputs, directedness asks only that each finite set have some common output extension in the fiber, not a least one or one given by a fixed merge opera… |
+| `«sec:lifted-monotonicity/figure-fibers»` | theorem | "The traceroute fiber of Figure `fig:ambiguity-frames`(g) is directed for a simpler reason: |
 | `«eq:joint-output-order»` | abbrev | **Eq. |
 | `«def:lifted-monotonicity»` | abbrev | **Def. |
 | `«eq:lifted-monotonicity»` | theorem | **Eq. |
@@ -281,20 +281,20 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«fig:participant-runs»` | theorem | **Fig. |
 | `«fig:participant-runs/general»` | theorem | The general form of Fig. |
 | `«sec:distributed-consistency/continuation»` | abbrev | "A continuation of a history at a consistent cut `C` is a history `H'` that extends the history events of `C` with further history events after them." Lean: |
-| `«sec:distributed-consistency/cut-confluent»` | abbrev | "A consistent cut `C` is confluent at `j` … when some continuation at `C` has a final cut with endpoint `((j,R))_{p∈𝒩}` for some `R`." |
+| `«sec:distributed-consistency/cut-confluent»` | abbrev | "Let `j` be a common input extension of the participants' current inputs at a consistent cut `C`. |
 | `«sec:distributed-consistency/cut-confluent-iff-runs»` | theorem | "History events at different participants are independent, so this holds exactly when the participant runs at `C` are confluent at `j`." |
 | `«def:distributed-consistency»` | abbrev | **Def. |
 | `«prop:distributed-consistency»` | theorem | **Prop. |
 | `«prop:distributed-consistency/literal-matching»` | theorem | Prop. |
 | `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, a spec has distributed consistency exactly when it satisfies Lifted Monotonici… |
 | `«cor:distributed-calm»` | theorem | **Corollary `cor:distributed-calm`** (Complete CALM at consistent cuts). |
-| `«sec:distributed-consistency/constructive-continuation»` | theorem | "The forward direction has a concrete witness. |
+| `«sec:distributed-consistency/constructive-continuation»` | theorem | "Under Lifted Monotonicity, this confluence has a concrete witness. |
 | `«cor:convergence»` | theorem | **Cor. |
 | `«cor:convergence/relational-fails»` | theorem | After Cor. |
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
 | `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which history events occur next at the receiver, but it never directly changes the receiver's specification state, and no… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
-| `«sec:systems/registrar»` | theorem | "When the registrar of Section election-story emits `⊥`, it also closes the polls (Figure election-frames(d)), although emitting `⊥` does not require the pol… |
+| `«sec:systems/registrar»` | theorem | "The registrar of Section election-story is a similar example. |
 | `«def:commitment»` | abbrev | **Def. |
 | `«eq:commitment-unsubsumed»` | theorem | **Eq. |
 | `«sec:systems/canonical-commitment»` | theorem | The canonical commitment of Definition `def:canonical-commitment` satisfies Definition `def:commitment`. |
@@ -313,8 +313,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/system-histories»` | theorem | Def. |
 | `«sec:systems/bases-differ»` | theorem | Opener of §4.2: |
 | `«fig:cc-commitments»` | theorem | Fig. |
-| `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
-| `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
+| `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments that leave some rows at the input." Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): |
+| `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the canonical commitment `x_o` of an output." At the canonical state of an input whose transactions `A`, `B`, `C` have each requested commi… |
 | `«sec:systems/run-under-basis»` | abbrev | "A run under a basis `ℬ` is one whose output and commitment events apply only commitments from `ℬ` (Definition run-under-basis)." (Formal definitions: |
 | `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
@@ -371,9 +371,9 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Linearizability respects real-time order: |
 | `«sec:complete-cap/gl-no-system»` | theorem | "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay consistent across a partition, which is Gilbert and Lynch's t… |
-| `«sec:complete-cap/gl-two-row-forced»` | theorem | "The proof needs less than the full hypotheses here, which is why it yields Gilbert and Lynch's theorem exactly. |
+| `«sec:complete-cap/gl-two-row-forced»` | theorem | "In this example, the proof of Corollary `cor:complete-cap-any-system` uses only weaker forms of its hypotheses, and these weaker forms are Gilbert and Lynch… |
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "Gilbert and Lynch's theorem is a case of Complete CAP" … "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay con… |
-| `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |
+| `«sec:complete-cap/gl-realized»` | theorem | "In this section the real-time order of the write and the read is part of the input. |
 | `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |
 
@@ -393,14 +393,14 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/locks-overhead»` | theorem | "A proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
-| `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, viewed through a chosen set of sound boundary observations, a component. |
+| `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, seen only through its boundary, a component. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
-| `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
+| `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape. |
 | `«sec:composite-calm/filtering»` | theorem | "Second, the upstream can filter out the inputs on which the downstream is not monotone. |
 | `«sec:composite-calm/output-orders»` | theorem | "Under the usual boolean order, as in LVars, `false` is only a lower bound, and the test is monotone." And, from the second case: |
-| `«sec:composite-calm/cancellation»` | theorem | "Third, considering a different order on `M` can make two non-monotone stages both monotone. |
+| `«sec:composite-calm/cancellation»` | theorem | "Third, a different order on `M` can make two non-monotone stages monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
 | `«def:intersection»` | theorem | **Definition `def:intersection`** (Intersection): |
@@ -575,12 +575,12 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
 | `«app:iconfluence/history»` | abbrev | "A transaction history `h` … is a finite partial order of transaction events, each labeled by a transaction in `T`; `e' < e` means that `e'` was visible to t… |
-| `«app:iconfluence/expansion-order»` | theorem | "History `h'` extends `h` when `h` is a downward-closed sub-order of `h'`, so an event keeps exactly the predecessors it had." Lean: |
-| `«app:iconfluence/eval»` | theorem | "The state of a history is computed event by event: |
+| `«app:iconfluence/expansion-order»` | theorem | "History `h'` extends `h` when `h` is a downward-closed sub-order of `h'`, so each event of `h` keeps exactly the predecessors it had." Lean: |
+| `«app:iconfluence/eval»` | theorem | "The state of a history is computed event by event. |
 | `«app:iconfluence/sub-keeps-pre-post»` | theorem | "A downward-closed sub-history keeps each event's predecessors, and so its `pre` and `post`." |
 | `«app:iconfluence/eval-union»` | theorem | "Hence the state of a union of downward-closed sub-histories is the union of their states." Lean: |
-| `«app:iconfluence/pre-post-as-eval»` | theorem | "Because `h` is a partial order and transactions are inflationary (`t(s) ⊇ s`), `pre(e)` is the state of the sub-history strictly below `e` and `post(e)` is… |
-| `«app:iconfluence/valid-def»` | theorem | "A history is locally valid when every `pre(e)` and `post(e)` satisfies `𝓘` … It is valid when every downward-closed sub-history `c` has `𝓘(eval(c))`." |
+| `«app:iconfluence/pre-post-as-eval»` | theorem | "Because `h` is a partial order and transactions are inflationary (`t(s) ⊇ s`), `pre(e)` is the state of the sub-history strictly below `e`, and `post(e)` is… |
+| `«app:iconfluence/valid-def»` | theorem | "A history is locally valid when every `pre(e)` and `post(e)` satisfies `𝓘` … It is valid when `𝓘(eval(c))` holds for every downward-closed sub-history `c`." |
 | `«app:iconfluence/valid-locally-valid»` | theorem | (Used in the proof) A valid history is locally valid, since `pre(e)` and `post(e)` are states of downward-closed sub-histories. |
 | `«app:iconfluence/inputs-closed»` | theorem | "The spec `𝒮_𝓘` has the locally valid histories as inputs; a downward-closed sub-order of a locally valid history is locally valid, so the inputs are closed… |
 | `«app:iconfluence/spec»` | theorem | "An output is a state, and `u` covers `s` when `s ⊆ u`. |
@@ -633,7 +633,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«lem:canonical-equivalent»` | theorem | **Lemma Observable Equivalence** (`lem:canonical-equivalent`). |
 | `«cor:reconciliation-any-basis»` | theorem | **Cor. |
 | `«app:bases/converse-fails»` | theorem | "The converse of Lemma canonical-equivalent fails: |
-| `«app:bases/basis-2PL»` | abbrev | *Application-specific commitments.* "Locks and timestamps are commitments of this kind: |
+| `«app:bases/basis-2PL»` | abbrev | *Application-specific commitments.* "Locks and timestamps are examples: |
 | `«app:bases/basis-MVTO»` | abbrev | *Application-specific commitments*: |
 
 ### Appendix D: Proofs and details for composition
@@ -649,7 +649,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«eq:curried-query-plan»` | theorem | Eq. |
 | `«prop:curried-query-plan»` | theorem | **Proposition `prop:curried-query-plan`** (Curried equijoin plan): |
 | `«eq:curried-composition»` | theorem | Eq. |
-| `«app:composition/all-monotone»` | theorem | "If every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the empty basis, the pipeline emits only what `P₂ ∘ P₁` emits under the empty basis. |
+| `«app:composition/all-monotone»` | theorem | "Suppose every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the empty basis. |
 | `«app:composition/joint-monotone»` | theorem | Proof of Proposition `prop:joint-monotone`: |
 | `«app:composition/reach»` | theorem | "The reach of case (3). |
 | `«app:composition/capped-counter»` | theorem | "For the capped counter of Section `sec:composite-calm`, let `𝒮₁` be the table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the test `… |
@@ -657,7 +657,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/components-commit»` | theorem | "Let `𝒮₁` have one input `*` and possibility relation `{(*,x),(*,y)}` with `x,y` incomparable, and let `𝒮₂` be the functional spec induced by a function `f`… |
 | `«app:composition/image-canon»` | theorem | "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write `R ⋈ T = {(k,x) : |
 | `«app:composition/pipeline-run»` | theorem | "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of `𝒮₂\|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`. |
-| `«app:composition/store-facts»` | theorem | "In a proper pipeline, two facts about a state `τ` that `𝒮₂\|_{𝒮₁}` reaches without commitment carry the proofs. |
+| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts about a proper pipeline. |
 | `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:proper-coordination`(2): |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
 | `«app:composition/properness-needed»` | theorem | "Properness is needed in (3). |
@@ -670,9 +670,9 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
 | `«app:composition/coverage»` | theorem | The covering argument: |
 | `«app:composition/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order. |
-| `«app:composition/no-pushforward»` | theorem | "The commitments of `𝒮₁` do not themselves push forward. |
+| `«app:composition/no-pushforward»` | theorem | "The image under `f` of a commitment of `𝒮₁` need not be a commitment of the composite. |
 | `«app:composition/monotone-needed»` | theorem | "Monotonicity of `f` is needed. |
-| `«app:composition/store-commitment»` | theorem | "A downstream that must itself exclude cannot delegate the commitment either. |
+| `«app:composition/store-commitment»` | theorem | "Nor can a downstream stage that needs a commitment of its own delegate it upstream. |
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
@@ -680,11 +680,11 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:intersection/example»` | theorem | "In the example of Section `sec:intersection`, both specs satisfy Lifted Monotonicity: |
 | `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run). |
 | `«def:implementation-form»` | abbrev | **Definition `def:implementation-form`** (Implementation form). |
-| `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once its boundary observations are chosen. |
-| `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision discussed after Proposition `prop:commitment-conflict` has both forms. |
+| `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once we choose its boundary observations. |
+| `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision discussed after Proposition `prop:commitment-conflict` can take either form. |
 | `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Feed, typed pipeline, external observation). |
 | `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (Contract-proper, implementation-proper). |
-| `«app:components/feed-is-input»` | theorem | "Receiving `m` is the downstream run's initial input, not a commitment of `C₂`." Lean: |
+| `«app:components/feed-is-input»` | theorem | "The value `m` is the downstream run's initial input, so receiving it is not a commitment of `C₂`." Lean: |
 | `«prop:typed-pipelines»` | theorem | **Proposition `prop:typed-pipelines`** (Typed pipelines): |
 | `«app:components/follows»` | theorem | "Item (5) covers one boundary output. |
 
@@ -701,34 +701,34 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«def:deployment/family»` | theorem | Def. |
 | `«def:deployment/separable»` | theorem | Def. |
 | `«def:monotone-across-partitions»` | theorem | **Definition `def:monotone-across-partitions`** (Monotone across partitions). |
-| `«app:deployment/lm-for-implies-mono-across»` | theorem | "If `P` satisfies Lifted Monotonicity for a relation that contains every `E_p`, it is monotone across partitions: |
+| `«app:deployment/lm-for-implies-mono-across»` | theorem | "If `P` satisfies Lifted Monotonicity for a relation that contains every `E_p`, it is monotone across partitions, since the emitted rows of a family are rows… |
 | `«app:deployment/uniform-mono-across»` | theorem | "So Lifted Monotonicity for `E` suffices for the uniform deployment `E_p = E` …" |
 | `«app:deployment/lm-implies-mono-across»` | theorem | "… and Lifted Monotonicity suffices for every deployment." |
-| `«app:deployment/run-outputs-chain»` | theorem | "Rows authorized only to `p` can be emitted only by `p`'s run, whose emitted outputs form a chain (each output event keeps only rows extending it)." The chai… |
-| `«app:deployment/sole-rows-single-row»` | theorem | "… so a family whose emitted rows are all authorized only to `p` is separable only when it emits a single row." Lean: |
-| `«app:deployment/leader-example/setup»` | theorem | "Let `P = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let `E_p = P` and `E_q = ∅`, so that `p` alone names a leader." Lean: |
+| `«app:deployment/run-outputs-chain»` | theorem | "Rows authorized only to `p` can be emitted only by `p`'s run, and the outputs that run emits form a chain, since each output event keeps only rows whose out… |
+| `«app:deployment/sole-rows-single-row»` | theorem | "So a family whose emitted rows are all authorized only to `p` is separable only when it emits a single row." Lean: |
+| `«app:deployment/leader-example/setup»` | theorem | "Let `𝒩 = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let `E_p = P` and `E_q = ∅`, so that `p` alone names a leader." Lean: |
 | `«app:deployment/leader-example/one-output»` | theorem | "A run of `p` emits at most one distinct output …" |
-| `«app:deployment/leader-example/separable-shape»` | theorem | "… and `q` never emits, so every separable family consists of one row `(i,a)` or `(i,b)` beside a silent `q`." |
-| `«app:deployment/leader-example»` | theorem | "So `P` is monotone across partitions, yet `(i,a)` and `(i,b)` have no common output extension and Lifted Monotonicity fails." (Any input `i` witnesses the f… |
-| `«app:deployment/sufficient-condition»` | theorem | "The same happens whenever each authorized row has an input extension at every input extension of its input and every set of authorized rows lacking a common… |
-| `«app:deployment/further-examples»` | theorem | "The causal register of Appendix `app:registers` is a further example, with no single authority, of monotonicity across partitions without Lifted Monotonicit… |
-| `«app:deployment/further-examples/condition-fails»` | theorem | "… they need not satisfy this condition, since a set of rows lacking a common output extension may also contain rows of other participants." Witness: |
-| `«app:deployment/full-deployment»` | theorem | "If `\|𝒩\| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split across a partition and every single row paired with a silent participant at the co… |
+| `«app:deployment/leader-example/separable-shape»` | theorem | "… and `q` never emits. |
+| `«app:deployment/leader-example»` | theorem | "So `P` is monotone across partitions, yet `(i,a)` and `(i,b)` have no common output extension, and Lifted Monotonicity fails." (Any input `i` witnesses the… |
+| `«app:deployment/sufficient-condition»` | theorem | "The same happens whenever two conditions hold: |
+| `«app:deployment/further-examples»` | theorem | "The causal register of Appendix `app:registers` is a further example of monotonicity across partitions without Lifted Monotonicity, with no single authority… |
+| `«app:deployment/further-examples/condition-fails»` | theorem | "It need not satisfy these conditions, since a set of rows lacking a common output extension may also contain rows of other participants." Witness: |
+| `«app:deployment/full-deployment»` | theorem | "If `\|𝒩\| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split across a partition, and every single row can be paired with a silent participant a… |
 | `«app:deployment/full-deployment/pairs-suffice»` | theorem | The pairs-suffice step used above (Appendix `app:pairs-suffice`). |
 | `«def:deployment-availability»` | theorem | **Definition `def:deployment-availability`** (Deployment Availability). |
 | `«app:deployment/uniform-availability»` | theorem | "This is Availability for `E_p`, one relation per participant. |
 | `«app:deployment/full-deployment-availability»` | theorem | "… and for `E_p = P` it is Availability." `AvailabilityAt Sys n` is `CAP.Availability` restricted to histories over `Fin n` (`CAP.Availability Sys ↔ ∀ n, Ava… |
 | `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `E_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
-| `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an input extension at every input extension of its input." (With `\|𝒩\| ≥ 2`, so that so… |
-| `«app:deployment/single-authority/not-distributed»` | theorem | "The deployment can prevent the contrary choice from being placed at another participant." Lean: |
-| `«app:deployment/single-authority/coordination»` | theorem | "It does not change the semantic conflict: |
+| `«app:deployment/single-authority»` | theorem | "… so monotonicity across partitions says only that each such row has an output extension at every input extension of its input." (With `\|𝒩\| ≥ 2`, so that so… |
+| `«app:deployment/single-authority/not-distributed»` | theorem | "The deployment keeps the conflicting choice from being made at another participant …" Lean: |
+| `«app:deployment/single-authority/coordination»` | theorem | "… but it does not change the semantic conflict: |
 | `«thm:complete-cap-deployment»` | theorem | **Proposition `thm:complete-cap-deployment`** (Partition compatibility under a deployment). |
 | `«thm:complete-cap-deployment/proof»` | theorem | Proof of Prop. |
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
-| `«app:deployment/system-runs»` | theorem | "So if `P` is monotone across partitions, the outputs emitted by a separable family of runs of a partitioned history, as Deployment Availability permits, hav… |
-| `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`; confluence through output events that the deployment authorizes would additio… |
-| `«app:deployment/full-deployment-step»` | theorem | "With `\|𝒩\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Theorem `thm:complete-cap` with `E = P`… |
+| `«app:deployment/system-runs»` | theorem | "So if `P` is monotone across partitions, the outputs that a separable family of system runs emits in a partitioned history, as Deployment Availability permi… |
+| `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`. |
+| `«app:deployment/full-deployment-step»` | theorem | "With `\|𝒩\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity. |
 | `«app:registers/history»` | abbrev | "An input is a finite operation history `h`: |
 | `«app:registers/history-order»` | theorem | "We set `h ⊑ h'` when the operations of `h` form a causally closed subset of `h'` and `→` restricted to them is the order of `h`." |
 | `«app:registers/no-new-past»` | theorem | "Thus an input extension never adds an operation to the causal past of an existing one." |
@@ -736,16 +736,16 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:registers/serialization»` | theorem | "A *serialization* for replica `p` is a total order of `p`'s operations and all writes of `h` that extends `→`; it explains a read of `p` with source `w` whe… |
 | `«app:registers/fibers»` | theorem | "Under causal consistency, `ρ ∈ P(h)` when each replica has a serialization explaining every read of that replica in the domain of `ρ`. |
 | `«app:registers/two-write-history»` | theorem | "Participant `p` completes `w_p(x,dog)` while `q` concurrently completes `w_q(x,cat)`; … each serves a local read, `r_p` at `p` and `r_q` at `q`. |
-| `«app:registers/linearizable-not-monotone-across»` | theorem | "Under linearizability, if `p` reads cat the order has `w_p(x,dog)` before `w_q(x,cat)`; if `q` reads dog it has the opposite. |
-| `«app:registers/causal-two-write»` | theorem | "Under causal consistency the two replicas may serialize the concurrent writes differently, and one source map sends `r_p` to `w_q(x,cat)` and `r_q` to `w_p(… |
-| `«app:registers/causal-monotone-across»` | theorem | "Under the deployment in which each replica answers only its own reads (`E_p` holds the rows whose source map is defined only on reads of `p`), the causal re… |
+| `«app:registers/linearizable-not-monotone-across»` | theorem | "Under linearizability, a source map that sends `r_p` to `w_q(x,cat)` needs a linearization with `w_p(x,dog)` before `w_q(x,cat)`, and one that sends `r_q` t… |
+| `«app:registers/causal-two-write»` | theorem | "Under causal consistency the two replicas may serialize the concurrent writes differently, so one source map sends `r_p` to `w_q(x,cat)` and `r_q` to `w_p(x… |
+| `«app:registers/causal-monotone-across»` | theorem | "More generally, consider the deployment in which each replica answers only its own reads (`E_p` holds the rows whose source map is defined only on reads of… |
 | `«app:registers/serialization-extends»` | theorem | Proof step: |
 | `«app:registers/linear-extension»` | theorem | Supporting fact: |
 | `«app:registers/same-read-incompatible»` | theorem | "Two answers to the same read remain incompatible, but only the reading replica may emit either." The causal register is not monotone: |
 | `«thm:product-frontier»` | theorem | **Theorem `thm:product-frontier`** (Independent products). |
 | `«app:rtc/input»` | theorem | "Consider the histories of Appendix `app:registers` with a second strict partial order `≺`: |
 | `«app:rtc/views»` | theorem | "A *real-time causal view* of replica `p` assigns to every read `r` of `p` a source `s(r)` such that (1) `s(r)` is a write visible to `r`, or `v₀` if none is… |
-| `«app:rtc/monotone-across»` | theorem | "Views exist … They continue … Views share a domain, so they form an antichain. |
+| `«app:rtc/monotone-across»` | theorem | "Views exist … Views also continue. |
 | `«app:rtc/blind»` | theorem | "A strengthening is *real-time blind* when a tuple it selects at an input stays selected at the same history with fewer real-time edges, provided its views a… |
 | `«prop:rtc-maximal»` | theorem | **Proposition `prop:rtc-maximal`** (Real-time causal maximality). |
 | `«prop:rtc-maximal/forced»` | theorem | Proof of `prop:rtc-maximal`: |
@@ -757,25 +757,25 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«app:cap-response/emitted-rows»` | abbrev | "The *emitted rows* of a run are the pairs `(i,o)` such that it emits `o` at current input `i`." Lean: |
+| `«app:cap-response/emitted-rows»` | abbrev | "The emitted rows of a run are as in Definition `def:deployment`" (the pairs `(i,o)` such that it emits `o` at current input `i`). |
 | `«def:response-obligation»` | abbrev | **Def. |
 | `«def:response-obligation/fields»` | theorem | Def. |
 | `«def:uniform-obligation»` | abbrev | **Def. |
-| `«app:cap-response/trivially-available»` | theorem | "Response availability is only as strong as `Q_p`: |
+| `«app:cap-response/trivially-available»` | theorem | "Response Availability is only as strong as `Q_p`: |
 | `«def:response-availability»` | abbrev | **Def. |
 | `«def:response-availability/unfolded»` | theorem | Def. |
 | `«def:response-availability/at-cuts»` | theorem | Def. |
 | `«def:response-availability(1)»` | theorem | Def. |
-| `«def:response-availability/input-acceptance-preserves-expansion»` | theorem | "Input acceptance says that `p` never empties the fiber at an input extension of its current input." Lean, at any cut, in particular the end of the history: |
-| `«def:response-availability/excludes-unavailable-expansion»` | theorem | "It excludes specs whose answers require such a fiber-emptying commitment": |
+| `«def:response-availability/input-acceptance-preserves-expansion»` | theorem | "Input acceptance says that `p` never rules out an input extension of its current input." Lean, at any cut, in particular the end of the history: |
+| `«def:response-availability/excludes-unavailable-expansion»` | theorem | "It excludes specs whose answers require ruling out such an input": |
 | `«def:response-availability/election-equality-order»` | theorem | "… such as the election under the equality order (Figure `fig:nonmonotone-frame`)": |
 | `«def:response-partition-consistency»` | theorem | **Def. |
 | `«def:response-partition-consistency/converse-part»` | theorem | "This is the part of Partition Consistency that the converse of Theorem `thm:complete-cap` and Corollary `cor:complete-cap-any-system` use, so both also hold… |
 | `«def:response-partition-consistency/of-confluent»` | theorem | "Confluence at `j` implies a common output extension at `j` (Corollary `cor:reconciliation-any-basis`)." Lean, at any cut, in particular the final one. |
-| `«def:response-partition-consistency/canonical»` | theorem | "for a system with basis `B_P` and no commitment events, whose participant runs are therefore canonical runs, the two coincide by Lemma `lem:reconciliation`,… |
+| `«def:response-partition-consistency/canonical»` | theorem | "The two coincide for a system with basis `ℬ_P` and no commitment events, whose participant runs are therefore canonical runs, by Lemma `lem:reconciliation`… |
 | `«def:response-partition-consistency/converse-fails»` | theorem | "With other commitments the converse can fail: |
-| `«app:cap-response/replicated»` | theorem | "A system is *replicated* (SPMD: |
-| `«lem:locality»` | theorem | **Lemma `lem:locality` (Locality).** "For each of some participants `p`, let `ℓ_p` be a local history that `p`'s strategy can produce from initial input `i_p… |
+| `«app:cap-response/replicated»` | theorem | "A system is *replicated* (SPMD) when its obligation is uniform and every participant runs the same strategy, which depends only on the participant's initial… |
+| `«lem:locality»` | theorem | **Lemma `lem:locality` (Locality).** "For each participant `p` in some set of participants, let `ℓ_p` be a local history that `p`'s strategy can produce from… |
 | `«def:response-interface»` | theorem | **Def. |
 | `«def:response-interface/lm-for-T»` | theorem | "Lifted Monotonicity for `T` is that of Definition `def:lm-for-A`, and the reconciling output may lie outside `T`." Lean: |
 | `«def:response-interface/T-eq-S»` | theorem | "With `T = P` it is the common-extension condition of Proposition `prop:common-expansion-form`." |
@@ -788,8 +788,8 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«app:cap-response/lm-implies-response-form»` | theorem | "Theorem `thm:complete-cap` with `E = P` requires every permitted output to stay available; Theorem `thm:complete-cap-response` lets the system choose which… |
 | `«app:cap-response/converse-fails»` | theorem | "The converse fails. |
 | `«app:cap-response/functional-coincide»` | theorem | "For a functional spec the two coincide: |
-| `«app:cap-response/lm-subspec»` | theorem | "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a spec is a response interface for which `P` satisfies Lifted Monotonicity". |
-| `«app:cap-response/subspec-weaker»` | theorem | "… but the condition is weaker." The five-input example: |
+| `«app:cap-response/lm-subspec»` | theorem | "If a total `T ⊆ Q` satisfies Lifted Monotonicity as a spec in its own right, then `T` is a response interface for which `P` satisfies Lifted Monotonicity." |
+| `«app:cap-response/subspec-weaker»` | theorem | "The converse fails: |
 | `«app:cap-response/subspec-empties-fibers»` | theorem | "Reconciling outputs need not lie in `T`: |
 | `«lem:forced-answer»` | theorem | **Lemma `lem:forced-answer` (Forced answer).** "Let `i ⪯ j`, and suppose no output in `Q_q(i)` has an output extension in `P(j)`. |
 | `«app:cap-response/register-fiber»` | theorem | "The fiber `P(h)` contains the maps explained by some linearization of `h`, a total order of its operations extending precedence in which each answered read… |
@@ -824,13 +824,13 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/output-order»` | theorem | "One output extends another when it extends all three parts …" `(L,X,ρ) ⪯ (L',X',ρ') ⟺ X ⊆ X', dom L ⊆ dom L', L'\|_{dom L} = L, ρ ⊆ ρ'`. |
 | `«app:cc-bases/complete-output»` | theorem | "An output is *complete* at an input when it commits or aborts every transaction of the input, and not both, and commits only transactions whose commit reque… |
 | `«app:cc-bases/read-rule»` | theorem | "… each read of a key `x` by a committed transaction `T` returns `T`'s own write of `x` if `T` writes `x` earlier in its sequence, and otherwise the write of… |
-| `«app:cc-bases/complete»` | theorem | "A complete output is permitted when each reported read result is for a read in the input and returns the initial version or the write of its key by a transa… |
+| `«app:cc-bases/complete»` | theorem | "A complete output is permitted when it meets two conditions. |
 | `«app:cc-bases/permitted»` | theorem | "Any output is permitted when some permitted complete output extends it, that is, when it can still be completed." |
 | `«app:cc-bases/spec»` | abbrev | The specification. |
 | `«app:cc-bases/figure-rows»` | theorem | "The figures … show only complete outputs without aborts or read results, as serial orders, at inputs in which every transaction has requested commit": |
 | `«app:cc-bases/total»` | theorem | "Every input has a permitted row: |
 | `«app:cc-bases/ab-ba-not-monotone»` | theorem | "Let `{A,B}` be an input in which `A` and `B` have each requested commit. |
-| `«app:cc-bases/abort-free-spec»` | theorem | "The *abort-free* specification permits a row when it can be completed with `X = ∅`, where a complete output now commits exactly the transactions whose commi… |
+| `«app:cc-bases/abort-free-spec»` | theorem | "The *abort-free* specification permits a row when it can be completed with `X = ∅`, where a complete output instead commits exactly the transactions whose c… |
 | `«app:cc-bases/abort-free-not-monotone»` | theorem | "… the same two rows show that it is not monotone either." |
 | `«app:cc-bases/applied»` | theorem | "Applied at a state `(i,R)`, it keeps the rows of `R` that can still be completed, within `R`, by a complete row satisfying the condition, and removes the rest. |
 | `«app:cc-bases/conditions»` | theorem | The four conditions. |
@@ -843,8 +843,8 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/complete-kept-iff»` | theorem | "… for them a complete row is kept exactly when it satisfies the condition, since two permitted complete outputs at one input, one extending the other, have… |
 | `«app:cc-bases/bases»` | theorem | "The bases are `B_2PL = {order, TxCommit, abort, read}` and `B_MVTO = {stamp, TxCommit, abort, read}`, over all transactions, positions, and versions." |
 | `«app:cc-bases/bases-differ»` | theorem | "… and differ in how they order. |
-| `«app:cc-bases/run-states»` | theorem | "In every state that a run under either basis reaches, each row has a complete output extension in the table at its input, and any output between two rows of… |
-| `«app:cc-bases/read-emit»` | theorem | "So a read is reported by applying `read(A,k,v)` in a commitment event and then emitting the result, which is then a legal output." Precisely: |
+| `«app:cc-bases/run-states»` | theorem | "Every state that a run under either basis reaches has two properties: |
+| `«app:cc-bases/read-emit»` | theorem | "Because of these properties, a scheduler reports a read by first applying `read(A,k,v)` in a commitment event; emitting the result is then a legal output."… |
 | `«app:cc-bases/fig-h»` | theorem | "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler applies `order(A,B)` in a commitment event, reporting nothing. |
 | `«app:cc-bases/order-at-ABC»` | theorem | "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps `[A,B,C]` and `[C,A,B]`, so it is a commitment, and it is not the commitment `x_o` of any… |
 | `«app:cc-bases/deadlock»` | theorem | "A deadlock between `A` and `B` arises when `B` waits for a lock that `A` holds and an operation of `A` then waits for a lock that `B` holds: |
@@ -854,10 +854,10 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/stamp-at-ABC»` | theorem | "… at the canonical state of `{A,B,C}` it is a commitment, and it is not the commitment `x_o` of any output": |
 | `«app:cc-bases/mvto-row»` | theorem | *What a read is a commitment to*, the row argument: |
 | `«app:cc-bases/read-commits»` | theorem | "Hence, after the two stamps, no row that reports the read and is at an input in which `A` writes `x` commits both `A` and `B`. |
-| `«app:cc-bases/writer-before-A»` | theorem | "The condition on the version is needed. |
+| `«app:cc-bases/writer-before-A»` | theorem | "The condition on the version, that `B` read a version older than `A`, is needed. |
 | `«app:cc-bases/abort-entailed»` | theorem | *When the abort is entailed.* "Suppose `A`'s write of `x` has arrived. |
-| `«app:cc-bases/abort-is-commitment»` | theorem | "While `B` is undecided, it does not. |
-| `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version is a commitment that, if the writer writes that key, the writer and the reader do not both commit. |
+| `«app:cc-bases/abort-is-commitment»` | theorem | "While `B` is undecided, the spec does not entail it. |
+| `«app:cc-bases/comparison»` | theorem | "Under MVTO, suppose `B` reads a version of a key older than `A`, which is stamped before `B`. |
 
 ### Appendix H: Additional applications
 
@@ -867,9 +867,9 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/additional-applica
 |---|---|---|
 | `«app:additional-applications/authority-output»` | abbrev | "An output is a triple `(E,V,D)`: |
 | `«eq:authority-refinement»` | theorem | Eq. |
-| `«app:additional-applications/safety-exposable»` | theorem | "Protocol safety guarantees that every output permitted at the current or any later input [extends] the certified evidence already emitted, so authority chan… |
+| `«app:additional-applications/safety-exposable»` | theorem | "Protocol safety guarantees that every output permitted at the current or any later input extends the certified evidence already emitted. |
 | `«app:additional-applications/slot-conflict»` | theorem | "Competing proposals for an undecided slot have incompatible extensions of `D`, so certifying one is a commitment." Two current outputs deciding different va… |
-| `«app:additional-applications/epoch-conflict»` | theorem | "If the succession rule were not fixed, competing next epochs would require one [a commitment] as well." Two current outputs extending the chain `e` by diffe… |
+| `«app:additional-applications/epoch-conflict»` | theorem | "If the succession rule were not fixed, choosing among competing next epochs would require a commitment as well." Two current outputs extending the chain `e`… |
 | `«app:additional-applications/kset-input»` | abbrev | "An input is a finite set of proposals `(p,v)`, at most one per participant, ordered by inclusion." |
 | `«app:additional-applications/pmap-order»` | theorem | "Outputs are partial decision maps `m : |
 | `«app:additional-applications/kset-permitted»` | theorem | "At input `I`, `m` is permitted when it decides only participants that propose in `I`, every value in its range is proposed in `I` (validity), and its range… |
@@ -888,6 +888,6 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/additional-applica
 | `«app:additional-applications/prefix-monotone»` | theorem | "Old prefixes stay legal as history grows, and finite unions of prefixes are prefixes, so it satisfies Lifted Monotonicity." |
 | `«app:additional-applications/prefix-empty»` | theorem | "… it guarantees neither freshness nor completeness": |
 | `«app:additional-applications/complete-history»` | theorem | "A spec that requires the complete history, with output `h` at `h` and outputs ordered by equality, is functional and not monotone: |
-| `«app:additional-applications/complete-history-commitment»` | theorem | "By Proposition `prop:functional-exposure-boundary`, some output can then be exposed only after a commitment that excludes larger inputs." At some state reac… |
+| `«app:additional-applications/complete-history-commitment»` | theorem | "By Proposition `prop:functional-exposure-boundary`, some output can then be emitted only after a commitment that rules out larger inputs." At some state rea… |
 
 <!-- END PAPER INDEX -->

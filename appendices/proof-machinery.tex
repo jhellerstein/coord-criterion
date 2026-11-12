@@ -66,7 +66,7 @@ for every \indesc $j$ of $i$, so $f$ is monotone.
 \label{app:proofs-sec3}
 
 \begin{proof}[Proof of Proposition~\ref{prop:common-expansion-form}]
-Suppose Lifted Monotonicity, and let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows
+Suppose the spec satisfies Lifted Monotonicity, and let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows
 with common \indesc $j$.  If $k=0$, any $u\in\fiber{j}$ will do, and since
 $\Spec$ is total, $j$ appears in some row $(j,u)$.  Otherwise, since $i_r\InputOrd j$, Relational Monotonicity gives, for each
 $r$, a $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ all lie in the
@@ -77,8 +77,9 @@ have common \indesc $j$, so some $u\in\fiber{j}$ \outrel all of $X$; that is
 $\fiber{i}\LiftedOrd\fiber{j}$.
 \end{proof}
 
-The survivor test and Lemma~\ref{lem:run-residual} combine into the form in
-which every later argument uses them.
+The Survivor test (Proposition~\ref{prop:confluence}) and
+Lemma~\ref{lem:run-residual} combine into the form that the later arguments
+use.
 
 \begin{lemma}[Reconciliation]
 \label{lem:reconciliation}
@@ -90,8 +91,8 @@ in $X$.
 
 \begin{proof}
 By Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ exactly when $u\in\fiber{j}$
-\outrel every output emitted on run $r$.  Apply
-Proposition~\ref{prop:confluence}.
+\outrel every output emitted on run $r$, and Proposition~\ref{prop:confluence}
+gives the claim.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
@@ -100,23 +101,24 @@ common-extension condition.  ($\Leftarrow$) Let finitely many runs end at
 $(i_r,R_r)$ with common \indesc $j$.  Each output $o$ emitted on a run was
 emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $P$; the
 condition supplies $u\in\fiber{j}$ \outrelpart all of them, and
-Lemma~\ref{lem:reconciliation} gives confluence.  ($\Rightarrow$) Given rows
-$(i_r,o_r)$ with common \indesc $j$, apply consistency and
-Lemma~\ref{lem:reconciliation} to the runs that start at $\sigma_P(i_r)$ and
-emit $o_r$; for the empty family, totality gives $\fiber{j}\neq\varnothing$.
+Lemma~\ref{lem:reconciliation} gives confluence.  ($\Rightarrow$) Given rows $(i_r,o_r)$ with common \indesc $j$, consider
+the runs that start at $\sigma_P(i_r)$ and emit $o_r$.  Consistency and
+Lemma~\ref{lem:reconciliation}, applied to them, give some $u\in\fiber{j}$
+\outrelpart every $o_r$.  For the empty family, totality gives
+$\fiber{j}\neq\varnothing$.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
 Suppose the common-extension condition holds; by Theorem~\ref{thm:complete-calm}, the
 spec is consistent.  Let $(i,R)$ be reached by a run (\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
-$x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
+$x\in R(j)$.  We extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
 By consistency the two extended runs are confluent at $j$, so
 Proposition~\ref{prop:confluence} supplies a row $(j,u)$ in both tables.  Both
 tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the legal-output test
 (Proposition~\ref{prop:exposability}) makes $o$ a legal output.
 Conversely, suppose every such output is a legal output, and let rows
-$(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
+$(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality there is some
 $u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the legal-output test for $o_r$ at
 $\sigma_P(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in P(j)$ \outrelpart both
 $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
@@ -124,12 +126,14 @@ $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 
 \paragraph{Pairs suffice for the common-extension condition.}
 \label{app:pairs-suffice}
-If every two rows with a common \indesc $j$ have a common \outnoun in
-$\fiber{j}$, the condition holds for every finite family: replace the first
-two rows by a row $(j,u)$ at $j$ and repeat; a single row is paired with any
-row at $j$.  The pairs must range over all rows of $P$, including those at
-$j$.  Restricting the families to rows at single-proposal inputs does not
-suffice, even $k$ rows at a time: in the $k$-set agreement example of
+Suppose every two rows with a common \indesc $j$ have a common \outnoun in
+$\fiber{j}$.  Then the condition holds for every finite family of rows with
+common \indesc $j$.  We replace the first two rows of the family by a row
+$(j,u)$ whose output $u$ \outrel both, and repeat until one row remains; a
+single row, paired with any row at $j$, has an \outnoun in $\fiber{j}$.  The
+pairwise hypothesis must cover all rows of $P$, including rows at $j$ itself,
+since the replacement rows are at $j$.  Checking only rows at single-proposal
+inputs does not suffice, even with families of up to $k$ rows: in the $k$-set agreement example of
 Appendix~\ref{app:additional-applications}, every family of at most $k$ rows
 at such inputs is compatible at each common \indesc, but the $k+1$ proposal
 rows are not.
@@ -138,9 +142,12 @@ rows are not.
 \label{app:proofs-sec4}
 
 \begin{proof}[Proof of Proposition~\ref{prop:distributed-consistency}]
-The participant runs at any cut are a finite family of runs.  Conversely,
-every finite family of runs is the family of participant runs of a
-message-free history, one participant per run, at its final cut.
+A cut is confluent at $j$ exactly when its participant runs are
+(\S\ref{sec:distributed-consistency}).  The participant runs at any cut form a
+finite family of runs, so consistency gives distributed consistency.
+Conversely, every finite family of runs is the family of participant runs, at
+the final cut, of a message-free history with one participant per run, so
+distributed consistency gives consistency.
 \end{proof}
 
 \paragraph{Exchanging outputs.}
@@ -182,18 +189,19 @@ of Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber.
 That event applies whatever \commitment $o$ requires, $x_o$ from the
 canonical basis (Definition~\ref{def:system-output-event}), so the system has
 Availability for $E$ whatever the spec.  Suppose $\Spec$ satisfies Lifted
-Monotonicity for $E$.  Every output the canonical system emits is a row of $E$ at an input below
-the current one, so at a common \indesc $j$ of the current inputs the emitted
-outputs have a common \outnoun in $\fiber{j}$.  For a system that emits only
-canonical output events, that is confluence at $j$
-(Lemma~\ref{lem:reconciliation}), which gives Partition Consistency.
+Monotonicity for $E$.  Every output the canonical system emits is the output of a row of $E$ whose
+input lies below the current one, so at a common \indesc $j$ of the current
+inputs the emitted outputs have a common \outnoun in $\fiber{j}$.  Since the
+system emits only canonical output events, Lemma~\ref{lem:reconciliation}
+makes this confluence at $j$, which gives Partition Consistency.
 
 Conversely, suppose some system, such as the canonical system for $E$, has
 Availability for $E$ and Partition Consistency.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
 \indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$.  If $k=0$,
 $\Spec$ is total, so $j$ appears in some row $(j,u)$.  Otherwise, take one
 participant $p_r$ per row, starting at input $i_r$, each on its own side,
-and a second participant for the row if $k=1$.  Each runs without messages.
+and, if $k=1$, a second participant for that row on another side, since a
+partitioned history has at least two sides.  Each runs without messages.
 By Availability for $E$, each $p_r$ can emit $o_r$.  By Partition Consistency,
 they then reach one state $(j,R)$, which has some row $(j,u)$
 (Definition~\ref{def:residual-state}); this $u$ is the one we seek.  Rows are
@@ -214,31 +222,32 @@ $\Spec$ escapes CAP for $E$.
 \label{app:iconfluence}
 
 The input records which transactions ran and what each one saw.  A
-\emph{transaction history} $h$ (here simply \emph{history}) is a finite partial order of transaction events, each
-labeled by a transaction in $T$; $e'<e$ means that $e'$ was visible to the
-replica that ran $e$.  History $h'$ \inrel $h$ when $h$ is a downward-closed
-sub-order of $h'$, so an event keeps exactly the predecessors it had.  The
-state of a history is computed event by event: $e$ runs on
+\emph{transaction history} $h$ (here simply \emph{history}) is a finite
+partial order of transaction events, each labeled by a transaction in $T$;
+$e'<e$ means that $e'$ was visible to the replica that ran $e$.  History $h'$
+\inrel $h$ when $h$ is a downward-closed sub-order of $h'$, so each event of
+$h$ keeps exactly the predecessors it had.  The state of a history is computed
+event by event.  An event $e$, labeled by the transaction $t_e$, runs on
 $\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
-$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, where $t_e$ is the transaction labeling $e$, and
-$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  A
+$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and the state of $h$ is
+$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  Because $h$ is a
+partial order and transactions are inflationary ($t(s)\supseteq s$),
+$\mathrm{pre}(e)$ is the state of the sub-history strictly below $e$, and
+$\mathrm{post}(e)$ is the state of the sub-history at or below $e$.  A
 downward-closed sub-history keeps each event's predecessors, and so its
 $\mathrm{pre}$ and $\mathrm{post}$; hence the state of a union of
-downward-closed sub-histories is the union of their states.  Because
-$h$ is a partial order and transactions are inflationary ($t(s)\supseteq
-s$), $\mathrm{pre}(e)$ is the state of the sub-history strictly below $e$ and
-$\mathrm{post}(e)$ is the state of the sub-history at or below $e$.  A history is \emph{locally valid}
-when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ satisfies $\mathcal I$, as
-when replicas abort transactions that would violate the invariant on their own
-state.  It is \emph{valid} when every downward-closed sub-history $c$ has
-$\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
-state.
+downward-closed sub-histories is the union of their states.  A history is
+\emph{locally valid} when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$
+satisfies $\mathcal I$, as when replicas abort transactions that would violate
+the invariant on their own state.  It is \emph{valid} when
+$\mathcal I(\mathrm{eval}(c))$ holds for every downward-closed sub-history
+$c$: every merge of what it contains satisfies $\mathcal I$.
 
 The spec $\Spec_{\mathcal I}$ has the locally valid histories as inputs;
 a downward-closed sub-order of a locally valid history is locally valid, so the
 inputs are closed under the order.
 An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
-the system may expose the state of any valid sub-history:
+the spec permits the state of any downward-closed, valid sub-history:
 \[
   P_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
   sub-history of }h\}.

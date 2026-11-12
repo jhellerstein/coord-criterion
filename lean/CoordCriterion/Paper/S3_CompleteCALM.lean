@@ -107,8 +107,8 @@ theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
 "`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
 `(O,≼)` are partially ordered sets.  `P` is the specification's *table of
 possibilities* and is total on `I`; a row `(i,o) ∈ P` is a possible
-input/output pair.  The fiber
-`P(i) = {o ∈ O : (i,o) ∈ P}` … may now contain several outputs.  A functional
+input/output pair.  As in Section `sec:functional-specifications`, the fiber
+at `i` is `P(i) = {o ∈ O : (i,o) ∈ P}`, and it may contain several outputs.  A functional
 specification is the special case `P(i) = {f(i)}`."
 
 Lean: `Spec I O` (orders are the `PO` instances); the fiber `P(i)` is
@@ -138,8 +138,8 @@ theorem «def:relational-specification/nondeterministic» {I O : Type} [PO I] [P
 
 /-- **Def. `def:nondeterministic`** (Nondeterministic I/O specification).  "An
 I/O specification is *nondeterministic* when some fiber contains more than one
-output.  Specification nondeterminism describes permitted results, not a
-strategy's method of choosing among them, and does not by itself imply a
+output.  Specification nondeterminism describes which results are permitted, not
+how a system chooses among them, and does not by itself imply a
 commitment."  Lean reading: there exist `i, o, o'` with `o ≠ o'` and both in
 `sp.P i`. -/
 abbrev «def:nondeterministic» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
@@ -188,9 +188,9 @@ theorem «def:fiber-directedness/singleton» {I O : Type} [PO I] [PO O] {sp : Sp
   functional_directed hf
 
 /-- "A common output extension, like a common input extension, need not be
-unique or least.  For inputs, two independent transactions `u` and `v`, with
-schedules ordered by subsequence, have two incomparable minimal common input
-extensions, `uv` and `vu`."  (Lean names the transactions `a` and `b`.)
+unique or least.  For inputs, take two independent transactions `u` and `v`,
+with schedules ordered by subsequence: `uv` and `vu` are both minimal common
+input extensions of `u` and `v`, and neither extends the other."  (Lean names the transactions `a` and `b`.)
 
 Lean: schedules `Sched T` are lists ordered by `List.Sublist` (a `PO`
 instance); "independent" is read as `a ≠ b`.  Both `ab` and `ba` are common
@@ -208,12 +208,14 @@ theorem «sec:lifted-monotonicity/subsequence-example» {T : Type} {a b : T}
     ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ :=
   ⟨sched_le_iff, sched_two_minimal hab⟩
 
-/-- "For outputs, directedness requires some upper bound within the fiber for
-each finite set, not a least one or a fixed merge operator, so it is weaker
-than a join-semilattice.  For example, the fiber
-`{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` under inclusion is directed, since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two
-incomparable minimal common output extensions.  Compatibility likewise does not
-require comparability: … as `{a,b,c}` and `{a,b,d}` do."  The fiber is the
+/-- "For outputs, directedness asks only that each finite set have some common
+output extension in the fiber, not a least one or one given by a fixed merge
+operator, so it is weaker than requiring a join-semilattice.  For example,
+under inclusion the fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` is directed,
+since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two minimal
+common output extensions, `{a,b,c}` and `{a,b,d}`.  Those two are
+incomparable but compatible, since `{a,b,c,d}` extends both: compatibility
+does not require comparability."  The fiber is the
 type `F5` (all of it). -/
 theorem «sec:lifted-monotonicity/directed-example» :
     JointLift (fun _ : F5 => True) (fun _ : F5 => True) ∧
@@ -224,10 +226,10 @@ theorem «sec:lifted-monotonicity/directed-example» :
       CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] :=
   ⟨f5_directed, f5_common_refinements, f5_minimal_incomparable, f5_compatible⟩
 
-/-- "Thus the traceroute fiber is directed: the union of finitely many
-route sets in it is again in the fiber and extends each.  The two
-transaction orders in Figure `fig:ambiguity-frames`(f), by contrast, are
-incompatible." -/
+/-- "The traceroute fiber of Figure `fig:ambiguity-frames`(g) is directed for
+a simpler reason: finitely many of its route sets always have a common output
+extension in the fiber, their union.  The two transaction orders in panel (f),
+by contrast, are incompatible." -/
 theorem «sec:lifted-monotonicity/figure-fibers» :
     (∀ x y, Figures.Trace.inFib x → Figures.Trace.inFib y →
         Figures.Trace.inFib (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) ∧
@@ -251,8 +253,8 @@ definition of `Spec.LiftedMono`, with `⊑` the joint refinement lift `JointLift
 theorem «eq:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ ∀ i j, i ≼ j → JointLift (sp.P i) (sp.P j) :=
   Iff.rfl
-/-- After Def. `def:lifted-monotonicity`: "With singleton fibers it is
-functional monotonicity." -/
+/-- After Def. `def:lifted-monotonicity`: "With singleton fibers, Lifted
+Monotonicity is functional monotonicity." -/
 theorem «def:lifted-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hf : sp.Functional) : sp.LiftedMono ↔ sp.MonotoneF :=
   liftedMono_iff_monoF hf
@@ -265,9 +267,9 @@ theorem «def:lifted-monotonicity/relmono-directed» {I O : Type} [PO I] [PO O]
 
 /-- After Def. `def:lifted-monotonicity`: "In powerdomain terms, Relational
 Monotonicity is monotonicity of `i ↦ P(i)` under the Hoare preorder, which
-asks only that each output in `A` have an output extension in `B`; the joint refinement lift
-asks that every finite set of them have a common one.  The two agree when `B`
-is directed."  Lean: the Hoare preorder is `Front.HoareLe A B`
+asks only that each output in `A` have an output extension in `B`.  The
+joint refinement lift asks that every finite set of them have a common one,
+and the two agree when `B` is directed."  Lean: the Hoare preorder is `Front.HoareLe A B`
 (`∀ a ∈ A, ∃ b ∈ B, a ≼ b`); (1) Relational Monotonicity is Hoare
 monotonicity of the fibers; (2) the joint refinement lift implies the Hoare preorder;
 (3) for directed `B` (`JointLift B B`, Def. `def:fiber-directedness`) the two
@@ -280,9 +282,9 @@ theorem «def:lifted-monotonicity/hoare» {I O : Type} [PO I] [PO O] :
    fun _ _ => Front.hoare_iff_jointLift_of_directed⟩
 
 /-- After Def. `def:lifted-monotonicity`: "Unlike the Hoare preorder, the
-joint refinement lift is not reflexive: `A ⊑ A` holds exactly when `A` is directed, so
-the transaction fiber of Figure `fig:ambiguity-frames`(f) already fails it at
-`j = i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
+joint refinement lift is not reflexive: `A ⊑ A` holds exactly when `A` is
+directed.  The transaction fiber of Figure `fig:ambiguity-frames`(f) therefore
+fails it already at `j = i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
 directedness of `A` (Def. `def:fiber-directedness`); the panel (f) fiber
 `{[A,B],[B,A]}` is not directed, so `P(i) ⊑ P(i)` fails at `i = {A,B}`. -/
 theorem «def:lifted-monotonicity/not-reflexive» :
@@ -345,9 +347,10 @@ theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 
 /-- "Specification states, input events, runs, commitment-free runs, and
-consistency are defined as before. The results of Section `sec:executions`
-depend on output events only through Equation `eq:output-action`, so the
-rows-remaining lemma and survivor test apply unchanged." In Lean there is
+consistency are defined as before.  The results of Section `sec:executions`
+use output events only through Equation `eq:output-action`, which lifted
+output events still satisfy, so the rows-remaining lemma and the Survivor test
+apply unchanged." In Lean there is
 nothing to lift: the transition system, Lemma `lem:run-residual` and Prop.
 `prop:confluence` are stated for arbitrary (relational) specifications from the
 start; this
@@ -376,19 +379,20 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
 
-/-- Prop. `prop:exposure-boundary`, proof sketch: "Under the common-extension
-condition, consistency supplies the common output extension the legal-output test asks
-for.  Conversely, the legal-output test at canonical states, one row at a time,
-builds the common output extension the condition asks for."  The common-extension
+/-- Prop. `prop:exposure-boundary`, proof sketch: "If the common-extension
+condition holds, the spec is consistent by Complete CALM. … Conversely, if
+every such output is legal, applying Proposition `prop:exposability` at
+canonical states, one row at a time, builds the common output extension that
+the condition asks for."  The common-extension
 form of the proposition. -/
 theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.CommonExpansion ↔
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   exposure_boundary sp
 
-/-- After Prop. `prop:exposure-boundary`: "For functions, both are
-monotonicity, so
-Complete CALM and Proposition `prop:exposure-boundary` reduce to Functional
+/-- After Prop. `prop:exposure-boundary`: "For functional specs, Lifted
+Monotonicity and the common-extension condition are both functional
+monotonicity, so Complete CALM and Proposition `prop:exposure-boundary` reduce to Functional
 CALM and Proposition `prop:functional-exposure-boundary`." -/
 theorem «prop:exposure-boundary/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hf : sp.Functional) :

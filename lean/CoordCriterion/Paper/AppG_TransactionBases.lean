@@ -92,12 +92,13 @@ theorem «app:cc-bases/read-rule» {T K : Type} (k : Inp T K) (o : Outcome T) (a
         | some W => o.lt W a ∧ k.writes W x ∧ ∀ w', o.lt W w' → o.lt w' a → ¬ k.writes w' x) := by
   cases v <;> exact Iff.rfl
 
-/-- "A complete output is permitted when each reported read result is for a
-read in the input and returns the initial version or the write of its key by a
-transaction of the input, and each read of a key `x` by a committed transaction
-`T` returns `T`'s own write of `x` if `T` writes `x` earlier in its sequence,
-and otherwise the write of `x` by the last transaction before `T` in the serial
-order that writes `x`, or the initial version if none does.  Reads by aborted
+/-- "A complete output is permitted when it meets two conditions.  First, each
+reported read result is for a read in the input and returns the initial
+version or the write of its key by a transaction of the input.  Second, each
+read of a key `x` by a committed transaction `T` returns `T`'s own write of `x`
+if `T` writes `x` earlier in its sequence.  Otherwise it returns the write of
+`x` by the last transaction before `T` in the serial order that writes `x`, or
+the initial version if none does.  Reads by aborted
 transactions are otherwise unconstrained."  (The read rule is
 `«app:cc-bases/read-rule»`.) -/
 theorem «app:cc-bases/complete» {T K : Type} (k : Inp T K) (r : Partial.ROut T K) :
@@ -149,7 +150,7 @@ theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} {A B : T} (h : A ≠ B)
     spec_not_liftedMono false h hk hf⟩
 
 /-- "The *abort-free* specification permits a row when it can be completed with
-`X = ∅`, where a complete output now commits exactly the transactions whose
+`X = ∅`, where a complete output instead commits exactly the transactions whose
 commit request is in the input and leaves the others undecided …" -/
 theorem «app:cc-bases/abort-free-spec» {T K : Type} (k : Inp T K) (u : Partial.ROut T K) :
     (spec true).P k u ↔ ∃ c, Complete true k c ∧ u ≼ c ∧
@@ -252,9 +253,10 @@ theorem «app:cc-bases/bases-differ» {T K : Type} {A B C : T} {k : Inp T K}
   let ⟨τ', hτ', _⟩ := stamp_at h
   ⟨⟨τ, hτ, order_not_MVTO h hτ⟩, ⟨τ', hτ', stamp_not_2PL h hτ'⟩⟩
 
-/-- "In every state that a run under either basis reaches, each row has a
-complete output extension in the table at its input, and any output between two rows
-of the table at one input is itself a row of the table."  (`Good`.) -/
+/-- "Every state that a run under either basis reaches has two properties:
+each row has a complete output extension in the table at its input, and any
+output between two rows of the table at one input is itself a row of the
+table."   (`Good`.) -/
 theorem «app:cc-bases/run-states» {T K : Type} {af : Bool} {i : Inp T K}
     {es : List (SEvent (spec (T := T) (K := K) af))} {τ : State (spec af)}
     (h : SysExec basis2PL (canon _ i) es τ ∨ SysExec basisMVTO (canon _ i) es τ) :
@@ -263,8 +265,9 @@ theorem «app:cc-bases/run-states» {T K : Type} {af : Bool} {i : Inp T K}
   let hg : Good τ := h.elim good_run.1 good_run.2
   ⟨hg.2, hg.1⟩
 
-/-- "So a read is reported by applying `read(A,k,v)` in a commitment event and
-then emitting the result, which is then a legal output."  Precisely: after `read(A,k,v)`, adding the
+/-- "Because of these properties, a scheduler reports a read by first applying
+`read(A,k,v)` in a commitment event; emitting the result is then a legal
+output."   Precisely: after `read(A,k,v)`, adding the
 result to a row that every remaining row extends gives a row, and emitting it is
 a legal output.  (At any state with the two properties above.) -/
 theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v : Option T}
@@ -369,8 +372,9 @@ theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h 
 
 /-- *What a read is a commitment to*, the row argument: "At an input in which
 `A` writes `x`, a complete row that satisfies both stamps and commits both `A`
-and `B` places `A` between that version and `B`, so it does not permit the
-read."  `Z_B ∋ A` is "`B` stamped after `A`"; the read is the `n`-th operation
+and `B` places `A` between that version and `B`.  In that row the read must
+return `A`'s write or a later one, so the row does not permit the reported
+read."   `Z_B ∋ A` is "`B` stamped after `A`"; the read is the `n`-th operation
 of `B`; the version is the initial one or written by `W ∈ Z_A`, `W ≠ A`. -/
 theorem «app:cc-bases/mvto-row» {T K : Type} {k : Inp T K} {c : Partial.ROut T K}
     (hc : Complete false k c) {A B : T} {ZA ZB : T → Prop} {x : K} {n : Nat}
@@ -383,8 +387,8 @@ theorem «app:cc-bases/mvto-row» {T K : Type} {k : Inp T K} {c : Partial.ROut T
 /-- "Hence, after the two stamps, no row that reports the read and is at an
 input in which `A` writes `x` commits both `A` and `B`.  Once `read` has been
 applied, no remaining row at such an input commits both, whether it reports the
-read or not.  Reporting the read is a commitment to this: if `A` writes `x`,
-then `A` and `B` do not both commit."  The two stamps are
+read or not.  Reporting the read therefore rules out one possibility: that `A`
+writes `x` and both `A` and `B` commit."   The two stamps are
 `TwoStamps A B Z_A Z_B σ σ2` (`stamp(A)`, anything, `stamp(B)` with
 `A ∈ Z_B`); "remaining" is: in any table contained in the one after the stamps
 (resp. after `read(B,n,v)`). -/
@@ -401,11 +405,13 @@ theorem «app:cc-bases/read-commits» {T K : Type} {af : Bool} {A B : T} {ZA ZB 
   ⟨fun _ hR _ _ hwA hop hw hρ => H.no_both hv hR hwA hop hw hρ,
    fun _ _ hs3 h _ hR _ _ hwA hop hw => H.read_no_both hv hs3 h hR hwA hop hw⟩
 
-/-- "The condition on the version is needed.  At an input of three
+/-- "The condition on the version, that `B` read a version older than `A`, is
+needed.  At an input of three
 transactions `A`, `W`, `B`, stamped in that order, each having requested
 commit, with `A` and `W` writing `x` and `B` only reading it, the complete row
 that commits all three in stamp order and reports that `B` read `W`'s write is
-permitted and satisfies every stamp."  ("Only reading it": the read is not
+permitted and satisfies every stamp.  There `B` read a version written after
+`A`, and all three commit."  ("Only reading it": the read is not
 preceded by a write of `x` by `B`.) -/
 theorem «app:cc-bases/writer-before-A» {T K : Type} {A W B : T} {k : Inp T K}
     (hk : Tri k A W B) {x : K} {n : Nat} (hwA : k.writes A x) (hwW : k.writes W x)
@@ -418,9 +424,9 @@ theorem «app:cc-bases/writer-before-A» {T K : Type} {A W B : T} {k : Inp T K}
 
 /-- *When the abort is entailed.*  "Suppose `A`'s write of `x` has arrived.  If
 every remaining complete row commits `B`, for instance after `TxCommit(B)`,
-then every remaining complete row aborts `A`.  Emitting `A`'s abort, added to a
-row that reports the read and that every remaining row extends, is then
-a legal output: the spec entails the abort."  (Lean also shows that no
+then every remaining complete row aborts `A`.  An output that reports the read
+and that every remaining row extends, with `A`'s abort added, is then a legal
+output, so the spec entails the abort."   (Lean also shows that no
 remaining row commits `A`.)  Stated at any state `τ` with the two properties of
 `«app:cc-bases/run-states»` whose table is contained in the one after the two
 stamps, at an input in which `A` writes `x`. -/
@@ -436,21 +442,21 @@ theorem «app:cc-bases/abort-entailed» {T K : Type} {A B : T} {ZA ZB : T → Pr
     (τ.R τ.cur u → τ.R τ.cur (addAbort u A) ∧ Exposable τ (addAbort u A)) :=
   H.abort_entailed hv hτ hg hwA hop hall hρ hB
 
-/-- "While `B` is undecided, it does not.  Consider a run in which `A`'s first
+/-- "While `B` is undecided, the spec does not entail it.  Consider a run in which `A`'s first
 operation, a read of `x`, arrives, then `B`'s read of `x`, and then `A`'s write
 of `x`, with further transactions free to arrive.  The scheduler applies
 `stamp(A)` and `stamp(B)` in commitment events and reports that `B` read the
-initial version of `x`.  Reporting the read is not a legal output on its own, since
-at an input in which `A` writes `x` the row that commits `A` and then `B`
-cannot be completed with it; after the scheduler applies `read` in a
-commitment event, reporting the read is a legal output.  After `A`'s write arrives, two
-completions remain at the input in which both then request commit: `B`
-committed with `A` aborted, and `A` committed with `B` aborted.  Emitting
-`A`'s abort is not a legal output, and `abort(A)` and `abort(B)` are both defined
+initial version of `x`.  Reporting the read is not a legal output on its own:
+at an input in which `A` writes `x`, the row that commits `A` and then `B`
+cannot be completed with it.  Once the scheduler applies `read` in a
+commitment event, reporting the read is a legal output.  After `A`'s write
+arrives, two completions remain at the input in which both then request
+commit: one commits `B` and aborts `A`, and the other commits `A` and aborts
+`B`.  Emitting `A`'s abort is then not a legal output, and `abort(A)` and `abort(B)` are both defined
 and keep different completions.  MVTO's write rule aborts `A` at once: the
 scheduler applies `abort(A)` in a commitment event, after which reporting the
 abort is a legal output.  That abort is the scheduler's choice between two outcomes the
-spec still permits.  If instead the scheduler waits until `B`'s commit
+spec still permits.  If the scheduler instead waits until `B`'s commit
 request arrives and applies `TxCommit(B)`, `A`'s abort becomes a legal output."
 
 (`C` is the further transaction: `stamp(B)` is defined because `C` may still
@@ -486,11 +492,11 @@ theorem «app:cc-bases/abort-is-commitment» {T K : Type} {A B C : T} (h : Disti
 
 /-! ## Comparison -/
 
-/-- "Under MVTO, a later transaction's read of an older version is a commitment
-that, if the writer writes that key, the writer and the reader do not both
-commit.  The write rule settles this by aborting the writer when its write
-arrives, and the spec forces that abort only after the reader
-commits."  The first part is `«app:cc-bases/read-commits»`; the second is
+/-- "Under MVTO, suppose `B` reads a version of a key older than `A`, which is
+stamped before `B`.  Reporting the read is then a commitment: if `A` writes
+that key, `A` and `B` do not both commit.  The write rule settles this by
+aborting `A` when its write arrives, and the spec forces that abort only after
+`B` commits."   The first part is `«app:cc-bases/read-commits»`; the second is
 `«app:cc-bases/abort-entailed»` together with the run of
 `«app:cc-bases/abort-is-commitment»`, restated here: after the write arrives,
 `A`'s abort is not a legal output while `B` is undecided, the write rule's

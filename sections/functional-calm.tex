@@ -240,8 +240,7 @@ means that $j$ contains at least the input information in $i$.  We say that $j$
 \emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself. We call $\OutputOrd$ the
 \emph{output order}: $o\OutputOrd u$ means that $u$ subsumes every
 externally visible claim in $o$ and may add more, and we say that $u$
-\emph{\outrel} $o$.  In either domain, we call the element above another
-an extension.  We write $\InputGe$ and $\OutputGe$ for the converse orders.
+\emph{\outrel} $o$.  In either domain, an element above another is an extension of it.  We write $\InputGe$ and $\OutputGe$ for the converse orders.
 
 A \emph{common \indesc} $j$ of
 $i_1,\ldots,i_k$ is an input that \inrel every $i_r$, and a
@@ -339,8 +338,8 @@ effect of $\mathsf{input}(k)$ alone; $\mathsf{input}(i)$ at
 $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-A system controls what it tells the world.  Later outputs must \outrelbase
-earlier ones.
+A system controls what it tells the world, but each later output must
+\outrelbase the earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
 output the system may emit.
@@ -351,12 +350,12 @@ The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
 upper fiber \outrel $o$.
 \end{definition}
 
-Equivalently, as the only row at a legal input $j$ is $(j,f(j))$, $o$ is legal
-exactly when $f(j)$ \outrel $o$ for every legal $j$.
+Equivalently, since the only row at a legal input $j$ is $(j,f(j))$, $o$ is
+legal exactly when $f(j)$ \outrel $o$ for every legal input $j$.
 
 Since every later output must \outrelbase $o$, emitting a non-legal $o$ requires
-a \commitment that removes every legal input whose output does not \outrelbase
-it.
+a \commitment that rules out every legal input whose output does not
+\outrelbase it.
 
 \begin{definition}[Output event]
 \label{def:output-event}
@@ -378,9 +377,9 @@ row remains at the same input.  It is a \commitment.
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  The
 current row $(i,o)$ remains, since $o$ \outrel itself, so the event always ends
-at a state. A \commitment removes rows that input alone would preserve; after
-the canonical \commitment above, their inputs are no longer legal.  Canonical
-\commitments of this form are the only \commitments this section uses.  Systems
+at a specification state.  A \commitment removes rows that input alone would
+keep; after the canonical \commitment, the inputs of the removed rows are no
+longer legal.  This section uses only canonical \commitments.  Systems
 may issue more \commitments than an output requires, as the registrar does in
 Figure~\ref{fig:election-frames}(d), but such extra \commitments are a
 system's choice, not the spec's (Section~\ref{sec:systems}).
@@ -393,9 +392,9 @@ output; a determined state goes further, since its current input determines
 the output of every input that may still arrive.  A functional spec
 can therefore have undetermined states, as in panel~(b) of
 Figure~\ref{fig:election-frames}.  \emph{Determination} is the process of
-reaching a determined state.  An input event may do so through input loss,
-while a \commitment may do so by emptying fibers that would otherwise
-remain possible, as in panels (c) and (d), respectively.
+reaching a determined state.  An input event can do so through input loss, as in panel~(c), and a
+\commitment can do so by emptying fibers that would otherwise remain possible,
+as in panel~(d).
 An event from a determined state always leads to another determined state:
 events only remove rows, and a row at the current input always remains.
 
@@ -432,8 +431,9 @@ some \commitment-free run reaches it.
 
 A run's state has a simple description.  Input events keep only rows whose
 input \inrel the current one, and output events keep only rows whose outputs
-\outrelbase what has been emitted.  Both steps are relational selections, and selections commute; since inputs only \ingrow during a run, the last input's selection
-subsumes the earlier ones.
+\outrelbase what was emitted.  Both steps are relational selections, which
+commute.  Since inputs only \ingrow during a run, the selection for the last
+input subsumes the earlier ones.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -470,16 +470,17 @@ An \spectype is \emph{consistent} when every finite family of
 runs is confluent at every common \indesc of their current inputs.
 \end{definition}
 
-Consistency requires confluence at every common \indesc, not merely at some
-later one.  Otherwise conflicting outputs can escape before reconciliation.
+Consistency requires confluence at every common \indesc, not just at some
+later one, because conflicting outputs could otherwise escape before the runs
+reconcile.
 In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
 incomparable.  One run can emit $\bot$ at $ab\cdot$, while another accepts
-$aba$ and can emit $a$.  The runs cannot reconcile at their common \indesc
-$aba$, and waiting cannot retract either output from the environment.  More
-generally, even when later input could reconcile the internal states, the
-environment may already have acted on their outputs through channels the system
-does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time};
-the reconciling input may never arrive.
+$aba$ and can emit $a$.  The two runs cannot reconcile at their common \indesc $aba$, and waiting cannot
+retract either output from the environment.  More generally, even when later
+input could reconcile the internal states, the environment may already have
+acted on the outputs through channels the system does not see, as in Lamport's
+``anomalous behavior''~\cite{lamport1978time}, and the reconciling input may
+never arrive.
 
 Confluence has a simple test: some row at the common \indesc must survive
 in every run.
@@ -505,18 +506,18 @@ in every run.  Full proof in Appendix~\ref{app:proofs-sec2}.
 In a functional spec the only row at $j$ is $(j,f(j))$, so the test
 asks whether $(j,f(j))$ survives in every run.
 
-Consistency guarantees runs never diverge irreparably: no ``split brain''.  Whatever input
-and output events a finite collection of runs has taken, any input \inrelpart all
-of theirs leaves a single state that every run can reach: one that honors all
-of their emitted outputs and accepts all of that input.
-Proposition~\ref{prop:confluence} identifies that state.  Consistency is a
+Consistency guarantees that runs never diverge irreparably: there is no
+``split brain.''  Whatever events a finite collection of runs has taken, at any
+input \inrelpart all of their inputs there is a state that every run can reach.
+That state honors all of their emitted outputs and accepts all of that input,
+and Proposition~\ref{prop:confluence} identifies it.  Consistency is a
 property of the spec, not of a protocol (Section~\ref{sec:scope}).
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-Consistency is defined by a spec's executions, monotonicity by its
-table and orders alone.  Functional CALM shows that these coincide.
+Monotonicity is defined by a spec's table and orders alone, consistency by its
+runs.  Functional CALM shows that these coincide.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
@@ -568,7 +569,7 @@ when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 A monotone spec can thus emit every current output without \commitment. If a
 spec is non-monotone, then for some $i\InputOrd k$,
 $f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
-$\mathsf{output}(f(i))$ applies $x_{f(i)}$ and excludes input $k$.
+$\mathsf{output}(f(i))$ applies $x_{f(i)}$ and rules out input $k$.
 
 Functional CALM is the familiar CALM dichotomy stated at the level of the spec
 rather than inside a particular programming language.

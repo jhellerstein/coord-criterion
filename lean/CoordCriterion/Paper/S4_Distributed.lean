@@ -166,8 +166,10 @@ abbrev «sec:distributed-consistency/continuation» {D : Type} {n : Nat}
     (H H' : Dist.History I O D n) (C : Dist.Pos n → Prop) : Prop :=
   H.Extends H' C
 
-/-- "A consistent cut `C` is confluent at `j` … when some continuation at `C`
-has a final cut with endpoint `((j,R))_{p∈𝒩}` for some `R`." -/
+/-- "Let `j` be a common input extension of the participants' current inputs
+at a consistent cut `C`.  The cut `C` is confluent at `j` when some
+continuation at `C` has a final cut with endpoint `((j,R))_{p∈𝒩}` for some
+`R`, so that every participant ends in the same state `(j,R)`." -/
 abbrev «sec:distributed-consistency/cut-confluent» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) (C : Dist.Pos n → Prop) (j : I) : Prop :=
   H.CutConfluentAt sp C j
@@ -222,13 +224,13 @@ theorem «cor:distributed-calm» (sp : Spec I O) (D : Type) :
     sp.LiftedMono ↔ Dist.DistConsistent sp D :=
   (Dist.distConsistent_iff_liftedMono sp D).symm
 
-/-- "The forward direction has a concrete witness.  For participant runs with common input extension `j`, the survivor test supplies a
+/-- "Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common input extension `j`, the Survivor test (Proposition `prop:confluence`) supplies a
 `u ∈ P(j)` that survives in every endpoint; by Lemma run-residual, `u` extends
 everything they have emitted.  At each participant, `input(j)` followed by
 `output(u)` reaches the same state without commitment (Proposition
-`prop:exposure-boundary`).  This is an existence
-witness in the transition system; choosing `u`, communicating it, and
-scheduling the transitions belong to the operational model."
+`prop:exposure-boundary`).  The witness shows only that such a state exists
+in the transition system.  Choosing `u`, communicating it, and scheduling the
+transitions are left to the operational model."
 
 Lean: `Dist.reconcile_cf` supplies `u`, proves that `(j,u)` survives in every
 endpoint, and gives the commitment-free two-event continuation from each one. -/
@@ -324,9 +326,9 @@ among them.  The section models those choices, then shows that their commitments
 can be assessed against canonical runs regardless of system implementation
 choices. -/
 
-/-- "When the registrar of Section election-story emits `⊥`, it also closes
-the polls (Figure election-frames(d)), although emitting `⊥` does not require
-the poll-closing commitment.  Closing the polls is the registrar's design
+/-- "The registrar of Section election-story is a similar example.  When it
+emits `⊥`, it also closes the polls (Figure election-frames(d)), although
+emitting `⊥` does not require that commitment.  Closing the polls is the registrar's design
 decision, as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, the commitment event
@@ -344,14 +346,15 @@ theorem «sec:systems/registrar» :
 
   /-! The systems section generalizes the earlier construction: "Sections
   functional-calm–complete-calm used only the canonical commitment `x_o`
-  required by an output. Systems may commit earlier or remove additional
-  alternatives … We therefore allow bespoke system commitments."  The formal
+  that an output requires.  Systems may commit earlier or remove more
+  alternatives, as the examples above do, so we let a system issue commitments
+  of its own."  The formal
   definition follows. -/
 
-  /-- **Def. commitment** (`def:commitment`).  "A commitment is a partial function
-  on specification states that removes a nonempty set of rows.  No row it
-  removes is subsumed by a row that remains at the same input.  Thus, whenever
-  `c(i,R) = (j,R')`, we have `R' ⊊ R` and
+  /-- **Def. commitment** (`def:commitment`).  "A commitment is a partial function `e`
+  on specification states that removes a nonempty set of rows, none of which
+  is extended by a row that remains at the same input.  That is, whenever
+  `e(i,R) = (j,R')`, we have `R' ⊊ R` and
   `(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w` (Eq. commitment-unsubsumed).  It leaves
   the current input unchanged: `j=i`."
 
@@ -399,9 +402,9 @@ abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
 
 /-- **Def. `def:system`** (System).  "A system consists of a *commitment
-basis* `ℬ`, a set of commitments shared by all participants, and a strategy
-`θ_p` for each participant `p` whose output and commitment events apply only
-commitments from `ℬ`."
+basis* `ℬ`, which is a set of commitments shared by all participants, and a
+strategy `θ_p` for each participant `p`, whose output and commitment events
+apply only commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
 participant of every finite participant set and initial inputs, as §4.4 later
@@ -562,9 +565,9 @@ theorem «sec:systems/bases-differ» {T K : Type} {A B C : T} {k : Txn.Partial.I
   CC.Paper.«app:cc-bases/bases-differ» h
 
 /-- Fig. `fig:cc-commitments`: "2PL applies `order(A,B)` when `B` waits for a
-lock `A` holds, leaving `C`'s position open (panel (h)); MVTO applies
-`stamp(B)` when `B` receives the first timestamp, placing `B` first (panel
-(i))."  The caption: only complete rows without aborts or read results are
+lock that `A` holds, which leaves `C`'s position open (panel (h)).  MVTO
+applies `stamp(B)` when `B` receives the first timestamp, which places `B`
+first (panel (i))."  The caption: only complete rows without aborts or read results are
 shown.  Among those, `order(A,B)` keeps exactly the rows with `A` before `B`,
 and `stamp(B)` (no earlier stamps) exactly those with `B` first. -/
 theorem «fig:cc-commitments» {T K : Type}
@@ -578,7 +581,7 @@ theorem «fig:cc-commitments» {T K : Type}
   ⟨fun h => CC.Paper.«app:cc-bases/fig-h» h hp hX hA hB,
    fun h => CC.Paper.«app:cc-bases/fig-i» h hp hX hB⟩
 
-/-- "Both are commitments: rows survive at the input."
+/-- "Both are commitments that leave some rows at the input."
 
 Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): a
 commitment keeps a row at the current input, so where it removes rows there it
@@ -591,7 +594,7 @@ theorem «sec:systems/two-systems-two-commitments» {sp : Spec I O} (c : Commitm
   obtain ⟨w, hw⟩ := commitment_preserves_current_fiber c h
   exact ⟨⟨w, hw⟩, fun _ => ⟨w, hw, fun u hu hnu => c.unsubsumed σ τ h _ u w hu hnu hw⟩⟩
 
-/-- "… and neither is the commitment `x_o` of Definition lifted-output-event."
+/-- "… and neither is the canonical commitment `x_o` of an output."
 At the canonical state of an input whose transactions `A`, `B`, `C` have each
 requested commit (Appendix G's specification), the results of
 `order(A,B)` and `stamp(B)` are not the result of `x_o` for any output `o`. -/
@@ -617,8 +620,7 @@ inputs and emit the same outputs, and after each event the canonical run keeps
 every row that `ρ` keeps."  Proof sketch:
 "Commitment events only remove rows, so dropping them can only keep more.  An
 input or output event applied to a larger table keeps a larger table, and the
-canonical run can perform it because
-the original's rows are among its own."
+canonical run can perform it because the rows of `ρ` are among its own."
 
 Lean: `«lem:canonical-equivalent»`; `Lockstep` records the per-event
 containment (a commitment event of the original is matched by no canonical
@@ -643,8 +645,8 @@ before `C` before `B` in a commitment event, and then emits `[A,C,B]`.  Every
 row whose output extends `[A,C,B]` satisfies 2PL's commitments, so 2PL removed
 none of them, and after the output both runs keep exactly these rows.  The
 tables are equal: the lock made the `A`-before-`B` decision
-earlier than the output required.  The commitments required by a spec's
-  outputs therefore do not depend on their timing or representation in a
+earlier than the output required.  The commitments a spec's outputs
+  require therefore do not depend on their timing or representation in a
   system's commitment basis."
 
 Lean (`CC.Txn.Partial.CommitEx.example_commitment_event_ABC`), at any input `k`

@@ -7,11 +7,11 @@ termination.
 
 \subsection{Committed authority, then monotone evidence}
 
-Suppose a \commitment fixes an initial authority and a rule determining each
-certified successor.  Inputs are finite sets of protocol messages (proposals,
+Suppose a \commitment fixes an initial authority and a rule that determines
+each certified successor.  Inputs are finite sets of protocol messages (proposals,
 votes, certificates), ordered by inclusion.  An output is a triple $(E,V,D)$:
-a certified epoch chain $E$, a finite sequence of epochs each certified under
-the authority of its predecessor; a set $V$ of votes or certificates; and a set
+a certified epoch chain $E$, which is a finite sequence of epochs, each
+certified under the authority of its predecessor; a set $V$ of votes or certificates; and a set
 $D$ of decisions, at most one value per epoch and slot, each certified for
 that epoch and slot.  Outputs are
 ordered by
@@ -23,12 +23,13 @@ ordered by
 \end{equation}
 where $E\preceq_{\rm pref}E'$ means that $E$ is a prefix of $E'$.
 Protocol safety guarantees that every output permitted at the current or any
-later input \outrel the certified evidence already emitted, so
-authority changes and certified decisions are \outnouns and need no further
-\commitment.  This covers following the succession rule, not choosing values:
-competing proposals for an undecided slot have incompatible extensions of
-$D$, so certifying one is a \commitment.  If the succession rule were not
-fixed, competing next epochs would require one as well.
+later input \outrel the certified evidence already emitted.  So an authority
+change or a certified decision is a legal output and needs no further
+\commitment.  This covers following the succession rule, not choosing
+values: competing proposals for an undecided slot have incompatible extensions
+of $D$, so certifying one is a \commitment.  If the succession rule were not
+fixed, choosing among competing next epochs would require a \commitment as
+well.
 
 \subsection{$k$-set agreement: no $k$-wise test suffices}
 
@@ -37,7 +38,7 @@ Fix $k\geq1$, distinct participants $p_1,\ldots,p_{k+1}$ in the participant set 
 set $\mathit{Val}$.  An input is a finite set of proposals $(p,v)$, at most one
 per participant, ordered by inclusion; the \emph{proposal input} of $p_r$ is
 $\{(p_r,v_r)\}$.  Outputs are partial decision maps
-$m:P\rightharpoonup\mathit{Val}$ ordered by extension.  At input $I$, $m$ is
+$m:\mathcal N\rightharpoonup\mathit{Val}$ ordered by extension.  At input $I$, $m$ is
 permitted when it decides only participants that propose in $I$, every value
 in its range is proposed in $I$ (validity), and its range has at most $k$
 values.  At $p_r$'s proposal input, $\{p_r\mapsto v_r\}$ is permitted, and the
@@ -59,7 +60,7 @@ the injective maps
   \label{eq:tight-renaming}
 \end{equation}
 At $\{p\}$ the only output is $p\mapsto1$, and at $\{q\}$ it is $q\mapsto1$.
-Each has a \outnoun at $\{p,q\}$, so Relational Monotonicity does not fail
+Each has an \outnoun at $\{p,q\}$, so Relational Monotonicity does not fail
 here, but no injective map extends both.  The spec also lacks directed
 fibers at
 $\{p,q\}$: $\{p\mapsto1,q\mapsto2\}$ and $\{p\mapsto2,q\mapsto1\}$ have no
@@ -81,7 +82,7 @@ nor completeness.  A spec that requires the complete history, with
 output $h$ at $h$ and outputs ordered by equality, is functional and not
 monotone: its required output changes whenever an environment event arrives.  By
 Proposition~\ref{prop:functional-exposure-boundary}, some output can then be
-exposed only after a \commitment that empties larger inputs.
+emitted only after a \commitment that rules out larger inputs.
 
 \begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.

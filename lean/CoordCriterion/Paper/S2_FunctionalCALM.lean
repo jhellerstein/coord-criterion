@@ -383,7 +383,7 @@ theorem «def:output-event/commitment-iff-excluded» {I O : Type} [PO I] [PO O] 
   functional_exclude_iff_excluded hf σ o
 
 /-- "The current row `(i,o)` remains, since `o` extends itself, so the event
-always ends at a state." -/
+always ends at a specification state." -/
 theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (σ : State sp) (o : O) (h : σ.R σ.cur o) :
     Step σ (.output o) (outputState σ o h) ∧ (outputState σ o h).R σ.cur o :=
@@ -418,8 +418,8 @@ theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I 
     Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x :=
   exposable_iff_no_commitment σ o
 
-/-- "Equivalently, as the only row at a legal input `j` is `(j, f(j))`,
-`o` is legal exactly when `f(j)` extends `o` for every legal `j`." -/
+/-- "Equivalently, since the only row at a legal input `j` is `(j, f(j))`,
+`o` is legal exactly when `f(j)` extends `o` for every legal input `j`." -/
 theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
     (Exposable σ o ↔ outputTable σ o = σ.R) ∧ (Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x) :=
@@ -439,8 +439,9 @@ theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO
   determined_upper_fiber σ
 
 /-- "A functional spec can therefore have undetermined states, as in
-panel (b) … An input event may [reach a determined state] by causing the table to lose rows …
-and a commitment by applying a commitment to inputs …, as in panels (c) and (d)." -/
+panel (b) … An input event can do so through input loss, as in panel (c), and
+a commitment can do so by emptying fibers that would otherwise remain
+possible, as in panel (d)." -/
 theorem «sec:functional-events/determination-examples» :
     elec.Functional ∧ ¬ Determined (canon elec bab) ∧ Determined (canon elec baa) ∧
       Determined Figures.Elec.panelD :=
@@ -528,16 +529,16 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 *consistent* when every finite family of runs is confluent at every common
 input extension of their current inputs."
 
-  "Consistency requires confluence at every common input extension, not merely
-  at some later one.  Otherwise conflicting outputs can escape before
-  reconciliation.  In the equality-order election, `f(ab·)=⊥` and `f(aba)=a`
+  "Consistency requires confluence at every common input extension, not just
+  at some later one, because conflicting outputs could otherwise escape before
+  the runs reconcile.  In the equality-order election, `f(ab·)=⊥` and `f(aba)=a`
   are incomparable.  One run can emit `⊥` at `ab·`, while another accepts
-  `aba` and can emit `a`.  The runs cannot reconcile at their common input
-  extension `aba`, and waiting cannot retract either output from the
+  `aba` and can emit `a`.  The two runs cannot reconcile at their common
+  input extension `aba`, and waiting cannot retract either output from the
   environment.  More generally, even when later input could reconcile the
-  internal states, the environment may already have acted on their outputs
+  internal states, the environment may already have acted on the outputs
   through channels the system does not see, as in Lamport's 'anomalous
-  behavior'; the reconciling input may never arrive."  The observability claim
+  behavior', and the reconciling input may never arrive."  The observability claim
   is the paper's modeling rationale.
 
 Lean: `Spec.Consistent`. -/
@@ -611,7 +612,7 @@ theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : S
 /-- After Prop. `prop:functional-exposure-boundary`: "A monotone spec can
 thus emit every current output without commitment. If a spec is non-monotone,
 then for some `i ≼ k`, `f(i) ⋠ f(k)`, so at `σ_P(i)` the event `output(f(i))`
-applies `x_{f(i)}` and excludes `k`." -/
+applies `x_{f(i)}` and rules out input `k`." -/
 theorem «prop:functional-exposure-boundary/nonmonotone-excludes» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :

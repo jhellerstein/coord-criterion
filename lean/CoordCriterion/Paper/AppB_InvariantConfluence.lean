@@ -38,16 +38,17 @@ visible to the replica that ran `e`."  Lean: `IConf.Hist Tx`. -/
 abbrev «app:iconfluence/history» (Tx : Type) : Type := IConf.Hist Tx
 
 /-- "History `h'` extends `h` when `h` is a downward-closed sub-order of `h'`,
-so an event keeps exactly the predecessors it had."  Lean: `h ≼ h'` unfolds
+so each event of `h` keeps exactly the predecessors it had."   Lean: `h ≼ h'` unfolds
 to: labels of `h` are labels of `h'`, and `h.lt x y ↔ h'.lt x y ∧ y ∈ h`. -/
 theorem «app:iconfluence/expansion-order» {Tx : Type} (h h' : IConf.Hist Tx) :
     h ≼ h' ↔ (∀ e t, h.lab e = some t → h'.lab e = some t) ∧
       (∀ x y, h.lt x y ↔ (h'.lt x y ∧ h.ev y)) :=
   Iff.rfl
 
-/-- "The state of a history is computed event by event: `e` runs on
-`pre(e) = s₀ ∪ ⋃_{e'<e} post(e')` and produces `post(e) = t_e(pre(e))` …
-and `eval(h) = s₀ ∪ ⋃_{e∈h} post(e)`."  Lean: `IConf.pre`, `IConf.post`
+/-- "The state of a history is computed event by event.  An event `e`,
+labeled by the transaction `t_e`, runs on `pre(e) = s₀ ∪ ⋃_{e'<e} post(e')`
+and produces `post(e) = t_e(pre(e))`, and the state of `h` is
+`eval(h) = s₀ ∪ ⋃_{e∈h} post(e)`."   Lean: `IConf.pre`, `IConf.post`
 (through `IConf.step`, which applies an event's label) and `IConf.eval`. -/
 theorem «app:iconfluence/eval» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Hist Tx) (e : Nat) :
     (IConf.pre M h e = fun v => M.s0 v ∨ ∃ x, h.lt x e ∧ IConf.post M h x v) ∧
@@ -72,7 +73,7 @@ theorem «app:iconfluence/eval-union» {V Tx : Type} (M : IConf.Model V Tx)
   IConf.eval_union M ha hb hc hev
 
 /-- "Because `h` is a partial order and transactions are inflationary
-(`t(s) ⊇ s`), `pre(e)` is the state of the sub-history strictly below `e` and
+(`t(s) ⊇ s`), `pre(e)` is the state of the sub-history strictly below `e`, and
 `post(e)` is the state of the sub-history at or below `e`." -/
 theorem «app:iconfluence/pre-post-as-eval» {V Tx : Type} (M : IConf.Model V Tx)
     (h : IConf.Hist Tx) (e : Nat) (he : h.ev e) :
@@ -82,8 +83,8 @@ theorem «app:iconfluence/pre-post-as-eval» {V Tx : Type} (M : IConf.Model V Tx
   ⟨IConf.pre_eq_eval M h e, IConf.post_eq_eval M h e he⟩
 
 /-- "A history is locally valid when every `pre(e)` and `post(e)` satisfies
-`𝓘` … It is valid when every downward-closed sub-history `c` has
-`𝓘(eval(c))`." -/
+`𝓘` … It is valid when `𝓘(eval(c))` holds for every downward-closed
+sub-history `c`."  -/
 theorem «app:iconfluence/valid-def» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Hist Tx) :
     (IConf.LocValid M h ↔ ∀ e, h.ev e → M.Inv (IConf.pre M h e) ∧ M.Inv (IConf.post M h e)) ∧
       (IConf.Valid M h ↔ ∀ c, c ≼ h → M.Inv (IConf.eval M c)) :=
@@ -106,7 +107,7 @@ theorem «app:iconfluence/inputs-closed» {V Tx : Type} (M : IConf.Model V Tx)
   Inst.locValid_sub M hc hl
 
 /-- "An output is a state, and `u` covers `s` when `s ⊆ u`. At input `h`, the
-system may expose the state of any valid sub-history:
+spec permits the state of any downward-closed, valid sub-history:
 `P_𝓘(h) = {eval(g) : g a downward-closed, valid sub-history of h}`." -/
 theorem «app:iconfluence/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M)
     (s u : IConf.St V) :

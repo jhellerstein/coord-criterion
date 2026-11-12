@@ -31,7 +31,7 @@ open CC.Txn CC.Apps
 
 /-! ## Committed authority, then monotone evidence -/
 
-/-- "An output is a triple `(E,V,D)`: a certified epoch chain `E`, a finite
+/-- "An output is a triple `(E,V,D)`: a certified epoch chain `E`, which is a finite
 sequence of epochs …; a set `V` of votes or certificates; and a set `D` of
 decisions."  Certification is not modeled: `Auth Ep Vt Dc` contains every
 triple; the protocol's specification decides which are permitted. -/
@@ -45,9 +45,9 @@ theorem «eq:authority-refinement» {Ep Vt Dc : Type} (a b : Auth Ep Vt Dc) :
   Iff.rfl
 
 /-- "Protocol safety guarantees that every output permitted at the current or
-any later input [extends] the certified evidence already emitted, so authority
-changes and certified decisions are [legal outputs] and need no further
-commitment."  Safety is the hypothesis that every remaining row extends `o`;
+any later input extends the certified evidence already emitted.  So an
+authority change or a certified decision is a legal output and needs no
+further commitment."   Safety is the hypothesis that every remaining row extends `o`;
 the conclusion is that `o` is a legal output, so its output event
 `output(o)` applies no commitment and is available under any basis.  Generic in the specification. -/
 theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO O]
@@ -73,8 +73,8 @@ theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO
       ∀ (B : CommitmentBasis sp) τ, SysStep B σ (.output o) τ → B (canonicalCommitment o) :=
   slot_conflict slot hU ho ho' hd hd' hs hne
 
-/-- "If the succession rule were not fixed, competing next epochs would require
-one [a commitment] as well."  Two current outputs extending the chain `e` by
+/-- "If the succession rule were not fixed, choosing among competing next epochs
+would require a commitment as well."   Two current outputs extending the chain `e` by
 different next epochs `a ≠ b`: as for slots, emitting one is not a legal
 output, and its output event applies `x_o`, which the basis must contain. -/
 theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I]
@@ -91,7 +91,8 @@ theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I
 participant, ordered by inclusion." -/
 abbrev «app:additional-applications/kset-input» (P Val : Type) := KInput P Val
 
-/-- "Outputs are partial decision maps `m : P ⇀ Val` ordered by extension." -/
+/-- "Outputs are partial decision maps `m : 𝒩 ⇀ Val` ordered by extension."
+(The participant type is `P` here.) -/
 theorem «app:additional-applications/pmap-order» {P Val : Type} (m m' : PMap P Val) :
     m ≼ m' ↔ ∀ p a, m.f p = some a → m'.f p = some a := Iff.rfl
 
@@ -243,7 +244,7 @@ theorem «app:additional-applications/complete-history» {Ev : Type} (e : Ev) :
   ⟨fun _ _ => Iff.rfl, completeSpec_functional, completeSpec_not_monotone e⟩
 
 /-- "By Proposition `prop:functional-exposure-boundary`, some output can then be
-exposed only after a commitment that excludes larger inputs."  At some state
+emitted only after a commitment that rules out larger inputs."   At some state
 reachable without commitment, some current output rules out an excluded row and no
 excluded row, and the output event emitting it applies a commitment, `x_o`,
 which the basis must contain. -/

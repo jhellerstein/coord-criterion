@@ -68,8 +68,7 @@ theorem «def:deployment/emitted-rows» (m : PRun sp) (c j : I) (o : O)
     emitted c (.output o :: es) = (c, o) :: emitted c es :=
   ⟨rfl, rfl, rfl, rfl⟩
 
-/-- Def. `def:deployment`: "A *partition* `Π` of `P` divides `P` into two or
-more nonempty sides."  A labelling `comp : Fin n → Nat` with two
+/-- Def. `def:deployment`: "A *partition* `Π` of `𝒩` divides `𝒩` into two or more nonempty sides."  A labelling `comp : Fin n → Nat` with two
 participants on different sides. -/
 theorem «def:deployment/partition» (comp : Fin n → Nat) :
     IsPartition comp ↔ ∃ p q, comp p ≠ comp q :=
@@ -109,8 +108,7 @@ theorem «def:deployment/separable» (F : Family sp n) (comp : Fin n → Nat) :
 partitions).  "Relative to a deployment, `P` is *monotone across `Π`* when,
 for every participant run family separable under `Π` and every common
 input extension `j` of its participants' current inputs, some `u ∈ P(j)` extends
-every emitted output.  It is *monotone across partitions* when it is monotone
-across every partition of `P`." -/
+every emitted output.  It is *monotone across partitions* when it is monotone across every partition of `𝒩`." -/
 theorem «def:monotone-across-partitions» (Dp : Deployment sp n) :
     (∀ comp, MonoAcross Dp comp ↔
       ∀ F : Family sp n, Authorized Dp F → Separable F comp →
@@ -118,9 +116,7 @@ theorem «def:monotone-across-partitions» (Dp : Deployment sp n) :
     (MonoAcrossPartitions Dp ↔ ∀ comp, IsPartition comp → MonoAcross Dp comp) :=
   ⟨fun _ => Iff.rfl, Iff.rfl⟩
 
-/-- "If `P` satisfies Lifted Monotonicity for a relation that contains every `E_p`, it is
-monotone across partitions: the emitted rows of a family are rows of that
-relation at inputs below `j`." -/
+/-- "If `P` satisfies Lifted Monotonicity for a relation that contains every `E_p`, it is monotone across partitions, since the emitted rows of a family are rows of that relation at inputs below `j`." -/
 theorem «app:deployment/lm-for-implies-mono-across» (Dp : Deployment sp n)
     (B : Table I O) (hB : ∀ p i o, Dp.A p i o → B i o) (hc : CAP.ConsistentOn sp B) :
     MonoAcrossPartitions Dp :=
@@ -137,17 +133,16 @@ theorem «app:deployment/lm-implies-mono-across» (hlm : sp.LiftedMono)
     (Dp : Deployment sp n) : MonoAcrossPartitions Dp :=
   monoAcrossPartitions_of_liftedMono hlm Dp
 
-/-- "Rows authorized only to `p` can be emitted only by `p`'s run, whose
-emitted outputs form a chain (each output event keeps only rows extending
-it)."  The chain is in emission order; its last row extends every emitted
+/-- "Rows authorized only to `p` can be emitted only by `p`'s run, and the
+outputs that run emits form a chain, since each output event keeps only rows
+whose outputs extend it."  The chain is in emission order; its last row extends every emitted
 output. -/
 theorem «app:deployment/run-outputs-chain» (m : PRun sp) :
     List.Pairwise (fun a b : I × O => a.2 ≼ b.2) m.rows ∧
     (m.rows ≠ [] → ∃ r ∈ m.rows, ∀ r' ∈ m.rows, r'.2 ≼ r.2) :=
   ⟨rows_chain m, rows_max m⟩
 
-/-- "… so a family whose emitted rows are all authorized only to `p` is
-separable only when it emits a single row."  Lean: every emitter is `p` and
+/-- "So a family whose emitted rows are all authorized only to `p` is separable only when it emits a single row."  Lean: every emitter is `p` and
 every emitted row is the same `r₀`; consequently two distinct rows make the
 family non-separable. -/
 theorem «app:deployment/sole-rows-single-row» (Dp : Deployment sp n) (F : Family sp n)
@@ -162,7 +157,7 @@ end Deployment
 
 /-! ### The leader example -/
 
-/-- "Let `P = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let
+/-- "Let `𝒩 = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let
 `E_p = P` and `E_q = ∅`, so that `p` alone names a leader."
 
 Lean: `leadSpec I` over any input poset `I`, outputs `Disc Bool` (equality
@@ -177,8 +172,8 @@ theorem «app:deployment/leader-example/one-output» {I : Type} [PO I]
     (m : PRun (leadSpec I)) : ∀ r ∈ m.rows, ∀ r' ∈ m.rows, r.2 = r'.2 :=
   lead_run_one_output m
 
-/-- "… and `q` never emits, so every separable family consists of one row
-`(i,a)` or `(i,b)` beside a silent `q`." -/
+/-- "… and `q` never emits.  Every separable family therefore consists of one
+row `(i,a)` or `(i,b)` beside a silent `q`." -/
 theorem «app:deployment/leader-example/separable-shape» {I : Type} [PO I]
     (F : Family (leadSpec I) 2) (hA : Authorized (leadD I) F) (comp : Fin 2 → Nat)
     (hs : Separable F comp) :
@@ -186,7 +181,7 @@ theorem «app:deployment/leader-example/separable-shape» {I : Type} [PO I]
   lead_separable_shape F hA comp hs
 
 /-- "So `P` is monotone across partitions, yet `(i,a)` and `(i,b)` have no
-common output extension and Lifted Monotonicity fails."  (Any input `i` witnesses the
+common output extension, and Lifted Monotonicity fails."  (Any input `i` witnesses the
 failure.) -/
 theorem «app:deployment/leader-example» (I : Type) [PO I] (i : I) :
     MonoAcrossPartitions (leadD I) ∧ ¬ (leadSpec I).LiftedMono :=
@@ -195,10 +190,10 @@ theorem «app:deployment/leader-example» (I : Type) [PO I] (i : I) :
 section Deployment2
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-- "The same happens whenever each authorized row has an input extension at every
-input extension of its input and every set of authorized rows lacking a common
-input extension at some common input extension is authorized only to a single
-participant."  Finite sets of rows are lists. -/
+/-- "The same happens whenever two conditions hold: each authorized row has an
+output extension at every input extension of its input, and every set of
+authorized rows that lacks a common output extension at some common input
+extension is authorized only to a single participant."  Finite sets of rows are lists. -/
 theorem «app:deployment/sufficient-condition» (Dp : Deployment sp n)
     (h1 : ∀ p i o, Dp.A p i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u)
     (h2 : ∀ E : List (I × O), (∀ r ∈ E, ∃ p, Dp.A p r.1 r.2) → ∀ j, (∀ r ∈ E, r.1 ≼ j) →
@@ -209,16 +204,16 @@ theorem «app:deployment/sufficient-condition» (Dp : Deployment sp n)
 
 end Deployment2
 
-/-- "The causal register of Appendix `app:registers` is a further example,
-with no single authority, of monotonicity across partitions without Lifted
-Monotonicity."
+/-- "The causal register of Appendix `app:registers` is a further example of
+monotonicity across partitions without Lifted Monotonicity, with no single
+authority."
 
 Lean: the two-write history signature `G2` with the replica deployment. -/
 theorem «app:deployment/further-examples» :
     MonoAcrossPartitions (replicaD G2) ∧ ¬ (causalSpec G2).LiftedMono :=
   ⟨causal_monoAcross G2, causal_not_liftedMono⟩
 
-/-- "… they need not satisfy this condition, since a set of rows lacking a
+/-- "It need not satisfy these conditions, since a set of rows lacking a
 common output extension may also contain rows of other participants."  Witness: in
 the configuration product interface, the rows `e_0(0)`, `e_0(1)`, `e_1(0)` are
 authorized, lack a common output extension, and are not authorized to a single
@@ -236,10 +231,10 @@ section Deployment3
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
 /-- "If `|𝒩| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split
-across a partition and every single row paired with a silent participant at
-the common input extension; since pairs of rows suffice for the common-extension
-condition (Appendix `app:pairs-suffice`), monotonicity across partitions is
-then Lifted Monotonicity." -/
+across a partition, and every single row can be paired with a silent
+participant at the common input extension.  Pairs of rows suffice for the
+common-extension condition (Appendix `app:pairs-suffice`), so monotonicity
+across partitions is then Lifted Monotonicity." -/
 theorem «app:deployment/full-deployment» (hn : 2 ≤ n) (Dp : Deployment sp n)
     (hA : ∀ p, Dp.A p = sp.P) : MonoAcrossPartitions Dp ↔ sp.LiftedMono :=
   full_deployment_iff hn Dp hA
@@ -253,9 +248,8 @@ theorem «app:deployment/full-deployment/pairs-suffice»
 
 /-- **Definition `def:deployment-availability`** (Deployment Availability).
 "Relative to a deployment, a system has *Deployment Availability* when, in
-every partitioned history over `𝒩` it produces, each participant `p`, ending
-in state `(i,R)`, can emit each output in `R(i) ∩ E_p(i)` in some same-side
-continuation of `p`."
+every partitioned history over `𝒩` it produces, each participant `p` can emit
+every output in `R(i) ∩ E_p(i)`, where `(i,R)` is `p`'s final state."
 
 Lean: `DeploymentAvailabilityEnd`, unfolded below; it is equivalent to the cut
 form `DeploymentAvailability` used by the library. -/
@@ -277,7 +271,7 @@ theorem «def:deployment-availability» {D : Type} (Sys : CAP.System sp D)
 
 /-- "This is Availability for `E_p`, one relation per participant.  For the
 uniform deployment `E_p = E` it is Availability for `E` on histories over
-`P` …"  `AvailabilityForAt E Sys n` is `CAP.AvailabilityFor E` restricted to
+`𝒩` …"  `AvailabilityForAt E Sys n` is `CAP.AvailabilityFor E` restricted to
 histories over `Fin n`. -/
 theorem «app:deployment/uniform-availability» {D : Type} (Sys : CAP.System sp D)
     (E : Table I O) (hES : ∀ i o, E i o → sp.P i o) :
@@ -313,16 +307,16 @@ theorem «app:deployment/single-authority/shape» (Dp : Deployment sp n) (p₀ :
       ∃ q, Silent F q ∧ comp q ≠ comp p₀ :=
   single_authority_shape Dp p₀ hSA F hA comp hs
 
-/-- "… and monotonicity across partitions says only that each such row has an
-input extension at every input extension of its input."  (With `|𝒩| ≥ 2`, so that some
+/-- "… so monotonicity across partitions says only that each such row has an
+output extension at every input extension of its input."  (With `|𝒩| ≥ 2`, so that some
 partition exists.) -/
 theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n) (p₀ : Fin n)
     (hSA : SingleAuthority Dp p₀) :
     MonoAcrossPartitions Dp ↔ ∀ i o, Dp.A p₀ i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u :=
   single_authority_iff hn Dp p₀ hSA
 
-/-- "The deployment can prevent the contrary choice from being placed at
-another participant."  Lean: if only participant `0` may perform output events,
+/-- "The deployment keeps the conflicting choice from being made at another
+participant …"  Lean: if only participant `0` may perform output events,
 no row that an output event removes by its canonical commitment is emitted, at
 the same input, by another participant of the same history. -/
 theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CAP.System sp D)
@@ -330,10 +324,10 @@ theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CA
     RowRemovalsNotDistributed Sys :=
   sole_emitter_rowRemovals Sys hsole
 
-/-- "It does not change the semantic conflict: a canonical run still
-contradicts the authority's commitment.  For example, another canonical run of
-the spec contradicts a lock manager's choice even when only the manager is
-authorized to emit the result."  Lean: the owner system's row-removing event is
+/-- "… but it does not change the semantic conflict: a canonical run still
+conflicts with the authority's commitment.  For example, another canonical run
+of the spec conflicts with a lock manager's choice even when only the manager
+is authorized to emit the result."  Lean: the owner system's row-removing event is
 a commitment, and the library's operational predicates record that the conflict
 is local rather than cross-participant. -/
 theorem «app:deployment/single-authority/coordination» (D : Type) :
@@ -374,7 +368,7 @@ theorem «thm:complete-cap-deployment/proof» (Dp : Deployment sp n) :
   ⟨fun F _ hj => survivor_iff_compatible F hj, partition_compatibility Dp⟩
 
 /-- "The proposition concerns canonical runs and does not use Deployment
-Availability.  It applies to the runs of a system as well: by Lemma
+Availability.  It also applies to the runs of a system: by Lemma
 `lem:canonical-equivalent`, each such run is observably equivalent to a
 canonical run with the same emitted rows, which therefore lie in `E_p`."
 
@@ -385,9 +379,10 @@ theorem «app:deployment/system-runs/canonical» {D : Type} {m : Nat} (r : SRun 
     ∃ q : PRun sp, q.rows = r.rows ∧ q.fin.cur = r.fin.cur :=
   r.canonical
 
-/-- "So if `P` is monotone across partitions, the outputs emitted by a
-separable family of runs of a partitioned history, as Deployment Availability
-permits, have a common output extension `u ∈ P(j)` at every common input extension `j`."
+/-- "So if `P` is monotone across partitions, the outputs that a separable
+family of system runs emits in a partitioned history, as Deployment
+Availability permits, have a common output extension `u ∈ P(j)` at every common
+input extension `j`."
 
 Lean: first for any separable authorized family of system runs (under `Π`),
 then for the participants' runs to a cut of a history partitioned by `comp`. -/
@@ -410,8 +405,8 @@ theorem «app:deployment/system-runs» {D : Type} {m : Nat} (Dp : Deployment sp 
 end Deployment3
 
 /-- "It does not follow that the deployment authorizes any participant to emit
-`u`; confluence through output events that the deployment authorizes would
-additionally require that authority, a condition we do not impose."
+`u`.  Confluence through authorized output events would also require that
+authority, a condition we do not impose."
 
 Lean witness: one input, fiber `{a, b, top}` with `a, b < top` (`CAP.triSpec`),
 `E_0 = {a}`, `E_1 = {b}`: the specification is monotone across partitions, the
@@ -425,8 +420,8 @@ theorem «app:deployment/unauthorized-refinement» :
   unauthorized_refinement
 
 /-- "With `|𝒩| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted
-Monotonicity, and the proposition is the step behind Theorem
-`thm:complete-cap` with `E = P` stating that separable families are confluent at every
+Monotonicity.  The proposition is then the step behind Theorem
+`thm:complete-cap` with `E = P`: separable families are confluent at every
 common input extension exactly when Lifted Monotonicity holds." -/
 theorem «app:deployment/full-deployment-step» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     {n : Nat} (hn : 2 ≤ n) (Dp : Deployment sp n) (hA : ∀ p, Dp.A p = sp.P) :
@@ -506,8 +501,9 @@ theorem «app:registers/two-write-history» :
     h2.hb 0 2 ∧ h2.hb 0 3 ∧ h2.hb 1 2 ∧ h2.hb 1 3 ∧ ¬ h2.hb 0 1 ∧ ¬ h2.hb 1 0 :=
   h2_shape
 
-/-- "Under linearizability, if `p` reads cat the order has `w_p(x,dog)` before
-`w_q(x,cat)`; if `q` reads dog it has the opposite.  No source map extends
+/-- "Under linearizability, a source map that sends `r_p` to `w_q(x,cat)` needs
+a linearization with `w_p(x,dog)` before `w_q(x,cat)`, and one that sends `r_q`
+to `w_p(x,dog)` needs the opposite order.  No source map extends
 both, so the register is not monotone across the partition `{{p},{q}}` under
 any deployment authorizing these two reads."
 
@@ -523,7 +519,7 @@ theorem «app:registers/linearizable-not-monotone-across» :
    fun Dp h0 h1 => lin_not_monoAcross Dp h0 h1⟩
 
 /-- "Under causal consistency the two replicas may serialize the concurrent
-writes differently, and one source map sends `r_p` to `w_q(x,cat)` and `r_q`
+writes differently, so one source map sends `r_p` to `w_q(x,cat)` and `r_q`
 to `w_p(x,dog)`." -/
 theorem «app:registers/causal-two-write» : (causalSpec G2).P h2 ρ12 :=
   causal_two_write
@@ -531,9 +527,10 @@ theorem «app:registers/causal-two-write» : (causalSpec G2).P h2 ρ12 :=
 section Registers2
 variable {α : Type} {n : Nat}
 
-/-- "Under the deployment in which each replica answers only its own reads
-(`E_p` holds the rows whose source map is defined only on reads of `p`), the
-causal register is monotone across partitions, for every history. … Separability
+/-- "More generally, consider the deployment in which each replica answers
+only its own reads (`E_p` holds the rows whose source map is defined only on
+reads of `p`).  Under it the causal register is monotone across partitions, for
+every history. … Separability
 is not used."
 
 Lean: `replicaD G`; the statement holds for every signature `G` (hence every
@@ -548,9 +545,9 @@ theorem «app:registers/causal-monotone-across» (G : OpSig α n) :
   ⟨fun _ _ _ => Iff.rfl, fun F hA j hj => causal_common G F hA j hj,
    causal_monoAcross G, causal_confluent G⟩
 
-/-- Proof step: "Take a serialization `L_p` of `i_p` explaining `ρ_p`, and
+/-- Proof step: "We take a serialization `L_p` of `i_p` explaining `ρ_p`, and
 extend it to `j` by appending the new operations of `p` and the new writes in
-any order extending `→`; since no new operation causally precedes an old one,
+any order extending `→`.  Since no new operation causally precedes an old one,
 the result extends `→` and explains the same reads."  (The appended order is
 built from a linear extension of a finite strict partial order, `linExt`.) -/
 theorem «app:registers/serialization-extends» (G : OpSig α n) {h j : Hist α} (hle : h ≼ j)
@@ -602,7 +599,7 @@ theorem «thm:product-frontier» {I : Type} [PO I] {W : Fin n → Type} [∀ p, 
 partial order `≺`: `a ≺ b` when `a` ended before `b` began.  We assume that
 `a → b` implies `a ≺ b`, so replicas propagate only completed writes, and that
 `→` totally orders the operations of each replica.  One input extends another
-when it does as a history and `≺` agrees on the old operations."
+when it does so as a history and `≺` agrees on the old operations."
 
 Lean: `RHist G` (fields `rt`, `hb_rt`, `po`) and its order. -/
 theorem «app:rtc/input» (G : OpSig α n) (i j : RHist G) :
@@ -622,8 +619,9 @@ theorem «app:rtc/views» (G : OpSig α n) (p : Fin n) (i : RHist G) (v : SMap �
       (∀ r s, v.f r = some s → RSrc G i r s) ∧ RMono G i p v :=
   Iff.rfl
 
-/-- "Views exist … They continue … Views share a domain, so they form an
-antichain.  By Theorem `thm:product-frontier`(1), the real-time causal product
+/-- "Views exist … Views also continue. … All views of `p` at an input are
+defined on the same reads, so no view extends a different one, and they form
+an antichain.  By Theorem `thm:product-frontier`(1), the real-time causal product
 interface, in which each replica answers its own reads, is monotone across
 partitions under the owner deployment." -/
 theorem «app:rtc/monotone-across» (G : OpSig α n) :

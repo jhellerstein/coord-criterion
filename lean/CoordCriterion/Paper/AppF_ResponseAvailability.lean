@@ -42,8 +42,8 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
 /-! ## Appendix F preamble -/
 
-/-- "The *emitted rows* of a run are the pairs `(i,o)` such that it emits `o`
-at current input `i`."  Lean: for a canonical execution `es` started at
+/-- "The emitted rows of a run are as in Definition `def:deployment`" (the
+pairs `(i,o)` such that it emits `o` at current input `i`).  Lean: for a canonical execution `es` started at
 current input `i`, `emRows i es`. -/
 abbrev «app:cap-response/emitted-rows» : I → List (Event I O) → List (I × O) := emRows
 
@@ -76,10 +76,11 @@ Lean: `Obligation sp` carries one `Q`; the uniform case is the identity shape
 used throughout. -/
 abbrev «def:uniform-obligation» (sp : Spec I O) : Type := Obligation sp
 
-/-- "Response availability is only as strong as `Q_p`: if an output permitted
-at every input answers, every spec is available."  Lean: indeed the
-conditions of Theorem `thm:complete-cap-response` (Response Availability and Response Partition Consistency
-for a replicated system) then holds. -/
+/-- "Response Availability is only as strong as `Q_p`: if a single output
+answers at every input, every spec meets condition (1) of Theorem
+`thm:complete-cap-response`."  Lean: condition (1) (`ResponseForm`: some
+replicated system has Response Availability and Response Partition
+Consistency) holds. -/
 theorem «app:cap-response/trivially-available» (Q : Obligation sp) (o0 : O)
     (h0 : ∀ i, Q.Q i o0) :
     ResponseForm sp D Q :=
@@ -98,7 +99,7 @@ emits some output in `Q_p(i)`.  (2) *Input acceptance.*  For every `j ⪰ i`,
 in some continuation within `p`'s side, `p` records `input(j)`."
 
 Lean: "within `p`'s side" is `Produced … ∧ Partitioned … comp ∧
-(∀ q, comp q ≠ comp p → ext q = [])`; a same-side continuation of `p`
+(∀ q, comp q ≠ comp p → ext q = [])`; a same-side continuation for `p`
 (Def. `def:local-continuation`) is one within `p`'s side that adds no input
 event. -/
 abbrev «def:response-availability» (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) :
@@ -149,8 +150,8 @@ theorem «def:response-availability(1)» (Sys : System sp D) (Q : (n : Nat) → 
   ⟨Iff.rfl, fun h n init H comp hw hp hpt p σ hσ => (h n init H comp hw hp hpt p σ hσ).1,
     answering_iff_end Sys Q⟩
 
-/-- "Input acceptance says that `p` never empties the fiber at an input extension of its current
-input."  Lean, at any cut, in particular the end of the history: where `p`
+/-- "Input acceptance says that `p` never rules out an input extension of its
+current input."  Lean, at any cut, in particular the end of the history: where `p`
 is in state `σ`, an Input-acceptance continuation for `j` exists iff `p`'s
 table still has a row at `j`. -/
 theorem «def:response-availability/input-acceptance-preserves-expansion» (Sys : System sp D)
@@ -163,7 +164,7 @@ theorem «def:response-availability/input-acceptance-preserves-expansion» (Sys 
         (∀ q, comp q ≠ comp p → ext q = []) ∧ LEv.inp j ∈ ext p) ↔ ∃ u, σ.R j u :=
   input_acceptance_iff Sys hwf hprod hpart hcut hσ j
 
-/-- "It excludes specs whose answers require such a fiber-emptying commitment": if no
+/-- "It excludes specs whose answers require ruling out such an input": if no
 answer at `i` has an output extension at some `j ⪰ i`, no system has Response
 Availability (already with two participants, each alone). -/
 theorem «def:response-availability/excludes-unavailable-expansion» (Sys : System sp D)
@@ -218,8 +219,9 @@ theorem «def:response-partition-consistency/of-confluent» {init : Fin n → I}
     RPCAt H c j :=
   rpc_of_confluent h
 
-/-- "for a system with basis `B_P` and no commitment events, whose
-participant runs are therefore canonical runs, the two coincide by Lemma `lem:reconciliation`, applied to the participant runs."
+/-- "The two coincide for a system with basis `ℬ_P` and no commitment events,
+whose participant runs are therefore canonical runs, by Lemma
+`lem:reconciliation` applied to those runs."
 Lean, at any cut, in particular the final one. -/
 theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     (hS : CanonicalSystem Sys) {init : Fin n → I} {H : History sp D n} (hwf : WF init H)
@@ -244,10 +246,10 @@ theorem «def:response-partition-consistency/converse-fails» :
 
 /-! ### Replicated systems -/
 
-/-- "A system is *replicated* (SPMD: every participant runs the same strategy)
-when its obligation is uniform and every participant runs the same strategy,
-which depends only on the participant's initial input and local history, and
-not on its identity or the number of participants."
+/-- "A system is *replicated* (SPMD) when its obligation is uniform and every
+participant runs the same strategy, which depends only on the participant's
+initial input and local history, not on its identity or the number of
+participants."
 
 Lean: one relation `F` on (initial input, erased local history, erased
 event), where erasing forgets the participant-set size in receives.
@@ -261,8 +263,8 @@ theorem «app:cap-response/replicated» (Sys : System sp D) :
 
 /-! ### Lemma `lem:locality` -/
 
-/-- **Lemma `lem:locality` (Locality).**  "For each of some participants `p`,
-let `ℓ_p` be a local history that `p`'s strategy can produce from initial
+/-- **Lemma `lem:locality` (Locality).**  "For each participant `p` in some set
+of participants, let `ℓ_p` be a local history that `p`'s strategy can produce from initial
 input `i_p` and that contains no receive.  Placing each `ℓ_p` on its own
 side, with at least two sides and any further participants idle,
 gives a partitioned history that the system produces.  If the system is
@@ -375,7 +377,7 @@ theorem «thm:complete-cap-response» (sp : Spec I O) (D : Type) (Q : Obligation
         ∃ Sys : System sp D, AvailabilityFor T Sys ∧ PartitionConsistencyAtEnd Sys) :=
   ⟨complete_cap_response_end sp D Q, response_form_iff_chosen sp D Q⟩
 
-/-- Proof of Theorem `thm:complete-cap-response`, (2⇒1): "Take the canonical
+/-- Proof of Theorem `thm:complete-cap-response`, (2⇒1): "We take the canonical
 system for `T`.  It is replicated, and
 … has Answering and Input acceptance. … Lifted Monotonicity for `T` gives Response
 Partition Consistency."  Lean: `respSystem T`. -/
@@ -431,8 +433,8 @@ theorem «app:cap-response/without-replication/local-init-needed» :
 
 /-- "Theorem `thm:complete-cap` with `E = P` requires every permitted output
 to stay available; Theorem `thm:complete-cap-response` lets the system choose
-which outputs to serve.  Lifted Monotonicity implies the conditions of that
-theorem for every uniform
+which outputs to serve.  Lifted Monotonicity implies the conditions of the
+latter theorem for every uniform
 obligation, with `T = Q`." -/
 theorem «app:cap-response/lm-implies-response-form» (Q : Obligation sp) (h : sp.LiftedMono) :
     (ResponseInterface Q Q.Q ∧ ConsistentOn sp Q.Q) ∧ ResponseForm sp D Q :=
@@ -472,14 +474,17 @@ theorem «app:cap-response/functional-coincide» (hf : sp.Functional) (Q : Oblig
   · rintro ⟨Sys, hA, hP⟩
     exact ⟨Sys, (availability_iff_atEnd _).2 hA, (partitionConsistency_iff_atEnd _).2 hP⟩
 
-/-- "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a spec is
-a response interface for which `P` satisfies Lifted Monotonicity". -/
+/-- "If a total `T ⊆ Q` satisfies Lifted Monotonicity as a spec in its own
+right, then `T` is a response interface for which `P` satisfies Lifted
+Monotonicity." -/
 theorem «app:cap-response/lm-subspec» (Q : Obligation sp) (T : Spec I O)
     (hTQ : ∀ i o, T.P i o → Q.Q i o) (h : T.LiftedMono) :
     ResponseInterface Q T.P ∧ ConsistentOn sp T.P :=
   subspec_lm_interface Q T hTQ h
 
-/-- "… but the condition is weaker."  The five-input example: `I = {i₁, i₂,
+/-- "The converse fails: in the following example a response interface works,
+but no sub-specification of `Q` satisfies Lifted Monotonicity."  The five-input
+example: `I = {i₁, i₂,
 j, k₁, k₂}` (`sp5`, `Q5 = P`), `T = {(i₁,a),(i₂,b),(j,c₁),(j,c₂),(k₁,e₁),
 (k₂,e₂)}` (`T5`) is a response interface for which `P` satisfies Lifted Monotonicity, but no
 sub-specification of `Q` satisfies Lifted Monotonicity. -/
@@ -489,7 +494,7 @@ theorem «app:cap-response/subspec-weaker» :
   subspec_counterexample
 
 /-- "Reconciling outputs need not lie in `T`: a participant that emits `d₁` or
-`d₂` empties the fiber at `k₂` or `k₁`."  Lean: after any run emitting `d₁` no row at `k₂`
+`d₂` rules out `k₂` or `k₁`."  Lean: after any run emitting `d₁` no row at `k₂`
 remains, and symmetrically. -/
 theorem «app:cap-response/subspec-empties-fibers» {D : Type} {n : Nat} {σ τ : State sp5}
     {l : List (LEv sp5 D n)} (h : LRun σ l τ) :
@@ -735,7 +740,7 @@ theorem «prop:gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.AsyncGL.Al
     ¬ (CC.AsyncGL.Available A ∧ CC.AsyncGL.Atomic A) :=
   CC.AsyncGL.gilbert_lynch_async hN A
 
-/-- Proof sketch of Prop. `prop:gl-async`: "Translate the algorithm into a
+/-- Proof sketch of Prop. `prop:gl-async`: "We translate the algorithm into a
 system with the canonical basis.  …  Availability, applied to each unanswered
 operation of the view, gives Answering.  …  atomicity gives a common
 output extension in `P(h_C)`.  The corollary excludes the algorithm."  Lean: the
@@ -748,7 +753,8 @@ theorem «prop:gl-async/proof» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.Asyn
    fun hat => CC.AsyncGL.sys_rpc hN A hat⟩
 
 /-- Proof sketch of Prop. `prop:gl-async`: "atomicity of that execution puts
-the map in the fiber at the view, so the output events are legal."  Lean: in
+the map in the fiber at the view, so the system can perform its output
+events under the canonical basis."  Lean: in
 a run of node `i` alone (no receipts, fresh ids, well-formed client), its
 response map lies in the register fiber at its view. -/
 theorem «prop:gl-async/atomic-view» {N : Nat} {M : Type} {A : CC.AsyncGL.Alg N M}

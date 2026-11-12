@@ -118,9 +118,10 @@ theorem «proof:thm:complete-calm/if» {I O : Type} [PO I] [PO O] {sp : Spec I O
   consistent_of_ce_paper hC
 
 /-- Proof of Thm. `thm:complete-calm`, (⇒): "Given rows `(i_r,o_r)` with
-common input extension `j`, apply consistency and Lemma `lem:reconciliation` to the
-runs that start at `σ_P(i_r)` and emit `o_r`; for the empty family, totality
-gives `P(j) ≠ ∅`."  (Lean needs no separate empty case: consistency of the
+common input extension `j`, consider the runs that start at `σ_P(i_r)` and emit
+`o_r`.  Consistency and Lemma `lem:reconciliation`, applied to them, give some
+`u ∈ P(j)` extending every `o_r`.  For the empty family, totality gives
+`P(j) ≠ ∅`."   (Lean needs no separate empty case: consistency of the
 empty family and the lemma already give `P(j) ≠ ∅`.) -/
 theorem «proof:thm:complete-calm/only-if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hc : sp.Consistent) : sp.CommonExpansion :=
@@ -133,7 +134,7 @@ theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
   ⟨complete_calm_paper sp, complete_calm_paper_lm sp⟩
 
 /-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Let `(i,R)` be reached by a
-run (commitment-free or not) … Extend the run in two ways: by `output(o)`,
+run (commitment-free or not) … We extend the run in two ways: by `output(o)`,
 and by `input(j)` followed by `output(x)`.  By consistency the two extended
 runs are confluent at `j` … the legal-output test makes `o` a legal output."
 Stated, as in the proof, at every run state. -/
@@ -143,7 +144,7 @@ theorem «proof:prop:exposure-boundary/only-if» {I O : Type} [PO I] [PO O] {sp 
   exposable_of_consistent hc hτ ho
 
 /-- Proof of Prop. `prop:exposure-boundary`, both directions; the converse is
-the paper's: "By totality pick `u₀ ∈ P(j)`.  For `r = 1,…,k` in turn, the
+the paper's: "By totality there is some `u₀ ∈ P(j)`.  For `r = 1,…,k` in turn, the
 legal-output test for `o_r` at `σ_P(i_r)`, applied with `x = u_{r-1}`, gives
 `u_r ∈ P(j)` extending both `o_r` and `u_{r-1}`." -/
 theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
@@ -153,18 +154,20 @@ theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I
 
 /-! ### Pairs suffice for the common-extension condition (`app:pairs-suffice`) -/
 
-/-- `app:pairs-suffice`: "If every two rows with a common input extension `j` have a
-common output extension in `P(j)`, the condition holds for every finite family:
-replace the first two rows by a row `(j,u)` at `j` and repeat; a single row is
-paired with any row at `j`."  `CALM.Pairs sp` is the pair condition over all
+/-- `app:pairs-suffice`: "Suppose every two rows with a common input extension
+`j` have a common output extension in `P(j)`.  Then the condition holds for
+every finite family of rows with common input extension `j`.  We replace the
+first two rows of the family by a row `(j,u)` whose output `u` extends both, and
+repeat until one row remains; a single row, paired with any row at `j`, has an
+output extension in `P(j)`."   `CALM.Pairs sp` is the pair condition over all
 rows of `P`; it is equivalent to the common-extension condition. -/
 theorem «app:pairs-suffice» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (∀ i₁ o₁ i₂ o₂ j, sp.P i₁ o₁ → sp.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
         ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ↔ sp.CommonExpansion :=
   pairs_iff_commonExpansion sp
 
-/-- `app:pairs-suffice`: "The pairs must range over all rows of `P`, including
-those at `j`."  On a four-input specification, every two rows at inputs other
+/-- `app:pairs-suffice`: "The pairwise hypothesis must cover all rows of `P`,
+including rows at `j` itself, since the replacement rows are at `j`."   On a four-input specification, every two rows at inputs other
 than the common input extension are compatible there, but the common-extension
 condition fails. -/
 theorem «app:pairs-suffice/rows-at-j» :
@@ -172,8 +175,8 @@ theorem «app:pairs-suffice/rows-at-j» :
         ∃ u, spec4.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ∧ ¬ spec4.CommonExpansion :=
   rowsAtJ_needed
 
-/-- `app:pairs-suffice`: "Restricting the families to rows at single-proposal
-inputs does not suffice, even `k` rows at a time: in the `k`-set agreement
+/-- `app:pairs-suffice`: "Checking only rows at single-proposal inputs does
+not suffice, even with families of up to `k` rows: in the `k`-set agreement
 example …, every family of at most `k` rows at such inputs is compatible at
 each common input extension, but the `k+1` proposal rows are not."
 
