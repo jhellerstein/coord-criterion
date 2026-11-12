@@ -361,7 +361,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/lm-for-S»` | theorem | Supporting step for `«thm:complete-cap/E-eq-P»`: |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "A spec escapes CAP for `E` if and only if it satisfies Lifted Monotonicity for `E`." Lean: |
 | `«thm:complete-cap/E-eq-P»` | theorem | "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and then the canonical system needs no commitment" (first half). |
-| `«cor:complete-cap-any-system»` | theorem | **Corollary `cor:complete-cap-any-system`.** "No system does better than its spec: |
+| `«cor:complete-cap-any-system»` | theorem | **Corollary `cor:complete-cap-any-system`.** "If some system for a spec has Availability for `E` and Partition Consistency, then so does the spec's canonical… |
 | `«sec:complete-cap/necessity-any-system»` | theorem | Full paper: |
 | `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P`, … and then the canonical system needs no commitment" (second half; for the canonical system itself see `«sec:complete-cap/canonical-system-comm… |
 | `«sec:complete-cap/canonical-system-commitment-free»` | theorem | "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and then the canonical system needs no commitment." Lean: |

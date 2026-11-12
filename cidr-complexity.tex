@@ -1095,9 +1095,8 @@ A \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$ if i
 carries none, and application-specific data $d$, such as timestamps, version
 vectors, or state identifiers.  Receiving a message does not change the
 specification state.  A participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a legal common \indesc $k$
-of $i$ and $j$.  Which $k$ to use, like everything else the participant does
-next, is the system's choice (\S\ref{sec:systems}); the data $d$ can influence
-that choice but never changes the state directly.\cxbar{95}{0.4 0.4 1}{e}
+of $i$ and $j$.  The system chooses $k$ (\S\ref{sec:systems}); the data $d$ can
+influence that choice but never changes the state directly.\cxbar{95}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{96}{N/M}\cxbar{96}{0.4 0.4 1}{s}Send and receive events connect the participants' locally ordered runs.  Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -1287,8 +1286,8 @@ separates the participants.\cxbar{115}{0.4 0.4 1}{e}
 \label{def:partitioned-history}
 \cxtag{116}{N/S}A \emph{partitioned history} divides the participants into two or more
 sides and contains no receive whose matching send lies on another side.
-Participants on the same side may still exchange messages, and every participant
-still receives environment input and emits outputs.
+Same-side messages are allowed, and participants still receive environment
+input and emit outputs.
 \end{definition}
 
 \color{black}\begin{definition}[Explicit possibility relation]
@@ -1322,8 +1321,8 @@ such history, each participant $p$ can emit every output in $R(i)\cap E(i)$.
 \emph{Availability} is shorthand for Availability for $P$.\cxbar{120}{0.4 0.4 1}{e}
 \end{definition}
 
-\color{black}\cxtag{121}{N/M}\cxbar{121}{0.4 0.4 1}{s}Partition Consistency asks that, whatever participants emit on separate sides,
-their states can still be brought to a common state.\cxbar{121}{0.4 0.4 1}{e}
+\color{black}\cxtag{121}{N/M}\cxbar{121}{0.4 0.4 1}{s}Partition Consistency asks that the sides' states can still be brought to a
+common state.\cxbar{121}{0.4 0.4 1}{e}
 
 \color{black}\begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
@@ -1374,8 +1373,8 @@ $\fiber{j}$.  \fullproof\cxbar{128}{0.4 0.4 1}{e}
 
 \color{black}\begin{corollary}
 \label{cor:complete-cap-any-system}
-\cxtag{129}{N/M}\cxbar{129}{0.4 0.4 1}{s}No system does better than its spec: if some system has Availability for $E$
-and Partition Consistency, its spec escapes CAP for $E$.\cxbar{129}{0.4 0.4 1}{e}
+\cxtag{129}{N/M}\cxbar{129}{0.4 0.4 1}{s}If some system for a spec has Availability for $E$ and Partition Consistency,
+then so does the spec's canonical system for $E$.\cxbar{129}{0.4 0.4 1}{e}
 \end{corollary}
 
 \color{black}\begin{proof}[Proof sketch]
@@ -1613,8 +1612,7 @@ Complete CAP extends it to networks that overlap~\cite{hellerstein2026completeca
 \color{black}\cxtag{154}{N/S}A CRDT uses join semilattices to guarantee that replicas that have received
 the same updates converge to the same state.  That guarantee, Strong Eventual
 Consistency, says nothing about what a client observes when it queries a
-replica that has not yet received every update.  A client can then act on an
-answer that later answers contradict, Lamport's anomalous behavior
+replica that has not yet received every update.  Such a query risks Lamport's anomalous behavior
 (\S\ref{sec:functional-specifications}).  Laddad et al.\ proposed
 monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
