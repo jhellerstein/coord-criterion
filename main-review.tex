@@ -2207,7 +2207,8 @@ isolated nodes may be the whole network and must emit. Baccaert and Ketsman
 call a behavior coordination-free when nodes can compute it without a list of
 all nodes, and show that this holds exactly when some such $A$ is \emph{node
 monotone}. Node monotonicity of $A$ is the common-extension condition on $A$
-for two rows whose networks share no node. Complete CAP extends it to networks that overlap, since Availability lets
+for two rows whose inputs place facts at disjoint sets of nodes. Complete CAP
+drops that restriction, since Availability lets
 no participant wait. In Baccaert and Ketsman's model, nodes may wait, because delays are finite. In
 their construction, a group's smallest node chooses once every member has
 confirmed the group, and groups that share a node are nested. That choice
@@ -2698,31 +2699,31 @@ potential program synthesis and optimization.}
 
 A spec abstracts execution details into a possibility relation over
 ordered input and output domains. The results here reduce to one question: can a participant act on what it knows
-without excluding a possibility that another run may still need? \textcolor{reviewed}{Mutexes,
+without excluding a possibility that another run may still need? Mutexes,
 locks, atomic instructions, and agreement protocols prevent such contradictions
-by applying \commitments.} \textcolor{reviewed}{Functional CALM answers the question for functions: a functional spec
+by applying \commitments. \textcolor{reviewed}{Functional CALM answers the question for functions: a functional spec
 stays confluent as input arrives exactly when it is monotone, and then no
-output needs a \commitment.} \textcolor{reviewed}{This generalizes the classic result from logical fact
-sets to arbitrary input and output orders.}
+output needs a \commitment.} This generalizes the classic result from logical fact
+sets to arbitrary input and output orders.
 
 \textcolor{reviewed}{Complete CALM extends the answer to specs that offer several outputs
 for one input.} The test is Lifted Monotonicity, which combines Relational
 Monotonicity with the requirement that the spec has directed fibers. \textcolor{reviewed}{When the test fails, some reachable output
 requires a \commitment, which rules out an input or some of its outputs.} \textcolor{reviewed}{Because the model makes \commitments explicit, it can also show where a
-composition coordinates (\S\ref{sec:composition}).} \textcolor{reviewed}{For example, a totally ordered log
+composition coordinates (\S\ref{sec:composition}).} For example, a totally ordered log
 and a key-value store are each non-monotone on their own, yet when the log
 guards the store, the log's \commitments are all the composition needs, and
-the store needs none.} \textcolor{reviewed}{Multi-Paxos is one way to distribute those
-\commitments.}
+the store needs none. Multi-Paxos is one way to distribute those
+\commitments.
 
-\textcolor{reviewed}{Complete CAP is the partition form of the same equivalence.} \textcolor{reviewed}{A system can keep
+Complete CAP is the partition form of the same equivalence. A system can keep
 the outputs selected by a spec's explicit relation available, and
 consistent, through partitions exactly when they have a common \outnoun at
 every common \indesc of their inputs; when the relation selects every output,
-this is Lifted Monotonicity.}
+this is Lifted Monotonicity.
 
-\textcolor{reviewed}{The generality of our specification model opens a range of new questions
-regarding the nondeterminism of specs and their \commitments.} \textcolor{reviewed}{One direction
+The generality of our specification model opens a range of new questions
+regarding the nondeterminism of specs and their \commitments. \textcolor{reviewed}{One direction
 extends the boolean criteria of this paper to metrics: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
 needed to determine a spec.} \textcolor{reviewed}{Another is Determination Provenance: a

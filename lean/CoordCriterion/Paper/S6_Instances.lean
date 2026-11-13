@@ -105,11 +105,12 @@ and so implements a sub-behavior `A` of it. … Baccaert and Ketsman call a
 behavior coordination-free when nodes can compute it without a list of all
 nodes, and show that this holds exactly when some such `A` is node monotone.
 Node monotonicity of `A` is the common-extension condition on `A` for two rows
-whose networks share no node.  Complete CAP extends it to networks that
-overlap"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,
+whose inputs place facts at disjoint sets of nodes.  Complete CAP drops that
+restriction"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,
 network input extension, so the network `Netw loc H` is read off the input) and a
 behavior is any `Spec` on them.  Node monotonicity is equivalent to the
-common-extension condition for two rows at disjoint networks and any common
+common-extension condition for two rows whose inputs place facts at disjoint
+sets of nodes, and any common
 input extension `j` (`QRef.DisjointPairExpansion`); the full common-extension
 condition implies it.  The transducer model, its notion of computing a
 behavior (Inf. Syst. 2026, Def. 4, Lemma 4), and its characterization theorem
