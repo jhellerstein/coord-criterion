@@ -70,21 +70,22 @@ means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.
 
-State-machine-style specs can be projected into this form, skipping
+State-machine-style specs can be projected into this form, by skipping
 operational details that are not externally observable (Section~\ref{sec:operational-models}).
 Despite its simplicity, our model captures not only application invariants,
 but also general-purpose consistency definitions (Appendix~\ref{app:registers},
 Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
-As a system runs, possibilities narrow: the spec's table loses rows.
-Newly-arrived input removes rows that cannot be reached by extending that input;
-the world has moved on.  Coordination mechanisms such as locks and consensus
-remove rows by decision.  We call their relevant semantic effect a
-\emph{\commitment}: an irrevocable, fateful system decision.  It can remove a permitted
-output that no remaining output at the same input covers: for example, choosing between two competing candidates
-in a leader election protocol removes the possibility of the loser winning that
-election.  Or it can rule out all rows with a given input; for example, closing
-the polls for an election rules out consideration of any future ballots.
+As a system runs, possibilities narrow: the spec's table loses rows.  When new
+input arrives, the world has moved on, and rows that cannot be reached by
+extending that input are lost.  When the system decides among possibilities, it
+makes a controlled decision to remove rows.  The decision is incidental if each
+removed output is covered by a remaining output that \outrel it, and fateful if
+not.  Choosing between two candidates in a leader election is fateful: nothing
+remaining covers the loser's possibility of a win.  So is closing the polls,
+which rules out every row with a later ballot.  We call a fateful decision a
+\emph{\commitment}: an irrevocable decision, enforceable by coordination
+mechanisms such as locks and consensus.
 
 \subsection{The Criterion: Lifted Monotonicity}
 The model provides clean definitions for the key ingredients of CALM:
@@ -108,12 +109,12 @@ invariants make every output decision incidental, and we call the pair
 proves that Consistency is equivalent to Lifted Monotonicity, a new reading of
 the CALM acronym.
 
+\subsection{Coordination is for \commitment}
 What of coordination?  A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, agreement protocols,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independently of the mechanism used.
-A system that omits a required \commitment can become inconsistent; one that
-makes more coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
+A system that omits a required \commitment can become inconsistent; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
@@ -151,8 +152,8 @@ We make contributions in four categories:
 
 \noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant
-        Confluence, CRDT observation, and later refinements of CALM all map
-        into the framework (Section~\ref{sec:instances}).
+        Confluence, CRDT observation, and later refinements of CALM are all
+        explained via Complete CALM (Section~\ref{sec:instances}).
 
 \vspace{0.5em}
 \noindent

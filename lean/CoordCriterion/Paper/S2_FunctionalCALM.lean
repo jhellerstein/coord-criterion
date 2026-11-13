@@ -68,8 +68,8 @@ theorem «fig:election-frames/printed-rows» (k : Ballots) (o : Res) :
   Figures.Elec.printed_complete k o
 
 /-- Fig. `fig:election-frames`(a): "Initial state, current input `a··` …
-future-output set `{⊥,a,b}`; undetermined; `⊥` needs no commitment."  Panel (a) is
-the canonical state `σ_P(a··)`; "future-output set is all of `{⊥,a,b}`" is stated
+upper fiber `{⊥,a,b}`; undetermined; `⊥` needs no commitment."  Panel (a) is
+the canonical state `σ_P(a··)`; "upper fiber is all of `{⊥,a,b}`" is stated
 as "every output occurs in some remaining row". -/
 theorem «fig:election-frames/a» :
     (∀ o : Res, ∃ k, (canon elec bad).R k o) ∧ ¬ Determined (canon elec bad) ∧
@@ -103,7 +103,7 @@ theorem «fig:election-frames/b-rows» (k : Ballots) (o : Res) (hk : bad ≼ k) 
   Figures.Elec.panel_b k o hk
 
 /-- Fig. `fig:election-frames`(c) and §2.1: "If `v₂` instead votes for `a`,
-as in panel (c), the future-output set is `{a}`.  The state is *determined*: input
+as in panel (c), the upper fiber is `{a}`.  The state is *determined*: input
 alone has resolved the outcome, without commitment"; caption: "`a` needs no
 commitment". -/
 theorem «fig:election-frames/c» :
@@ -158,7 +158,7 @@ theorem «fig:election-frames/bot-alone» :
   Figures.Elec.bot_alone_at_b
 
 /-- Fig. `fig:nonmonotone-frame`: "Panel (b) under the equality order, after
-`output(⊥)`. … future-output set `{⊥}`; determined."  Under `elecEq`, `output(⊥)`
+`output(⊥)`. … upper fiber `{⊥}`; determined."  Under `elecEq`, `output(⊥)`
 at `σ_P(ab·)` excludes `aba` and leaves the single row `(ab·,⊥)`. -/
 theorem «fig:nonmonotone-frame» :
     Excluded (canon elecEq bab) ⟨.bot⟩ baba ⟨winner baba⟩ ∧
@@ -172,7 +172,7 @@ theorem «fig:nonmonotone-frame/matches-d» (k : Ballots) (r : Res) :
   Figures.Elec.panelD_matches_e k r
 
 /-- §2.1 "Output and consistency": "An output is a *legal output* when every
-item in the future-output set extends it; no future output contradicts it.
+item in the upper fiber extends it; no future output contradicts it.
 Hence `⊥` is a legal output in panels (a) and (b), and `a` in panel (c)." -/
 theorem «sec:election-story/exposable-panels» :
     Exposable (canon elec bad) .bot ∧ Exposable (canon elec bab) .bot ∧
@@ -295,6 +295,26 @@ theorem «eq:canonical-state/input-moves-canonical» {I O : Type} [PO I] [PO O]
     τ = canon sp j :=
   input_canon h
 
+/-- **Def. `def:fiber`** (Fiber, upper fiber).  "Let `R` be a table and `k`
+an input.  The *fiber* of `R` at `k` is `R(k) = π_out(R[in = k])`, the outputs
+paired with `k`.  The *upper fiber* of `R` at `k` is `π_out(R[in ⪰ k])`, the
+outputs paired with `k` or any of its input extensions."
+
+Lean: the fiber is `R k`, a predicate on outputs; the upper fiber is
+`fun o => ∃ k', k ≼ k' ∧ R k' o` (`«def:fiber/upper»`). -/
+abbrev «def:fiber» {I O : Type} (R : Table I O) (k : I) : O → Prop := R k
+
+/-- Def. `def:fiber`: the upper fiber of `R` at `k`, `π_out(R[in ⪰ k])`. -/
+abbrev «def:fiber/upper» {I O : Type} [PO I] (R : Table I O) (k : I) : O → Prop :=
+  fun o => ∃ k', k ≼ k' ∧ R k' o
+
+/-- Def. `def:fiber`: "For a state `(i,R)`, the upper fiber at `i` is
+`π_out(R)`: every output still possible."  Every row of a state's table is at an
+input extension of its current input, so the two descriptions agree. -/
+theorem «def:fiber/state» {I O : Type} [PO I] [PO O] {sp : Spec I O} (σ : State sp)
+    (o : O) : «def:fiber/upper» σ.R σ.cur o ↔ ∃ k, σ.R k o :=
+  ⟨fun ⟨k, _, h⟩ => ⟨k, h⟩, fun ⟨k, h⟩ => ⟨k, σ.above k o h, h⟩⟩
+
 /-! ## Input and output events (`sec:functional-events`) -/
 
 /-- **Eq. `eq:input-event`**: for a state `(i,R)` and legal `j` with `i ≼ j`,
@@ -382,7 +402,7 @@ theorem «sec:functional-events/extra-commitments» (B : CommitmentBasis elec) (
   Figures.Elec.registrar_canonical B hB
 
 /-- **Def. `def:exposable`** (Legal output).  "The output `o` at `(i,R)`
-is a *legal output* when every output in the future-output set extends `o`."
+is a *legal output* when every output in the upper fiber extends `o`."
 
 Lean: `Exposable σ o` says that every row ruled out by `o` is extended by a
   kept row at the same input (it is subsumed, not committed away); by
@@ -405,14 +425,14 @@ theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O
     (Exposable σ o ↔ outputTable σ o = σ.R) ∧ (Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x) :=
   ⟨exposable_iff_functional hf σ o, exposable_iff_refines_all hf σ o⟩
 
-/-- §2.3 "Determination": "A state is *determined* when its future-output set has
+/-- §2.3 "Determination": "A state is *determined* when its upper fiber has
 one element."  Lean: `CALM.Determined σ` is `∃ o, ∀ k x, σ.R k x → x = o`;
-the future-output set `out(R)` is nonempty, so this is "has exactly one element". -/
+the upper fiber `π_out(R)` is nonempty, so this is "has exactly one element". -/
 abbrev «sec:functional-events/determined» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) : Prop :=
   Determined σ
 
-/-- "Determined": future-output set has exactly one element. -/
+/-- "Determined": upper fiber has exactly one element. -/
 theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (σ : State sp) :
     Determined σ ↔ ∃ o, (∃ k, σ.R k o) ∧ ∀ k x, σ.R k x → x = o :=

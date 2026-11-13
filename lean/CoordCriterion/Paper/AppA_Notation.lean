@@ -78,22 +78,22 @@ abbrev «app:notation/selection-in» {sp : Spec I O} (σ : State sp) (j : I) : T
 abbrev «app:notation/selection-out» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   outputTable σ o
 
-/-- *`in(R)`* — the inputs in `R` (Sec. `sec:functional-specifications`).
+/-- *`π_in(R)`* — the inputs in `R` (Sec. `sec:functional-specifications`).
 No library name: statements write `∃ u, R k u`. -/
 abbrev «app:notation/in» (R : Table I O) (k : I) : Prop := ∃ u, R k u
 
-/-- *`out(R)`* — the outputs in `R` (Sec. `sec:functional-specifications`).
+/-- *`π_out(R)`* — the outputs in `R` (Sec. `sec:functional-specifications`).
 No library name: statements write `∃ k, R k o`. -/
 abbrev «app:notation/out» (R : Table I O) (o : O) : Prop := ∃ k, R k o
 
 /-- *row at `k`* — a row `(k,u)` (Sec. `sec:functional-specifications`):
-`R k u`.  *fiber `R(k)`* — `out(R[in = k])`: Lean `R k`, a predicate on
+`R k u`.  *fiber `R(k)`* — `π_out(R[in = k])`: Lean `R k`, a predicate on
 outputs (for the specification, `sp.P k`). -/
 abbrev «app:notation/fiber» (R : Table I O) (k : I) : O → Prop := R k
 
-/-- *future-output set* — `out(R[in ⪰ k])` (Sec. `sec:functional-specifications`).
+/-- *upper fiber* — `π_out(R[in ⪰ k])` (Def. `def:fiber`).
 No library name: statements write `∃ k', k ≼ k' ∧ R k' o`; for a state
-`(i,R)` the future-output set at `i` is `∃ k, σ.R k o` (`R` holds only rows at
+`(i,R)` the upper fiber at `i` is `∃ k, σ.R k o` (`R` holds only rows at
 input extensions of `i`). -/
 abbrev «app:notation/upper-fiber» (R : Table I O) (k : I) (o : O) : Prop :=
   ∃ k', k ≼ k' ∧ R k' o
@@ -134,7 +134,7 @@ abbrev «app:notation/output-event-excludes» {sp : Spec I O} (σ : State sp) (o
 Lean: `Exposable σ o`. -/
 abbrev «app:notation/exposable» {sp : Spec I O} (σ : State sp) (o : O) : Prop := Exposable σ o
 
-/-- *determined* — the future-output set has one element; *determination* —
+/-- *determined* — the upper fiber has one element; *determination* —
 reaching such a state (Sec. `sec:functional-events`).  Lean:
 `CALM.Determined σ`. -/
 abbrev «app:notation/determined» {sp : Spec I O} (σ : State sp) : Prop := Determined σ

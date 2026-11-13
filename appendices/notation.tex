@@ -14,9 +14,9 @@ whose output \outrel $o$, and $R[\mathrm{in}\in K]$ is
 the table of rows with inputs in $K$.  Commas separate conjuncts:
 $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the table of rows
 satisfying both predicates.
-To project onto a single column, we write $\mathrm{in}(R)$ and
-$\mathrm{out}(R)$ for the sets of inputs and outputs that appear in $R$.
-We say that a row $(k,u)$ is \emph{at} $k$; $R[\mathrm{in}=k]$ is the table of
+To project onto a single column, we write $\pi_{\mathrm{in}}(R)$ and
+$\pi_{\mathrm{out}}(R)$ for the sets of inputs and outputs that appear in $R$.
+We say that a row $(k,u)$ is \emph{at input} $k$; $R[\mathrm{in}=k]$ is the table of
 rows at $k$.
 
 {\footnotesize
@@ -33,15 +33,15 @@ rows at $k$.
   \outrel; \outnoun & $o\OutputOrd u$: $u$ preserves every visible claim in $o$ & Sec.~\ref{sec:functional-specifications}\\
   common \indesc; common \outnoun & an input that \inrel each; an output that \outrel each & Sec.~\ref{sec:functional-specifications}\\
   monotone (functional) & $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity}\\
-  selection; $\mathrm{in}(R)$, $\mathrm{out}(R)$ & $R[\text{predicate on }\mathrm{in},\mathrm{out}]$; inputs and outputs in $R$ & Sec.~\ref{sec:functional-specifications}\\
-  row at $k$; fiber $R(k)$ & a row $(k,u)$; $\mathrm{out}(R[\mathrm{in}=k])$ & Sec.~\ref{sec:functional-specifications}\\
-  future-output set & $\mathrm{out}(R[\mathrm{in}\InputGe k])$ & Sec.~\ref{sec:functional-specifications}\\
+  selection; $\pi_{\mathrm{in}}(R)$, $\pi_{\mathrm{out}}(R)$ & $R[\text{predicate on }\mathrm{in},\mathrm{out}]$; inputs and outputs in $R$ & Sec.~\ref{sec:functional-specifications}\\
+  row at $k$; fiber $R(k)$ & a row $(k,u)$; $\pi_{\mathrm{out}}(R[\mathrm{in}=k])$ & Sec.~\ref{sec:functional-specifications}, Def.~\ref{def:fiber}\\
+  upper fiber & $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe k])$ & Def.~\ref{def:fiber}\\
   state $(i,R)$; legal input & current input and remainder table, every row at an \indesc of $i$; an input with a row in $R$ & Def.~\ref{def:residual-state}\\
   canonical state & $\sigma_P(i)=(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
   input event; input loss & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
   output event; \commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; when it removes rows, that removal is a \commitment & Def.~\ref{def:output-event}\\
   legal output & $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
-  determined; determination & the future-output set has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
+  determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
   canonical run (run); \commitment-free & finite sequence of specification events from a canonical state; no output event issues a \commitment & Def.~\ref{def:run}\\
   consistent; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
   \bottomrule
