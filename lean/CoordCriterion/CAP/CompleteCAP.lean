@@ -355,7 +355,7 @@ theorem det_prefix (Sys : System sp D) (hdet : Sys.Deterministic) {N : Nat} {ini
 
 theorem compliant_strat {Sys : System sp D} {N : Nat} {init : Fin N → I} {p : Fin N}
     {L : List (LEv sp D N)} (hc : Compliant (Allowed Sys N init p) L)
-    (hn : ∀ j, LEv.inp j ∉ L) :
+    (hn : ∀ j, LEv.inp j ∉ L) (hr : ∀ q k j d, LEv.recv q k j d ∉ L) :
     ∀ a e b, L = a ++ e :: b → Sys.strat N init p ([] ++ a) e := by
   intro a e b h
   have hA := hc a e b h
@@ -364,7 +364,7 @@ theorem compliant_strat {Sys : System sp D} {N : Nat} {init : Fin N → I} {p : 
   | out o => exact by simpa using hA.2
   | commitment γ => exact by simpa using hA.2
   | send => simpa [Allowed] using hA
-  | recv => simpa [Allowed] using hA
+  | recv q k j d => exact absurd (by rw [h]; simp) (hr q k j d)
 
 /-- Three outputs `a`, `b` incomparable, both below `top`. -/
 inductive Tri where
@@ -420,21 +420,25 @@ theorem deterministic_not_available (D : Type) (Sys : System triSpec D)
   have hσ : LRun (canon triSpec (init 0)) ((H0 0).take 0) (canon triSpec (init 0)) := .nil _
   have hav : ∀ o : Tri, ∃ L : List (LEv triSpec D 2),
       (∃ τ, LRun (canon triSpec (init 0)) L τ) ∧ Compliant (Allowed Sys 2 init 0) L ∧
-      (∀ j, LEv.inp j ∉ L) ∧ LEv.out o ∈ L := by
+      (∀ j, LEv.inp j ∉ L) ∧ (∀ q k j d, LEv.recv q k j d ∉ L) ∧ LEv.out o ∈ L := by
     intro o
-    obtain ⟨H', ext, hext, hwf', hprod', _, _, hnoinp, hγ⟩ :=
+    obtain ⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, hγ⟩ :=
       hA 2 init H0 comp hwf0 hprod0 hpart0 (fun _ => 0) hcut0 0 _ hσ o ⟨trivial, trivial⟩
     have hH' : H' 0 = ext 0 := by rw [hext 0]; simp [H0]
-    refine ⟨ext 0, ?_, ?_, hnoinp 0, hγ⟩
+    refine ⟨ext 0, ?_, ?_, hnoinp 0, ?_, hγ⟩
     · obtain ⟨τ, h⟩ := hwf'.1 0; exact ⟨τ, hH' ▸ h⟩
     · have := hprod' 0; rw [hH'] at this; exact this
-  obtain ⟨La, ⟨τa, hra⟩, hca, hna, hγa⟩ := hav .a
-  obtain ⟨Lb, ⟨τb, hrb⟩, hcb, hnb, hγb⟩ := hav .b
+    · intro q k j d hm
+      obtain ⟨a, b, hab⟩ := List.append_of_mem hm
+      rw [← hH'] at hab
+      exact (hwf'.2 0 a q k j d b hab).1 (Fin.ext (hpart'.2 0 a q k j d b hab))
+  obtain ⟨La, ⟨τa, hra⟩, hca, hna, hra', hγa⟩ := hav .a
+  obtain ⟨Lb, ⟨τb, hrb⟩, hcb, hnb, hrb', hγb⟩ := hav .b
   have hab : ¬ (Tri.a ≼ Tri.b) := by
     show ¬ Tri.le .a .b; simp [Tri.le]
   have hba : ¬ (Tri.b ≼ Tri.a) := by
     show ¬ Tri.le .b .a; simp [Tri.le]
-  rcases det_prefix Sys hdet La Lb [] (compliant_strat hca hna) (compliant_strat hcb hnb) with
+  rcases det_prefix Sys hdet La Lb [] (compliant_strat hca hna hra') (compliant_strat hcb hnb hrb') with
     ⟨t, ht⟩ | ⟨t, ht⟩
   · subst ht
     exact lrun_no_incomparable hrb (List.mem_append_left _ hγa) hγb hab hba

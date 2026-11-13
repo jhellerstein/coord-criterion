@@ -24,11 +24,13 @@ the last vote arrives.  Two readings of that abort are checked.
   the coordinator emits a decision, is not `CoordinationFreeH`.
   This is the replicated case (`pollClosingSysRepl`: every participant at `yy·` may
   close the polls).
-* `pollClosingSys1_local`: when the decision specification is run by the coordinator
-  alone (a system whose strategies act only with one participant), the fiber-emptying commitment
+* `pollClosingSys_alone`: when the decision specification is run by the coordinator
+  alone (one-participant histories, the process form), the fiber-emptying commitment
   requires coordination (not `CoordinationFree`: another run of the
   coordinator accepts `yyy`) but not distributed coordination
-  (`CoordinationFreeH`, by `single_coordinationFreeH`).
+  (`CoordinationFreeHOn (· = 1)`, by `one_coordinationFreeHOn`).  Strategies do
+  not see the participant set, so "alone" is a property of the histories
+  considered, not of the strategies.
 
 *As a row-removing commitment* (`abortSpec`: the coordinator may abort until it decides, so
 `P(v) = {decide2PC v, abort}`):
@@ -211,10 +213,10 @@ theorem pollClosing_not_coordinationFreeH {D : Type} (Sys : System (voteSpec 3) 
 closed; the owners' strategies never decide. -/
 noncomputable def pollClosingSys (D : Type) : System (voteSpec 3) D where
   basis := fun c => c = cp
-  strat := fun _ init p _ e =>
+  rule := fun p x _ e =>
     match e with
-    | .commitment γ => γ = [cp] ∧ p.val = 0 ∧ init p = yyN
-    | .out u => u = .undecided ∧ p.val = 0 ∧ init p = yyN
+    | .commitment γ => γ = [cp] ∧ p = 0 ∧ x = yyN
+    | .out u => u = .undecided ∧ p = 0 ∧ x = yyN
     | _ => False
 
 theorem pollClosingSys_only_coordinator (D : Type) :
@@ -240,37 +242,22 @@ theorem localInH_one {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
   exact ⟨fun _ _ _ _ ⟨q, _, _, _, hq, _⟩ => h q hq, fun _ _ _ ⟨q, _, _, hq, _⟩ => h q hq⟩
 
 /-- **A system run by one participant needs no distributed coordination.**
-If the strategies act only when the system has one participant, no history of
-the system applies a commitment that another participant of the same history
-contradicts: with more participants no output or commitment event occurs, and
-with one there is no other participant. -/
-theorem single_coordinationFreeH {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
-    (Sys : System sp' D) (h1 : ∀ n init p pre e, Sys.strat n init p pre e → n = 1) :
-    Sys.CoordinationFreeH := by
-  refine ⟨fun n init H _ hp p a b o σ hH _ ho => ?_,
-    fun n init H _ hp p a b γ σ σc hH _ _ => ?_⟩
-  · have hn := h1 _ _ _ _ _ (hp p a (.out o) b hH).2
-    subst hn; exact localInH_one init H p σ _
-  · have hn := h1 _ _ _ _ _ (hp p a (.commitment γ) b hH).2
-    subst hn; exact localInH_one init H p σ σc
-
-/-- The coordinator alone runs the decision specification: the system has one
-participant, which closes the polls at `yy·` and emits `undecided`. -/
-noncomputable def pollClosingSys1 (D : Type) : System (voteSpec 3) D where
-  basis := fun c => c = cp
-  strat := fun n init p _ e =>
-    match e with
-    | .commitment γ => n = 1 ∧ γ = [cp] ∧ init p = yyN
-    | .out u => n = 1 ∧ u = .undecided ∧ init p = yyN
-    | _ => False
+In a one-participant history no other participant can contradict a
+commitment. -/
+theorem one_coordinationFreeHOn {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
+    (Sys : System sp' D) : Sys.CoordinationFreeHOn (· = 1) := by
+  refine ⟨fun n init H hn _ _ p a b o σ _ _ ho => ?_,
+    fun n init H hn _ _ p a b γ σ σc _ _ _ => ?_⟩
+  · subst hn; exact localInH_one init H p σ _
+  · subst hn; exact localInH_one init H p σ σc
 
 /-- **Poll closing run by the coordinator alone: local coordination.**  The commitment
 requires coordination (another run of the coordinator, from `yy·`, accepts the
-late-vote `yyy`), but no history of `pollClosingSys1` applies a commitment
-requiring distributed coordination. -/
-theorem pollClosingSys1_local (D : Type) :
-    ¬ (pollClosingSys1 D).CoordinationFree ∧ (pollClosingSys1 D).CoordinationFreeH := by
-  refine ⟨fun hcf => ?_, single_coordinationFreeH _ fun n init p pre e h => ?_⟩
+late-vote `yyy`), but no one-participant history of `pollClosingSys` applies a
+commitment requiring distributed coordination. -/
+theorem pollClosingSys_alone (D : Type) :
+    ¬ (pollClosingSys D).CoordinationFree ∧ (pollClosingSys D).CoordinationFreeHOn (· = 1) := by
+  refine ⟨fun hcf => ?_, one_coordinationFreeHOn _⟩
   · obtain ⟨-, -, hsy, -, -⟩ := timeout_closes_yy
     have hcy : (canon (voteSpec 3) yyN).R yyy (decide2PC yyy) := ⟨rfl, yyN_le_yyy⟩
     let σ := canon (voteSpec 3) yyN
@@ -281,12 +268,12 @@ theorem pollClosingSys1_local (D : Type) :
       refine ⟨fun _ => ⟨_, hr0⟩, fun r a q k j d b h => ?_⟩
       have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
       simp [H] at hm
-    have hp : Produced (pollClosingSys1 D) 1 (fun _ => yyN) H := by
+    have hp : Produced (pollClosingSys D) 1 (fun _ => yyN) H := by
       intro r a e b h
       cases a with
       | nil =>
         simp [H] at h; obtain ⟨rfl, _⟩ := h
-        exact ⟨fun c hc => by simp at hc; subst hc; rfl, rfl, rfl, rfl⟩
+        exact ⟨fun c hc => by simp at hc; subst hc; rfl, rfl, Nat.lt_one_iff.1 r.isLt, rfl⟩
       | cons _ _ => simp [H] at h
     -- another run of the coordinator, from `yy·`, accepts the late vote
     let H' : History (voteSpec 3) D 1 := fun _ => [LEv.inp yyy]
@@ -296,26 +283,22 @@ theorem pollClosingSys1_local (D : Type) :
       refine ⟨fun _ => ⟨_, hr1⟩, fun r a q k j d b h => ?_⟩
       have hm : LEv.recv q k j d ∈ H' r := by rw [h]; simp
       simp [H'] at hm
-    have hp' : Produced (pollClosingSys1 D) 1 (fun _ => yyN) H' := by
+    have hp' : Produced (pollClosingSys D) 1 (fun _ => yyN) H' := by
       intro r a e b h
       cases a with
       | nil => simp [H'] at h; obtain ⟨rfl, _⟩ := h; trivial
       | cons _ _ => simp [H'] at h
     exact (hcf.2 1 _ H hw hp 0 [] [] [cp] σ _ rfl (.nil _) ha).2 yyy
       ⟨_, hcy⟩ hsy ⟨1, _, H', 0, [], [], hw', hp', rfl⟩
-  · cases e with
-    | out u => exact h.1
-    | commitment γ => exact h.1
-    | _ => exact h.elim
 
 /-- The decision replicated: every participant starting at `yy·` may close
 the polls there. -/
 noncomputable def pollClosingSysRepl (D : Type) : System (voteSpec 3) D where
   basis := fun c => c = cp
-  strat := fun _ init p _ e =>
+  rule := fun _ x _ e =>
     match e with
-    | .commitment γ => γ = [cp] ∧ init p = yyN
-    | .out u => u = .undecided ∧ init p = yyN
+    | .commitment γ => γ = [cp] ∧ x = yyN
+    | .out u => u = .undecided ∧ x = yyN
     | _ => False
 
 /-- **Poll closing replicated: distributed coordination.** -/
@@ -387,6 +370,7 @@ theorem kc_preserves_fibers {m : Nat} {σ : State (abortSpec m)} {u : Decision}
 def OkEv {m : Nat} {D : Type} {n : Nat} : LEv (abortSpec m) D n → Prop
   | .inp _ => True
   | .out _ => True
+  | .recv _ _ _ _ => True
   | _ => False
 
 theorem inv_lrun {m : Nat} {D : Type} {n : Nat} {σ ρ : State (abortSpec m)}
@@ -465,16 +449,16 @@ theorem abort_canonicalCommitment_yy :
 applying the canonical commitment of its output when needed). -/
 noncomputable def coordSys (m : Nat) (D : Type) : System (abortSpec m) D where
   basis := fun c => ∃ u, c = kc u
-  strat := fun _ _ p _ e =>
+  rule := fun p _ _ e =>
     match e with
-    | .out _ => p.val = 0
+    | .out _ => p = 0
     | _ => False
 
 /-- Every participant may decide, by output events (the decision
 replicated). -/
 noncomputable def replSys (m : Nat) (D : Type) : System (abortSpec m) D where
   basis := fun c => ∃ u, c = kc u
-  strat := fun _ _ _ _ e =>
+  rule := fun _ _ _ e =>
     match e with
     | .out _ => True
     | _ => False
@@ -496,7 +480,7 @@ theorem coordSys_ok {m : Nat} {D : Type} :
   | out _ => trivial
   | commitment _ => exact h.2.elim
   | send _ _ => exact h.elim
-  | recv _ _ _ _ => exact h.elim
+  | recv _ _ _ _ => trivial
 
 theorem replSys_ok {m : Nat} {D : Type} :
     ∀ n init p pre e, Allowed (replSys m D) n init p pre e → OkEv e := by
@@ -506,7 +490,7 @@ theorem replSys_ok {m : Nat} {D : Type} :
   | out _ => trivial
   | commitment _ => exact h.2.elim
   | send _ _ => exact h.elim
-  | recv _ _ _ _ => exact h.elim
+  | recv _ _ _ _ => trivial
 
 /-- **Only the coordinator decides: no distributed coordination.**  No other
 participant emits a decision, and no output event of the coordinator empties

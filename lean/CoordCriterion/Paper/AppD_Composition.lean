@@ -745,17 +745,20 @@ Replicated, it is a cluster, and a conflicting choice can be placed at another
 participant.  In both cases the timeout has the same semantic effect: it
 applies a commitment contradicted by a canonical run."  Lean additionally
 records the distinction with the library's operational coordination predicates:
-`CAP.Timeout.pollClosingSys1` is not `CoordinationFree` but is
-`CoordinationFreeH`, while the replicated system is not `CoordinationFreeH`. -/
+`CAP.Timeout.pollClosingSys` is not `CoordinationFree`, but in one-participant
+histories (the process form) it is `CoordinationFreeH`
+(`CoordinationFreeHOn (· = 1)`), while the replicated system is not
+`CoordinationFreeH`. -/
 theorem «app:components/two-phase-commit» (D : Type) :
-    (∃ r, (Components.Component.process (CAP.Timeout.pollClosingSys1 D)).accepts r ∧
+    (∃ r, (Components.Component.process (CAP.Timeout.pollClosingSys D)).accepts r ∧
       Coordinates (canon (CAP.voteSpec 3) r.input) r.events) ∧
-    ¬ (CAP.Timeout.pollClosingSys1 D).CoordinationFree ∧ (CAP.Timeout.pollClosingSys1 D).CoordinationFreeH ∧
+    ¬ (CAP.Timeout.pollClosingSys D).CoordinationFree ∧
+      (CAP.Timeout.pollClosingSys D).CoordinationFreeHOn (· = 1) ∧
     (∃ r, (Components.Component.cluster (CAP.Timeout.pollClosingSysRepl D)
       (Components.pollClosingSysRepl_replicated D)).accepts r ∧
         Coordinates (canon (CAP.voteSpec 3) r.input) r.events) ∧
     ¬ (CAP.Timeout.pollClosingSysRepl D).CoordinationFreeH :=
-  let h := Components.pollClosingSys1_process D
+  let h := Components.pollClosingSys_process D
   let h' := Components.pollClosingSysRepl_cluster D
   ⟨h.1, h.2.2.1, h.2.2.2, h'.1, h'.2⟩
 

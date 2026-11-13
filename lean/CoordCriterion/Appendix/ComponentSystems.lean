@@ -21,12 +21,12 @@ form is metadata: the admitted runs and their certificates do not depend on it.
 * `Component.ofSystemOn`, `Component.process`, `Component.cluster`,
   `ofSystem_emptyCommitmentBasis_commitmentFree`, `cfSystem_replicated`,
   `cfSystem_cluster_commitmentFree`.
-* `pollClosing_run`, `pollClosingSys1_process`, `pollClosingSysRepl_replicated`,
+* `pollClosing_run`, `pollClosingSys_process`, `pollClosingSysRepl_replicated`,
   `pollClosingSysRepl_cluster` — the 2PC timeout-abort commitment (§4.3).  Run by the
-  coordinator alone (`CAP.Timeout.pollClosingSys1`) the decision is a process
-  component that admits a run applying a commitment; that fiber-emptying commitment requires
-  coordination but not distributed coordination
-  (`CAP.Timeout.pollClosingSys1_local`).  Replicated (`CAP.Timeout.pollClosingSysRepl`) it
+  coordinator alone (`CAP.Timeout.pollClosingSys` in one-participant histories) the
+  decision is a process component that admits a run applying a commitment; that
+  fiber-emptying commitment requires coordination but not distributed coordination
+  (`CAP.Timeout.pollClosingSys_alone`).  Replicated (`CAP.Timeout.pollClosingSysRepl`) it
   is a cluster component, and the commitment requires distributed coordination.
   Commitment, coordination relative to a run universe, and distributed
   coordination inside one component are different properties.
@@ -213,19 +213,20 @@ theorem pollClosing_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis
   exact hx.noCommit_of_empty _ (by rw [hev]; exact List.mem_cons_self)
 
 /-- **The timeout-abort commitment as a process component.**  The coordinator alone
-running the decision specification (`pollClosingSys1`) is a process component that
-admits a run applying a commitment (it closes the polls at `yy·`), so it is
-not commitment-free.  That commitment requires coordination but not distributed
-coordination (`pollClosingSys1_local`). -/
-theorem pollClosingSys1_process (D : Type) :
-    (∃ r, (Component.process (pollClosingSys1 D)).accepts r ∧
+running the decision specification (`pollClosingSys` in one-participant
+histories) is a process component that admits a run applying a commitment (it
+closes the polls at `yy·`), so it is not commitment-free.  That commitment
+requires coordination but not distributed coordination
+(`pollClosingSys_alone`). -/
+theorem pollClosingSys_process (D : Type) :
+    (∃ r, (Component.process (pollClosingSys D)).accepts r ∧
         Coordinates (canon (voteSpec 3) r.input) r.events) ∧
-      ¬ (Component.process (pollClosingSys1 D)).CommitmentFree ∧
-      ¬ (pollClosingSys1 D).CoordinationFree ∧ (pollClosingSys1 D).CoordinationFreeH := by
-  obtain ⟨r, hacc, hco⟩ := pollClosing_run D (pollClosingSys1 D) rfl ⟨rfl, rfl, rfl⟩
+      ¬ (Component.process (pollClosingSys D)).CommitmentFree ∧
+      ¬ (pollClosingSys D).CoordinationFree ∧ (pollClosingSys D).CoordinationFreeHOn (· = 1) := by
+  obtain ⟨r, hacc, hco⟩ := pollClosing_run D (pollClosingSys D) rfl ⟨rfl, rfl, rfl⟩
     ⟨rfl, rfl, rfl⟩ (· = 1) rfl (some .process)
   exact ⟨⟨r, hacc, hco⟩, fun hcf => hco (hcf r hacc),
-    (pollClosingSys1_local D).1, (pollClosingSys1_local D).2⟩
+    (pollClosingSys_alone D).1, (pollClosingSys_alone D).2⟩
 
 /-- The replicated decision (`pollClosingSysRepl`) is a replicated system. -/
 theorem pollClosingSysRepl_replicated (D : Type) : (pollClosingSysRepl D).Replicated :=

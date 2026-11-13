@@ -117,7 +117,7 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
   rotate_left
   · -- `respSystem A` performs no commitment event
     have := (hp q a (.commitment γ) b hH).2
-    simp [respSystem, respF, LEv.erase] at this
+    simp [System.strat, respSystem, respF, LEv.erase] at this
   intro n init H _ hp q a b o σ hH hrun hu
   have hAl := hp q a (.out o) b hH
   obtain ⟨_, hAo, hge⟩ := hAl
@@ -271,7 +271,7 @@ theorem respSystem_P_commitmentFree (hcons : ConsistentOn sp sp.P) {N : Nat}
   refine ⟨fun p γ hmem => ?_, fun p a o b hH σ hrun => ?_⟩
   · obtain ⟨a, b, hH⟩ := List.append_of_mem hmem
     have := (hp p a (.commitment γ) b hH).2
-    simp [respSystem, respF, LEv.erase] at this
+    simp [System.strat, respSystem, respF, LEv.erase] at this
   · obtain ⟨_, hAo, hge⟩ := hp p a (.out o) b hH
     obtain ⟨hcur, hres, _, _⟩ :=
       rinv_of_produced sp.P (compliant_of_eq_append (hp p) hH) hrun

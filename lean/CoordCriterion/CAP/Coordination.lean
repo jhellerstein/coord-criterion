@@ -81,6 +81,22 @@ def System.CoordinationFreeH (Sys : System sp D) : Prop :=
       H p = a ++ LEv.commitment γ :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
       LocalInH init H p σ σc)
 
+/-- `CoordinationFreeH` restricted to histories whose participant count
+satisfies `N` (for instance `(· = 1)`: the system run by one participant). -/
+def System.CoordinationFreeHOn (Sys : System sp D) (N : Nat → Prop) : Prop :=
+  (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), N n → WF init H → Produced Sys n init H →
+    ∀ (p : Fin n) (a b : List (LEv sp D n)) (o : O) (σ : State sp),
+      H p = a ++ LEv.out o :: b → LRun (canon sp (init p)) a σ →
+      ∀ ho : σ.R σ.cur o, LocalInH init H p σ (kcState σ o ho)) ∧
+  (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), N n → WF init H → Produced Sys n init H →
+    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ σc : State sp),
+      H p = a ++ LEv.commitment γ :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
+      LocalInH init H p σ σc)
+
+theorem System.CoordinationFreeH.on {Sys : System sp D} (h : Sys.CoordinationFreeH)
+    (N : Nat → Prop) : Sys.CoordinationFreeHOn N :=
+  ⟨fun n init H _ => h.1 n init H, fun n init H _ => h.2 n init H⟩
+
 theorem localEvent_to_H {Sys : System sp D} {n : Nat} {init : Fin n → I} {H : History sp D n}
     (hw : WF init H) (hp : Produced Sys n init H) (p : Fin n) {σ σc : State sp}
     (hl : LocalEvent Sys σ σc) : LocalInH init H p σ σc := by
@@ -334,15 +350,15 @@ may emit only `bot`.  Its basis holds the canonical commitments, so each output
 event may apply `x_u`. -/
 noncomputable def ownerSys (D : Type) : System ordSpec D where
   basis := fun c => ∃ u, c = kc u
-  strat := fun _ _ p _ e =>
+  rule := fun p _ _ e =>
     match e with
-    | .out u => u = .bot ∨ p.val = 0
+    | .out u => u = .bot ∨ p = 0
     | _ => False
 
 /-- Two owners: every participant may emit any order. -/
 noncomputable def twoOwnerSys (D : Type) : System ordSpec D where
   basis := fun c => ∃ u, c = kc u
-  strat := fun _ _ _ _ e =>
+  rule := fun _ _ _ e =>
     match e with
     | .out _ => True
     | _ => False

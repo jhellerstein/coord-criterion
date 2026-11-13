@@ -294,15 +294,16 @@ abbrev «app:notation/commitment» (sp : Spec I O) := Commitment sp
 /-- *local history; strategy* — `p`'s history events in order;
 `θ_p(λ)`, the output, commitment, and send events `p` may perform next
 (Def. `def:strategy`).  Lean (`CC.CAP`): a local history is a list
-`pre : List (CAP.LEv sp D n)`; the strategy is the field `System.strat`
-(`strat n init p pre e`: `p` may perform `e` after `pre`), a relation, i.e.
-nondeterministic. -/
+`pre : List (CAP.LEv sp D n)`; the strategy is the field `System.rule`,
+applied to `p`'s number, its own initial input and its erased local history;
+`strat n init p pre e` (`p` may perform `e` after `pre`) is the induced
+relation, i.e. nondeterministic. -/
 abbrev «app:notation/strategy» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
     (n : Nat) → (Fin n → I) → Fin n → List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop :=
   Sys.strat
 
 /-- *system* — a commitment basis `𝓑` and a strategy per participant
-(Def. `def:system`).  Lean: `CAP.System sp D` (fields `basis`, `strat`). -/
+(Def. `def:system`).  Lean: `CAP.System sp D` (fields `basis`, `rule`). -/
 abbrev «app:notation/system» (sp : Spec I O) (D : Type) := CAP.System sp D
 
 /-- *basis* (Def. `def:system`: "A commitment basis is a set of commitments
@@ -310,8 +311,9 @@ shared by all participants").  Lean: `CommitmentBasis sp := Commitment sp → Pr
 (in `CC.CAP`: the field `System.basis`). -/
 abbrev «app:notation/basis» (sp : Spec I O) := CommitmentBasis sp
 
-/-- *produced* — every non-input event permitted by its strategy and using
-only commitments from `𝓑` (Def. `def:system`).  Lean: `CAP.Produced`. -/
+/-- *produced* — every event other than an input or receive permitted by its
+strategy and using only commitments from `𝓑` (Def. `def:system`).  Lean:
+`CAP.Produced`. -/
 abbrev «app:notation/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) (n : Nat)
     (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
   CAP.Produced Sys n init H

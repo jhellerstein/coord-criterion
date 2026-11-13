@@ -67,24 +67,10 @@ def ResponsePC (Sys : System sp D) : Prop :=
 
 ### Replicated systems, obligations, response interfaces -/
 
-/-- Participant-independent local events (receives name the sender by number). -/
-inductive LEvN (sp : Spec I O) (D : Type) where
-  | inp (j : I)
-  | out (o : O)
-  | commitment (γ : List (Commitment sp))
-  | send (j : Option I) (d : D)
-  | recv (q : Nat) (k : Nat) (j : Option I) (d : D)
-
-def LEv.erase : LEv sp D n → LEvN sp D
-  | .inp j => .inp j
-  | .out o => .out o
-  | .commitment γ => .commitment γ
-  | .send j d => .send j d
-  | .recv q k j d => .recv q.val k j d
-
 /-- A replicated system gives every participant the same strategy, depending
-only on its own initial input and local history — not on its identity, the
-number of participants, or other participants' initial inputs. -/
+only on its own initial input and local history, not on its identity.  (No
+strategy sees the participant set or other participants' initial inputs;
+`System.rule`.) -/
 def System.Replicated (Sys : System sp D) : Prop :=
   ∃ F : I → List (LEvN sp D) → LEvN sp D → Prop,
     ∀ n init p pre e, Sys.strat n init p pre e ↔ F (init p) (pre.map LEv.erase) e.erase
@@ -237,7 +223,7 @@ noncomputable def respF (T : Table I O) (i0 : I) (pre : List (LEvN sp D)) : LEvN
 
 noncomputable def respSystem (T : Table I O) : System sp D where
   basis := fun c => ∃ u, c = kc u
-  strat := fun _ init p pre e => respF T (init p) (pre.map LEv.erase) e.erase
+  rule := fun _ x pre e => respF T x pre e
 
 /-- Invariant of participant runs of `respSystem T`. -/
 def RInv (T : Table I O) (i0 : I) (pre : List (LEvN sp D)) (σ : State sp) : Prop :=
@@ -301,15 +287,24 @@ theorem rinv_run (T : Table I O) {N : Nat} {init : Fin N → I} {p : Fin N} :
   | @commitment σ τ' ρ γ es _ _ _ _ =>
     intro pre hc _
     have := hc [] (.commitment γ) es rfl
-    simp [Allowed, respSystem, respF, LEv.erase] at this
+    simp [Allowed, System.strat, respSystem, respF, LEv.erase] at this
   | @send σ ρ j d es _ _ =>
     intro pre hc _
     have := hc [] (.send j d) es rfl
-    simp [Allowed, respSystem, respF, LEv.erase] at this
-  | @recv σ ρ q k j d es _ _ =>
-    intro pre hc _
-    have := hc [] (.recv q k j d) es rfl
-    simp [Allowed, respSystem, respF, LEv.erase] at this
+    simp [Allowed, System.strat, respSystem, respF, LEv.erase] at this
+  | @recv σ ρ q k j d es _ ih =>
+    intro pre hc hi
+    have := ih (pre ++ [.recv q k j d]) (fun a e b hab => by
+      have := hc (.recv q k j d :: a) e b (by simp [hab]); simpa using this)
+    simp only [List.append_assoc, List.singleton_append] at this
+    apply this
+    have hE : emittedOf ((pre ++ [LEv.recv q k j d]).map LEv.erase) =
+        emittedOf (pre.map LEv.erase) := by
+      simp [emittedOf_append, LEv.erase, emittedOf]
+    have hC : curOf (init p) ((pre ++ [LEv.recv q k j d]).map LEv.erase) =
+        curOf (init p) (pre.map LEv.erase) := by
+      simp [curOf_append, LEv.erase, curOf]
+    unfold RInv; rw [hE, hC]; exact hi
 
 theorem rinv_of_produced (T : Table I O) {N : Nat} {init : Fin N → I} {p : Fin N}
     {L : List (LEv sp D N)} {σ : State sp} (hc : Compliant (Allowed (respSystem T) N init p) L)

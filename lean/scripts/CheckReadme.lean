@@ -542,7 +542,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:complete-cap-response»
 #check @CC.Paper.«thm:complete-cap-response/proof-sufficiency»
 #check @CC.Paper.«app:cap-response/without-replication»
-#check @CC.Paper.«app:cap-response/without-replication/local-init-needed»
 #check @CC.Paper.«app:cap-response/lm-implies-response-form»
 #check @CC.Paper.«app:cap-response/converse-fails»
 #check @CC.Paper.«app:cap-response/functional-coincide»

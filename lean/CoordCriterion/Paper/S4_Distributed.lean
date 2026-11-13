@@ -394,21 +394,25 @@ next performs any one of them, or waits.  Input and receive events are not
 chosen by the strategy: inputs come from the environment and receives from
 matching sends."
 
-Lean (the `CC.CAP` system model): a strategy for `p` is a relation from local
-histories (`List (CAP.LEv sp D n)`) to next events; local events include
-commitment events `CAP.LEv.commitment γ`.  Its value on input events
-is ignored: `CAP.Allowed` always allows inputs. -/
-abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
-  List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
+Lean (the `CC.CAP` system model): a strategy is the field `CAP.System.rule`,
+a relation from a participant's number, its own initial input and its local
+history to next events.  Local histories are taken with receives naming the
+sender by number (`CAP.LEvN`, the erasure `CAP.LEv.erase` of
+`CAP.LEv sp D n`), so a strategy does not see the participant set or other
+participants' initial inputs.  Local events include commitment events
+`CAP.LEvN.commitment γ`.  Its value on input and receive events is ignored:
+`CAP.Allowed` always allows them. -/
+abbrev «def:strategy» (sp : Spec I O) (D : Type) :=
+  Nat → I → List (CAP.LEvN sp D) → CAP.LEvN sp D → Prop
 
 /-- **Def. `def:system`** (System).  "A system consists of a *commitment
 basis* `ℬ`, which is a set of commitments shared by all participants, and a
 strategy `θ_p` for each participant `p`, whose output and commitment events
 apply only commitments from `ℬ`."
 
-Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
-participant of every finite participant set and initial inputs, as §4.4 later
-requires) with `System.CommitmentBasisRespecting`.  Its commitments are
+Lean: `CAP.System` (basis + strategies `rule`; `System.strat n init p` is
+the strategy of participant `p` of `Fin n` on its local events) with
+`System.CommitmentBasisRespecting`.  Its commitments are
 `CAP.Commitment`, equivalent to `CC.Commitment` (`CC.Dist.toCAP`,
 `CC.Dist.ofCAP`).  The library's `CAP.System` does not require basis respect;
 `«def:system/restrict»` shows this loses nothing. -/

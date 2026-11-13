@@ -32,10 +32,9 @@ Contents (paper item ↦ Lean):
 * Lemma `lem:locality`: `locality_glue`, `locality_transfer`.
 * Remark after Def. `def:response-interface`: `consistentOn_S`,
   `consistentOn_iff_confluent`.
-* Remark "Without replication": as stated it is false under
-  the system assumption after Def. `def:partitioned-history` (`without_replication_counterexample`); it
-  holds for a fixed participant set when each strategy depends on the initial
-  inputs only through its own (`without_replication`).
+* Remark "Without replication": for a fixed participant set
+  (`without_replication_interface`, `without_replication`).  Each strategy
+  sees only its own participant's initial input (`localInit_all`).
 * "Relationship to the interface form": `lm_response_interface`,
   `lm_response_form`, `converse_counterexample`, `functional_response_iff`,
   `functional_forms_coincide`, `subspec_lm_interface`,
@@ -844,15 +843,21 @@ theorem without_replication_interface (Sys : System sp D) (Q : (n : Nat) → Fin
     simp
 
 /-- Strategies depend on the initial inputs only through the participant's
-own initial input (they may still depend on the participant set and the
-participant's identity). -/
+own initial input.  Every system satisfies it (`localInit_all`). -/
 def LocalInit (Sys : System sp D) : Prop :=
   ∀ n (init init' : Fin n → I) (p : Fin n), init p = init' p →
     Sys.strat n init p = Sys.strat n init' p
 
-/-- Remark "Without replication", second half, corrected: for a fixed
-participant set with at least two participants and strategies satisfying
-`LocalInit`, consistency holds for every family that draws on each `T_p` at
+/-- Every system satisfies `LocalInit`: a strategy sees only its own
+participant's initial input (`System.rule`). -/
+theorem localInit_all (Sys : System sp D) : LocalInit Sys := by
+  intro n init init' p h
+  funext pre e
+  simp only [System.strat, h]
+
+/-- Remark "Without replication", second half: for a fixed
+participant set with at least two participants (strategies satisfy
+`LocalInit`, `localInit_all`), consistency holds for every family that draws on each `T_p` at
 most once (the participants in `A`, row `r p` from `T_p`). -/
 theorem without_replication (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
     (hRPC : ResponsePC Sys) (hloc : LocalInit Sys) {n : Nat} (h2 : 2 ≤ n)
@@ -1204,7 +1209,7 @@ theorem removeHi_apply :
     rw [dite_eq_left_of_eq_true (eq_true ⟨rfl, (), trivial, rfl⟩)]
   simp only [applySeq, hf]
 
-noncomputable def rnSys : System uSpec Unit := ⟨fun c => c = removeHi, fun _ _ _ _ _ => True⟩
+noncomputable def rnSys : System uSpec Unit := ⟨fun c => c = removeHi, fun _ _ _ _ => True⟩
 
 noncomputable def rnH : History uSpec Unit 2 :=
   fun p => if p.val = 0 then [LEv.commitment [removeHi], LEv.out ()] else []
@@ -1349,165 +1354,6 @@ theorem election_eq_no_ra {D : Type} (Sys : System electionEq D)
   exact absurd h3 (by decide)
 
 end Examples
-
-/-! ## Remark "Without replication": counterexample to the stated form -/
-
-section NonRepCounter
-
-inductive O4 | a | b | a2 | b2
-  deriving DecidableEq
-
-def O4.leB : O4 → O4 → Bool
-  | .a, .a | .b, .b | .a2, .a2 | .b2, .b2 => true
-  | .a, .a2 | .b, .b2 => true
-  | _, _ => false
-
-instance : PO O4 where
-  le x y := O4.leB x y = true
-  refl x := by cases x <;> rfl
-  trans := by intro x y z; cases x <;> cases y <;> cases z <;> decide
-  antisymm := by intro x y; cases x <;> cases y <;> decide
-
-instance (x y : O4) : Decidable (x ≼ y) := inferInstanceAs (Decidable (O4.leB x y = true))
-
-def s4B : In2 → O4 → Bool
-  | .lo, .a | .lo, .b | .hi, .a2 | .hi, .b2 => true
-  | _, _ => false
-
-abbrev sp4 : Spec In2 O4 :=
-  ⟨fun i o => s4B i o = true, by intro i; cases i; exact ⟨.a, rfl⟩; exact ⟨.a2, rfl⟩⟩
-
-abbrev Q4 : Obligation sp4 := ⟨sp4.P, fun _ _ h => h, sp4.total, fun _ _ _ _ h _ => h⟩
-
-def taB : In2 → O4 → Bool
-  | .lo, .a | .hi, .a2 => true
-  | _, _ => false
-
-def tbB : In2 → O4 → Bool
-  | .lo, .b | .hi, .b2 => true
-  | _, _ => false
-
-abbrev Ta4 : Table In2 O4 := fun i o => taB i o = true
-abbrev Tb4 : Table In2 O4 := fun i o => tbB i o = true
-
-theorem Ta4_ok : ResponseInterface Q4 Ta4 ∧ ConsistentOn sp4 Ta4 := by
-  refine ⟨⟨?_, ?_, ?_⟩, ?_⟩
-  · intro i o h; cases i <;> cases o <;> revert h <;> decide
-  · intro i; cases i
-    · exact ⟨.a, rfl⟩
-    · exact ⟨.a2, rfl⟩
-  · intro i o j h hij
-    cases i <;> cases o <;> cases j <;>
-      first
-        | exact absurd h (by decide)
-        | exact absurd hij (by decide)
-        | exact ⟨.a, rfl, rfl⟩
-        | exact ⟨.a2, rfl, rfl⟩
-  · apply consistentOn_of_bound
-    intro j; cases j
-    · exact ⟨.a, rfl, by intro i o h hi; cases i <;> cases o <;> revert h hi <;> decide⟩
-    · exact ⟨.a2, rfl, by intro i o h hi; cases i <;> cases o <;> revert h hi <;> decide⟩
-
-theorem Tb4_ok : ResponseInterface Q4 Tb4 ∧ ConsistentOn sp4 Tb4 := by
-  refine ⟨⟨?_, ?_, ?_⟩, ?_⟩
-  · intro i o h; cases i <;> cases o <;> revert h <;> decide
-  · intro i; cases i
-    · exact ⟨.b, rfl⟩
-    · exact ⟨.b2, rfl⟩
-  · intro i o j h hij
-    cases i <;> cases o <;> cases j <;>
-      first
-        | exact absurd h (by decide)
-        | exact absurd hij (by decide)
-        | exact ⟨.b, rfl, rfl⟩
-        | exact ⟨.b2, rfl, rfl⟩
-  · apply consistentOn_of_bound
-    intro j; cases j
-    · exact ⟨.b, rfl, by intro i o h hi; cases i <;> cases o <;> revert h hi <;> decide⟩
-    · exact ⟨.b2, rfl, by intro i o h hi; cases i <;> cases o <;> revert h hi <;> decide⟩
-
-/-- Which interface the system follows: for two participants with different
-initial inputs `Tb`, otherwise `Ta`.  (Allowed by
-the system assumption after Def. `def:partitioned-history`: one strategy per participant set and choice of
-initial inputs.) -/
-def Tsel (n : Nat) (init : Fin n → In2) : Table In2 O4 :=
-  if h : 2 ≤ n then (if init ⟨0, by omega⟩ = init ⟨1, by omega⟩ then Ta4 else Tb4) else Ta4
-
-theorem Tsel_ok (n : Nat) (init : Fin n → In2) :
-    ResponseInterface Q4 (Tsel n init) ∧ ConsistentOn sp4 (Tsel n init) := by
-  unfold Tsel
-  split
-  · split
-    · exact Ta4_ok
-    · exact Tb4_ok
-  · exact Ta4_ok
-
-noncomputable def mixSys : System sp4 Unit where
-  basis := fun c => ∃ u, c = kc u
-  strat := fun n init p pre e => respF (Tsel n init) (init p) (pre.map LEv.erase) e.erase
-
-theorem mixSys_ra : ResponseAvailability mixSys (fun _ _ => Q4.Q) :=
-  ra_pointwise fun n init => ⟨respSystem (Tsel n init), rfl, rfl,
-    (response_sufficient Q4 (Tsel n init) (Tsel_ok n init).1 (Tsel_ok n init).2).2.1⟩
-
-theorem mixSys_rpc : ResponsePC mixSys :=
-  rpc_pointwise fun n init => ⟨respSystem (Tsel n init), rfl, rfl,
-    (response_sufficient Q4 (Tsel n init) (Tsel_ok n init).1 (Tsel_ok n init).2).2.2⟩
-
-/-- A single canonical emission from the empty cut is an isolated emission. -/
-theorem single_emit {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} (Sys : System sp D)
-    {n : Nat} (h2 : 2 ≤ n) (init : Fin n → I) (p : Fin n) {o : O}
-    (ho : (canon sp (init p)).R (init p) o)
-    (hA : Allowed Sys n init p [] (.out o)) :
-    IsoEmitAt Sys n p (init p) o := by
-  classical
-  have hrun : LRun (D := D) (n := n) (canon sp (init p)) [LEv.out o]
-      (outSt (canon sp (init p)) o ho) :=
-    .out (Step.output _ (outSt (canon sp (init p)) o ho) o ho rfl rfl) (.nil _)
-  let L : History sp D n := fun q => if q = p then [LEv.out o] else []
-  have hLp : L p = [LEv.out o] := by simp [L]
-  have hLq : ∀ q, q ≠ p → L q = [] := fun q h => by simp [L, h]
-  obtain ⟨g1, g2, g3, _⟩ := locality_glue Sys (init := init) L _ (two_labels h2)
-    (fun q => by
-      by_cases hq : q = p
-      · rw [hq, hLp]; simp
-      · rw [hLq q hq]; simp)
-    (fun q => by
-      by_cases hq : q = p
-      · rw [hq, hLp]; intro a e b h
-        cases a with
-        | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact hA
-        | cons _ _ => simp at h
-      · rw [hLq q hq]; intro a e b h; simp at h)
-    (fun q => by
-      by_cases hq : q = p
-      · rw [hq, hLp]; exact ⟨_, hrun⟩
-      · rw [hLq q hq]; exact ⟨_, .nil _⟩)
-  exact ⟨init, L, _, [], [], canon sp (init p), g1, g2, g3, hLp,
-    fun _ _ _ _ h => (by cases h), .nil _, rfl⟩
-
-/-- **Counterexample to Remark "Without replication" as stated.**  A
-(non-replicated) system has Response Availability and Response Partition
-Consistency, yet the family `(lo, b) ∈ T₀`, `(lo, a) ∈ T₁` — drawing on each
-`T_p` once, with common input extension `lo` — has no common output extension at any
-input.  The witnesses come from different choices of initial inputs, on which
-the strategies depend. -/
-theorem without_replication_counterexample :
-    ResponseAvailability mixSys (fun _ _ => Q4.Q) ∧ ResponsePC mixSys ∧
-    Tp mixSys (fun _ _ => Q4.Q) 2 0 .lo .b ∧ Tp mixSys (fun _ _ => Q4.Q) 2 1 .lo .a ∧
-    ∀ j u, sp4.P j u → ¬ (O4.b ≼ u ∧ O4.a ≼ u) := by
-  refine ⟨mixSys_ra, mixSys_rpc, ⟨rfl, ?_⟩, ⟨rfl, ?_⟩, ?_⟩
-  · have := single_emit mixSys (n := 2) (by omega) (fun q => if q.val = 0 then .lo else .hi) 0
-      (o := .b) ⟨rfl, rfl⟩ (by
-        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, rfl, by simp [emittedOf]⟩)
-    exact this
-  · have := single_emit mixSys (n := 2) (by omega) (fun _ => .lo) 1
-      (o := .a) ⟨rfl, rfl⟩ (by
-        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, rfl, by simp [emittedOf]⟩)
-    exact this
-  · intro j u hu h; cases j <;> cases u <;> revert hu h <;> decide
-
-end NonRepCounter
 
 /-! ## Gilbert–Lynch -/
 

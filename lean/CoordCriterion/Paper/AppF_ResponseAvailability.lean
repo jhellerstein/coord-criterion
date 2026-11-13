@@ -394,14 +394,15 @@ theorem «thm:complete-cap-response/proof-sufficiency» (Q : Obligation sp) (T :
 /-- **Remark "Without replication"**: "For a system that is not replicated,
 fix the participant set.  The same proof, with `T_p` built from `p`'s
 isolated emissions, gives one response interface `T_p ⊆ Q_p` per participant.
-If moreover each strategy depends on the initial inputs only through its own
-participant's, then, since each participant is replayed once, consistency is
-required only for families that draw on each `T_p` at most once."
+Each strategy sees only its own participant's initial input, and each
+participant is replayed once, so consistency is required only for families
+that draw on each `T_p` at most once."
 
 Lean: participant set `Fin n` with `n ≥ 2`; `Tp Sys Q n p` is the set of rows
 of `Q_p` emitted by `p` in isolated emissions.  First conjunct: each `T_p` is
 contained in `Q_p`, total and self-continuing (from Response Availability).
-Second conjunct (from Response Partition Consistency and `LocalInit`): a
+Second conjunct (from Response Partition Consistency; every system satisfies
+`LocalInit`, `localInit_all`): a
 family drawing row `r p` from `T_p` for the participants `p` in `A` has a
 common output extension at every common input extension `j`. -/
 theorem «app:cap-response/without-replication» (Sys : System sp D)
@@ -409,25 +410,13 @@ theorem «app:cap-response/without-replication» (Sys : System sp D)
     (ResponseAvailabilityEnd Sys Q → ∀ p : Fin n,
       (∀ i o, Tp Sys Q n p i o → Q n p i o) ∧ (∀ i, ∃ o, Tp Sys Q n p i o) ∧
       ∀ i o j, Tp Sys Q n p i o → i ≼ j → ∃ u, Tp Sys Q n p j u ∧ o ≼ u) ∧
-    (CommonRefinementAtEnd Sys → LocalInit Sys →
+    (CommonRefinementAtEnd Sys →
       ∀ (A : Fin n → Prop) (r : Fin n → I × O),
         (∀ p, A p → Tp Sys Q n p (r p).1 (r p).2) →
         ∀ j : I, (∀ p, A p → (r p).1 ≼ j) → ∃ u, sp.P j u ∧ ∀ p, A p → (r p).2 ≼ u) :=
   ⟨fun hRA p => without_replication_interface Sys Q ((responseAvailability_iff_end Sys Q).2 hRA) h2 p,
-   fun hRPC hloc A r hr j hj => without_replication Sys Q
-     ((responsePC_iff_commonRefinement Sys).2 hRPC) hloc h2 A r hr j hj⟩
-
-/-- The `LocalInit` hypothesis ("each strategy depends on the initial inputs
-only through its own participant's") is needed: the non-replicated system
-`mixSys` has Response Availability and Response Partition Consistency, yet
-the rows `(lo, b) ∈ T₀` and `(lo, a) ∈ T₁`, drawing on each `T_p` once, have
-no common output extension at any input. -/
-theorem «app:cap-response/without-replication/local-init-needed» :
-    ResponseAvailabilityEnd mixSys (fun _ _ => Q4.Q) ∧ CommonRefinementAtEnd mixSys ∧
-    Tp mixSys (fun _ _ => Q4.Q) 2 0 .lo .b ∧ Tp mixSys (fun _ _ => Q4.Q) 2 1 .lo .a ∧
-    ∀ j u, sp4.P j u → ¬ (O4.b ≼ u ∧ O4.a ≼ u) :=
-  let h := without_replication_counterexample
-  ⟨(responseAvailability_iff_end _ _).1 h.1, (responsePC_iff_commonRefinement _).1 h.2.1, h.2.2⟩
+   fun hRPC A r hr j hj => without_replication Sys Q
+     ((responsePC_iff_commonRefinement Sys).2 hRPC) (localInit_all Sys) h2 A r hr j hj⟩
 
 /-! ## Choosing versus requiring every output -/
 

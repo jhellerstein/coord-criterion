@@ -40,8 +40,7 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    receive `recv q k j d` names the sender `q`, the position `k` of the
    matching send in `q`'s local list, and the message content `(j, d)`; it is
    matched when `q ≠ p` and `q`'s `k`-th event is `send j d`.  The receiver
-   therefore also sees the sender's identity and sequence number (harmless:
-   it only gives strategies *more* information).
+   therefore also sees the sender's identity and sequence number.
 3. *Consistent cuts.*  Since local orders are total, a happens-before–closed
    set of events is a prefix of each participant's list closed under
    send→receive edges; we represent a cut by its prefix lengths `c : Fin n → Nat`.
@@ -52,18 +51,23 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    applies the sequence `γ` (each a genuine commitment: partial,
    input-preserving, strictly row-removing, satisfying Eq.
    `commitment-unsubsumed`) and stops there: no subsumption, no output.
-5. *Strategies are nondeterministic* (relations from local history to
-   allowed next events), and may depend on the participant set, the initial
-   inputs and the participant's identity, but otherwise only on the
-   participant's local history.  The paper's Def. `def:system` says "a rule
-   that chooses"; with *deterministic* strategies the (⇐) direction is false
+5. *Strategies are local and nondeterministic.*  A strategy is a relation
+   from local history to allowed next events (`System.rule`).  It sees the
+   participant's identity (a number), its own initial input and its local
+   history, with receives naming senders by number (`LEvN`).  It does not see
+   the participant set or other participants' initial inputs: a participant
+   learns of others only through their messages (Def. `def:strategy`).
+   `System.strat` is the induced relation on the local events of a participant
+   of `Fin n`.  With *deterministic* strategies the (⇐) direction is false
    (a lone participant could not have both incomparable outputs of a fiber
    available; `deterministic_not_available` in `CAP/CompleteCAP.lean`).
    Appendix `app:cap-response` makes the nondeterministic reading explicit.
 6. *Produced by the system.*  A history is produced when every event of each
    participant is allowed given its own local prefix: input events are always
    allowed (adversarial environment: any *legal* input to any participant at
-   any time — legality is enforced by well-formedness); every other event must
+   any time — legality is enforced by well-formedness), and so are receives
+   (the network delivers them; matching is enforced by well-formedness), as in
+   Def. `def:strategy`; output, commitment and send events must
    be allowed by the strategy, and output and commitment events may use only
    basis commitments (an output event of a non-legal output needs `kcap o`
    in the basis).  Locality of this condition is exactly the paper's
@@ -211,18 +215,75 @@ def ConfluentCut (init : Fin n → I) (H : History sp D n) (c : Fin n → Nat) (
 
 /-! ## Systems -/
 
-/-- Def. `def:system`, with the extra requirement of
-the system assumption after Def. `def:partitioned-history` (Section `sec:complete-cap`): a strategy for each participant of every finite
-participant set and every choice of initial inputs.  Strategies are
-nondeterministic: `strat n init p pre e` says that `p` may perform `e` after
-local history `pre`. -/
+/-- Participant-independent local events (receives name the sender by number). -/
+inductive LEvN (sp : Spec I O) (D : Type) where
+  | inp (j : I)
+  | out (o : O)
+  | commitment (γ : List (Commitment sp))
+  | send (j : Option I) (d : D)
+  | recv (q : Nat) (k : Nat) (j : Option I) (d : D)
+
+/-- Forget the participant set: name a receive's sender by number. -/
+def LEv.erase : LEv sp D n → LEvN sp D
+  | .inp j => .inp j
+  | .out o => .out o
+  | .commitment γ => .commitment γ
+  | .send j d => .send j d
+  | .recv q k j d => .recv q.val k j d
+
+/-- `LRun` on erased local events. -/
+inductive LRunN : State sp → List (LEvN sp D) → State sp → Prop
+  | nil (σ : State sp) : LRunN σ [] σ
+  | inp {σ τ ρ : State sp} {j : I} {es : List (LEvN sp D)} :
+      Step σ (.input j) τ → LRunN τ es ρ → LRunN σ (.inp j :: es) ρ
+  | out {σ τ ρ : State sp} {o : O} {es : List (LEvN sp D)} :
+      Step σ (.output o) τ → LRunN τ es ρ → LRunN σ (.out o :: es) ρ
+  | commitment {σ τ ρ : State sp} {γ : List (Commitment sp)} {es : List (LEvN sp D)} :
+      γ ≠ [] → applySeq σ γ = some τ → LRunN τ es ρ → LRunN σ (.commitment γ :: es) ρ
+  | send {σ ρ : State sp} {j : Option I} {d : D} {es : List (LEvN sp D)} :
+      LRunN σ es ρ → LRunN σ (.send j d :: es) ρ
+  | recv {σ ρ : State sp} {q : Nat} {k : Nat} {j : Option I} {d : D}
+      {es : List (LEvN sp D)} :
+      LRunN σ es ρ → LRunN σ (.recv q k j d :: es) ρ
+
+/-- A participant run is a run of its erased events. -/
+theorem lrun_erase {σ τ : State sp} {l : List (LEv sp D n)} :
+    LRun σ l τ ↔ LRunN σ (l.map LEv.erase) τ := by
+  induction l generalizing σ with
+  | nil => exact ⟨fun h => by cases h; exact .nil _, fun h => by cases h; exact .nil _⟩
+  | cons e l ih =>
+    cases e with
+    | inp j => exact ⟨fun h => by cases h with | inp hs hr => exact .inp hs (ih.1 hr),
+        fun h => by cases h with | inp hs hr => exact .inp hs (ih.2 hr)⟩
+    | out o => exact ⟨fun h => by cases h with | out hs hr => exact .out hs (ih.1 hr),
+        fun h => by cases h with | out hs hr => exact .out hs (ih.2 hr)⟩
+    | commitment γ => exact ⟨fun h => by cases h with
+          | commitment hne ha hr => exact .commitment hne ha (ih.1 hr),
+        fun h => by cases h with | commitment hne ha hr => exact .commitment hne ha (ih.2 hr)⟩
+    | send j d => exact ⟨fun h => by cases h with | send hr => exact .send (ih.1 hr),
+        fun h => by cases h with | send hr => exact .send (ih.2 hr)⟩
+    | recv q k j d => exact ⟨fun h => by cases h with | recv hr => exact .recv (ih.1 hr),
+        fun h => by cases h with | recv hr => exact .recv (ih.2 hr)⟩
+
+/-- Defs. `def:strategy` and `def:system`: a commitment basis and, for each
+participant, a nondeterministic strategy.  `rule p x pre e` says that
+participant `p`, with initial input `x` and local history `pre`, may perform
+`e`.  The strategy sees nothing else: not the participant set, and not other
+participants' initial inputs. -/
 structure System (sp : Spec I O) (D : Type) where
   basis : Commitment sp → Prop
-  strat : (n : Nat) → (Fin n → I) → Fin n → List (LEv sp D n) → LEv sp D n → Prop
+  rule : Nat → I → List (LEvN sp D) → LEvN sp D → Prop
+
+/-- The strategy of participant `p` of `Fin n`, with initial inputs `init`, on
+its local events: `rule` applied to `p`'s number, its own initial input and
+its erased local history. -/
+def System.strat (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
+    (pre : List (LEv sp D n)) (e : LEv sp D n) : Prop :=
+  Sys.rule p.val (init p) (pre.map LEv.erase) e.erase
 
 /-- Which next event a participant may perform after local history `pre`.
-Inputs come from the adversarial environment and are always allowed (their
-legality is checked by `LRun`). -/
+Inputs come from the adversarial environment and receives from the network;
+both are always allowed (legality and matching are checked by `WF`). -/
 def Allowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
     (pre : List (LEv sp D n)) : LEv sp D n → Prop
   | .inp _ => True
@@ -230,7 +291,7 @@ def Allowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
       Sys.strat n init p pre (.out o)
   | .commitment γ => (∀ c ∈ γ, Sys.basis c) ∧ Sys.strat n init p pre (.commitment γ)
   | .send j d => Sys.strat n init p pre (.send j d)
-  | .recv q k j d => Sys.strat n init p pre (.recv q k j d)
+  | .recv _ _ _ _ => True
 
 /-- Every event of `l` is allowed given its local prefix. -/
 def Compliant {E : Type} (A : List E → E → Prop) (l : List E) : Prop :=
@@ -247,11 +308,12 @@ def System.CommitmentBasisRespecting (Sys : System sp D) : Prop :=
     ∀ σ, LRun (canon sp (init p)) pre σ → Exposable σ o ∨ Sys.basis (kcap o)) ∧
   (∀ n init p pre γ, Sys.strat n init p pre (.commitment γ) → ∀ c ∈ γ, Sys.basis c)
 
-/-- The paper's reading of "produced": inputs from the environment, every
-other event chosen by the strategy. -/
+/-- The paper's reading of "produced": inputs from the environment, receives
+from the network, every other event chosen by the strategy. -/
 def StratAllowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
     (pre : List (LEv sp D n)) : LEv sp D n → Prop
   | .inp _ => True
+  | .recv _ _ _ _ => True
   | e => Sys.strat n init p pre e
 
 /-- For a system whose strategies respect the basis, "produced" in the
@@ -269,13 +331,14 @@ theorem allowed_iff_stratAllowed {Sys : System sp D} (h : Sys.CommitmentBasisRes
 /-- Restricting a system's strategies to basis commitments. -/
 def System.restrict (Sys : System sp D) : System sp D where
   basis := Sys.basis
-  strat n init p pre e := Sys.strat n init p pre e ∧
+  rule i x pre e := Sys.rule i x pre e ∧
     (∀ o, e = .out o →
-      ∀ σ, LRun (canon sp (init p)) pre σ → Exposable σ o ∨ Sys.basis (kcap o)) ∧
+      ∀ σ, LRunN (canon sp x) pre σ → Exposable σ o ∨ Sys.basis (kcap o)) ∧
     (∀ γ, e = .commitment γ → ∀ c ∈ γ, Sys.basis c)
 
 theorem System.restrict_basisRespecting (Sys : System sp D) : Sys.restrict.CommitmentBasisRespecting :=
-  ⟨fun _ _ _ _ o h => h.2.1 o rfl, fun _ _ _ _ γ h => h.2.2 γ rfl⟩
+  ⟨fun _ _ _ _ o h σ hσ => h.2.1 o rfl σ (lrun_erase.1 hσ),
+   fun _ _ _ _ γ h => h.2.2 γ rfl⟩
 
 /-- Restricting loses nothing: the restricted system allows exactly the same
 events, so it produces the same histories. -/
@@ -285,15 +348,15 @@ theorem System.restrict_allowed (Sys : System sp D) (n : Nat) (init : Fin n → 
   cases e with
   | inp j => exact Iff.rfl
   | out o =>
-    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, (fun o' he => by cases he; exact h.1),
+    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2,
+      (fun o' he σ hσ => by cases he; exact h.1 σ (lrun_erase.2 hσ)),
       fun _ he => by cases he⟩⟩
   | commitment γ =>
     exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, (fun _ he => by cases he),
       fun γ' he => by cases he; exact h.1⟩⟩
   | send j d => exact ⟨fun h => h.1, fun h => ⟨h, (fun _ he => by cases he),
       fun _ he => by cases he⟩⟩
-  | recv q k j d => exact ⟨fun h => h.1, fun h => ⟨h, (fun _ he => by cases he),
-      fun _ he => by cases he⟩⟩
+  | recv q k j d => exact Iff.rfl
 
 /-- Def. `def:partition-notions`: Availability (interface form). -/
 def Availability (Sys : System sp D) : Prop :=
@@ -321,7 +384,7 @@ def PartitionConsistency (Sys : System sp D) : Prop :=
 strategy that allows every event. -/
 def cfSystem (sp : Spec I O) (D : Type) : System sp D where
   basis := fun _ => False
-  strat := fun _ _ _ _ _ => True
+  rule := fun _ _ _ _ => True
 
 
 /-! ## Run lemmas -/

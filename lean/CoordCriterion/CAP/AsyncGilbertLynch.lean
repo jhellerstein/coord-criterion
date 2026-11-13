@@ -843,8 +843,68 @@ responses ↦ output events of the node's response map, sends ↦ sends); the
 basis is the canonical commitments. -/
 noncomputable def sysOf (A : Alg N M) : System regSpec (Fin N × M) where
   basis := fun c => ∃ u, c = kc u
-  strat := fun n _ p pre e => ∃ hp : p.val < N, ∃ t, Corr (n := n) p.val t (pre ++ [e]) ∧
-    ∃ s, NRun A ⟨p.val, hp⟩ (A.start ⟨p.val, hp⟩) (acts t) s
+  rule := fun p _ pre e => ∃ hp : p < N, ∃ (n' : Nat) (L : PL N M n'),
+    L.map LEv.erase = pre ++ [e] ∧
+    ∃ t, Corr (n := n') p t L ∧ ∃ s, NRun A ⟨p, hp⟩ (A.start ⟨p, hp⟩) (acts t) s
+
+/-- A correspondence depends on a local history only through its erasure
+(correspondences contain no receive). -/
+theorem corr_transfer {n' : Nat} {p : Nat} {t : List (Nat × Act N M)} {L' : PL N M n'}
+    (h : Corr p t L') : ∀ {L : PL N M n}, L.map LEv.erase = L'.map LEv.erase → Corr p t L := by
+  induction h with
+  | nil => intro L hL; simp at hL; subst hL; exact .nil
+  | @inv t L0 a k _ hf halt ih =>
+    intro L hL
+    rw [List.map_append] at hL
+    obtain ⟨L1, l2, rfl, h1, h2⟩ := List.map_eq_append_iff.1 hL
+    obtain ⟨e, rfl, h2⟩ := List.map_eq_singleton_iff.1 h2
+    cases e <;> simp [LEv.erase] at h2
+    subst h2
+    have hlen : L1.length = L0.length := by
+      have := congrArg List.length h1; simpa using this
+    have := Corr.inv (k := k) (ih h1) hf halt
+    rwa [hlen] at this
+  | @resp t L0 a r _ ih =>
+    intro L hL
+    rw [List.map_append] at hL
+    obtain ⟨L1, l2, rfl, h1, h2⟩ := List.map_eq_append_iff.1 hL
+    obtain ⟨e, rfl, h2⟩ := List.map_eq_singleton_iff.1 h2
+    cases e <;> simp [LEv.erase] at h2
+    subst h2
+    have hlen : L1.length = L0.length := by
+      have := congrArg List.length h1; simpa using this
+    have := Corr.resp (a := a) (r := r) (ih h1)
+    rwa [hlen] at this
+  | @send t L0 d m _ ih =>
+    intro L hL
+    rw [List.map_append] at hL
+    obtain ⟨L1, l2, rfl, h1, h2⟩ := List.map_eq_append_iff.1 hL
+    obtain ⟨e, rfl, h2⟩ := List.map_eq_singleton_iff.1 h2
+    cases e <;> simp [LEv.erase] at h2
+    obtain ⟨rfl, rfl⟩ := h2
+    have hlen : L1.length = L0.length := by
+      have := congrArg List.length h1; simpa using this
+    have := Corr.send (d := d) (m := m) (ih h1)
+    rwa [hlen] at this
+  | @stut t L0 _ ih =>
+    intro L hL
+    rw [List.map_append] at hL
+    obtain ⟨L1, l2, rfl, h1, h2⟩ := List.map_eq_append_iff.1 hL
+    obtain ⟨e, rfl, h2⟩ := List.map_eq_singleton_iff.1 h2
+    cases e <;> simp [LEv.erase] at h2
+    subst h2
+    exact Corr.stut (ih h1)
+
+/-- The strategy of `sysOf A` on the local events of a participant of `Fin n`. -/
+theorem sysOf_strat (A : Alg N M) {init : Fin n → Hist} {p : Fin n}
+    {pre : PL N M n} {e : LEv regSpec (Fin N × M) n} :
+    (sysOf A).strat n init p pre e ↔ ∃ hp : p.val < N, ∃ t, Corr (n := n) p.val t (pre ++ [e]) ∧
+      ∃ s, NRun A ⟨p.val, hp⟩ (A.start ⟨p.val, hp⟩) (acts t) s := by
+  constructor
+  · rintro ⟨hp, n', L, hL, t, hc, hr⟩
+    exact ⟨hp, t, corr_transfer hc (by rw [hL, List.map_append]; rfl), hr⟩
+  · rintro ⟨hp, t, hc, hr⟩
+    exact ⟨hp, n, pre ++ [e], by rw [List.map_append]; rfl, t, hc, hr⟩
 
 /-- Client discipline for a participant history: the initial input is `∅`
 and each input event adds one fresh operation invoked at the participant. -/
@@ -867,10 +927,12 @@ theorem compliant_snoc {E : Type} {A : List E → E → Prop} {l : List E} {e : 
 translation of a run of the node. -/
 theorem corr_of_produced (A : Alg N M) {init : Fin n → Hist} {p : Fin n} (hp : p.val < N) :
     ∀ L : PL N M n, Compliant (Allowed (sysOf A) n init p) L → ClientLocal p.val L →
+      (∀ q k j d, LEv.recv q k j d ∉ L) →
       ∃ t, Corr p.val t L ∧ ∃ s, NRun A ⟨p.val, hp⟩ (A.start ⟨p.val, hp⟩) (acts t) s := by
   refine snoc_induction ?_ ?_
-  · intro _ _; exact ⟨[], .nil, _, .nil _⟩
-  · intro L e ih hc hcl
+  · intro _ _ _; exact ⟨[], .nil, _, .nil _⟩
+  · intro L e ih hc hcl hnr
+    have ih := fun h1 h2 => ih h1 h2 (fun q k j d hm => hnr q k j d (List.mem_append_left _ hm))
     obtain ⟨hc1, hA⟩ := compliant_snoc hc
     obtain ⟨hcl1, hinp⟩ := clientLocal_snoc hcl
     cases e with
@@ -904,12 +966,12 @@ theorem corr_of_produced (A : Alg N M) {init : Fin n → Hist} {p : Fin n} (hp :
       · have := Corr.inv (k := op.kind) hct hf halt
         rwa [viewOf_snoc_inv _ _ _ _ hf, ← hop] at this
       · rw [acts_snoc]; exact nrun_append.2 ⟨s, hs, .cons hs' (.nil _)⟩
-    | out o => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
+    | out o => obtain ⟨_, t, h1, h2⟩ := (sysOf_strat A).1 hA.2; exact ⟨t, h1, h2⟩
     | commitment γ =>
-      dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, _⟩ := hA
+      obtain ⟨_, t, h1, _⟩ := (sysOf_strat A).1 hA.2
       exact absurd (List.mem_append_right _ (List.mem_singleton_self _)) (corr_no_cmt h1 γ)
-    | send j d => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
-    | recv q k j d => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
+    | send j d => obtain ⟨_, t, h1, h2⟩ := (sysOf_strat A).1 hA; exact ⟨t, h1, h2⟩
+    | recv q k j d => exact absurd (List.mem_append_right _ (List.mem_singleton_self _)) (hnr q k j d)
 
 
 /-! ## Indistinguishability: a lone node's responses are explained by its view -/
@@ -1086,7 +1148,7 @@ theorem extend_corr (A : Alg N M) (hat : Atomic A) {init : Fin n → Hist} {p : 
         cases a' with
         | nil =>
           simp at hab; obtain ⟨rfl, _⟩ := hab
-          exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, hp, t1, by simpa using hc1, hrun1'⟩
+          exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, (sysOf_strat A).2 ⟨hp, t1, by simpa using hc1, hrun1'⟩⟩
         | cons _ _ => simp at hab
       obtain ⟨t', ext, σ', hc', hacts, hrun', hcomp', hni2, hnr2⟩ :=
         extend_corr A hat hp bs t1 _ τ hc1 (lrun_append.2 ⟨σ, hσ, hτ⟩) hcomp1
@@ -1113,7 +1175,7 @@ theorem extend_corr (A : Alg N M) (hat : Atomic A) {init : Fin n → Hist} {p : 
         cases a' with
         | nil =>
           simp at hab; obtain ⟨rfl, _⟩ := hab
-          exact ⟨hp, t1, by simpa using hc1, hrun1'⟩
+          exact (sysOf_strat A).2 ⟨hp, t1, by simpa using hc1, hrun1'⟩
         | cons _ _ => simp at hab
       obtain ⟨t', ext, σ', hc', hacts, hrun', hcomp', hni2, hnr2⟩ :=
         extend_corr A hat hp bs t1 _ σ hc1 (lrun_append.2 ⟨σ, hσ, .send (.nil σ)⟩) hcomp1
@@ -1249,6 +1311,19 @@ theorem clientLocal_take {D : Type} {p : Nat} {L : List (LEv regSpec D n)} (h : 
   conv => lhs; rw [← List.take_append_drop c L]
   rw [hab]; simp
 
+/-- A partitioned history of two participants has no receive. -/
+theorem no_recv_two {D : Type} {init : Fin 2 → Hist} {H : History regSpec D 2}
+    {comp : Fin 2 → Nat} (hw : WF init H) (hpart : Partitioned H comp) (p : Fin 2) (c : Nat) :
+    ∀ q k j d, LEv.recv q k j d ∉ (H p).take c := by
+  intro q k j d hm
+  obtain ⟨a, b, hab⟩ := List.append_of_mem (List.mem_of_mem_take hm)
+  have hne := (hw.2 p a q k j d b hab).1
+  have hc := hpart.2 p a q k j d b hab
+  obtain ⟨x, y, hxy⟩ := hpart.1
+  have h2 : ∀ r : Fin 2, r = 0 ∨ r = 1 := by decide
+  rcases h2 p with rfl | rfl <;> rcases h2 q with rfl | rfl <;>
+    rcases h2 x with rfl | rfl <;> rcases h2 y with rfl | rfl <;> simp_all
+
 /-- **Availability and atomicity give Answering** for the translated system. -/
 theorem sys_answering (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) (hav : Available A) :
     AnsweringC (sysOf A) := by
@@ -1258,6 +1333,7 @@ theorem sys_answering (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) (hav : Avail
   let L := (H p).take (c p)
   have hcompL : Compliant (Allowed (sysOf A) 2 init0 p) L := compliant_take (hprod p) (c p)
   obtain ⟨t, hc, hrun⟩ := corr_of_produced A hp L hcompL (clientLocal_take (hcl p) (c p))
+    (no_recv_two hwf hpart p (c p))
   have hσ' : LRun (canon regSpec emptyH) L σ := hσ
   obtain ⟨B, hB⟩ := firstInv_bound (acts t)
   obtain ⟨t1, ext1, σ1, hc1, hl1, hcomp1, hrun1, hv1, hans1, hni1, hnr1⟩ :=
@@ -1309,7 +1385,7 @@ theorem sys_answering (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) (hav : Avail
       cases a with
       | nil =>
         simp at hab; obtain ⟨rfl, _⟩ := hab
-        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, hp, t1, by simpa using hc2, hrun1⟩
+        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, (sysOf_strat A).2 ⟨hp, t1, by simpa using hc2, hrun1⟩⟩
       | cons _ _ => simp at hab
     · show Compliant _ ((H q).take (c q) ++ ext q)
       rw [heq q hqp, List.append_nil]; exact compliant_take (hprod q) (c q)
@@ -1334,12 +1410,13 @@ precedence, and atomicity of that execution explains all emitted maps by one
 linearization. -/
 theorem sys_rpc (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) : RealizedRPCC (sysOf A) := by
   classical
-  intro H comp _ hprod _ hcl pos hil m c hpc j hreal _
+  intro H comp hwf hprod hpart hcl pos hil m c hpc j hreal _
   have hp : ∀ p : Fin 2, p.val < N := fun p => by have := p.isLt; omega
   let nd : Fin 2 → Fin N := fun p => ⟨p.val, hp p⟩
   have hT : ∀ p : Fin 2, ∃ t, Corr p.val t ((H p).take (c p)) ∧
       ∃ s, NRun A (nd p) (A.start (nd p)) (acts t) s := fun p =>
     corr_of_produced A (hp p) _ (compliant_take (hprod p) (c p)) (clientLocal_take (hcl p) (c p))
+      (no_recv_two hwf hpart p (c p))
   obtain ⟨T, hT⟩ := Classical.axiomOfChoice hT
   let rt : Fin 2 → Nat × Act N M → Nat × Act N M := fun p x => (pos p x.1, x.2)
   let E : GExec N M := ⟨fun i => if h : i.val < 2 then (T ⟨i.val, h⟩).map (rt ⟨i.val, h⟩) else []⟩
