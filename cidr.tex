@@ -1619,7 +1619,7 @@ Lost Update, such as snapshot isolation, repeatable read, and serializability, $
 \end{theorem}
 \proofinfull
 
-The timestamp condition in the theorem is required, correcting an error in the pseudocode of
+The timestamp condition in the theorem is required, correcting an error in
 the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
@@ -1650,13 +1650,14 @@ any two reachable states satisfies $\mathcal I$.
 
 We construct a spec $\Spec_{\mathcal I}$ from this model.  An input is a
 \emph{transaction history}: the transactions executed so far, partially
-ordered so that one precedes another when the replica running the second saw
+ordered so that one precedes another when the replica running the second saw \jmh{what is "saw"? remove language of "seeing" and use our terminology or clear transactional terminology of read and write}
 the first.  One history \inrel another when it adds transactions without
-changing what the earlier ones saw.  Only histories in which each transaction
-preserves $\mathcal I$ on its replica's state are inputs.  An output is a database state; a later state keeps every version of an earlier one.  Call a sub-history \emph{closed} when it contains
-everything its transactions saw, and \emph{valid} when each of its closed
-sub-histories has a state satisfying $\mathcal I$.  At a history $h$,
-$P_{\mathcal I}$ permits the state of any valid closed sub-history of $h$.  A replica may hold transactions back, but what it exposes must be valid.
+changing what the earlier ones saw.  Legal inputs include only those histories in which each transaction
+preserves $\mathcal I$ on its replica's state.  An output is a database state; outputs are ordered by set-containment of versioned data.  Call a sub-history \emph{closed} when it contains
+everything its transactions saw \jmh{I'm not happy with that definition, it's vague}, and \emph{valid} when each of its closed
+sub-histories has a state \jmh{has in what sense? states are outputs, histories are inputs, what do you mean?} satisfying $\mathcal I$.  At a history $h$,
+$P_{\mathcal I}$ permits \jmh{meaning what?} the state of any valid closed sub-history of $h$.  A replica may hold transactions back, but what it exposes must be valid.
+\jmh{I don't know what the preceding sentence means in our vocabulary.}
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
