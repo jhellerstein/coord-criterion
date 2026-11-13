@@ -1668,7 +1668,7 @@ Lost Update, such as snapshot isolation, repeatable read, and serializability, $
 \end{theorem}
 \proofinfull
 
-\color{black}\cxtag{159}{N/M}\cxbar{159}{0.4 0.4 1}{s}The timestamp condition in the theorem is required, correcting an error in the pseudocode of
+\color{black}\cxtag{159}{N/M}\cxbar{159}{0.4 0.4 1}{s}The timestamp condition in the theorem is required, correcting an error in
 the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
@@ -1699,13 +1699,19 @@ any two reachable states satisfies $\mathcal I$.\cxbar{161}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{162}{N/M}\cxbar{162}{0.4 0.4 1}{s}We construct a spec $\Spec_{\mathcal I}$ from this model.  An input is a
 \emph{transaction history}: the transactions executed so far, partially
-ordered so that one precedes another when the replica running the second saw
-the first.  One history \inrel another when it adds transactions without
-changing what the earlier ones saw.  Only histories in which each transaction
-preserves $\mathcal I$ on its replica's state are inputs.  An output is a database state; a later state keeps every version of an earlier one.  Call a sub-history \emph{closed} when it contains
-everything its transactions saw, and \emph{valid} when each of its closed
-sub-histories has a state satisfying $\mathcal I$.  At a history $h$,
-$P_{\mathcal I}$ permits the state of any valid closed sub-history of $h$.  A replica may hold transactions back, but what it exposes must be valid.\cxbar{162}{0.4 0.4 1}{e}
+ordered so that one precedes another when the second ran on a state that
+included the first's writes.  One history \inrel another when it adds
+transactions, none of which precedes a transaction already present.  Legal
+inputs include only those histories in which each transaction preserves
+$\mathcal I$ on the state it ran on.  An output is a database state; outputs
+are ordered by set-containment of versioned data.  The \emph{state} of a
+history is the initial state together with every version its transactions
+write.  Call a sub-history \emph{closed} when it contains every transaction
+that precedes one of its own, and \emph{valid} when the state of each of its
+closed sub-histories satisfies $\mathcal I$.  At input $h$, each valid
+closed sub-history of $h$ contributes its state as a permitted output.
+An output may therefore leave out some of the input's transactions, but what
+it includes must be closed and valid.\cxbar{162}{0.4 0.4 1}{e}
 
 \color{black}\begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
