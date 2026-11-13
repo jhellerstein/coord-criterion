@@ -46,7 +46,7 @@ coordination-free transducers know, and their characterization theorem (a
 behavior is coordination-free exactly when it contains a node monotone
 behavior, their Thm. 5 with Lemma 4; Lean proves the necessity half through a
 translation of their transducer networks and cites the sufficiency half,
-their Prop. 10); in §4 (`sec:systems`), that Ameloot et al. show a list of
+their Prop. 10; and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node chooses); in §4 (`sec:systems`), that Ameloot et al. show a list of
 all participants enlarges what a system can compute; in
 Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
 al.'s checks, the correspondence of the hypotheses to theirs, and the remark
@@ -152,7 +152,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-633 entries.
+634 entries.
 
 ### §2 Functional CALM
 
@@ -425,6 +425,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:query-instance/weaker-monotonicity»` | theorem | Sec. |
 | `«sec:query-instance/one-fact-version»` | theorem | Sec. |
 | `«sec:query-instance/mapping»` | theorem | Sec. |
+| `«sec:query-instance/aims»` | theorem | Sec. |
 | `«sec:query-instance/node-monotonicity»` | theorem | Sec. |
 | `«sec:query-instance/asks-for-more»` | theorem | Sec. |
 | `«sec:query-instance/matching»` | theorem | Sec. |

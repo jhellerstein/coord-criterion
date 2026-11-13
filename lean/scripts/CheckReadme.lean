@@ -233,6 +233,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:query-instance/weaker-monotonicity»
 #check @CC.Paper.«sec:query-instance/one-fact-version»
 #check @CC.Paper.«sec:query-instance/mapping»
+#check @CC.Paper.«sec:query-instance/aims»
 #check @CC.Paper.«sec:query-instance/node-monotonicity»
 #check @CC.Paper.«sec:query-instance/asks-for-more»
 #check @CC.Paper.«sec:query-instance/matching»

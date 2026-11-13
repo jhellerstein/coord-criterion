@@ -138,6 +138,30 @@ theorem «sec:query-instance/mapping» {F Msg St Out : Type} {loc : F → Nat}
   ⟨BK.sysOf_anonymous Pg, BK.placedConsistent_of_computes,
     fun hCh _ _ hf hn hK => BK.covers_of_characterizes hCh hf hn hK⟩
 
+/-- Sec. `sec:query-instance`: "Their aims differ from ours.  They ask which
+behaviors become computable when nodes share some piece of system knowledge,
+such as identifiers, an order on them, or the list of all nodes.  For them, a
+behavior needs coordination when it cannot be computed without the list of all
+nodes.  Correctness is judged by the final output of a run, and the input is
+fixed when the run starts.  We ask instead when a spec requires a commitment,
+judge consistency at every point of a run, and let input arrive over time.  A
+behavior can therefore be coordination-free in their sense while still needing
+a commitment in ours, made by one participant, as in their constructions, where
+a group's smallest node chooses for the group."
+
+Lean: the last sentence's example is the matching problem below: it is node
+monotone (`QRef.matching_nodeMono`; coordination-free in their sense by their
+characterization theorem, cited) and fails Lifted Monotonicity, so by Complete
+CALM some reachable output needs a commitment.  The descriptions of their aims,
+notion of coordination, correctness, inputs and constructions are cited prose
+(Prop. 10's quorum construction). -/
+theorem «sec:query-instance/aims» :
+    QRef.NodeMono (id : Nat → Nat) (QRef.matching (id : Nat → Nat)) ∧
+      ¬ (QRef.matching (id : Nat → Nat)).LiftedMono :=
+  ⟨QRef.matching_nodeMono id,
+    fun h => QRef.matching_not_consistentOn.2.2.2.2.2.2.2
+      ((liftedMono_iff_commonExpansion _).1 h)⟩
+
 /-- Sec. `sec:query-instance`: "Two sides of a partition cannot know that
 they are disconnected, so neither can tell whether it is the whole network,
 and each must emit.  When the partition heals, the outputs of both sides must
