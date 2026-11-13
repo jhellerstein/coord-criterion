@@ -18,8 +18,8 @@ Library: `Instances/InvariantConfluence.lean` (namespace `CC.IConf`), plus
 Representation (see the module docstring of `Instances/InvariantConfluence`):
 states are `IConf.St V := V → Prop` ordered by inclusion, merged by
 `St.union`; a history `IConf.Hist Tx` labels finitely many natural-number
-event ids with transactions and carries a strict order `lt` (visibility),
-numbered along a linear extension; `a ≼ b` means `a` is a downward-closed
+event ids with transactions and carries a strict order `lt` (precedence: `lt x y` when `y` ran on a
+state that included the writes of `x`), numbered along a linear extension; `a ≼ b` means `a` is a downward-closed
 sub-order of `b` in which every event keeps its label and exactly its
 predecessors (the paper's "`b` extends `a`").  A downward-closed sub-history
 is written `j.restrict P _` for a downward-closed id predicate `P`; the
@@ -33,12 +33,16 @@ namespace Paper
 /-! ## The model -/
 
 /-- "A transaction history `h` … is a finite partial order of transaction
-events, each labeled by a transaction in `T`; `e' < e` means that `e'` was
-visible to the replica that ran `e`."  Lean: `IConf.Hist Tx`. -/
+events, each labeled by a transaction in `T`; `e' < e` means that `e` ran on a
+state that included the writes of `e'`.  A sub-history is closed when it
+contains every event that precedes one of its own, that is, when it is a
+downward-closed sub-order."  Lean: `IConf.Hist Tx`; a closed sub-history of
+`h` is a `c ≼ h`. -/
 abbrev «app:iconfluence/history» (Tx : Type) : Type := IConf.Hist Tx
 
-/-- "History `h'` extends `h` when `h` is a downward-closed sub-order of `h'`,
-so each event of `h` keeps exactly the predecessors it had."   Lean: `h ≼ h'` unfolds
+/-- "History `h'` extends `h` when `h` is a closed sub-history of `h'`, so
+the events `h'` adds precede no event of `h`, and each event of `h` keeps
+exactly the predecessors it had."   Lean: `h ≼ h'` unfolds
 to: labels of `h` are labels of `h'`, and `h.lt x y ↔ h'.lt x y ∧ y ∈ h`. -/
 theorem «app:iconfluence/expansion-order» {Tx : Type} (h h' : IConf.Hist Tx) :
     h ≼ h' ↔ (∀ e t, h.lab e = some t → h'.lab e = some t) ∧
@@ -56,15 +60,15 @@ theorem «app:iconfluence/eval» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf
       (IConf.eval M h = fun v => M.s0 v ∨ ∃ e, h.ev e ∧ IConf.post M h e v) :=
   ⟨rfl, IConf.post_eq M h e, rfl⟩
 
-/-- "A downward-closed sub-history keeps each event's predecessors, and so
-its `pre` and `post`." -/
+/-- "A closed sub-history keeps each event's predecessors, and so its `pre`
+and `post`." -/
 theorem «app:iconfluence/sub-keeps-pre-post» {V Tx : Type} (M : IConf.Model V Tx)
     {c h : IConf.Hist Tx} (hc : c ≼ h) {e : Nat} (he : c.ev e) :
     IConf.pre M c e = IConf.pre M h e ∧ IConf.post M c e = IConf.post M h e :=
   ⟨Inst.pre_sub M hc he, IConf.post_sub M hc he⟩
 
-/-- "Hence the state of a union of downward-closed sub-histories is the union
-of their states."  Lean: if the events of `c ≼ j` are those of `a ≼ j` and
+/-- "Hence the state of a union of closed sub-histories is the union of their
+states."  Lean: if the events of `c ≼ j` are those of `a ≼ j` and
 `b ≼ j`, then `eval c = eval a ∪ eval b`. -/
 theorem «app:iconfluence/eval-union» {V Tx : Type} (M : IConf.Model V Tx)
     {a b c j : IConf.Hist Tx} (ha : a ≼ j) (hb : b ≼ j) (hc : c ≼ j)
@@ -83,32 +87,34 @@ theorem «app:iconfluence/pre-post-as-eval» {V Tx : Type} (M : IConf.Model V Tx
   ⟨IConf.pre_eq_eval M h e, IConf.post_eq_eval M h e he⟩
 
 /-- "A history is locally valid when every `pre(e)` and `post(e)` satisfies
-`𝓘` … It is valid when `𝓘(eval(c))` holds for every downward-closed
-sub-history `c`."  -/
+`𝓘` … It is valid when the state of each of its closed sub-histories
+satisfies `𝓘`: `𝓘(eval(c))` for every closed sub-history `c`."  -/
 theorem «app:iconfluence/valid-def» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Hist Tx) :
     (IConf.LocValid M h ↔ ∀ e, h.ev e → M.Inv (IConf.pre M h e) ∧ M.Inv (IConf.post M h e)) ∧
       (IConf.Valid M h ↔ ∀ c, c ≼ h → M.Inv (IConf.eval M c)) :=
   ⟨Iff.rfl, Iff.rfl⟩
 
 /-- (Used in the proof) A valid history is locally valid, since `pre(e)` and
-`post(e)` are states of downward-closed sub-histories. -/
+`post(e)` are states of closed sub-histories. -/
 theorem «app:iconfluence/valid-locally-valid» {V Tx : Type} (M : IConf.Model V Tx)
     {h : IConf.Hist Tx} (hv : IConf.Valid M h) : IConf.LocValid M h :=
   IConf.valid_locValid M hv
 
 /-! ## The specification `𝒮_𝓘` -/
 
-/-- "The spec `𝒮_𝓘` has the locally valid histories as inputs; a
-downward-closed sub-order of a locally valid history is locally valid, so the
-inputs are closed under the order."  Lean: inputs are the subtype
+/-- "The spec `𝒮_𝓘` has the locally valid histories as inputs; a closed
+sub-history of a locally valid history is locally valid, so the inputs are
+closed under the order."  Lean: inputs are the subtype
 `IConf.Inp M`; closure is `Inst.locValid_sub`. -/
 theorem «app:iconfluence/inputs-closed» {V Tx : Type} (M : IConf.Model V Tx)
     {c h : IConf.Hist Tx} (hc : c ≼ h) (hl : IConf.LocValid M h) : IConf.LocValid M c :=
   Inst.locValid_sub M hc hl
 
-/-- "An output is a state, and `u` covers `s` when `s ⊆ u`. At input `h`, the
-spec permits the state of any downward-closed, valid sub-history:
-`P_𝓘(h) = {eval(g) : g a downward-closed, valid sub-history of h}`." -/
+/-- "An output is a state, and `u` covers `s` when `s ⊆ u`. At input `h`, each
+valid closed sub-history of `h` contributes its state as a permitted output:
+`P_𝓘(h) = {eval(g) : g a valid closed sub-history of h}`.  An output may
+therefore leave out some of the input's transactions, but what it includes
+must be closed and valid." -/
 theorem «app:iconfluence/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M)
     (s u : IConf.St V) :
     ((IConf.SI M).P h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s) ∧
@@ -179,7 +185,7 @@ theorem «app:iconfluence/proof-parts» {V Tx : Type} (M : IConf.Model V Tx) {g�
       IConf.eval M L = IConf.eval M (IConf.Hist.side g₁ g₂ k) :=
   IConf.part_row M hk hv
 
-/-- (⇐): "Every downward-closed `c ⊆ j` is the disjoint union of `c ∩ g₁` and
+/-- (⇐): "Every closed `c ⊆ j` is the disjoint union of `c ∩ g₁` and
 `c ∩ g₂`."  Lean: the state of `c ≼ dunion g₁ g₂` is the union of the states of
 its two halves `half c 0 ≼ g₁`, `half c 1 ≼ g₂`. -/
 theorem «app:iconfluence/proof-halves» {V Tx : Type} (M : IConf.Model V Tx)

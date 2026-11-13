@@ -556,12 +556,19 @@ theorem «sec:iconfluence-instance/bailis-definition» {V Tx : Type} (M : IConf.
 /-- "From an instance `(s₀, T, 𝓘)` of their model we construct a
 spec `𝒮_𝓘` in ours as follows.  Inputs are transaction histories:
 partial orders of events, each labeled by a transaction in `T`, where one
-event precedes another when the replica running the second saw the first.  A
-history extends each of its downward-closed sub-orders.  We keep the locally
-valid histories, in which every transaction step preserves `𝓘` on its
-replica's state.  Outputs are database states, ordered by inclusion.  The
-possibility relation permits, at input `h`, the state of any downward-closed sub-history of
-`h` that is valid: every merge of what it contains satisfies `𝓘`."  Lean:
+event precedes another when the second ran on a state that included the
+first's writes.  One history extends another when it adds events, none of
+which precedes an event already present.  Legal inputs include only the
+locally valid histories, in which each transaction preserves `𝓘` on the
+state it ran on.  Outputs are database states, ordered by set-containment of
+versioned data.  The state of a history is `s₀` together with every version
+its transactions write.  Call a sub-history closed when it contains every
+event that precedes one of its own, and valid when the state of each of its
+closed sub-histories satisfies `𝓘`.  At input `h`, each valid closed
+sub-history of `h` contributes its state as a permitted output.  An output
+may therefore leave out some of the input's transactions, but what it
+includes must be closed and valid."  Lean (a closed sub-history of `h` is a
+`g ≼ h`):
 `IConf.SI M` on inputs `IConf.Inp M` (locally valid histories, input extension
 order) with outputs `IConf.St V` under inclusion; full model in
 `Paper/AppB_InvariantConfluence`. -/
@@ -588,12 +595,13 @@ theorem «sec:iconfluence-instance/iconfluence-is-consistency» {V Tx : Type} (M
 
 /-- The uniqueness example: "The uniqueness constraint of Bailis et al.'s
 payroll example shows the failure directly.  Two replicas each create an
-employee and assign ID 7, which each sees is unused.  The history in which
-neither creation saw the other is locally valid and extends both
+employee and assign ID 7, each running on a state in which ID 7 is unused.
+The history in which neither creation ran on a state that included the
+other's writes is locally valid and extends both
 one-creation histories, but its state has two employees with ID 7, so no
 state it permits extends both."  Lean (library names from an earlier
 username version of the example): versions are the employees holding ID 7;
-`alloc a` creates employee `a` with ID 7 if the replica sees the ID unused;
+`alloc a` creates employee `a` with ID 7 if ID 7 is unused in the state it runs on;
 the invariant `uModel.Inv` is "at most one employee has ID 7"; `jU` has the
 unordered events `alloc 1`, `alloc 2`; `oneU n t` is the one-event history.
 Consequently `𝒮_𝓘` fails Lifted Monotonicity and the transactions are not
@@ -608,8 +616,8 @@ theorem «sec:iconfluence-instance/uniqueness» :
   Inst.uniqueness_example
 
 /-- "Concurrency, not the transactions alone, decides the outcome: a
-transaction that is harmless after another can, when it runs without seeing
-it, produce a state whose merge with the other's is invalid."  Lean:
+transaction that is harmless after another can, when it runs on a state
+without the other's writes, produce a state whose merge with the other's is invalid."  Lean:
 `alloc 2` after `alloc 1` is valid, `alloc 2` alone is valid, but the merge of
 `alloc 1` and `alloc 2` run concurrently from `s₀` is invalid. -/
 theorem «sec:iconfluence-instance/concurrency-decides» :

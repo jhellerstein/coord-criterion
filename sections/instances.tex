@@ -255,15 +255,18 @@ From an instance $(s_0,T,\mathcal I)$ of their model we construct a
 spec $\Spec_{\mathcal I}$ in ours as follows (Appendix~\ref{app:iconfluence}).
 Inputs are \emph{transaction histories}: partial orders of events, each
 labeled by a transaction in $T$, where one event precedes another when the
-replica running the second saw the first.  Histories are ordered by extension:
-$h'$ \inrel $h$ when $h$ is a downward-closed sub-order of $h'$, so $h'$ adds
-events without changing what the earlier ones saw.  We keep the \emph{locally
-valid} histories, in which every transaction step preserves $\mathcal I$ on
-its replica's state.  Outputs are database states, ordered by inclusion: a
-later state keeps every version of an earlier one.  The table $P_{\mathcal I}$ permits, at input $h$, the state of any downward-closed sub-history of $h$
-that is \emph{valid}: every merge of what it contains satisfies $\mathcal I$.
-A replica may thus hold transactions back, but whatever it exposes must be
-valid together with everything it contains.
+second ran on a state that included the first's writes.  One history \inrel
+another when it adds events, none of which precedes an event already present.
+Legal inputs include only the \emph{locally valid} histories, in which each
+transaction preserves $\mathcal I$ on the state it ran on.  Outputs are
+database states, ordered by set-containment of versioned data.  The
+\emph{state} of a history is $s_0$ together with every version its
+transactions write.  Call a sub-history \emph{closed} when it contains every
+event that precedes one of its own, and \emph{valid} when the state of each of
+its closed sub-histories satisfies $\mathcal I$.  At input $h$, each valid
+closed sub-history of $h$ contributes its state as a permitted output.  An
+output may therefore leave out some of the input's transactions, but what it
+includes must be closed and valid.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
@@ -276,13 +279,13 @@ See Appendix~\ref{app:iconfluence}.
 \end{proof}
 
 The uniqueness constraint of Bailis et al.'s payroll example shows the failure
-directly.  Two replicas each create an employee and assign ID~7, which each
-sees is unused.  The history in which neither creation saw the other is
-locally valid and \inrel both one-creation histories, but its state has two
+directly.  Two replicas each create an employee and assign ID~7, each running
+on a state in which ID~7 is unused.  The history in which neither creation ran
+on a state that included the other's writes is locally valid and \inrel both one-creation histories, but its state has two
 employees with ID~7, so no state it permits \outrel both.  The system must
 reserve IDs, reject one creation, or weaken the invariant.  Concurrency,
 not the transactions alone, decides the outcome: a transaction that is harmless
-after another can, when it runs without seeing it, produce a state whose merge
+after another can, when it runs on a state without the other's writes, produce a state whose merge
 with the other's is invalid.
 
 Invariant preservation and isolation are expressed by different specs: $\Spec_{\mathcal I}$ constrains exposed database states, while an

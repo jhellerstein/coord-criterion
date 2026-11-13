@@ -221,12 +221,15 @@ $\Spec$ escapes CAP for $E$.
 \subsection{Invariant confluence (\S\ref{sec:iconfluence-instance})}
 \label{app:iconfluence}
 
-The input records which transactions ran and what each one saw.  A
-\emph{transaction history} $h$ (here simply \emph{history}) is a finite
+The input records which transactions ran and whose writes each one ran on.
+A \emph{transaction history} $h$ (here simply \emph{history}) is a finite
 partial order of transaction events, each labeled by a transaction in $T$;
-$e'<e$ means that $e'$ was visible to the replica that ran $e$.  History $h'$
-\inrel $h$ when $h$ is a downward-closed sub-order of $h'$, so each event of
-$h$ keeps exactly the predecessors it had.  The state of a history is computed
+$e'<e$ means that $e$ ran on a state that included the writes of $e'$.  A
+sub-history is \emph{closed} when it contains every event that precedes one of
+its own, that is, when it is a downward-closed sub-order.  History $h'$
+\inrel $h$ when $h$ is a closed sub-history of $h'$, so the events $h'$ adds
+precede no event of $h$, and each event of $h$ keeps exactly the predecessors
+it had.  The state of a history is computed
 event by event.  An event $e$, labeled by the transaction $t_e$, runs on
 $\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
 $\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and the state of $h$ is
@@ -234,26 +237,27 @@ $\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  Because $h$ is a
 partial order and transactions are inflationary ($t(s)\supseteq s$),
 $\mathrm{pre}(e)$ is the state of the sub-history strictly below $e$, and
 $\mathrm{post}(e)$ is the state of the sub-history at or below $e$.  A
-downward-closed sub-history keeps each event's predecessors, and so its
+closed sub-history keeps each event's predecessors, and so its
 $\mathrm{pre}$ and $\mathrm{post}$; hence the state of a union of
-downward-closed sub-histories is the union of their states.  A history is
+closed sub-histories is the union of their states.  A history is
 \emph{locally valid} when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$
 satisfies $\mathcal I$, as when replicas abort transactions that would violate
-the invariant on their own state.  It is \emph{valid} when
-$\mathcal I(\mathrm{eval}(c))$ holds for every downward-closed sub-history
-$c$: every merge of what it contains satisfies $\mathcal I$.
+the invariant on their own state.  It is \emph{valid} when the
+state of each of its closed sub-histories satisfies $\mathcal I$:
+$\mathcal I(\mathrm{eval}(c))$ for every closed sub-history $c$.
 
 The spec $\Spec_{\mathcal I}$ has the locally valid histories as inputs;
-a downward-closed sub-order of a locally valid history is locally valid, so the
+a closed sub-history of a locally valid history is locally valid, so the
 inputs are closed under the order.
 An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
-the spec permits the state of any downward-closed, valid sub-history:
+each valid closed sub-history of $h$ contributes its state as a permitted
+output:
 \[
-  P_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
+  P_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a valid closed
   sub-history of }h\}.
 \]
-A replica may hold some transactions back, but whatever it exposes must be a
-valid state together with everything it contains.  Taking $g$ empty gives
+An output may therefore leave out some of the input's transactions, but what
+it includes must be closed and valid.  Taking $g$ empty gives
 $s_0$, so the spec is total.
 
 \begin{proof}[Proof of Proposition~\ref{prop:iconfluence-lm}]
@@ -261,16 +265,16 @@ We use the common-extension form of Lifted Monotonicity
 (Proposition~\ref{prop:common-expansion-form}).  First, the
 state of a valid history $g$ is reachable, by induction on $g$: if $e$ is
 maximal in $g$, then $g\setminus\{e\}$ and the sub-history strictly below $e$
-are downward closed, hence valid, and their states $\mathrm{eval}(g\setminus\{e\})$
+are closed, hence valid, and their states $\mathrm{eval}(g\setminus\{e\})$
 and $\mathrm{pre}(e)$ are reachable by induction; $\mathrm{post}(e)$ is a valid
 transaction step from $\mathrm{pre}(e)$, and
 $\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
 valid merge.
 
 ($\Rightarrow$) Let rows $(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a
-common \indesc $j$, so each $g_r$ is a downward-closed sub-history of $j$.  Let
-$g=g_1\cup\cdots\cup g_k$.  Every downward-closed sub-history $c$ of $g$ is the
-union of the pieces $c\cap g_r$, each a downward-closed sub-history of the valid
+common \indesc $j$, so each $g_r$ is a closed sub-history of $j$.  Let
+$g=g_1\cup\cdots\cup g_k$.  Every closed sub-history $c$ of $g$ is the
+union of the pieces $c\cap g_r$, each a closed sub-history of the valid
 $g_r$, so by the first step $\mathrm{eval}(c)$ is a union of reachable states.  Invariant
 confluence makes each successive union valid, and a valid merge of reachable
 states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Thus $g$ is valid, and
@@ -280,12 +284,12 @@ For $k=0$, take $g$ empty.
 ($\Leftarrow$) Only the property of having directed fibers is needed.  Let $g_1$ and $g_2$ be valid
 histories, and let $j$ be their disjoint union, with events renamed apart and
 no order between the two parts.  Each event keeps its predecessors, and its
-$\mathrm{pre}$ and $\mathrm{post}$ are states of downward-closed sub-histories
+$\mathrm{pre}$ and $\mathrm{post}$ are states of closed sub-histories
 of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$.
 Because the spec has directed fibers, there is a valid sub-history $g$ of $j$ with
 $\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$,
 so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Every
-downward-closed $c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap
+closed $c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap
 g_2$, both valid, so the same argument gives $\mathcal I(\mathrm{eval}(c))$ and
 $j$ is valid.  Valid histories
 are therefore closed under disjoint union, and under adding an event above all

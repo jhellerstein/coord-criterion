@@ -23,7 +23,7 @@ The equivalence with Bailis et al.'s own Def. 6 is in
   (`T` is the range of `app`.)
 * **Histories** (`Hist Tx`): events are natural-number ids.  A history is a
   partial labeling `lab : Nat → Option Tx` (events are the ids with a label,
-  finitely many) and a strict partial order `lt` (visibility) on its events.
+  finitely many) and a strict partial order `lt` (precedence) on its events.
   We require ids to be numbered along a linear extension (`lt a b → a < b`).
   Every finite partial order admits such a numbering, so this loses no
   generality; it makes the event-by-event recursion for `pre`/`post` a plain

@@ -584,15 +584,15 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«app:iconfluence/history»` | abbrev | "A transaction history `h` … is a finite partial order of transaction events, each labeled by a transaction in `T`; `e' < e` means that `e'` was visible to t… |
-| `«app:iconfluence/expansion-order»` | theorem | "History `h'` extends `h` when `h` is a downward-closed sub-order of `h'`, so each event of `h` keeps exactly the predecessors it had." Lean: |
+| `«app:iconfluence/history»` | abbrev | "A transaction history `h` … is a finite partial order of transaction events, each labeled by a transaction in `T`; `e' < e` means that `e` ran on a state th… |
+| `«app:iconfluence/expansion-order»` | theorem | "History `h'` extends `h` when `h` is a closed sub-history of `h'`, so the events `h'` adds precede no event of `h`, and each event of `h` keeps exactly the… |
 | `«app:iconfluence/eval»` | theorem | "The state of a history is computed event by event. |
-| `«app:iconfluence/sub-keeps-pre-post»` | theorem | "A downward-closed sub-history keeps each event's predecessors, and so its `pre` and `post`." |
-| `«app:iconfluence/eval-union»` | theorem | "Hence the state of a union of downward-closed sub-histories is the union of their states." Lean: |
+| `«app:iconfluence/sub-keeps-pre-post»` | theorem | "A closed sub-history keeps each event's predecessors, and so its `pre` and `post`." |
+| `«app:iconfluence/eval-union»` | theorem | "Hence the state of a union of closed sub-histories is the union of their states." Lean: |
 | `«app:iconfluence/pre-post-as-eval»` | theorem | "Because `h` is a partial order and transactions are inflationary (`t(s) ⊇ s`), `pre(e)` is the state of the sub-history strictly below `e`, and `post(e)` is… |
-| `«app:iconfluence/valid-def»` | theorem | "A history is locally valid when every `pre(e)` and `post(e)` satisfies `𝓘` … It is valid when `𝓘(eval(c))` holds for every downward-closed sub-history `c`." |
-| `«app:iconfluence/valid-locally-valid»` | theorem | (Used in the proof) A valid history is locally valid, since `pre(e)` and `post(e)` are states of downward-closed sub-histories. |
-| `«app:iconfluence/inputs-closed»` | theorem | "The spec `𝒮_𝓘` has the locally valid histories as inputs; a downward-closed sub-order of a locally valid history is locally valid, so the inputs are closed… |
+| `«app:iconfluence/valid-def»` | theorem | "A history is locally valid when every `pre(e)` and `post(e)` satisfies `𝓘` … It is valid when the state of each of its closed sub-histories satisfies `𝓘`: |
+| `«app:iconfluence/valid-locally-valid»` | theorem | (Used in the proof) A valid history is locally valid, since `pre(e)` and `post(e)` are states of closed sub-histories. |
+| `«app:iconfluence/inputs-closed»` | theorem | "The spec `𝒮_𝓘` has the locally valid histories as inputs; a closed sub-history of a locally valid history is locally valid, so the inputs are closed under t… |
 | `«app:iconfluence/spec»` | theorem | "An output is a state, and `u` covers `s` when `s ⊆ u`. |
 | `«app:iconfluence/total»` | theorem | "Taking `g` empty gives `s₀`, so the spec is total." |
 | `«app:iconfluence/proof-common-expansion-form»` | theorem | "We use the common-extension form of Lifted Monotonicity (Prop. |
