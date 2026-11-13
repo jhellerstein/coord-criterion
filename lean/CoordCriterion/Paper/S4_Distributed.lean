@@ -230,7 +230,7 @@ everything they have emitted.  At each participant, `input(j)` followed by
 `output(u)` reaches the same state without commitment (Proposition
 `prop:exposure-boundary`).  The witness shows only that such a state exists
 in the transition system.  Choosing `u`, communicating it, and scheduling the
-transitions are up to the system."
+transitions are left to the operational model."
 
 Lean: `Dist.reconcile_cf` supplies `u`, proves that `(j,u)` survives in every
 endpoint, and gives the commitment-free two-event continuation from each one. -/

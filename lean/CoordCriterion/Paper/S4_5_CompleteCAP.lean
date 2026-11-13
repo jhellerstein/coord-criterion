@@ -70,7 +70,9 @@ combined output would exist; we return to this case at the end of the section.
 We therefore pair a spec with an *explicit possibility relation* `E ⊆ P`, or
 explicit relation for short: the rows whose outputs participants actually
 emit.  Outputs in `P ∖ E` are not emitted by participants; they remain
-permitted in `P` to capture implicit combinations of emitted outputs.
+permitted in `P` to capture implicit combinations of emitted outputs—e.g., as
+could be constructed by external observers or clients making sense of explicit
+outputs across participants.
 
 Both availability and consistency are judged on histories in which a
 partition separates the participants."  Lean: Theorem `thm:complete-cap`,
@@ -329,10 +331,9 @@ theorem «thm:complete-cap/E-eq-P» (sp : Spec I O) (D : Type) :
 
 /-! ### Corollary `cor:complete-cap-any-system` -/
 
-/-- **Corollary `cor:complete-cap-any-system`.**  "If some system for a spec
-has Availability for `E` and Partition Consistency, then so does the spec's
-canonical system for `E`."  (By Def. `def:escapes-cap`, the spec escapes CAP
-for `E`.)
+/-- **Corollary `cor:complete-cap-any-system`.**  "No system does better than
+its spec: if some system has Availability for `E` and Partition Consistency,
+its spec escapes CAP for `E`."
 
 Lean: `Sys` is arbitrary (any basis, any nondeterministic local strategies). -/
 theorem «cor:complete-cap-any-system» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)

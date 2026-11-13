@@ -219,9 +219,8 @@ The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow (Appendix~\ref{app:bases}).  Systems may constrain their runs arbitrarily, and
 their remainder tables may lack rows that their canonical runs keep.  So a spec
 can be confluent while a system for it is not.  The registrar is an example:
-after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$.
-Under the original output order, a canonical run can emit $\bot$, accept
-$aba$, and emit $a$.
+after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$,
+although its canonical run, which only emits $\bot$, can.
 
 The CALM and CAP criteria are about specs and
 their canonical runs.  A system with no \commitment events inherits their
@@ -312,7 +311,9 @@ We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
 participants actually emit.  Outputs in
 $P\setminus E$ are not emitted by participants;
-they remain permitted in $P$ to capture implicit combinations of emitted outputs.
+they remain permitted in $P$ to capture implicit combinations of emitted outputs---e.g.,
+as could be constructed by external observers or clients making sense of explicit outputs
+across participants.
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
@@ -321,8 +322,7 @@ separates the participants.
 \label{def:partitioned-history}
 A \emph{partitioned history} divides the participants into two or more
 sides and contains no receive whose matching send lies on another
-side.  Participants on the same side may still exchange messages, and every
-participant still receives environment input and emits outputs.
+side; participants still receive environment input and emit outputs.
 \end{definition}
 
 \begin{definition}[Explicit possibility relation]
@@ -361,9 +361,6 @@ it produces, each participant $p$ can emit every output in $R(i)\cap E(i)$,
 where $(i,R)$ is $p$'s final state.  \emph{Availability} is shorthand for
 Availability for $P$.
 \end{definition}
-
-Partition Consistency asks that, whatever participants emit on separate sides,
-their states can still be brought to a common state.
 
 \begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
@@ -415,8 +412,8 @@ Appendix~\ref{app:proofs-sec4}.
 
 \begin{corollary}
 \label{cor:complete-cap-any-system}
-If some system for a spec has Availability for $E$ and Partition Consistency,
-then so does the spec's canonical system for $E$.
+No system does better than its spec: if some system has Availability for $E$
+and Partition Consistency, its spec escapes CAP for $E$.
 \end{corollary}
 
 \begin{proof}[Proof sketch]

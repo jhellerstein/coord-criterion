@@ -31,9 +31,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:canonical-state»
 #check @CC.Paper.«eq:canonical-state/largest»
 #check @CC.Paper.«eq:canonical-state/input-moves-canonical»
-#check @CC.Paper.«def:fiber»
-#check @CC.Paper.«def:fiber/upper»
-#check @CC.Paper.«def:fiber/state»
 #check @CC.Paper.«eq:input-event»
 #check @CC.Paper.«eq:input-event/legal-expands»
 #check @CC.Paper.«sec:functional-events/input-cumulative»

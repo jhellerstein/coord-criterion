@@ -185,9 +185,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
     fun hP fam h1 h2 h3 h4 j hj hS => Guard.proper_confluent hP fam h1 h2 h3 h4 j hj hS,
     fun hP hnot => Guard.proper_needs_commit hP hnot⟩
 
-/-- "Longer pipelines nest: the composite `P₂ ∘ P₁` of a proper pipeline can
-itself guard a third stage, and the theorem applies again (Corollary
-`cor:pipelines`).  Locks in the
+/-- "A proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`).  Locks in the
 key-value store would be pure overhead: by (1), the store restricted to logs
 needs no commitment."  Lean: for the log `𝒫 = Inst.smrS1` and execution
 `Inst.execF δ σ₀`, every log is an output of the log, and the pipeline is

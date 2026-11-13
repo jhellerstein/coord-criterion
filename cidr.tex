@@ -79,7 +79,7 @@
   \noalign{\vskip-0.5\arrayrulewidth}}
 % Pointer to the long version (proofs and extended material).
 \newcommand{\extended}{the full paper~\cite{hellerstein2026completecalmfull}}
-\newcommand{\fullproof}{Complete proof in the full paper~\cite{hellerstein2026completecalmfull}.}
+\newcommand{\fullproof}{Proof in the full paper~\cite{hellerstein2026completecalmfull}.}
 \newcommand{\proofinfull}{\begin{proof}In the full paper~\cite{hellerstein2026completecalmfull}.\end{proof}}
 % CIDR only: omit DOIs and URLs from the bibliography (read by ACM-Reference-Format's .bbl).
 \def\showDOI#1{\unskip}
@@ -107,7 +107,7 @@ programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.
 
 We put them on common ground, in a formalism that clarifies the literature and
-offers new results.  A minimalist \emph{\spectype} is a possibility table containing, for
+offers new results.  A minimalist \spectype is a \emph{possibility table} containing, for
 each input, every output a system may produce, with partial orders on inputs and
 outputs.  It is \emph{consistent} when all its runs are confluent.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
@@ -119,9 +119,9 @@ CALM map into the same framework.
 
 Prior CALM results stop at monotonicity: for non-monotone
 specifications, they say only that coordination is needed somewhere.  Our
-unified framework says exactly
+unified framework offers constructive results on both sides: it says exactly
 how much coordination a specification needs, and where.  A non-monotone
-specification's outputs drive irrevocable \emph{\commitments} that are required for consistency,
+specification's outputs determine irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
 \emph{Proper Coordination} identifies which stage of a composition must make the
 \commitments and certifies that later stages need none, validating designs such
@@ -145,7 +145,7 @@ as consensus logs in front of a replicated store.
 
 \ccsdesc[500]{Theory of computation~Distributed computing models}
 \ccsdesc[300]{Information systems~Database transaction processing}
-\keywords{coordination, monotonicity, determination, CALM, CAP, CRDTs}
+\keywords{coordination, monotonicity, CALM, CAP, transactions, CRDTs}
 
 \maketitle
 
@@ -166,17 +166,16 @@ question for one class of programs, consistency models, or design patterns, in
 formalisms that cannot be compared or combined.  This leaves developers
 guessing.
 
-The CALM Conjecture proposed a crisp, bidirectional criterion: consistency can
-be achieved without coordination exactly when a specification is
-monotone~\cite{hellerstein2010declarative}.  But the original proof applied only
-in a restricted setting: Datalog queries evaluated by relational transducer
-networks~\cite{ameloot2013relational,hellerstein2020keeping}. A related question
-comes from the CAP conjecture: which consistency guarantees can remain available
-when participants cannot communicate? There, the original proof applied in a
-different restricted setting: linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are invoked
-broadly: CALM as a rule that monotone programs need no coordination, CAP as a
-general constraint on distributed systems. The folklore outgrew the proofs.
+The CALM Conjecture proposed a crisp, bidirectional criterion:
+consistency can be achieved without coordination exactly when a specification
+is monotone~\cite{hellerstein2010declarative}.  But the original proof applied
+only in a restricted setting: Datalog queries evaluated by relational transducer
+networks~\cite{ameloot2013relational,hellerstein2020keeping}. A related
+question comes from the CAP conjecture: which consistency guarantees can remain
+available when participants cannot communicate? There, the original proof
+applied in a different restricted setting: linearizable
+registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are invoked broadly: CALM as a rule that monotone programs need no coordination, CAP as a constraint on distributed systems. The folklore
+outgrew the proofs.
 
 The apparent connection between CALM and CAP was never established in a common
 formalism, and nearby results only complicate the picture. CRDTs use
@@ -220,21 +219,21 @@ means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.
 
-State-machine-style specs can be projected into this form, by skipping
+State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (\S\ref{sec:scope}).
-Despite its simplicity, our model captures not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
-\S\ref{sec:hat-instance}).
+Despite its simplicity, our model captures not only application invariants,
+but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
+\S\ref{sec:hat-instance}, and \extended).
 
-As a system runs, possibilities narrow: the spec's table loses rows.  When new
-input arrives, the world has moved on, and rows that cannot be reached by
-extending that input are lost.  When the system decides among possibilities, it
-makes a controlled decision to remove rows.  The decision is incidental if each
-removed output is covered by a remaining output that \outrel it, and fateful if
-not.  Choosing between two candidates in a leader election is fateful: nothing
-remaining covers the loser's possibility of a win.  So is closing the polls,
-which rules out every row with a later ballot.  We call a fateful decision a
-\emph{\commitment}: an irrevocable decision, enforceable by coordination
-mechanisms such as locks and consensus.
+As a system runs, possibilities narrow: the spec's table loses rows.
+Newly-arrived input removes rows that cannot be reached by extending that input;
+the world has moved on.  Coordination mechanisms such as locks and consensus
+remove rows by decision.  We call their relevant semantic effect a
+\emph{\commitment}: an irrevocable, fateful system decision.  It can remove a permitted
+output that no remaining output at the same input covers: for example, choosing between two competing candidates
+in a leader election protocol removes the possibility of the loser winning that
+election.  Or it can rule out all rows with a given input; for example, closing
+the polls for an election rules out consideration of any future ballots.
 
 \paragraph{The Criterion: Lifted Monotonicity.}
 The model provides clean definitions for the key ingredients of CALM:
@@ -258,11 +257,12 @@ invariants make every output decision incidental, and we call the pair
 proves that Consistency is equivalent to Lifted Monotonicity, a new reading of
 the CALM acronym.
 
-\paragraph{Coordination is for \commitment.} What of coordination?  A \commitment isolates the contract a coordination
+What of coordination?  A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, agreement protocols,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independently of the mechanism used.
-A system that omits a required \commitment can become inconsistent; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
+A system that omits a required \commitment can become inconsistent; one that
+makes more coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
@@ -299,7 +299,8 @@ We make contributions in four categories:
 
 \noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant
-        Confluence, CRDT observation, and later refinements of CALM are all explained via Complete CALM (\S\ref{sec:instances}).
+        Confluence, CRDT observation, and later refinements of CALM all map
+        into the framework (\S\ref{sec:instances}).
 
 \vspace{0.5em}
 \noindent
@@ -338,7 +339,7 @@ when an output can be emitted without \commitment.
     $a\cdot a$ & \sh{$a$} \\
     $a\cdot b$ & \sh{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -355,7 +356,7 @@ when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -372,7 +373,7 @@ when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{a\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $a$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -389,12 +390,12 @@ when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
   \caption{The election specification and three states reached from it, limited to rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
-  input and its upper fiber.  Gray: lost after an input event; struck
+  input and its future-output set.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
   and (c) follow input events.  In (d) the registrar closes the polls, a \commitment that emitting
   $\bot$ does not require, and emits $\bot$.}
@@ -408,15 +409,14 @@ say how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
 $b$.  The output is whichever candidate has two ballots, or $\bot$ while there
-is no winner.  An input is a vector of the ballots received so far, one entry per voter, with a
-dot for a ballot not yet received.  We write it as a string: $ab\cdot$ means
-$v_1$ voted $a$, $v_2$ voted $b$, and $v_3$'s ballot has not arrived.  For brevity,
+is no winner.  An input is the ballots received so far, written as a
+three-character string with a dot for a ballot not yet received.  For brevity,
 the figure shows only inputs \inrelpart $a\cdot\cdot$.
 
 The two orders require thoughtful design.  The \emph{input order}
-must record accumulated ballots: $ab\cdot$ \inrel $a\cdot\cdot$, while
+must record accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
 $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output order} says which
-announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$.
+announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$. 
 $\bot$ claims nothing, so either winner
 \outrel it, while $a$ and $b$ are incomparable.  In general, the functional table is \emph{monotone}
 when
@@ -432,21 +432,20 @@ state}: the \emph{current input} and the \emph{remainder table} of rows still
 possible from it.  When $v_2$'s ballot for $b$ arrives, the input event
 $\mathsf{input}(ab\cdot)$ produces panel~(b).  The table passively loses the rows
 whose inputs do not extend $ab\cdot$, such as $aa\cdot$: those possibilities are
-lost.  The \emph{upper fiber} (Definition~\ref{def:fiber}) is the set of outputs
-still possible in the remainder table: $\{\bot,a,b\}$ in panel~(b).  If $v_2$
-instead votes for $a$
-(panel~(c)), the upper fiber is a singleton, $\{a\}$, and we call such
-states \emph{determined}.  In that case, input alone has determined an outcome,
+lost.  The \emph{future-output set} is the set of outputs still possible in the
+remainder table: $\{\bot,a,b\}$ in panel~(b).  If $v_2$ instead votes for $a$
+(panel~(c)), the future-output set is a singleton, $\{a\}$, and we call such
+states \emph{determined}.  In this case, input alone has determined an outcome,
 without \commitment.
 
-Panel~(d), by contrast, adds a decision by the \emph{system}; i.e., the implementation
+Panel~(d), by contrast, adds a decision by the \emph{system}: the implementation
 that receives the ballots and announces the result (\S\ref{sec:systems}).  Here
 the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
 closes the polls.  Closing the polls is a \emph{\commitment}: it removes the
 still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$.
-The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result.
-The spec did not require this \commitment: emitting $\bot$ removes
-nothing by itself, since every output still possible extends $\bot$.  Closing the polls is
+The future-output set becomes $\{\bot\}$, so $\bot$ is the determined result.
+The spec did not require this \commitment: emitting $\bot$ alone would remove
+nothing, since every output still possible extends $\bot$.  Closing the polls is
 the registrar's own fateful decision.
 
 \begin{figure}[t]
@@ -476,7 +475,7 @@ the registrar's own fateful decision.
       \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
       \bottomrule
     \end{tabular*}
-    {\footnotesize upper fiber $\{\bot\}$; determined}
+    {\footnotesize future-output set $\{\bot\}$; determined}
   \end{minipage}\par\smallskip
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
@@ -486,30 +485,33 @@ the registrar's own fateful decision.
 \end{figure}
 
 \paragraph{Output and consistency.}
-Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
-rows whose outputs \outrelbase $o$, since later outputs must not contradict it.
-In a functional table, $o$ is a \emph{legal output} when everything in the
-upper fiber already \outrel $o$, so the event removes nothing.  Thus
-$\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  When $o$ is not
-legal, the event removes the rows that conflict with $o$, ruling out their
-inputs; that removal is a \commitment.
+In a functional table, an output is a \emph{legal output} when every output in
+the future-output set \outrel it.  Hence $\bot$ is legal
+in panels~(a) and~(b), and $a$ in panel~(c).
+The output event $\mathsf{output}(o)$ emits $o$ and keeps only the rows whose
+outputs extend $o$, since later outputs must not contradict it.  When $o$ is
+legal, every remaining row qualifies and nothing is lost.  When it is not, the
+event removes the rows that conflict with $o$, ruling out their inputs; that
+removal is a \commitment.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
-for no winner. Under this order (known as the \emph{equality order}), $\bot$ is
-incompatible with future winners, so emitting it requires a \commitment.  That
-change in the output order is Functional CALM in miniature: the spec is monotone
-under the original order, so later outputs \outrelbase every earlier one; under
-the equality order it is non-monotone, and some outputs can be emitted only with a \commitment.
+for no winner (the \emph{equality order}, under which each element is related only
+to itself).  Then $\bot$ is incompatible with future winners, so emitting it
+requires a \commitment.  That change in the output order is Functional CALM in
+miniature: the original order is monotone, so later outputs \outrelbase every
+earlier one; under the equality order, some outputs can be emitted
+only with a \commitment.
 
-To see why, we follow the events.  A \emph{run} is a sequence of input and output
+To see why, we can follow the events.  A \emph{run} is a sequence of input and output
 events from a starting state, like the sequences that produce the panels of
 Figure~\ref{fig:election-frames}.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
 $aba$ \outrel both $\bot$ and $a$.  So a run that emits $\bot$ at $ab\cdot$ and
 a run that receives $aba$ and emits $a$ can never be reconciled at $aba$.
-Emitting $\bot$ is safe only with the \commitment that rules out $aba$ and
-$abb$; without it, the two runs would diverge for good.  The argument uses only the table and its orders, so the need for the \commitment is a property of the spec, not of any system.
+Without the \commitment, the two runs would diverge for good.  The need for a
+\commitment is thus a property of the table and its orders alone, not of any
+system.
 
 Runs are the foundation of the consistency side of CALM.  Input and output
 events form a transition system over specification states, and a spec is
@@ -561,42 +563,30 @@ $\Spec$ is \emph{monotone} if
 \end{equation}
 \end{definition}
 
-We say that a row $(k,u)$ of a relation $R\subseteq I\times O$ is \emph{at
-input} $k$.  To describe tables compactly, a predicate in square brackets
-selects rows, and commas separate conjuncts:
-$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ holds the rows whose
-input \inrel $j$ and whose output \outrel $o$.  As in relational algebra,
-$\pi_{\mathrm{out}}(R)$ is the set of outputs in $R$.
-
 \paragraph{States: remaining possibilities.}
 As illustrated by the non-gray text in Figure~\ref{fig:election-frames}, a
 \emph{specification state} $\sigma=(i,R)$ records the current input and the
 possibilities still open: $i$ is the \emph{current input}, and $R\subseteq P$
 is the \emph{remainder table}.  The table $R$ contains a row at $i$ and only
-rows at \indescs of $i$.  An input $k$ is \emph{legal} when $R$ contains a row
-at $k$.  Rows are never added during execution.  The \emph{canonical state at
-$i$} has received $i$, emitted nothing, and removed no rows:
+rows at \indescs of $i$.  An input $k$ is \emph{legal} when $R$ contains a
+row at $k$.  Rows are never added during execution.
+
+To describe tables compactly, a predicate in square brackets selects rows of a
+relation $R\subseteq I\times O$, and commas separate conjuncts:
+$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ holds the rows whose
+input \inrel $j$ and whose output \outrel $o$.  We say that a row $(k,u)$ is
+\emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs in $R$.
+
+The \emph{canonical state at $i$} has received $i$, emitted nothing, and
+removed no rows:
 \begin{equation}
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
-    \label{eq:canonical-state}
+  \label{eq:canonical-state}
 \end{equation}
-
-Two sets of outputs recur throughout our discussion: those a table permits at a given input,
-and those it still permits there or once more input arrives.  In panel~(b) of
-Figure~\ref{fig:election-frames}, the first is $\{\bot\}$ at $ab\cdot$, and the
-second, shaded, is $\{\bot,a,b\}$.
-
-\begin{definition}[Fiber, upper fiber]
-\label{def:fiber}
-Let $R$ be a table and $k$ an input.  The \emph{fiber} of $R$ at $k$ is
-$R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
-\emph{upper fiber} of $R$ at $k$ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe
-k])$, the outputs paired with $k$ or any of its \indescs.
-\end{definition}
-
-For a state $(i,R)$, the upper fiber at $i$ is $\pi_{\mathrm{out}}(R)$: every
-output still possible.  The state is \emph{determined} when its upper fiber at
-$i$ has one element.
+The \emph{fiber} of $R$ at $k$ is the set of outputs paired with $k$:
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The \emph{future-output set} of
+$(i,R)$ is $\mathrm{out}(R)$: all outputs still possible from $i$.  The state
+is \emph{determined} when its future-output set has one element.
 
 \paragraph{Events: narrowing possibilities.}
 Each event applies a selection predicate on one column of the remainder table.
@@ -617,7 +607,7 @@ ones.
 \begin{definition}[Legal output]
 \label{def:exposable}
 At a state $(i,R)$, let $o$ be the unique output at the current input.  The
-output $o$ is \emph{legal} when every output in the upper fiber \outrel
+output $o$ is \emph{legal} when every output in the future-output set \outrel
 $o$.
 \end{definition}
 
@@ -626,40 +616,39 @@ Emitting an output may require a \commitment.
 \begin{definition}[Output event, canonical \commitment]
 \label{def:output-event}
 At a state $(i,R)$ with current output $o$, the \emph{output event}
-$\mathsf{output}(o)$ atomically keeps only the rows whose outputs \outrelbase $o$,
-and then emits $o$:
+$\mathsf{output}(o)$ atomically keeps the rows whose outputs \outrelbase $o$,
+and emits $o$:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
 If $o$ is not legal, some rows have outputs that do not \outrelbase $o$;
 removing them is the \emph{canonical \commitment} $x_o$.  In a functional table
-each input has only one row, so $x_o$ rules out those rows' inputs.
+each input has one row, so $x_o$ rules out those rows' inputs.
 \end{definition}
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  At a
 determined state the current output is the only future output, so it is legal,
-and an event from a determined state always leads to another determined state
-with the same output.
-% A system may also issue \commitments of its own, as the registrar does in
-% Figure~\ref{fig:election-frames}(d) (\S\ref{sec:systems}).
+and an event from a determined state always leads to another determined state.
+A system may also issue \commitments of its own, as the registrar does in
+Figure~\ref{fig:election-frames}(d) (\S\ref{sec:systems}).
 
 \paragraph{Runs and consistency.}
 We now consider the executions corresponding to a spec.
 \begin{definition}[Specification event, canonical run, \commitment-free]
 \label{def:run}
 Input and output events are \emph{specification events}, or just \emph{events}.  A \emph{canonical run}, or just \emph{run}, is a
-finite sequence of events from the
+finite sequence of them from the
 canonical state $\sigma_P(i)$ at some input $i$.  It is
 \emph{\commitment-free} when no output event in it applies a \commitment; the
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
+We compare a system's choices with every behavior the declared spec permits,
+not only those the system happens to produce.
 
-
-Input and output events are both relational selections, and selections
-commute, so a run's remainder table depends only on its last input and the
-outputs it emitted:
+Input events keep only rows whose input \inrel the current one, and output
+events keep only rows whose outputs \outrelbase what was emitted.  Both steps are relational selections, which commute.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -677,14 +666,14 @@ Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are \emph{confluent at} a
 common \indesc $j$ of their current inputs when each can be continued to one
 common state with current input $j$.  An \spectype is \emph{consistent} when
 every finite family of runs is confluent at every common \indesc of its current
-inputs, including inputs that some run's \commitments have ruled out.
+inputs.
 \end{definition}
 
 Consistency as we define it has to hold after every output.  An inconsistent
 output, once emitted, can influence the environment, which in turn may generate
 inputs based on that output, leading to unintended consequences.  This is what
 Lamport calls ``anomalous behavior''~\cite{lamport1978time}, and our
-definitions forbid it.  Nonetheless, output orders align our view with the ``eventual
+definitions forbid it.  Output orders align our view with the ``eventual
 consistency'' literature: outputs that can only \outrelbase each other, as in
 CRDTs, are always consistent by our definition.  We discuss CRDTs further in \S\ref{sec:crdt-instance}.
 
@@ -709,7 +698,7 @@ $R_r$.  Conversely, the two events above reach a common state.  \fullproof
 Consistency thus ensures that runs never diverge irreparably: there is no
 ``split brain''.  Whatever events a finite collection of runs contains, at any
 common \indesc of their current inputs, some state is reachable by every run
-and contradicts none of their outputs.  Consistency is a safety property of the spec:
+and contradicts none of their outputs.  Consistency is a property of the spec:
 it describes no protocol and promises no delivery or termination.
 
 \subsection{The Functional CALM theorem}
@@ -745,15 +734,14 @@ $i$.
 \fullproof
 \end{proof}
 
-By Corollary~\ref{cor:state-by-input}, knowing the input is enough to know the
-state, and with it the one output.  Monotonicity also governs legality: a monotone spec can emit every
+Knowing the input is therefore enough to know the state, and with it the one
+output.  Monotonicity also governs legality: a monotone spec can emit every
 current output without \commitment, while if $f(i)\not\OutputOrd f(k)$ for some
 $i\InputOrd k$, emitting $f(i)$ at $\sigma_P(i)$ must rule out $k$.
 Section~\ref{sec:complete-calm-theorem} states this in general.
 
-\paragraph{Classical CALM and CRDTs.}
-Functional CALM restates the familiar CALM dichotomy at the level of the spec
-rather than inside a particular programming language.
+This is the familiar CALM dichotomy stated at the level of the spec
+rather than inside a particular programming language.  
 Classical CALM fits, with inputs $J$ as sets of facts ordered by
 inclusion and output views $Q(J)$ ordered by inclusion.  Functional
 monotonicity becomes $J\subseteq J'\Rightarrow Q(J)\subseteq Q(J')$,
@@ -786,7 +774,7 @@ where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  The
 relation $P$ is the spec's \emph{possibility relation} and is total
 on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
-$\fiber{i}=\{o\in O:(i,o)\in P\}$ may contain several
+$\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
 outputs; the \spectype is \emph{nondeterministic} when some fiber does.  A
 functional \spectype is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
@@ -842,9 +830,9 @@ serial schedules, to which executions correspond via equivalence (\S\ref{sec:hat
 \end{figure}
 
 The two specs behave differently when an output is emitted.  The transaction
-schedules $[A,B]$ and $[B,A]$ are incompatible under the equality order, so emitting either requires a
+schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting either requires a
 \commitment that removes the other.  In the traceroute spec, by contrast, every
-removed route set is contained in a remaining one that also contains the
+removed route set is \outrelpast by a remaining one that also \outrelbase the
 emitted observation, so the removal loses nothing and needs no \commitment.
 
 Lifted Monotonicity captures this difference.  It combines two properties:
@@ -880,7 +868,7 @@ A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
 $X\subseteq F$ is compatible in $F$.  A spec has \emph{directed fibers} when every fiber is directed.
 \end{definition}
 
-A singleton fiber is trivially directed.  Each traceroute fiber is directed
+A singleton fiber is trivially directed.  The traceroute fiber is directed
 too: any route sets in it can be merged into one that contains them all, and
 the merged set is also a permitted observation.  The two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
@@ -892,8 +880,7 @@ or least.  In the fiber $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under
 inclusion, for example, $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and
 $\{b\}$ have two incomparable minimal common \outnouns.
 
-\paragraph{Lifted Monotonicity.} The two conditions become one
-criterion.
+\paragraph{Lifted Monotonicity.}
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
 An \spectype satisfies \emph{Lifted Monotonicity}, and is called
@@ -903,15 +890,15 @@ $X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.
 
 With singleton fibers it is functional monotonicity
 (Definition~\ref{def:functional-monotonicity}). Lifted
-Monotonicity holds exactly when both Relational Monotonicity and directed fibers
-hold.
+Monotonicity holds exactly when Relational Monotonicity and directed fibers
+both do.
 
 \paragraph{The common-extension condition.}
-Lifted Monotonicity is stated for one input and its extensions, but runs may
-emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
-Such runs can be reconciled only at a common \indesc $j$ of both, which calls
-for a condition on rows at different inputs: a common \outnoun of $o_1$ and
-$o_2$ in the fiber at $j$.  The two conditions turn out to be equivalent.
+Lifted Monotonicity compares an input with its
+own input extensions. Runs may emit outputs at incomparable inputs, say
+$o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
+\indesc $j$ of both. The next condition asks exactly that: a common
+\outnoun of $o_1$ and $o_2$ in the fiber at $j$.
 
 \begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
@@ -985,20 +972,21 @@ alone.
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
 An \spectype is consistent if and only if it satisfies Lifted
-Monotonicity.
+Monotonicity, equivalently the common-extension condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds
-if and only if the common-extension condition holds.
-If that condition holds, a common \outnoun $u\in P(j)$
+If the common-extension condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run.
 If outputs emitted at inputs with a common \indesc $j$ are incompatible in
 $P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.  \fullproof
 \end{proof}
 
-The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
+The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
+logic language.  The new, more general result is Consistency As Lifted Monotonicity.
+The condition that characterizes consistency is now a
+property of a spec: Lifted Monotonicity, which for a function is
 ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
 both theorems hold for distributed histories.
 
@@ -1013,7 +1001,7 @@ if every output at every state reachable without \commitment is legal.
 \begin{proof}[Proof sketch]
 If the common-extension condition holds, every output at a reachable state has
 a common \outnoun with each remaining output, so it is legal.  Conversely,
-checking legality at canonical states, row by row, yields the common
+checking legality at canonical states, one row at a time, yields the common
 \outnouns the condition requires.  \fullproof
 \end{proof}
 
@@ -1045,9 +1033,10 @@ Participants exchange messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.
 A \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$ if it
 carries none, and application-specific data $d$, such as timestamps, version
 vectors, or state identifiers.  Receiving a message does not change the
-specification state.  A participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a legal common \indesc $k$
-of $i$ and $j$.  The system chooses $k$ (\S\ref{sec:systems}); the data $d$ can
-influence that choice but never changes the state directly.
+specification state.  A participant at $(i,R)$ that receives $(j,d)$ may
+incorporate $j$ by its own $\mathsf{input}(k)$, for a legal common \indesc $k$
+of $i$ and $j$; the data $d$ can influence what the system does next
+(\S\ref{sec:systems}) but never changes the state directly.
 
 Send and receive events connect the participants' locally ordered runs.  Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -1063,15 +1052,16 @@ receive has a matching send at another participant, and each participant $p$'s
 specification events, in order, form a run from $\sigma_P(i_p)$.  A
 \emph{consistent cut} $C$ is a set of history events closed under
 happens-before: whenever $C$ contains an event, it contains every event that
-happens before it~\cite{lamport1978time,chandy1985distributed}.
+happens before it~\cite{lamport1978time,chandy1985distributed}.  (The term is
+unrelated to our consistency.)
 \end{definition}
 
-The term is standard and unrelated to our notion of consistency.  At a
-consistent cut $C$, the specification events of $C$ at participant $p$,
+At a consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, ending in some state
-$\sigma_p$.  For a common \indesc $j$ of the participants' current inputs,
-confluence asks whether the history can be extended so that every participant
-reaches the same state $(j,R)$.
+$\sigma_p$.  A \emph{continuation} at $C$ extends the history events of $C$
+with further history events.  For a common \indesc $j$ of the participants'
+current inputs, confluence asks whether some continuation brings every
+participant to the same state $(j,R)$.
 
 \begin{corollary}[Complete CALM at consistent cuts]
 \label{cor:distributed-calm}
@@ -1093,15 +1083,15 @@ inputs; by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have
 emitted.  Each participant can then perform $\mathsf{input}(j)$ and
 $\mathsf{output}(u)$ and reach the same state without \commitment
 (Proposition~\ref{prop:exposure-boundary}).  The spec guarantees only that such
-a $u$ exists; choosing it, communicating it, and scheduling the events are up
-to the system (\S\ref{sec:systems}).
+a $u$ exists; choosing it, communicating it, and scheduling the events belong to
+the operational model (\S\ref{sec:scope}).
 
 For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
 arrival order, or outputs emitted.  This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
 asks of replicated state.  The semilattice merge of CRDTs suffices for it but
-is not needed: it follows directly from any monotone functional
+is not needed: it follows directly from any consistent functional
 spec.
 
 \subsection{Systems and canonical runs}
@@ -1147,7 +1137,7 @@ A spec says which behaviors are permitted, not how a system chooses among them. 
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
 canonical \commitment $x_o$ that an output requires.  Systems may commit
 earlier or remove more: the registrar may close the polls before announcing a
-result, and a lock manager may fix an order before emitting an output.  We therefore add a third kind of event alongside $\mathsf{input}(j)$ and
+result, and a lock manager may fix an order before emitting it.  We therefore add a third kind of event alongside $\mathsf{input}(j)$ and
 $\mathsf{output}(o)$.  A \emph{\commitment event} $\mathsf{apply}(\gamma)$
 applies a sequence $\gamma$ of \commitments and emits nothing, and systems may
 choose to apply \commitments this way, independent of inputs or outputs.  When
@@ -1164,10 +1154,10 @@ strategies describe how participants use them, and its basis records the
 
 Two familiar concurrency control examples make this concrete. Two-phase locking
 (2PL) orders transactions pairwise through lock requests: when $B$ waits for a
-lock $A$ holds, the 2PL \commitment $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else.
+lock $A$ holds, $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else.
 Multiversion timestamp ordering (MVTO)~\cite{bernstein1981concurrency} orders transactions totally through timestamp
-assignment: the MVTO \commitment $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet
-stamped. The two systems' bespoke \commitments each leave different possibilities
+assignment: $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet
+stamped. Both are \commitments, but each leaves different possibilities
 afterward (Figure~\ref{fig:cc-commitments}).
 
 \begin{lemma}[Observable Equivalence]
@@ -1185,15 +1175,15 @@ representation in a system's \commitment basis.
 The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow.  Systems may constrain their runs arbitrarily, and
 their remainder tables may lack rows that their canonical runs keep.  So a spec
-can be confluent while a system for it is not.  The registrar is an example: after closing the polls at $ab\cdot$, it cannot
-accept the late ballot $aba$.  Under the original output order, a canonical run
-can emit $\bot$, accept $aba$, and emit $a$.
+can be confluent while a system for it is not.  The registrar is an example:
+after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$,
+although its canonical run, which only emits $\bot$, can.
 
 The CALM and CAP criteria are
 about specs and their canonical runs. A system with no \commitment events
 inherits their confluence, since its runs are canonical runs. For a
 system with \commitments of its own, showing that it inherits that confluence
-requires an argument about that system, which is beyond this paper's scope.
+requires an argument about that system, beyond this paper's scope.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
@@ -1226,9 +1216,9 @@ combined output would exist; we return to this case at the end of the section.
 
 We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
-participants may actually emit.  Outputs in
+participants actually emit.  Outputs in
 $P\setminus E$ are not emitted by participants;
-they remain permitted in $P$ to capture implicit combinations of emitted outputs.
+they remain permitted in $P$ to capture implicit combinations of emitted outputs, for example those an observer or client could assemble from explicit outputs across participants.
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
@@ -1236,9 +1226,8 @@ separates the participants.
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
 A \emph{partitioned history} divides the participants into two or more
-sides and contains no receive whose matching send lies on another side.
-Same-side messages are allowed, and participants still receive environment
-input and emit outputs.
+sides and contains no receive whose matching send lies on another
+side; participants still receive environment input and emit outputs.
 \end{definition}
 
 \begin{definition}[Explicit possibility relation]
@@ -1248,7 +1237,7 @@ outputs participants actually emit.  Write $E(i)$ for its outputs at input
 $i$.
 \end{definition}
 
-For example, consider two-phase commit.  We focus on the spec for the
+For example, consider two-phase commit (2PC).  We focus on the spec for the
 voters; the coordinator is an observer of that spec.  We're interested in the
 fiber at the input \textsf{prepare(tx)}: how each voter responds to that
 prepare message.  Each possible explicit response is a row of $E$.  The overall
@@ -1272,9 +1261,6 @@ such history, each participant $p$ can emit every output in $R(i)\cap E(i)$.
 \emph{Availability} is shorthand for Availability for $P$.
 \end{definition}
 
-Partition Consistency asks that the sides' states can still be brought to a
-common state.
-
 \begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
 The system has \emph{Partition Consistency} when the final cut of every
@@ -1287,7 +1273,7 @@ canonical runs and emit only outputs of $E$.
 
 \begin{definition}[Escaping CAP]
 \label{def:escapes-cap}
-A spec \emph{escapes CAP} for explicit relation $E$ when its canonical system for $E$ has
+A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
 Availability for $E$ and Partition Consistency.
 \end{definition}
 
@@ -1305,7 +1291,7 @@ a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-A spec escapes CAP for explicit relation $E$ if and only if it satisfies Lifted Monotonicity for
+A spec escapes CAP for $E$ if and only if it satisfies Lifted Monotonicity for
 $E$.
 \end{theorem}
 
@@ -1324,8 +1310,8 @@ $\fiber{j}$.  \fullproof
 
 \begin{corollary}
 \label{cor:complete-cap-any-system}
-If some system for a spec has Availability for $E$ and Partition Consistency,
-then so does the spec's canonical system for $E$.
+No system does better than its spec: if some system has Availability for $E$
+and Partition Consistency, its spec escapes CAP for $E$.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
@@ -1341,14 +1327,13 @@ there is none.
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment.
 
-We return to the voters' spec.  Each voter decides whether it can commit and
-emits its vote, yes or no.  That decision is a \commitment: a voter that votes
-yes rules out every set of votes in which it votes no.  But it is a single-voter
+We return to the voters' spec.  Each voter decides whether it can commit and emits
+its vote, yes or no.  That decision is a \commitment: a voter that votes yes
+rules out every set of votes in which it votes no.  But it is a single-voter
 \commitment involving no communication, so the voter can make it and produce
 output during a partition.  Each vote is cast by a different voter, so votes
-emitted on different sides of a partition never conflict (the full paper
-formalizes this placement as a deployment~\extended), and every set of votes an
-observer may collect is consistent.
+emitted on different sides of a partition never conflict (the full paper formalizes this placement as a deployment~\extended), and every
+set of votes an observer may collect is consistent.
 
 A partition does not change the intrinsic \commitments a spec needs; it prevents separated participants from jointly enforcing them through coordination.  When Lifted Monotonicity
 for $E$ fails, some output of $E$ waits for another side, sacrificing
@@ -1407,8 +1392,8 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.  Their
 \end{equation}
 where $\pi$ and $\Join$ are relational projection and equijoin.  Every $i\in I$
 has a nonempty fiber in $P_2\circ P_1$, since $P_1$ is total on $I$ and $P_2$ is
-total on $M$.  We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
-its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.
+total on $M$.  When the two specs run as a pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
+we say that $\Spec_1$ \emph{guards} $\Spec_2$.
 
 \begin{lemma}[Composition]
 \label{lem:composition}
@@ -1432,7 +1417,7 @@ By associativity the lemma extends to finite pipelines.
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
 
-We return to the replicated store of the section's opening.  The key-value store is not
+We return to the replicated store of the opening.  The key-value store is not
 monotone on its own, but it is monotone on what the log offers: a log fixes
 the order of commands, and a longer log only extends the responses.  The log
 issues a \commitment to offer only such inputs, freeing the store from making any
@@ -1460,7 +1445,7 @@ Let $\Spec_1$ guard $\Spec_2$.
         system as its next input and answer it without \commitment.  Replacing
         each output of $\rho$ by these answers, and dropping the \commitment
         events of $\rho$, gives a canonical run of $P_2\circ P_1$.  Such runs are
-        confluent whenever the runs of the chosen system for $\Spec_1$ are.
+        confluent whenever the runs of the system are.
   \item If the pipeline is proper and $P_2\circ P_1$ does not satisfy Lifted
         Monotonicity, some output of $\Spec_1$ needs a \commitment.
 \end{enumerate}
@@ -1471,8 +1456,7 @@ Proposition~\ref{prop:exposure-boundary}) applied to $\Spec_2|_{\Spec_1}$. The
 full proof of (1) and the proofs of (2) and (3) are in \extended.
 \end{proof}
 
-Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
-itself guard a third stage, and the theorem applies again (\extended).  Locks in
+A proper pipeline is itself a guard for a further stage.  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment.
 
@@ -1490,11 +1474,9 @@ simpler puzzle than our opening one.
 Consider the spec for an incrementing counter that is capped at $9$, and
 compose it with a downstream spec for a double-digit threshold test, which
 outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.
-% Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
-% is only a lower bound, and the test is monotone.
-% Suppose instead that every answer must be final.
-Suppose that every answer must be final: unchanging in the face of more input.
-Then the output order is equality, and the test cannot
+Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
+is only a lower bound, and the test is monotone.  Suppose instead that every
+answer must be final.  Then the output order is equality, and the test cannot
 emit \textsf{false} without a \commitment, since a later count of $10$ would
 contradict it.  Yet when composed after the capped counter, the pair of
 components needs no \commitment.  When do composed specs erase the need for
@@ -1533,38 +1515,34 @@ and applications to distributed-systems protocols such as registers, $k$-set agr
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-The CALM Theorem of Ameloot et al.\ is stated in a particular operational
-model: a query can be
+The CALM Theorem of Ameloot et al.\ is an operational result: a query can be
 evaluated on a network of relational transducers without coordination exactly
 when it is monotone, under that model's assumptions about data placement and
 execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
 restates the result as a property of a spec, so that it can be compared with
-specs outside Datalog; it does not replace the operational details.  Li and
-Lee recently proved the same correspondence directly for functions on set inputs
-under inclusion, among other results~\cite{li2025coordinationfree}.  Earlier
+specs outside Datalog; it does not replace the operational details.  Later
 refinements of the theorem change only the input order.  When transducers know
 how data is placed, more queries become coordination-free; Ameloot et al.\
 characterized these classes by domain-distinct and domain-disjoint
 monotonicity~\cite{ameloot2015weaker,zinn2012weak,zinn2012winmove}.  Each is
 Functional CALM under a sparser input order: a node's input $I$ is extended by
 new facts $J$ only when the placement policy leaves the node unable to rule out
-$J$.
+$J$.  Among other results, Li and Lee prove the case of set inputs under
+inclusion~\cite{li2025coordinationfree}.
 
 Baccaert and Ketsman show that a nondeterministic behavior can be computed
 without a list of all nodes exactly when it contains a \emph{node monotone}
 behavior~\cite{baccaert2023dcbq,baccaert2026spectrum}; node monotonicity is the
-common-extension condition for two rows whose networks share no node, and
-Complete CAP extends it to networks that overlap~\cite{hellerstein2026completecalmfull}.
+common-extension condition for two rows whose inputs place facts at disjoint
+sets of nodes, and Complete CAP drops that restriction~\cite{hellerstein2026completecalmfull}.
 
 \subsection{CRDTs and monotone queries}
 \label{sec:crdt-instance}
 
-
 A CRDT uses join semilattices to guarantee that replicas that have received
 the same updates converge to the same state.  That guarantee, Strong Eventual
 Consistency, says nothing about what a client observes when it queries a
-replica that has not yet received every update.  Such a query risks Lamport's anomalous behavior
-(\S\ref{sec:functional-specifications}).  Laddad et al.\ proposed
+replica that has not yet received every update.  Laddad et al.\ proposed
 monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
 
@@ -1578,7 +1556,7 @@ set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
 test: a later removal grows $R$ and shrinks the answer.  The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
-common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).
+common extension, not a least one (\S\ref{sec:lifted-monotonicity}).
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
@@ -1614,7 +1592,7 @@ Lost Update, such as snapshot isolation, repeatable read, and serializability, $
 \end{theorem}
 \proofinfull
 
-The timestamp condition in the theorem is required, correcting an error in the pseudocode of
+The timestamp condition is required, correcting an error in the pseudocode of
 the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
@@ -1630,7 +1608,7 @@ but no stronger consistency, while staying always available (every read and
 write completes whatever messages are lost) and one-way convergent (a node that
 can receive from another eventually reflects the other's
 updates)~\cite{mahajan2011consistency}.  With real-time precedence recorded in
-the input, both parts of their result follow from Complete CAP (see \extended).
+the input, both parts of their result follow from Complete CAP (\extended).
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
@@ -1670,18 +1648,18 @@ invariant confluent.
 \label{sec:scope}
 
 Automata are a traditional way to model operational behavior
-abstractly~\cite{lynch1987io}.  Our model keeps only the
+abstractly~\cite{lynch1987io,lynch1996distributed}.  Our model keeps only the
 inputs and outputs of that behavior and drops the operational details.  The
 mapping is straightforward: for each input, record the outputs of the runs that
 consume it.  Two standard approaches then apply, both used widely and with
 success.  Model checkers explore runs on bounded
-inputs~\cite{newcombe2015aws};
+inputs~\cite{flanagan2005dpor,newcombe2015aws};
 their input/output pairs become a finite spec in our model that can be tested for
 violations of Lifted Monotonicity.  The only additional requirement is on the
 checker's bounds: any input it reports on must have had all its executions
 explored. The more comprehensive approach is to use
 formal proofs to declare a spec and show, by the standard obligations
-of refinement~\cite{abadi1991refinement}, that it represents
+of refinement~\cite{abadi1991refinement,lynch1995forward}, that it represents
 the machine: every execution's output is dominated by a declared one, and every
 declared row is produced by some execution.  Such proofs are routinely
 mechanized~\cite{hawblitzel2015ironfleet}, and Lifted Monotonicity is then
@@ -1726,13 +1704,13 @@ if and only if the program is non-monotone. Ameloot et al.\
 proved it, but only for relational languages, which to date have
 still not become mainstream beyond query processing (more on this below).
 
-This paper moves the declarations one level higher, from queries to specs: all
-that matters about a spec is the mapping from a program's inputs
+This paper moves the declarations one level higher, from queries to views: all
+that matters about a spec is the single view mapping a program's inputs
 to its output. Eliding the query logic frees the analysis from any particular
 language and broadens what can be specified. Prior work focused on implementing
 complex programs
 declaratively~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2011bloom}.
-This ``declarative engineering'' offered concrete benefits in
+This was interesting ``declarative engineering'' with concrete benefits in
 analysis and optimization. But the higher-level model here also captures abstract
 families of guarantees, like CAP and isolation levels, which have no application or
 protocol in mind.
@@ -1781,32 +1759,34 @@ potential program synthesis and optimization.
 \section{Conclusion}
 \label{sec:conclusion}
 
-The simplicity of \spectype[s] provides a unified foundation for the
-coordination-avoidance literature, and clarifies the intrinsic purpose of coordination:
-removing possibilities via \commitments.
-The question of coordination-free consistency becomes clear in this model:
-when must a system make a fateful decision in order to emit an output?
-Functional CALM answers the question for functional specs: runs
-stay confluent as input arrives exactly when a spec is monotone, and then no
-output needs a \commitment.  This generalizes classic CALM to any function
-from inputs to outputs.
+A spec abstracts execution details away, and the results here reduce
+to a single question: can a participant act on what it knows without being
+contradicted by what it learns later?  Mutexes, locks, atomic instructions, and
+agreement protocols prevent such contradictions by issuing \commitments.
+Functional CALM answers the question for functions: a functional spec
+stays confluent as input arrives exactly when it is monotone, and then no
+output needs a \commitment.  This generalizes the classic result from logical fact
+sets to arbitrary input and output orders.
 
 Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When the test fails, some reachable output
 requires a \commitment, which rules out an input or some of its outputs.
 Because the model makes \commitments explicit, it can also show where a
-composition coordinates (\S\ref{sec:composition}).
-%  A totally ordered log
-% and a key-value store are each non-monotone on their own, yet when the log
-% guards the store, the log's \commitments are all the composition needs, and
-% the store needs none.  Multi-Paxos is one way to distribute them.
-Complete CAP is the partition form of the same equivalence: a spec escapes
-the CAP tradeoff exactly when it satisfies Lifted Monotonicity for its explicit possibility relation.
+composition coordinates (\S\ref{sec:composition}).  A totally ordered log
+and a key-value store are each non-monotone on their own, yet when the log
+guards the store, the log's \commitments are all the composition needs, and
+the store needs none.  Multi-Paxos is one way to distribute them.
 
-Our model of \spectype[s] and \commitments opens a range of new questions.
-One direction
-extends the boolean criterion of this paper to a quantity: a Determination
+Complete CAP is the partition form of the same equivalence.  A system can keep
+the outputs selected by a spec's explicit relation available, and
+consistent, through partitions exactly when they have a common \outnoun at
+every common \indesc of their inputs; when the relation selects every output,
+this is Lifted Monotonicity.
+
+The generality of our specification model opens a range of new questions
+regarding the nondeterminism of specs and their \commitments. One direction
+extends the boolean criteria of this paper to metrics: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
 needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
@@ -1828,7 +1808,7 @@ and revising text, and checking mathematical arguments with Lean proofs.  All
 content was reviewed, validated, and approved by the author.
 \end{acks}
 
-\bibliographystyle{ACM-Reference-Format-cidr}
+\bibliographystyle{ACM-Reference-Format}
 \bibliography{references,cidr-extra}
 
 \end{document}

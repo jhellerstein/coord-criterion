@@ -109,6 +109,7 @@ def main():
               "\\textcolor{%s}{small gray [was]} is the old version.  %d paragraphs changed.}}"
               "\\par\\medskip\n" % (base.replace("_", "\\_"), NEWC, OLDC, n_changed))
     res = res.replace("\\maketitle", "\\maketitle\n" + legend, 1)
+    res = "\n".join(ln.rstrip() for ln in res.split("\n"))
     open(OUT, "w").write(res)
     print(f"{n_changed} new or changed paragraphs; wrote {OUT}")
 
