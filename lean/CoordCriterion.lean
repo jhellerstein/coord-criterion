@@ -38,6 +38,7 @@ import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.Instances.BaccaertKetsman
 import CoordCriterion.Instances.BKTransducers
+import CoordCriterion.Instances.BKSufficiency
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineCofinal
