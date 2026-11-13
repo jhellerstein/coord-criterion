@@ -56,8 +56,9 @@ Lean: `Deployment sp n` has a field `A : Fin n → Table I O` (the paper's
 are used (`Authorized`). -/
 abbrev «def:deployment» (sp : Spec I O) (n : Nat) : Type := CC.Deploy.Deployment sp n
 
-/-- Def. `def:deployment`: "The *emitted rows* of a run are the pairs `(i,o)`
-such that the run emits `o` at current input `i`."  For a canonical run of one
+/-- Def. `def:deployment`: "Emitted rows are as in Definition
+`def:emitted-rows`" ("the pairs `(i,o)` such that the run emits `o` at current
+input `i`").  For a canonical run of one
 participant these are `m.rows`; along an event list they are computed by
 `emitted`, which tracks the current input through input events. -/
 theorem «def:deployment/emitted-rows» (m : PRun sp) (c j : I) (o : O)

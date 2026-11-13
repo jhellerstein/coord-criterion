@@ -42,7 +42,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
 /-! ## Appendix F preamble -/
 
-/-- "The emitted rows of a run are as in Definition `def:deployment`" (the
+/-- "Emitted rows are as in Definition `def:emitted-rows`" (the
 pairs `(i,o)` such that it emits `o` at current input `i`).  Lean: for a canonical execution `es` started at
 current input `i`, `emRows i es`. -/
 abbrev «app:cap-response/emitted-rows» : I → List (Event I O) → List (I × O) := emRows
@@ -392,8 +392,8 @@ theorem «thm:complete-cap-response/proof-sufficiency» (Q : Obligation sp) (T :
 /-! ### Remark "Without replication" -/
 
 /-- **Remark "Without replication"**: "For a system that is not replicated,
-fix the participant set.  The same proof, with `T_p` built from `p`'s
-isolated emissions, gives one response interface `T_p ⊆ Q_p` per participant.
+fix the participant set.  The same proof, with `T_p` the rows `p` emits in
+histories where it is alone on its side, gives one response interface `T_p ⊆ Q_p` per participant.
 Each strategy sees only its own participant's initial input, and each
 participant is replayed once, so consistency is required only for families
 that draw on each `T_p` at most once."

@@ -36,15 +36,9 @@ def cutHist (H : History sp D n) (c : Fin n → Nat) : History sp D n :=
 
 theorem wf_cutHist {init : Fin n → I} {H : History sp D n} {c : Fin n → Nat}
     (hw : WF init H) (hc : IsCut H c) : WF init (cutHist H c) := by
-  refine ⟨fun p => ?_, ?_⟩
-  · obtain ⟨τ, hτ⟩ := hw.1 p
-    exact lrun_take hτ (c p)
-  · intro p a q k j d b h
-    have hk := hc.2 p a q k j d b h
-    obtain ⟨hne, hs⟩ := hw.2 p a q k j d _ (take_split h)
-    refine ⟨hne, ?_⟩
-    show ((H q).take (c q))[k]? = _
-    rw [List.getElem?_take]; simp [hk, hs]
+  refine wf_extend (ext := fun _ => []) hw hc (fun p => by simp [cutHist]) (by simp) fun p => ?_
+  obtain ⟨τ, hτ⟩ := hw.1 p
+  exact lrun_take hτ (c p)
 
 theorem produced_cutHist {Sys : System sp D} {init : Fin n → I} {H : History sp D n}
     (hp : Produced Sys n init H) (c : Fin n → Nat) : Produced Sys n init (cutHist H c) :=
@@ -54,13 +48,17 @@ theorem partitioned_cutHist {H : History sp D n} {comp : Fin n → Nat}
     (hp : Partitioned H comp) (c : Fin n → Nat) : Partitioned (cutHist H c) comp :=
   ⟨hp.1, fun p a q k j d _ h => hp.2 p a q k j d _ (take_split h)⟩
 
-theorem isCut_full {init : Fin n → I} {H : History sp D n} (hw : WF init H) :
+theorem isCut_of_matched {H : History sp D n} (hm : RecvMatched H) :
     IsCut H (fun p => (H p).length) := by
   refine ⟨fun _ => Nat.le_refl _, ?_⟩
   intro p a q k j d b h
   rw [List.take_length] at h
-  obtain ⟨_, hs⟩ := hw.2 p a q k j d b h
+  obtain ⟨_, hs⟩ := hm p a q k j d b h
   exact (List.getElem?_eq_some_iff.1 hs).1
+
+theorem isCut_full {init : Fin n → I} {H : History sp D n} (hw : WF init H) :
+    IsCut H (fun p => (H p).length) :=
+  isCut_of_matched hw.2
 
 /-- Availability at every consistent cut is the same as Availability at the
 end of every history. -/

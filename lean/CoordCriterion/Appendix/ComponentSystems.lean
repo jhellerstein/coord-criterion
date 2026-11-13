@@ -188,7 +188,7 @@ theorem pollClosing_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis
     CAP.lrun_append.2 ⟨σc, hr1, .out (step_output_outState hu) (.nil _)⟩
   let H : History (voteSpec 3) D 1 := fun _ => [LEv.commitment [cp], LEv.out .undecided]
   have hw : WF (fun _ => yyN) H := by
-    refine ⟨fun _ => ⟨τ0, hr0⟩, fun r a q k j d b h => ?_⟩
+    refine wf_of_ne (fun _ => ⟨τ0, hr0⟩) (fun r a q k j d b h => ?_)
     have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
     simp [H] at hm
   have hp : Produced Sys 1 (fun _ => yyN) H := by

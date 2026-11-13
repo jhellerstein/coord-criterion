@@ -911,5 +911,112 @@ theorem pairing_no_consistentOn (A : Table (ExtInp (netAdm (id : Nat → Nat))) 
 
 end Pairing
 
+/-! ### Matching over located items: node monotone, but not under back-channel sharing
+
+Data items are facts located at participants (`loc`).  An output is a matching
+of items of the input: symmetric pairs of distinct items, each item paired at
+most once; every matching is permitted (Sec. `sec:query-instance`, the
+unconstrained matching problem).  Two inputs whose items sit at disjoint sets
+of participants share no item, so the union of two matchings is a matching
+(`matching_nodeMono`).  When two inputs share an item `0`, the rows pairing
+`0` with `1` at `{0,1}` and `0` with `2` at `{0,2}` have no common output
+extension at `{0,1,2}`, so `matching` fails Lifted Monotonicity for `E = P`
+(`matching_not_consistentOn`). -/
+
+section Matching
+
+variable {F N : Type} (loc : F → N)
+
+/-- Symmetric pairs of distinct items of `H`, each item paired at most once. -/
+def IsMatching (H : PSet F) (K : PSet (F × F)) : Prop :=
+  (∀ x y, K.mem (x, y) → H.mem x ∧ H.mem y ∧ x ≠ y) ∧
+    (∀ x y, K.mem (x, y) → K.mem (y, x)) ∧
+    (∀ x y y', K.mem (x, y) → K.mem (x, y') → y = y')
+
+/-- The unconstrained matching behavior over located items. -/
+def matching : Spec (ExtInp (netAdm loc)) (PSet (F × F)) where
+  P H K := IsMatching H.set K
+  total _ := ⟨⟨fun _ => False⟩, fun _ _ h => h.elim, fun _ _ h => h.elim, fun _ _ _ h => h.elim⟩
+
+/-- **Matching is node monotone**: matchings of inputs at disjoint sets of
+participants share no item, so their union is a matching of the union. -/
+theorem matching_nodeMono : NodeMono loc (matching loc) := by
+  intro H₁ H₂ hd K₁ K₂ ⟨l₁, s₁, u₁⟩ ⟨l₂, s₂, u₂⟩
+  have hd' : ∀ x, H₁.mem x → H₂.mem x → False := fun x a b =>
+    hd _ ⟨x, a, rfl⟩ ⟨x, b, rfl⟩
+  refine ⟨⟨fun p => K₁.mem p ∨ K₂.mem p⟩, ⟨?_, ?_, ?_⟩,
+    fun _ h => Or.inl h, fun _ h => Or.inr h⟩
+  · intro x y h
+    rcases h with h | h
+    · exact ⟨Or.inl (l₁ _ _ h).1, Or.inl (l₁ _ _ h).2.1, (l₁ _ _ h).2.2⟩
+    · exact ⟨Or.inr (l₂ _ _ h).1, Or.inr (l₂ _ _ h).2.1, (l₂ _ _ h).2.2⟩
+  · intro x y h
+    rcases h with h | h
+    · exact Or.inl (s₁ _ _ h)
+    · exact Or.inr (s₂ _ _ h)
+  · intro x y y' h h'
+    rcases h with h | h <;> rcases h' with h' | h'
+    · exact u₁ _ _ _ h h'
+    · exact (hd' x (l₁ _ _ h).1 (l₂ _ _ h').1).elim
+    · exact (hd' x (l₁ _ _ h').1 (l₂ _ _ h).1).elim
+    · exact u₂ _ _ _ h h'
+
+/-- The matching `{a–b}` at an input containing `a` and `b`. -/
+def pairOf (a b : Nat) : PSet (Nat × Nat) := ⟨fun p => p = (a, b) ∨ p = (b, a)⟩
+
+theorem pairOf_matching {a b : Nat} (hab : a ≠ b) :
+    (matching (id : Nat → Nat)).P (net fun x => x = a ∨ x = b) (pairOf a b) := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro x y h
+    rcases h with h | h <;> cases h
+    · exact ⟨Or.inl rfl, Or.inr rfl, hab⟩
+    · exact ⟨Or.inr rfl, Or.inl rfl, fun e => hab e.symm⟩
+  · intro x y h
+    rcases h with h | h <;> cases h
+    · exact Or.inr rfl
+    · exact Or.inl rfl
+  · intro x y y' h h'
+    rcases h with h | h <;> cases h <;> rcases h' with h' | h' <;> cases h'
+    all_goals first | rfl | exact absurd rfl hab | (exfalso; omega)
+
+/-- **Under back-channel sharing matching fails.**  The rows `({0,1}, {0–1})`
+and `({0,2}, {0–2})` of `matching`, whose inputs share item `0`, have the
+common input extension `{0,1,2}` but no common output extension there; so
+`matching` does not satisfy Lifted Monotonicity for `E = P`. -/
+theorem matching_not_consistentOn :
+    (net fun x => x = 0 ∨ x = 1).set.mem 0 ∧ (net fun x => x = 0 ∨ x = 2).set.mem 0 ∧
+    (matching (id : Nat → Nat)).P (net fun x => x = 0 ∨ x = 1) (pairOf 0 1) ∧
+    (matching (id : Nat → Nat)).P (net fun x => x = 0 ∨ x = 2) (pairOf 0 2) ∧
+    (net fun x => x = 0 ∨ x = 1) ≼ (net fun x => x = 0 ∨ x = 1 ∨ x = 2) ∧
+    (net fun x => x = 0 ∨ x = 2) ≼ (net fun x => x = 0 ∨ x = 1 ∨ x = 2) ∧
+    (∀ u, (matching (id : Nat → Nat)).P (net fun x => x = 0 ∨ x = 1 ∨ x = 2) u →
+      ¬ (pairOf 0 1 ≼ u ∧ pairOf 0 2 ≼ u)) ∧
+    ¬ CAP.ConsistentOn (matching (id : Nat → Nat)) (matching (id : Nat → Nat)).P := by
+  have h01 := pairOf_matching (a := 0) (b := 1) (by decide)
+  have h02 := pairOf_matching (a := 0) (b := 2) (by decide)
+  have le1 : (net fun x => x = 0 ∨ x = 1) ≼ (net fun x => x = 0 ∨ x = 1 ∨ x = 2) :=
+    net_le fun x (hx : _ ∨ _) => show _ ∨ _ ∨ _ by omega
+  have le2 : (net fun x => x = 0 ∨ x = 2) ≼ (net fun x => x = 0 ∨ x = 1 ∨ x = 2) :=
+    net_le fun x (hx : _ ∨ _) => show _ ∨ _ ∨ _ by omega
+  have none : ∀ u, (matching (id : Nat → Nat)).P (net fun x => x = 0 ∨ x = 1 ∨ x = 2) u →
+      ¬ (pairOf 0 1 ≼ u ∧ pairOf 0 2 ≼ u) := by
+    rintro u ⟨_, _, uu⟩ ⟨e1, e2⟩
+    have := uu 0 1 2 (e1 _ (Or.inl rfl)) (e2 _ (Or.inl rfl))
+    exact absurd this (by decide)
+  refine ⟨Or.inl rfl, Or.inl rfl, h01, h02, le1, le2, none, fun hc => ?_⟩
+  let rows : List (ExtInp (netAdm (id : Nat → Nat)) × PSet (Nat × Nat)) :=
+    [(net fun x => x = 0 ∨ x = 1, pairOf 0 1), (net fun x => x = 0 ∨ x = 2, pairOf 0 2)]
+  have cases : ∀ r ∈ rows, r = (net fun x => x = 0 ∨ x = 1, pairOf 0 1) ∨
+      r = (net fun x => x = 0 ∨ x = 2, pairOf 0 2) := by
+    intro r hr; simpa [rows] using hr
+  obtain ⟨u, hu, hall⟩ := hc rows
+    (fun r hr => by rcases cases r hr with rfl | rfl <;> assumption)
+    (net fun x => x = 0 ∨ x = 1 ∨ x = 2)
+    (fun r hr => by rcases cases r hr with rfl | rfl <;> assumption)
+  exact none u hu ⟨hall _ (List.mem_cons_self ..),
+    hall _ (List.mem_cons_of_mem _ (List.mem_cons_self ..))⟩
+
+end Matching
+
 end QRef
 end CC

@@ -687,7 +687,7 @@ theorem gilbert_lynch (Sys : System regSpec D) :
   have h10 : comp 0 ≠ comp 1 := by decide
   let H0 : RHist D 2 := fun _ => []
   have wf0 : WF init H0 :=
-    ⟨fun p => ⟨_, LRun.nil _⟩, fun p a q k j d b h => absurd h nil_ne_app⟩
+    wf_of_ne (fun p => ⟨_, LRun.nil _⟩) (fun p a q k j d b h => absurd h nil_ne_app)
   have prod0 : Produced Sys 2 init H0 := fun p a e b h => absurd h nil_ne_app
   have part0 : Partitioned H0 comp :=
     ⟨⟨0, 1, by decide⟩, fun p a q k j d b h => absurd h nil_ne_app⟩
@@ -786,7 +786,7 @@ theorem realized_not_expansion (Sys : System regSpec D) :
   have hinj : ∀ p q : Fin 2, comp p = comp q → p = q := fun p q h => Fin.ext h
   let H0 : RHist D 2 := fun _ => []
   have wf0 : WF init H0 :=
-    ⟨fun p => ⟨_, LRun.nil _⟩, fun p a q k j d b h => absurd h nil_ne_app⟩
+    wf_of_ne (fun p => ⟨_, LRun.nil _⟩) (fun p a q k j d b h => absurd h nil_ne_app)
   have prod0 : Produced Sys 2 init H0 := fun p a e b h => absurd h nil_ne_app
   have part0 : Partitioned H0 comp :=
     ⟨⟨0, 1, by decide⟩, fun p a q k j d b h => absurd h nil_ne_app⟩

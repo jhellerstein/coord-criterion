@@ -1235,11 +1235,14 @@ $\mathsf{receive}(m)$, with:}
 a total local order on each participant's history events;
 \item
 for each receive, a matching send of the same message at another
-        participant, each send matching at most one receive; and
+        participant, each send matching at most one receive;
 \item
 for each participant $p$, its specification events, in local order,
         form a defined transition sequence from $\sigma_P(i_p)$: each
-        is legal at the state where it occurs.
+        is legal at the state where it occurs; and
+\item
+no history event happens before itself
+        (Definition~\ref{def:happens-before}).
 \end{enumerate}
 \end{definition}
 
@@ -1524,6 +1527,16 @@ Participants may behave differently; a replicated (SPMD) system is the special
 case in which they share one strategy (Appendix~\ref{app:cap-response}). Systems for different specs compose as components
 (Section~\ref{sec:proper-coordination}).
 
+Our model places no bound on the set of participants, and a strategy has no way
+to enumerate them. In general there is no list of all participants, which
+Ameloot et al.\ call the $\mathsf{All}$ relation~\cite{ameloot2013relational}. Such a list lets a participant wait for every other participant, for example to
+collect a vote from each at some step of a protocol, and know when it has them
+all. Ameloot et al.\ show that this enlarges what a system can compute. A
+spec can include this knowledge as a modeling decision, by fixing the list of
+all participants as part of the input in every row. The list is then explicit
+common knowledge, available to each participant's strategy from its initial
+input.
+
 \paragraph{Two bases on three transactions.}
 We return to the concurrency protocols from the start of this subsection. Each protocol's basis contains its ordering \commitments, $\mathsf{order}$ for
 $\mathcal B_{\mathrm{2PL}}$ and $\mathsf{stamp}$ for $\mathcal B_{\mathrm{MVTO}}$,
@@ -1730,6 +1743,18 @@ prepare message.} \textcolor{reviewed}{Each possible explicit response is a row 
 \emph{set} of responses the coordinator might observe across voters is in
 $P\setminus E$.} \textcolor{reviewed}{The spec includes these as implicit outputs, representing the
 possible combined outcomes that respect each voter's response.}
+
+\begin{definition}[Emitted rows]
+\label{def:emitted-rows}
+The \emph{emitted rows} of a run are the pairs $(i,o)$ such that the run
+emits $o$ at current input $i$. The emitted rows of a system are the
+emitted rows of its participants' runs in the histories it produces.
+\end{definition}
+
+An explicit relation is declared with the spec; the emitted rows depend on
+the system. Availability for $E$ asks that every row of $E$ at a
+participant's state can become an emitted row.
+
 
 \textcolor{reviewed}{We consider a system whose participants each follow a strategy that depends
 only on their local history, and an environment that may send any legal input
@@ -2196,28 +2221,55 @@ consistent under partition exactly when it is monotone~\cite{li2025coordinationf
 partially ordered set of outputs whose order they read as consistency, that is,
 the functional specs whose inputs are sets under inclusion.
 
-Baccaert and Ketsman generalize the CALM Theorem to nondeterministic
-\emph{behaviors}, which map facts located at nodes to sets of permitted
-outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}. Ordering outputs by
-inclusion, and inputs by adding facts at new nodes, makes a behavior an
-\spectype. A transducer computes a behavior if every fair run ends at a
-permitted output, and so implements a sub-behavior $A$ of it. A list of all
-nodes lets nodes wait for everyone and choose consistently. Without it,
-isolated nodes may be the whole network and must emit. Baccaert and Ketsman
-call a behavior coordination-free when nodes can compute it without a list of
-all nodes, and show that this holds exactly when some such $A$ is \emph{node
-monotone}. Node monotonicity of $A$ is the common-extension condition on $A$
-for two rows whose inputs place facts at disjoint sets of nodes. Complete CAP
-drops that restriction, since Availability lets
-no participant wait. In Baccaert and Ketsman's model, nodes may wait, because delays are finite. In
-their construction, a group's smallest node chooses once every member has
-confirmed the group, and groups that share a node are nested. That choice
-needs a \commitment. Because the shared node is the only participant placed
-to choose for that group, the conflict stays at one participant. The two
-conditions differ. Pairing off nodes, leaving at most one unpaired, is node
-monotone. Yet every $A$ pairs $b$ with $a$ at $\{a,b\}$ and with $c$ at
-$\{b,c\}$, so the condition of Complete CAP fails at $\{a,b,c\}$. For
-deterministic behaviors the two conditions coincide.
+Baccaert and Ketsman were the first to extend CALM beyond deterministic
+queries~\cite{baccaert2023dcbq,baccaert2026spectrum}. Their running example
+is leader election, which permits many outputs for one input. They also
+changed how data placement is modeled. Ameloot et al.\ require a query to be
+computed correctly however its input is distributed across nodes. Baccaert
+and Ketsman make placement part of the problem instead: each fact names the
+node that holds it, as in Dedalus and declarative
+networking~\cite{alvaro2010dedalus,loo2009declarative}, and a
+\emph{behavior} maps such located inputs to sets of permitted located outputs.
+
+Their model maps directly to ours. A behavior is an \spectype whose outputs
+are ordered by inclusion. Each fact names the participant that holds it. One
+input extends another by adding the facts of participants not yet heard from,
+never by adding facts of a participant already heard from. A network of
+transducers is a system in which every participant runs the same strategy,
+sees only its own facts and the contents of the messages it receives, and
+broadcasts its messages. Since its own facts name it, a participant knows its
+own name and the order on names, which is what their coordination-free
+transducers know. It does not know the list of all participants. Under their
+placement, the environment gives each participant only its own facts, at the
+start, so the facts in a participant's input that name other participants
+arrived in messages, and a participant passes on only facts it holds. A
+transducer that computes a behavior translates into a system whose runs stay
+confluent. Every output that some fair run of the transducer can produce is
+emitted by some run of that system.
+
+Two sides of a partition cannot know that they are disconnected, so neither can
+tell whether it is the whole network, and each must emit. When the partition
+heals, the outputs of both sides must have a common \outnoun at any input that
+extends what both sides have received. This is what Baccaert and Ketsman call
+\emph{node monotonicity}: the common-extension condition for outputs of
+participants that have heard from disjoint sets of participants. They show
+that a behavior is coordination-free exactly when it contains a node monotone
+behavior.
+
+Complete CAP asks for more, because the environment is not constrained from
+back-channel sharing of facts across sides. It requires the common-extension
+condition even when participants on different sides receive overlapping input. Under Baccaert and Ketsman's placement there is no back channel.
+
+We now show how the back-channel sharing that Complete CAP allows goes beyond
+node monotonicity. Consider an unconstrained matching problem over data items
+partitioned across participants: any set of disjoint pairs of items is a
+permitted output. Under a network partition with Baccaert and Ketsman's
+placement, each side can pair its items arbitrarily. Two sides can always
+combine their pairings, because no item can be found on both sides. This
+changes in our model, where the environment can provide an item to
+participants on both sides of the partition. An item $i$ may then be paired
+with $j$ on one side and with $k$ on the other, and no matching contains both
+pairs. For deterministic behaviors the two conditions coincide.
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
@@ -3981,8 +4033,7 @@ partition. Assigning rows to participants removes no row from the spec, and
 A \emph{deployment} over a finite participant set $\mathcal N$ assigns to each $p\in\mathcal N$
 an explicit relation $E_p\subseteq P$, the rows $p$ may emit: $p$ performs an output event
 $\mathsf{output}(o)$ (Definition~\ref{def:system-output-event}) at current input
-$i$ only if $(i,o)\in E_p$. The \emph{emitted rows} of a run are the pairs
-$(i,o)$ such that the run emits $o$ at current input $i$. A \emph{partition} $\Pi$ of $\mathcal N$ divides $\mathcal N$ into
+$i$ only if $(i,o)\in E_p$. Emitted rows are as in Definition~\ref{def:emitted-rows}. A \emph{partition} $\Pi$ of $\mathcal N$ divides $\mathcal N$ into
 two or more nonempty sides, as in a partitioned history
 (Definition~\ref{def:partitioned-history}).
 \end{definition}
@@ -4298,8 +4349,8 @@ acceptable responses, shows that the result is Theorem~\ref{thm:complete-cap}
 applied to the chosen relation, and derives the Gilbert--Lynch theorem with
 precedence taken from real time. Throughout, we fix an \spectype $\Spec$ and the partitioned histories of
 Section~\ref{sec:complete-cap}; the environment supplies any input to any
-participant and resolves the strategies' nondeterministic choices. The
-emitted rows of a run are as in Definition~\ref{def:deployment}.
+participant and resolves the strategies' nondeterministic choices. Emitted
+rows are as in Definition~\ref{def:emitted-rows}.
 
 \subsection{Obligations, availability, and locality}
 
@@ -4469,7 +4520,7 @@ $u\in\fiber{j}$.
 
 \begin{remark}[Without replication]
 For a system that is not replicated, fix the participant set. The same proof,
-with $T_p$ built from $p$'s isolated emissions, gives one response interface
+with $T_p$ the rows $p$ emits in histories where it is alone on its side, gives one response interface
 $T_p\subseteq Q_p$ per participant. Each strategy sees only its own participant's initial input, and each
 participant is replayed once, so consistency is required only for families
 that draw on each $T_p$ at most once.

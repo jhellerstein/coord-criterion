@@ -13,7 +13,7 @@ import CoordCriterion.Appendix.Registers
 
 Statement layer for Section `sec:complete-cap`, from the subsection header to
 the end of `sections/distributed.tex`: Definitions `def:partitioned-history`,
-`def:explicit-relation`, `def:local-continuation`, `def:partition-notions`,
+`def:explicit-relation`, `def:emitted-rows`, `def:local-continuation`, `def:partition-notions`,
 `def:partition-consistency`, `def:lm-for-A`, and `def:escapes-cap`, the
 canonical system for `E`, Theorem `thm:complete-cap` and Corollary
 `cor:complete-cap-any-system`, the remarks after them, and the claims of the paragraph "Gilbert and Lynch".  The proofs
@@ -119,6 +119,49 @@ voters' spec (prose only).
 Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
 abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
+
+/-! ### Definition `def:emitted-rows` (Emitted rows) -/
+
+/-- **Def. `def:emitted-rows`** (Emitted rows).  "The *emitted rows* of a run
+are the pairs `(i,o)` such that the run emits `o` at current input `i`.  The
+emitted rows of a system are the emitted rows of its participants' runs in the
+histories it produces."
+
+Lean: for a canonical run the emitted rows are `emRows` (Appendix F) or
+`Deploy.emitted` (Appendix E); for a system, `SysEmits Sys k x`: some
+participant of some well-formed history the system produces emits `x` at
+current input `k`. -/
+abbrev «def:emitted-rows» (Sys : System sp D) : Table I O := SysEmits Sys
+
+/-- After Def. `def:emitted-rows`: "An explicit relation is declared with the
+spec; the emitted rows depend on the system.  Availability for `E` asks that
+every row of `E` at a participant's state can become an emitted row."
+
+Lean: under Availability for `E` (`AvailabilityFor`, at the end of a
+partitioned history the system produces), every output of `E` in the fiber
+at participant `p`'s current input is an emitted row of the system at that
+input. -/
+theorem «def:emitted-rows/availability» (E : Table I O) (Sys : System sp D)
+    (hA : AvailabilityFor E Sys) {init : Fin n → I} {H : History sp D n}
+    {comp : Fin n → Nat} (hw : WF init H) (hp : Produced Sys n init H)
+    (hpt : Partitioned H comp) (p : Fin n) (σ : State sp)
+    (hσ : LRun (canon sp (init p)) (H p) σ) (o : O) (ho : σ.R σ.cur o)
+    (hE : E σ.cur o) : SysEmits Sys σ.cur o := by
+  obtain ⟨ext, hw', hp', _, _, hni, hm⟩ := hA n init H comp hw hp hpt p σ hσ o ho hE
+  obtain ⟨a, b, hab⟩ := List.append_of_mem hm
+  have h2 : (fun q => H q ++ ext q) p = (H p ++ a) ++ LEv.out o :: b := by
+    show H p ++ ext p = _
+    rw [hab]; simp
+  obtain ⟨τ, hτ⟩ := hw'.1 p
+  have hτ : LRun (canon sp (init p)) ((H p ++ a) ++ LEv.out o :: b) τ := h2 ▸ hτ
+  obtain ⟨σ', h1, _⟩ := lrun_append.1 hτ
+  obtain ⟨σ'', hHa, ha⟩ := lrun_append.1 h1
+  have hdet : σ'' = σ := lrun_det hHa hσ
+  subst hdet
+  have hc : σ'.cur = σ''.cur := lrun_noinp ha (fun j hj => hni p j (by
+    rw [hab]; exact List.mem_append_left _ hj))
+  exact ⟨n, init, _, p, H p ++ a, b, σ', hw', hp', h2, lrun_append.2 ⟨σ'', hσ, ha⟩, hc⟩
+
 
 /-! ### The system and environment assumptions -/
 

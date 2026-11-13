@@ -39,12 +39,15 @@ run driven by arrivals); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman, which input order a placement
 model justifies, and their notion of coordination; for Baccaert and Ketsman
-also their notion of computing a behavior, that a node without the list of
-all nodes may be the whole network and must emit, that their construction
-waits until a group confirms its members and that groups sharing a node are
-nested, that the group's choice requires coordination but not distributed
-coordination, and that the list and an order on nodes compute every behavior;
-Lean checks only the mapping of their conditions into our frame); in
+also that they were the first to extend CALM beyond deterministic queries,
+that leader election is their running example, how Ameloot et al. and they
+model placement, that an identifier and an order on identifiers is what their
+coordination-free transducers know, and their characterization theorem (a
+behavior is coordination-free exactly when it contains a node monotone
+behavior, their Thm. 5 with Lemma 4; Lean proves the necessity half through a
+translation of their transducer networks and cites the sufficiency half,
+their Prop. 10); in §4 (`sec:systems`), that Ameloot et al. show a list of
+all participants enlarges what a system can compute; in
 Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
 al.'s checks, the correspondence of the hypotheses to theirs, and the remark
 that a strengthening may read real time from the input; in §6.3, that HAT's session guarantees under sticky availability are deployments; in §6.5, that
@@ -101,6 +104,7 @@ first and supporting claims and examples follow.
 | `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings of output and exclusion events agree |
 | `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: exclusions, histories (local events: inputs, output events `out o`, exclusion events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.4 | Thm. Complete CAP; deterministic strategies do not suffice |
+| `CAP/FullKnowledge.lean` | `CC.CAP` | §4 | Strategies that see the participant set and all initial inputs (`KSystem`); every system is one; the necessity half of Complete CAP for an explicit relation holds for them |
 | `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.3 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
 | `CAP/TimeoutAbort.lean` | `CC.CAP.Timeout` | §4.3 | Two-phase commit aborting on timeout: on the vote-decision specification, closing the polls excludes every future input that adds a missing vote; run by the coordinator alone this is local coordination, replicated it is distributed; on a specification where abort remains allowed until a decision, aborting excludes the commit outputs at later inputs while keeping those inputs legal, so it is local coordination when only the coordinator decides and distributed when the decision is replicated |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
@@ -114,7 +118,9 @@ first and supporting claims and examples follow.
 | `Instances/HATRC.lean` | `CC.HATRC` | §6.3 | HAT's Read Committed algorithm (App. B pseudocode, partial replication, anti-entropy): a G1c witness with timestamps fixed at `BEGIN`; with Lamport timestamps chosen at commit every run is PL-2 |
 | `Instances/HATUnion.lean` | `CC.HATUnion` | — (not cited) | Bailis's dissertation frame (histories merged by union): two read-committed histories whose union has G1c; with the Lamport condition unions never do |
 | `Instances/HATSpec.lean` | `CC.HATSpec` | §6.3 | Def. hat-spec, Thm. hat-levels: event-history inputs with happens-before (optionally with the timestamp condition), read-answer outputs, HAT levels (RU, RC, SI, RR, SER; item-only); HAT's read rule as explicit relation; RU/RC available under the timestamp condition; any level proscribing Lost Update unavailable; without the condition the read rule leaves `S_RC` |
-| `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity |
+| `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity, matching over located items |
+| `Instances/BaccaertKetsman.lean` | `CC.BK`, `CC.CAP` | §6.1 | Baccaert and Ketsman's setting as an anonymous cluster: anonymized strategies, histories side by side, causal histories, placement (participants are nodes, inputs only held, node-closed facts), consistency on placed histories, realized rows; their Prop. 11 (necessity: realized rows are node monotone) |
+| `Instances/BKTransducers.lean` | `CC.BK` | §6.1 | Baccaert and Ketsman's operational model (node programs under Id+Ord, networks, broadcast log, fair runs, quiescent output, computes/characterizes) and its translation into an anonymous cluster: computing implies consistency on placed histories (`placedConsistent_of_computes`), characterized rows are covered by placed histories (`covers_of_characterizes`), and their Prop. 11 on finite networks through our necessity theorem (`nodeMono_of_characterizes`) |
 | `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by Prop. induced-specification (2)); arrival-order independence; the election as an induced specification |
 | `Instances/IOMachine.lean` | `CC.IOM` | §6 | A general machine automaton (receives, outputs and internal steps that may change state; state machines as the special case `ofSM`), clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; fibers are reached by machine executions on arrival orders, every one over a bag without observations; FIFO single client is the table of payload sequences under prefix (the prefix encoding for state machines); confluence across executions ⇔ Lifted Monotonicity, also for emitted outputs when outputs report observations; later sends after an output (Def./Prop. induced-specification) |
 | `Instances/IOMachineCofinal.lean` | `CC.IOM` | §6.5 | Prop. declared-specification (machine bridge): a declared spec over the occurring inputs (or along an order embedding of them) whose rows are produced by executions and dominate every execution's final observation is Lifted Monotone iff the induced spec is, iff observations are confluent; re-derives single-client FIFO stationary consistency ⇔ `TransMono` and Lifted Monotonicity of the transient dip (a machine whose internal step lowers the observation); finite witnesses of a violation of Lifted Monotonicity, certified by the machine's own runs or a finite list containing the fiber; the `fork` machine, showing neither obligation alone suffices |
@@ -146,7 +152,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-629 entries.
+633 entries.
 
 ### §2 Functional CALM
 
@@ -305,6 +311,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system/produced»` | theorem | Def. |
 | `«def:system/restrict»` | theorem | Def. |
 | `«sec:systems/one-specification»` | theorem | After Def. |
+| `«sec:systems/all-relation»` | theorem | After Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
 | `«def:commitment-event»` | abbrev | **Def. |
 | `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
@@ -341,6 +348,8 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partitioned-history»` | abbrev | **Def. |
 | `«def:partitioned-history/unfolded»` | theorem | Def. |
 | `«def:explicit-relation»` | abbrev | **Def. |
+| `«def:emitted-rows»` | abbrev | **Def. |
+| `«def:emitted-rows/availability»` | theorem | After Def. |
 | `«sec:complete-cap/system»` | abbrev | Paragraph after Def. |
 | `«sec:complete-cap/system-produced»` | theorem | "We consider a system …": |
 | `«sec:complete-cap/environment»` | theorem | "… and an environment that may send any legal input to any participant." Lean: |
@@ -415,9 +424,10 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 |---|---|---|
 | `«sec:query-instance/weaker-monotonicity»` | theorem | Sec. |
 | `«sec:query-instance/one-fact-version»` | theorem | Sec. |
+| `«sec:query-instance/mapping»` | theorem | Sec. |
 | `«sec:query-instance/node-monotonicity»` | theorem | Sec. |
-| `«sec:query-instance/all-nodes»` | theorem | Sec. |
-| `«sec:query-instance/pairing»` | theorem | Sec. |
+| `«sec:query-instance/asks-for-more»` | theorem | Sec. |
+| `«sec:query-instance/matching»` | theorem | Sec. |
 | `«sec:query-instance/deterministic-behaviors»` | theorem | Sec. |
 | `«sec:crdt-instance/state-function»` | theorem | Sec. |
 | `«sec:crdt-instance/state-monotone»` | theorem | Sec. |
@@ -757,7 +767,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«app:cap-response/emitted-rows»` | abbrev | "The emitted rows of a run are as in Definition `def:deployment`" (the pairs `(i,o)` such that it emits `o` at current input `i`). |
+| `«app:cap-response/emitted-rows»` | abbrev | "Emitted rows are as in Definition `def:emitted-rows`" (the pairs `(i,o)` such that it emits `o` at current input `i`). |
 | `«def:response-obligation»` | abbrev | **Def. |
 | `«def:response-obligation/fields»` | theorem | Def. |
 | `«def:uniform-obligation»` | abbrev | **Def. |

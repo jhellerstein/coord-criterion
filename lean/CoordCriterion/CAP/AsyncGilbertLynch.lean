@@ -1360,7 +1360,7 @@ theorem sys_answering (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) (hav : Avail
     · rw [heq p' h] at hm; cases hm
   have hext : Extends H c (fun q => (H q).take (c q) ++ ext q) ext := fun _ => rfl
   obtain ⟨hcur, _, _⟩ := corr_state hc σ hσ'
-  refine ⟨_, ext, hext, ⟨?_, recvMatched_extend hwf.2 hcut hext hnr'⟩, ?_,
+  refine ⟨_, ext, hext, wf_extend hwf hcut hext hnr' (?_), ?_,
     partitioned_extend hpart hext hnr', fun q hq => heq q (fun h => hq (h ▸ rfl)), ?_,
     o, ⟨?_, ?_⟩, by rw [hep]; simp⟩
   · intro q
@@ -1702,7 +1702,7 @@ theorem gilbert_lynch_client {D : Type} (Sys : System regSpec D) :
   have h10 : comp 0 ≠ comp 1 := by decide
   let H0 : RHist D 2 := fun _ => []
   have wf0 : WF init H0 :=
-    ⟨fun p => ⟨_, LRun.nil _⟩, fun p a q k j d b h => absurd h nil_ne_app⟩
+    wf_of_ne (fun p => ⟨_, LRun.nil _⟩) (fun p a q k j d b h => absurd h nil_ne_app)
   have prod0 : Produced Sys 2 init H0 := fun p a e b h => absurd h nil_ne_app
   have part0 : Partitioned H0 comp :=
     ⟨⟨0, 1, by decide⟩, fun p a q k j d b h => absurd h nil_ne_app⟩

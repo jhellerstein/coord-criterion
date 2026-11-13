@@ -68,7 +68,7 @@ theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o �
     ⟨⟨0, by omega⟩, ⟨rows.length, by omega⟩, by simp [comp]; omega⟩
   let H0 : History sp D N := fun _ => []
   have hwf0 : WF init H0 :=
-    ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
+    wf_of_ne (fun p => ⟨_, .nil _⟩) (by intro p a q k j d b h; simp [H0] at h)
   have hprod0 : Produced Sys N init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 comp := ⟨hcomp2, by intro p a q k j d b h; simp [H0] at h⟩
   -- each `p_r` emits `o_r` alone in its block
@@ -106,7 +106,7 @@ theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o �
     have hm : LEv.recv q k j' d ∈ Lf p := by rw [h]; simp
     exact (hLs p).2.1 q k j' d hm
   have hwfc : WF init Lf :=
-    ⟨fun p => (hLs p).1, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩
+    wf_of_ne (fun p => (hLs p).1) (fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b))
   have hprodc : Produced Sys N init Lf := fun p => (hLs p).2.2.1
   have hpartc : Partitioned Lf comp :=
     ⟨hcomp2, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩

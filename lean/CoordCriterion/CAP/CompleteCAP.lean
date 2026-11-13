@@ -87,7 +87,7 @@ theorem cf_availability (hlm : sp.LiftedMono) : Availability (cfSystem sp D) := 
   have hnr : ∀ p' q k j d, LEv.recv q k j d ∉ ext p' := by
     intro p' q k j d; simp only [ext]; split <;> simp
   have hext : Extends H c (fun q => (H q).take (c q) ++ ext q) ext := fun _ => rfl
-  refine ⟨_, ext, hext, ⟨?_, recvMatched_extend hwf.2 hcut hext hnr⟩, ?_,
+  refine ⟨_, ext, hext, wf_extend hwf hcut hext hnr ?_, ?_,
     partitioned_extend hpart hext hnr, ?_, ?_, by simp [ext]⟩
   · intro q
     obtain ⟨τq, hq⟩ := hwf.1 q
@@ -171,7 +171,7 @@ theorem cf_partitionConsistency (hlm : sp.LiftedMono) :
     fun p => lrun_append.2 ⟨(X p).1, (hXs p).1,
       exec_to_lrun hce (Classical.choose_spec (hE p)) (hXs p).2.1⟩
   exact ⟨_, ext, meetState sp j u hju, hext,
-    ⟨fun p => ⟨_, hrun p⟩, recvMatched_extend hwf.2 hcut hext hnr⟩, rfl, hrun⟩
+    wf_extend hwf hcut hext hnr (fun p => ⟨_, hrun p⟩), rfl, hrun⟩
 
 
 /-! ## Necessity: Availability ∧ Partition Consistency ⇒ Lifted Monotonicity -/
@@ -197,7 +197,7 @@ theorem cap_necessary (Sys : System sp D) (hA : Availability Sys)
     ⟨⟨0, by omega⟩, ⟨rows.length, by omega⟩, by simp [comp]; omega⟩
   let H0 : History sp D N := fun _ => []
   have hwf0 : WF init H0 :=
-    ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
+    wf_of_noRecv (fun p => ⟨_, .nil _⟩) (by intro p q k j d h; simp [H0] at h)
   have hprod0 : Produced Sys N init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 comp := ⟨hcomp2, by intro p a q k j d b h; simp [H0] at h⟩
   have hcut0 : IsCut H0 (fun _ => 0) :=
@@ -235,7 +235,7 @@ theorem cap_necessary (Sys : System sp D) (hA : Availability Sys)
     exact (hLs p).2.1 q k j' d hm
   -- glue the local runs into one partitioned, produced history
   have hwfc : WF init Lf :=
-    ⟨fun p => (hLs p).1, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩
+    wf_of_noRecv (fun p => (hLs p).1) (fun p q k j' d hm => (hLs p).2.1 q k j' d hm)
   have hprodc : Produced Sys N init Lf := fun p => (hLs p).2.2.1
   have hpartc : Partitioned Lf comp :=
     ⟨hcomp2, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩
@@ -411,7 +411,7 @@ theorem deterministic_not_available (D : Type) (Sys : System triSpec D)
   let comp : Fin 2 → Nat := fun p => p.val
   let H0 : History triSpec D 2 := fun _ => []
   have hwf0 : WF init H0 :=
-    ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
+    wf_of_noRecv (fun p => ⟨_, .nil _⟩) (by intro p q k j d h; simp [H0] at h)
   have hprod0 : Produced Sys 2 init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 comp :=
     ⟨⟨0, 1, by simp [comp]⟩, by intro p a q k j d b h; simp [H0] at h⟩

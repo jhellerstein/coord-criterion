@@ -332,7 +332,7 @@ theorem extend_single (Sys : System sp D) {init : Fin n → I} {H : History sp D
   have hext : Extends H c (fun q => (H q).take (c q) ++ ext q) ext := fun _ => rfl
   have hp : ext p = [e] := by simp [ext]
   have hq : ∀ q, q ≠ p → ext q = [] := fun q h => by simp [ext, h]
-  refine ⟨_, ext, hext, ⟨?_, recvMatched_extend hwf.2 hcut hext hnr'⟩, ?_,
+  refine ⟨_, ext, hext, wf_extend hwf hcut hext hnr' (?_), ?_,
     partitioned_extend hpart hext hnr', hp, hq⟩
   · intro q
     by_cases hqp : q = p
@@ -515,7 +515,7 @@ theorem glue {Sys : System sp D} {N : Nat} (hN : 2 ≤ N) {init : Fin N → I}
   have hno : ∀ p a (q : Fin N) k j d b, L p ≠ a ++ LEv.recv q k j d :: b := by
     intro p a q k j d b h
     exact hnr p q k j d (by rw [h]; simp)
-  refine ⟨⟨hr, fun p a q k j d b h => absurd h (hno p a q k j d b)⟩, hc,
+  refine ⟨wf_of_ne (hr) (fun p a q k j d b h => absurd h (hno p a q k j d b)), hc,
     ⟨⟨⟨0, by omega⟩, ⟨1, by omega⟩, by simp⟩, fun p a q k j d b h => absurd h (hno p a q k j d b)⟩,
     ⟨fun _ => Nat.le_refl _, fun p a q k j d b h => ?_⟩⟩
   rw [List.take_length] at h; exact absurd h (hno p a q k j d b)

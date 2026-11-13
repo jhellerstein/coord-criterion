@@ -40,7 +40,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
   -- the empty history: each participant at its canonical state
   let H0 : History sp D 2 := fun _ => []
   have hwf0 : WF init H0 :=
-    ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
+    wf_of_ne (fun p => ⟨_, .nil _⟩) (by intro p a q k j d b h; simp [H0] at h)
   have hprod0 : Produced Sys 2 init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 comp := ⟨hcomp2, by intro p a q k j d b h; simp [H0] at h⟩
   -- Availability: each participant emits its output within its block
@@ -72,7 +72,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     exact (hLs p).2.1 q k j' d hm
   -- the two message-free runs form one partitioned history the system produces
   have hwfc : WF init Lf :=
-    ⟨fun p => (hLs p).1, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩
+    wf_of_ne (fun p => (hLs p).1) (fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b))
   have hprodc : Produced Sys 2 init Lf := fun p => (hLs p).2.2.1
   have hpartc : Partitioned Lf comp :=
     ⟨hcomp2, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩

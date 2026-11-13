@@ -188,7 +188,7 @@ theorem pollClosing_not_coordinationFreeH {D : Type} (Sys : System (voteSpec 3) 
     · rw [hH0] at hm; simp at hm
     · rw [hH1] at hm; simp at hm
   have hw : WF (fun _ => yyN) H := by
-    refine ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩
+    refine wf_of_ne (fun r => ?_) (fun r a q k j d b h => absurd h (hnr r a q k j d b))
     rcases hfin r with rfl | rfl
     · exact ⟨_, hr0⟩
     · exact ⟨_, hr1⟩
@@ -265,7 +265,7 @@ theorem pollClosingSys_alone (D : Type) :
     -- the coordinator closes the polls at `yy·`
     let H : History (voteSpec 3) D 1 := fun _ => [LEv.commitment [cp]]
     have hw : WF (fun _ => yyN) H := by
-      refine ⟨fun _ => ⟨_, hr0⟩, fun r a q k j d b h => ?_⟩
+      refine wf_of_ne (fun _ => ⟨_, hr0⟩) (fun r a q k j d b h => ?_)
       have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
       simp [H] at hm
     have hp : Produced (pollClosingSys D) 1 (fun _ => yyN) H := by
@@ -280,7 +280,7 @@ theorem pollClosingSys_alone (D : Type) :
     have hr1 : LRun (D := D) (n := 1) σ [LEv.inp yyy] (canon _ yyy) :=
       .inp (Dist.step_canon_input _ yyN_le_yyy ⟨_, rfl⟩) (.nil _)
     have hw' : WF (fun _ => yyN) H' := by
-      refine ⟨fun _ => ⟨_, hr1⟩, fun r a q k j d b h => ?_⟩
+      refine wf_of_ne (fun _ => ⟨_, hr1⟩) (fun r a q k j d b h => ?_)
       have hm : LEv.recv q k j d ∈ H' r := by rw [h]; simp
       simp [H'] at hm
     have hp' : Produced (pollClosingSys D) 1 (fun _ => yyN) H' := by
@@ -518,7 +518,7 @@ theorem one_emit {m : Nat} (D : Type) (Sys : System (abortSpec m) D) (i : Votes 
   have hr : LRun (D := D) (n := 1) (canon (abortSpec m) i) [LEv.out u] _ :=
     .out (step_output_outState (σ := canon (abortSpec m) i) hu) (.nil _)
   let H : History (abortSpec m) D 1 := fun _ => [LEv.out u]
-  refine ⟨H, ⟨fun r => ⟨_, hr⟩, fun r a q k j d b h => ?_⟩, ?_, rfl⟩
+  refine ⟨H, wf_of_ne (fun r => ⟨_, hr⟩) (fun r a q k j d b h => ?_), ?_, rfl⟩
   · have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
     simp [H] at hm
   · intro r a e b h
@@ -575,7 +575,7 @@ theorem replSys_not_coordinationFreeH (D : Type) : ¬ (replSys 3 D).Coordination
     · rw [hH0] at hm; simp at hm
     · rw [hH1] at hm; simp at hm
   have hw : WF (fun _ => yyN) H := by
-    refine ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩
+    refine wf_of_ne (fun r => ?_) (fun r a q k j d b h => absurd h (hnr r a q k j d b))
     rcases hfin r with rfl | rfl
     · exact ⟨_, hr0⟩
     · exact ⟨_, by rw [hH1]; exact lrun_append.2 ⟨_, hin, hr1⟩⟩

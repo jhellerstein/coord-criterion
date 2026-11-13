@@ -177,7 +177,7 @@ theorem cf_partitionConsistencyCF (hlm : sp.LiftedMono) :
     fun p => lrun_append.2 ⟨(X p).1, (hXs p).1,
       exec_to_lrun hce (Classical.choose_spec (hE p)) (hXs p).2.1⟩
   refine ⟨_, ext, meetState sp j u hju, hext,
-    ⟨fun p => ⟨_, hrun p⟩, recvMatched_extend hwf.2 hcut hext hnr⟩, rfl, hrun,
+    wf_extend hwf hcut hext hnr (fun p => ⟨_, hrun p⟩), rfl, hrun,
     fun p γ => toL_nocmt _ γ, fun p a o b h σ' hσ' => ?_, hnr⟩
   obtain ⟨σ1, h1, h2⟩ := lrun_append.1 hσ'
   rw [lrun_det h1 (hXs p).1] at h2
@@ -264,20 +264,21 @@ theorem exec_lrun_canon {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ
     ∃ l : List (LEv sp D n), LRun σ l τ ∧ CanonOut l ∧ (∀ q k j d, LEv.recv q k j d ∉ l) :=
   ⟨toL es, exec_lrun_toL hx, toL_nocmt es, toL_norecv es⟩
 
-/-- For histories whose output events (up to the cut) are canonical,
-Response Partition Consistency at `j` implies confluence at `j`, with a
-canonical, receive-free continuation (Lemma `lem:reconciliation` applied to
-the participant runs). -/
-theorem confluent_of_rpc_canonical {init : Fin n → I} {H : History sp D n} {c : Fin n → Nat}
-    (hwf : WF init H) (hcut : IsCut H c) (hcan : ∀ p, CanonOut ((H p).take (c p))) {j : I}
+/-- The continuation behind `confluent_of_rpc_canonical`: receive-free
+events after the cut bring every participant to one state at `j`. -/
+theorem confluent_ext_of_rpc_canonical {init : Fin n → I} {H : History sp D n} {c : Fin n → Nat}
+    (hruns : ∀ p, ∃ τ, LRun (canon sp (init p)) (H p) τ)
+    (hcan : ∀ p, CanonOut ((H p).take (c p))) {j : I}
     (hj : ∀ p σ, LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ j)
-    (hr : RPCAt H c j) : ConfluentCut init H c j := by
+    (hr : RPCAt H c j) : ∃ (ext : Fin n → List (LEv sp D n)) (τ : State sp),
+      (∀ p q k j d, LEv.recv q k j d ∉ ext p) ∧ τ.cur = j ∧
+      ∀ p, LRun (canon sp (init p)) ((H p).take (c p) ++ ext p) τ := by
   classical
   obtain ⟨u, hju, hu⟩ := hr
   have hX : ∀ p, ∃ x : State sp × List O, LRun (canon sp (init p)) ((H p).take (c p)) x.1 ∧
       Residual x.1 x.2 ∧ x.1.R j u := by
     intro p
-    obtain ⟨τp, hp⟩ := hwf.1 p
+    obtain ⟨τp, hp⟩ := hruns p
     obtain ⟨σ, hσ⟩ := lrun_take hp (c p)
     obtain ⟨es, hx, hm⟩ := lrun_canon_exec hσ (hcan p)
     have hres : Residual σ (outs es) := run_residual hx
@@ -294,11 +295,21 @@ theorem confluent_of_rpc_canonical {init : Fin n → I} {H : History sp D n} {c 
   let ext : Fin n → List (LEv sp D n) := fun p => Classical.choose (hE p)
   have hEs : ∀ p, _ := fun p => Classical.choose_spec (hE p)
   have hnr : ∀ p q k j d, LEv.recv q k j d ∉ ext p := fun p => (hEs p).2
-  have hext : Extends H c (fun q => (H q).take (c q) ++ ext q) ext := fun _ => rfl
   have hrun : ∀ p, LRun (canon sp (init p)) ((H p).take (c p) ++ ext p) (meetState sp j u hju) :=
     fun p => lrun_append.2 ⟨(X p).1, (hXs p).1, (hEs p).1⟩
-  exact ⟨_, ext, meetState sp j u hju, hext,
-    ⟨fun p => ⟨_, hrun p⟩, recvMatched_extend hwf.2 hcut hext hnr⟩, rfl, hrun⟩
+  exact ⟨ext, meetState sp j u hju, hnr, rfl, hrun⟩
+
+/-- For histories whose output events (up to the cut) are canonical,
+Response Partition Consistency at `j` implies confluence at `j`, with a
+canonical, receive-free continuation (Lemma `lem:reconciliation` applied to
+the participant runs). -/
+theorem confluent_of_rpc_canonical {init : Fin n → I} {H : History sp D n} {c : Fin n → Nat}
+    (hwf : WF init H) (hcut : IsCut H c) (hcan : ∀ p, CanonOut ((H p).take (c p))) {j : I}
+    (hj : ∀ p σ, LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ j)
+    (hr : RPCAt H c j) : ConfluentCut init H c j := by
+  obtain ⟨ext, τ, hnr, hτ, hrun⟩ := confluent_ext_of_rpc_canonical hwf.1 hcan hj hr
+  have hext : Extends H c (fun q => (H q).take (c q) ++ ext q) ext := fun _ => rfl
+  exact ⟨_, ext, τ, hext, wf_extend hwf hcut hext hnr (fun p => ⟨_, hrun p⟩), hτ, hrun⟩
 
 theorem canonOut_of_produced {Sys : System sp D} (hS : CanonicalSystem Sys) {init : Fin n → I}
     {H : History sp D n} (hp : Produced Sys n init H) (p : Fin n) (c : Nat) :
@@ -422,7 +433,7 @@ theorem ra_excludes_unavailable_expansion (Sys : System sp D) (Q : (n : Nat) →
   let comp : Fin 2 → Nat := fun p => p.val
   let H0 : History sp D 2 := fun _ => []
   have hwf0 : WF init H0 :=
-    ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
+    wf_of_ne (fun p => ⟨_, .nil _⟩) (by intro p a q k j d b h; simp [H0] at h)
   have hprod0 : Produced Sys 2 init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 comp :=
     ⟨⟨0, 1, by simp [comp]⟩, by intro p a q k j d b h; simp [H0] at h⟩
@@ -469,7 +480,7 @@ theorem locality_glue (Sys : System sp D) {init : Fin n → I} (L : History sp D
   have hno : ∀ p a (q : Fin n) k j d b, L p ≠ a ++ LEv.recv q k j d :: b := by
     intro p a q k j d b h
     exact hnr p q k j d (by rw [h]; simp)
-  have hwf : WF init L := ⟨hr, fun p a q k j d b h => absurd h (hno p a q k j d b)⟩
+  have hwf : WF init L := wf_of_ne (hr) (fun p a q k j d b h => absurd h (hno p a q k j d b))
   exact ⟨hwf, hc, ⟨h2, fun p a q k j d b h => absurd h (hno p a q k j d b)⟩, full_cut' hwf⟩
 
 /-- Lemma `lem:locality`, second part: under replication a receive-free local
@@ -1478,7 +1489,7 @@ theorem gilbert_lynch_answering (Sys : System regSpec D) :
   have h10 : comp 0 ≠ comp 1 := by decide
   let H0 : RHist D 2 := fun _ => []
   have wf0 : WF init H0 :=
-    ⟨fun p => ⟨_, LRun.nil _⟩, fun p a q k j d b h => absurd h nil_ne_app⟩
+    wf_of_ne (fun p => ⟨_, LRun.nil _⟩) (fun p a q k j d b h => absurd h nil_ne_app)
   have prod0 : Produced Sys 2 init H0 := fun p a e b h => absurd h nil_ne_app
   have part0 : Partitioned H0 comp :=
     ⟨⟨0, 1, by decide⟩, fun p a q k j d b h => absurd h nil_ne_app⟩

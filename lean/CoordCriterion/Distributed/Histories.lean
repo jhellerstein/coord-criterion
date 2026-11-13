@@ -137,6 +137,86 @@ theorem History.hb_src {H : History I O D n} {a b : Pos n} (h : H.HB a b) : H.In
   | single e => exact History.edge_src e
   | tail _ _ ih => exact ih
 
+/-- No history event happens before itself. -/
+def History.Acyclic (H : History I O D n) : Prop := ∀ a, ¬ H.HB a a
+
+theorem History.hb_rank {H : History I O D n} (t : Pos n → Nat)
+    (h : ∀ a b, H.Edge a b → t a < t b) {a b : Pos n} (hab : H.HB a b) : t a < t b := by
+  induction hab with
+  | single he => exact h _ _ he
+  | tail _ he ih => exact Nat.lt_trans ih (h _ _ he)
+
+/-- A rank that increases along edges rules out cycles. -/
+theorem History.acyclic_of_rank {H : History I O D n} (t : Pos n → Nat)
+    (h : ∀ a b, H.Edge a b → t a < t b) : H.Acyclic :=
+  fun a ha => Nat.lt_irrefl _ (H.hb_rank t h ha)
+
+/-- A history without sends or receives is acyclic. -/
+theorem History.acyclic_of_io {H : History I O D n}
+    (h : ∀ (p : Fin n) (r : Nat) (e : LEv I O D), (H.ev p)[r]? = some e → ∃ e', e = .io e') :
+    H.Acyclic := by
+  refine H.acyclic_of_rank (fun a => a.2) fun a b he => ?_
+  cases he with
+  | loc _ _ _ hk _ => exact hk
+  | msg q s p r x m hs _ => obtain ⟨_, he⟩ := h q s _ hs; cases he
+
+/-- All positions of a history. -/
+def History.allPos (H : History I O D n) : List (Pos n) :=
+  (List.finRange n).flatMap fun p => (List.range (H.ev p).length).map fun k => (p, k)
+
+theorem History.mem_allPos {H : History I O D n} {a : Pos n} : a ∈ H.allPos ↔ H.InH a := by
+  obtain ⟨p, k⟩ := a
+  simp [History.allPos, History.InH]
+
+theorem flen_le {α : Type} (P Q : α → Bool) :
+    ∀ l : List α, (∀ x ∈ l, P x = true → Q x = true) → (l.filter P).length ≤ (l.filter Q).length
+  | [], _ => by simp
+  | x :: l, h => by
+    have ih := flen_le P Q l (fun y hy => h y (List.mem_cons_of_mem _ hy))
+    simp only [List.filter_cons]
+    by_cases hP : P x = true
+    · have hQ := h x List.mem_cons_self hP
+      simp [hP, hQ]; omega
+    · by_cases hQ : Q x = true
+      · simp [hP, hQ]; omega
+      · simp [hP, hQ]; omega
+
+theorem flen_lt {α : Type} (P Q : α → Bool) :
+    ∀ l : List α, (∀ x ∈ l, P x = true → Q x = true) → ∀ y ∈ l, Q y = true → P y = false →
+      (l.filter P).length < (l.filter Q).length
+  | [], _, _, hy, _, _ => by simp at hy
+  | x :: l, h, y, hy, hQy, hPy => by
+    have hle := flen_le P Q l (fun z hz => h z (List.mem_cons_of_mem _ hz))
+    simp only [List.filter_cons]
+    rcases List.mem_cons.1 hy with rfl | hy'
+    · simp [hPy, hQy]; omega
+    · have ih := flen_lt P Q l (fun z hz => h z (List.mem_cons_of_mem _ hz)) y hy' hQy hPy
+      by_cases hP : P x = true
+      · have hQ := h x List.mem_cons_self hP
+        simp [hP, hQ]; omega
+      · by_cases hQ : Q x = true
+        · simp [hP, hQ]; omega
+        · simp [hP, hQ]; omega
+
+open Classical in
+/-- The number of history events that happen before `b`. -/
+noncomputable def History.rank (H : History I O D n) (b : Pos n) : Nat :=
+  (H.allPos.filter fun a => decide (H.HB a b)).length
+
+open Classical in
+theorem History.rank_lt {H : History I O D n} (hac : H.Acyclic) {a b : Pos n} (he : H.Edge a b) :
+    H.rank a < H.rank b := by
+  unfold History.rank
+  refine flen_lt _ _ _ ?_ a (History.mem_allPos.2 (History.edge_src he)) ?_ ?_
+  · intro x _ hx
+    simp only [decide_eq_true_eq] at hx ⊢
+    exact Relation.TransGen.tail hx he
+  · simp only [decide_eq_true_eq]; exact Relation.TransGen.single he
+  · simp only [decide_eq_false_iff_not]; exact hac a
+
+theorem History.rank_le (H : History I O D n) (b : Pos n) : H.rank b ≤ H.allPos.length :=
+  List.length_filter_le _ _
+
 /-- All of `H` is a consistent cut of `H` (its final cut). -/
 theorem History.isCut_full (H : History I O D n) : H.IsCut H.InH :=
   ⟨fun _ h => h, fun _ _ h _ => History.hb_src h⟩
@@ -175,14 +255,19 @@ theorem len_unique {P : Nat → Prop} {c c' : Nat} (h : ∀ k, P k ↔ k < c)
 
 variable [PO I] [PO O]
 
-/-- Well-formed distributed history (Def. distributed-history, items 2–3;
-item 1 is the list order). -/
+/-- Well-formed distributed history (Def. distributed-history, items 2–4;
+item 1 is the list order).  Each send matches at most one receive: send
+identifiers are unique (`send_unique`) and so are receive identifiers
+(`recv_unique`).  No history event happens before itself (`acyclic`). -/
 structure History.WF (sp : Spec I O) (H : History I O D n) : Prop where
   recv_match : ∀ p (r : Nat) x m, (H.ev p)[r]? = some (LEv.recv x m) →
     ∃ q, ∃ s : Nat, q ≠ p ∧ (H.ev q)[s]? = some (LEv.send x m)
   send_unique : ∀ q (s : Nat) q' (s' : Nat) x m m', (H.ev q)[s]? = some (LEv.send x m) →
     (H.ev q')[s']? = some (LEv.send x m') → q = q' ∧ s = s'
+  recv_unique : ∀ p (r : Nat) p' (r' : Nat) x m m', (H.ev p)[r]? = some (LEv.recv x m) →
+    (H.ev p')[r']? = some (LEv.recv x m') → p = p' ∧ r = r'
   legal : ∀ p, ∃ τ : State sp, Exec (canon sp (H.init p)) (ioOf (H.ev p)) τ
+  acyclic : H.Acyclic
 
 /-- `σs` is the endpoint `end(H, C)` (Def. participant-run): `σs p` is the
 final state of `p`'s participant run at `C`. -/
@@ -329,7 +414,13 @@ theorem cut_confluent_iff {sp : Spec I O} {H : History I O D n} (hW : H.WF sp)
     -- sends of `H'` at positions in the cut are those of `H`
     have hcut : ∀ q s, C (q, s) → (H'.ev q)[s]? = (H.ev q)[s]? := fun q s hs =>
       get_ext_lt (((hc q).1 s).1 hs) (hC.sub _ hs)
-    refine ⟨H', ⟨?_, ?_, fun p => ⟨τ, hlegal p⟩⟩, ⟨rfl, hcut⟩, τ, hτ,
+    have hcle : ∀ p, c p ≤ (H.ev p).length := by
+      intro p
+      apply Nat.le_of_not_lt
+      intro hlt
+      have := hC.sub _ (((hc p).1 (H.ev p).length).2 hlt)
+      exact Nat.lt_irrefl _ this
+    refine ⟨H', ⟨?_, ?_, ?_, fun p => ⟨τ, hlegal p⟩, ?_⟩, ⟨rfl, hcut⟩, τ, hτ,
       History.endpoint_full.2 hlegal⟩
     · intro p r x m h
       rcases get_ext h with ⟨hrc, hr'⟩ | ⟨_, he⟩
@@ -344,6 +435,32 @@ theorem cut_confluent_iff {sp : Spec I O} {H : History I O D n} (hW : H.WF sp)
         · exact hW.send_unique q s q' s' x m m' hs hs'
         · cases he'
       · cases he
+    · intro p r p' r' x m m' h h'
+      rcases get_ext h with ⟨_, hr⟩ | ⟨_, he⟩
+      · rcases get_ext h' with ⟨_, hr'⟩ | ⟨_, he'⟩
+        · exact hW.recv_unique p r p' r' x m m' hr hr'
+        · cases he'
+      · cases he
+    · let N := H.allPos.length
+      refine H'.acyclic_of_rank
+        (fun a => if a.2 < c a.1 then H.rank a else N + 1 + a.2) fun a b he => ?_
+      cases he with
+      | loc p k k' hk hk' =>
+        by_cases h' : k' < c p
+        · have h : k < c p := Nat.lt_trans hk h'
+          simp only [h, h', ↓reduceIte]
+          exact H.rank_lt hW.acyclic (.loc p k k' hk (Nat.lt_of_lt_of_le h' (hcle p)))
+        · simp only [h', ↓reduceIte]
+          by_cases h : k < c p
+          · simp only [h, ↓reduceIte]; have := H.rank_le (p, k); omega
+          · simp only [h, ↓reduceIte]; omega
+      | msg q s p r x m hs hr =>
+        rcases get_ext hs with ⟨hsc, hs'⟩ | ⟨_, he⟩
+        · rcases get_ext hr with ⟨hrc, hr'⟩ | ⟨_, he⟩
+          · simp only [hsc, hrc, ↓reduceIte]
+            exact H.rank_lt hW.acyclic (.msg q s p r x m hs' hr')
+          · cases he
+        · cases he
 
 end lemmas
 
@@ -385,9 +502,11 @@ theorem consistent_iff_distConsistent (sp : Spec I O) (D : Type) :
       show Exec _ (ioOf ((esp p).map LEv.io)) _
       rw [ioOf_map_io]; exact hx p
     have hW : H.WF sp := by
-      refine ⟨fun p r x m h => ?_, fun q s _ _ x m _ h _ => ?_, fun p => ⟨_, hlegal p⟩⟩
+      refine ⟨fun p r x m h => ?_, fun q s _ _ x m _ h _ => ?_, fun p r _ _ x m _ h _ => ?_,
+        fun p => ⟨_, hlegal p⟩, History.acyclic_of_io hnoio⟩
       · obtain ⟨_, he⟩ := hnoio p r _ h; cases he
       · obtain ⟨_, he⟩ := hnoio q s _ h; cases he
+      · obtain ⟨_, he⟩ := hnoio p r _ h; cases he
     have hE : H.Endpoint sp H.InH (fun p => fam[p.1]'p.2) := History.endpoint_full.2 hlegal
     have hcc := hd fam.length H hW H.InH H.isCut_full _ hE j
       (fun p => hj _ (List.getElem_mem p.2))

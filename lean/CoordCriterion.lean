@@ -30,11 +30,14 @@ import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.Register
 import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AsyncGilbertLynch
+import CoordCriterion.CAP.FullKnowledge
 -- §6 Instances (incl. invariant confluence, Appendix B)
 import CoordCriterion.Instances.InvariantConfluence
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.QueryRefinements
+import CoordCriterion.Instances.BaccaertKetsman
+import CoordCriterion.Instances.BKTransducers
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineCofinal

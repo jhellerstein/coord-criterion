@@ -9,6 +9,7 @@ import CoordCriterion.Paper.AppG_TransactionBases
 import CoordCriterion.Appendix.TransactionBases.CommitmentEvent
 import CoordCriterion.Appendix.ComponentSystems
 import CoordCriterion.Appendix.Deployment
+import CoordCriterion.Instances.QueryRefinements
 
 /-!
 # Paper §4.1–4.3: Distributed Execution (statement layer)
@@ -61,14 +62,21 @@ distributed history may contain them" (§4.2, after Def.
 item 3. -/
 abbrev «def:distributed-history» (I O D : Type) (n : Nat) := Dist.History I O D n
 
-/-- Def. `def:distributed-history`, items 2–3: "for each receive, a matching
+/-- Def. `def:distributed-history`, items 2–4: "for each receive, a matching
 send of the same message at another participant, each send matching at most
-one receive; and for each participant `p`, its specification events, in local
-order, form a defined transition sequence from `σ_P(i_p)`".
+one receive; for each participant `p`, its specification events, in local
+order, form a defined transition sequence from `σ_P(i_p)` …; and no history
+event happens before itself".
 
 Lean: `History.WF`.  "Each send matching at most one receive" is read as
-"send identifiers are unique"; `CC.Dist.WF0` drops this (see
-`«prop:distributed-consistency/literal-matching»`). -/
+"send identifiers are unique and receive identifiers are unique"
+(`send_unique`, `recv_unique`); "no history event happens before itself" is
+`acyclic` (`History.Acyclic`: happens-before is irreflexive).  `CC.Dist.WF0`
+drops the uniqueness and acyclicity clauses (see
+`«prop:distributed-consistency/literal-matching»`).  The system model
+`CAP/Model.lean` has the same clauses (`CAP.WF`: `RecvUnique`, `Acyclic`);
+an acyclic history with matched receives can be laid out in time
+(`CAP.causal_iff_acyclic`). -/
 abbrev «def:distributed-history/well-formed» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) : Prop :=
   H.WF sp
@@ -469,6 +477,36 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
       ∀ (n : Nat) (Dp : Deploy.Deployment sp n) p k u, Dp.A p k u → sp.P k u :=
   ⟨rfl, fun r h => ((Components.Component.ofSystemOn Sys N location).sound r h).legal,
     fun _ Dp => Dp.sub⟩
+
+/-- After Def. `def:system`: "Our model places no bound on the set of
+participants, and a strategy has no way to enumerate them.  In general there is
+no list of all participants, which Ameloot et al. call the `All`
+relation. … A spec can include this knowledge as a modeling decision, by
+fixing the list of all participants as part of the input in every row.  The
+list is then explicit common knowledge, available to each participant's
+strategy from its initial input."
+
+Lean, first conjunct: a strategy (`CAP.System.rule`) sees a participant's
+number, its own initial input and its local history with receives naming
+senders by number, not the participant set: participants of `Fin n` and
+`Fin n'` with the same number, initial input and erased local history are
+allowed the same events.  Second conjunct: with the list of all participants
+in the input (`QRef.AllInp`: the membership and the participants heard from),
+an input that has heard from every listed participant has no proper extension
+(`QRef.allInp_complete_maximal`).  That Ameloot et al. show a list of all
+participants enlarges what a system can compute is cited. -/
+theorem «sec:systems/all-relation» :
+    (∀ {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) {n n' : Nat}
+      (init : Fin n → I) (init' : Fin n' → I) (p : Fin n) (p' : Fin n')
+      (pre : List (CAP.LEv sp D n)) (pre' : List (CAP.LEv sp D n'))
+      (e : CAP.LEv sp D n) (e' : CAP.LEv sp D n'),
+      p.val = p'.val → init p = init' p' → pre.map CAP.LEv.erase = pre'.map CAP.LEv.erase →
+        e.erase = e'.erase → (Sys.strat n init p pre e ↔ Sys.strat n' init' p' pre' e')) ∧
+    (∀ {i j : QRef.AllInp}, i.Complete → i ≼ j → i = j) :=
+  ⟨by
+      intro _ _ Sys _ _ _ _ _ _ _ _ _ _ hp hi hpre he
+      simp only [CAP.System.strat, hp, hi, hpre, he],
+    QRef.allInp_complete_maximal⟩
 
 /-- **Def. system output event** (`def:system-output-event`).  "Let `(i,R)`
 be a state and `o ∈ R(i)`.  A system emits `o` by the output event `output(o)`

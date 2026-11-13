@@ -1,6 +1,7 @@
 import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.QueryRefinements
+import CoordCriterion.Instances.BKTransducers
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
@@ -98,74 +99,116 @@ theorem «sec:query-instance/one-fact-version» :
       ¬ QRef.DistinctMono QRef.edgeVals QRef.noCycle2 :=
   ⟨QRef.noCycle2_oneFact, QRef.noCycle2_not_disjointMono, QRef.noCycle2_not_distinctMono⟩
 
-/-- Sec. `sec:query-instance`: "Ordering outputs by inclusion, and inputs by
-adding facts at new nodes, makes a behavior a relational specification.  A
-transducer computes a behavior if every fair run ends at a permitted output,
-and so implements a sub-behavior `A` of it. … Baccaert and Ketsman call a
-behavior coordination-free when nodes can compute it without a list of all
-nodes, and show that this holds exactly when some such `A` is node monotone.
-Node monotonicity of `A` is the common-extension condition on `A` for two rows
-whose inputs place facts at disjoint sets of nodes.  Complete CAP drops that
-restriction"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,
-network input extension, so the network `Netw loc H` is read off the input) and a
-behavior is any `Spec` on them.  Node monotonicity is equivalent to the
-common-extension condition for two rows whose inputs place facts at disjoint
-sets of nodes, and any common
-input extension `j` (`QRef.DisjointPairExpansion`); the full common-extension
-condition implies it.  The transducer model, its notion of computing a
-behavior (Inf. Syst. 2026, Def. 4, Lemma 4), and its characterization theorem
-(Def. 6, Thm. 5: the behaviors characterized by Id+Ord transducers are the node
-monotone ones, so by Lemma 4 a behavior is coordination-free exactly when it
-contains a node monotone one) are cited, not formalized. -/
-theorem «sec:query-instance/node-monotonicity» {F N G : Type} (loc : F → N)
+/-- Sec. `sec:query-instance`: "Their model maps directly to ours.  A
+behavior is an I/O specification whose outputs are ordered by inclusion.  Each
+fact names the participant that holds it.  One input extends another by adding
+the facts of participants not yet heard from, never by adding facts of a
+participant already heard from.  A network of transducers is a system in which
+every participant runs the same strategy, sees only its own facts and the
+contents of the messages it receives, and broadcasts its messages. … Under
+their placement, the environment gives each participant only its own facts, at
+the start, so the facts in a participant's input that name other participants
+arrived in messages, and a participant passes on only facts it holds.  A
+transducer that computes a behavior translates into a system whose runs stay
+confluent.  Every output that some fair run of the transducer can produce is
+emitted by some run of that system."
+
+Lean: inputs are `QRef.ExtInp (QRef.netAdm loc)` (located facts; an input
+extends another by facts at new locations, `BK.LInp`), outputs located facts
+under inclusion.  Their transducer networks are `BK.Prog` (abstracted over
+their relational mappings; genericity and domain preservation are not
+modeled, so the class of programs is larger), translated by `BK.sysOf` into an
+anonymous cluster (`CAP.System.Anonymous`: one strategy, seeing its own
+initial input and the contents of its receives; sends are broadcasts, each
+received at most once per participant, `BK.WFB`).  Placement is `BK.Placed`
+(own facts at the start, later inputs only of held facts, `BK.Holds`).  First
+conjunct (T1): if the program computes `B`, the cluster is consistent on
+placed histories (`BK.PlacedConsistent`) for the downward closure `BK.downB B`.
+Second conjunct (T2): if it characterizes `B` (every output of a fair run),
+every row of `B` at a nonempty finite network is covered by a placed history
+of the cluster.  The sentence on what their coordination-free transducers
+know (an identifier and an order on identifiers) is cited. -/
+theorem «sec:query-instance/mapping» {F Msg St Out : Type} {loc : F → Nat}
+    (Pg : BK.Prog F Msg St Out) (B : Spec (BK.LInp loc) (CALM.PSet (Nat × Out))) :
+    (BK.sysOf (sp := BK.downB B) Pg).Anonymous ∧
+    (BK.Computes Pg B → BK.PlacedConsistent (BK.sysOf (sp := BK.downB B) Pg)) ∧
+    (BK.Characterizes Pg B → ∀ (H : CALM.PSet F) (K : CALM.PSet (Nat × Out)),
+      BK.FinNet loc H → (∃ f, H.mem f) → B.P ⟨H⟩ K →
+        BK.Covers (BK.sysOf (sp := BK.downB B) Pg) H K) :=
+  ⟨BK.sysOf_anonymous Pg, BK.placedConsistent_of_computes,
+    fun hCh _ _ hf hn hK => BK.covers_of_characterizes hCh hf hn hK⟩
+
+/-- Sec. `sec:query-instance`: "Two sides of a partition cannot know that
+they are disconnected, so neither can tell whether it is the whole network,
+and each must emit.  When the partition heals, the outputs of both sides must
+have a common output extension at any input that extends what both sides have
+received.  This is what Baccaert and Ketsman call node monotonicity: the
+common-extension condition for outputs of participants that have heard from
+disjoint sets of participants.  They show that a behavior is coordination-free
+exactly when it contains a node monotone behavior."
+
+Lean, first conjunct: node monotonicity (`QRef.NodeMono`, their Def. 7) is
+the common-extension condition for two rows at disjoint networks and any
+common input extension (`QRef.DisjointPairExpansion`).  Second conjunct (the
+argument, in our model): an anonymous cluster consistent on placed histories
+realizes rows (`BK.realized`, the rows it emits) that have a common output
+extension at the union of disjoint networks; the two witness histories are
+placed side by side, since no strategy can tell.  Third conjunct: through the
+translation, a behavior characterizing a transducer is node monotone on finite
+networks (their Prop. 11).  Their characterization theorem (Thm. 5 with
+Lemma 4) is cited; its sufficiency half (Prop. 10) is not formalized. -/
+theorem «sec:query-instance/node-monotonicity» :
+    (∀ {F N G : Type} (loc : F → N) (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)),
+      QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
+    (∀ {F O D : Type} [PO O] {loc : F → Nat} {sp : Spec (BK.LInp loc) O} (Sys : CAP.System sp D),
+      Sys.Anonymous → BK.PlacedConsistent Sys → BK.NodeMonoFor sp (BK.realized Sys)) ∧
+    (∀ {F Msg St Out : Type} {loc : F → Nat} (Pg : BK.Prog F Msg St Out)
+      (B : Spec (BK.LInp loc) (CALM.PSet (Nat × Out))),
+      BK.Characterizes Pg B → BK.NodeMonoFin loc B) :=
+  ⟨fun loc B => QRef.nodeMono_iff_disjointPair loc B,
+    fun _ hA hc => BK.nodeMono_of_placedConsistent hA hc,
+    fun _ _ hCh => BK.nodeMono_of_characterizes hCh⟩
+
+/-- Sec. `sec:query-instance`: "Complete CAP asks for more, because the
+environment is not constrained from back-channel sharing of facts across
+sides.  It requires the common-extension condition even when participants on
+different sides receive overlapping input."  Lean: the common-extension
+condition (equivalently Lifted Monotonicity, the condition of Theorem
+`thm:complete-cap` with `E = P`) implies node monotonicity, which asks it only
+for inputs at disjoint networks. -/
+theorem «sec:query-instance/asks-for-more» {F N G : Type} (loc : F → N)
     (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)) :
-    (QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
-      (B.CommonExpansion → QRef.NodeMono loc B) :=
-  ⟨QRef.nodeMono_iff_disjointPair loc B,
-    fun h => QRef.nodeMono_of_consistent loc ((complete_calm_commonExpansion B).2 h)⟩
+    B.CommonExpansion → QRef.NodeMono loc B :=
+  fun h => QRef.nodeMono_of_consistent loc ((complete_calm_commonExpansion B).2 h)
 
-/-- Sec. `sec:query-instance`: "A list of all nodes lets nodes wait for
-everyone and choose consistently."  Lean: the list puts the membership in the
-input (`QRef.AllInp`: membership `mem` and the nodes heard from, `view ⊆
-mem`; an input extends another only at the same membership).  A complete
-view is maximal, and a choice of one output at each maximal input is a table
-for which any behavior containing it satisfies Lifted Monotonicity
-(`CAP.ConsistentOn`, Def. `def:lm-for-A`, the condition of Theorem
-`thm:complete-cap`).  For instance, the star centred at
-the least member is a spanning tree of the membership, the spanning-tree
-behavior satisfies Lifted Monotonicity for it, and as a specification it is consistent.  That
-the list and an order on nodes compute every behavior is Baccaert and
-Ketsman's Thm. 2–3, cited, not formalized. -/
-theorem «sec:query-instance/all-nodes» :
-    (∀ {i j : QRef.AllInp}, i.Complete → i ≼ j → i = j) ∧
-    (∀ {I O : Type} [PO I] [PO O] (B : Spec I O) (A : Table I O),
-      (∀ i o, A i o → B.P i o) → (∀ i o j, A i o → i ≼ j → i = j) →
-      (∀ i o o', A i o → A i o' → o = o') → CAP.ConsistentOn B A) ∧
-    ((∀ i, QRef.treeAll.P i (QRef.star i.mem)) ∧
-      CAP.ConsistentOn QRef.treeAll (fun i K => K = QRef.star i.mem) ∧
-      (graph (fun i : QRef.AllInp => QRef.star i.mem)).Consistent) :=
-  ⟨QRef.allInp_complete_maximal, fun B A => QRef.consistentOn_of_maximal B A, QRef.treeAll_star⟩
+/-- Sec. `sec:query-instance`: "Consider an unconstrained matching problem
+over data items partitioned across participants: any set of disjoint pairs of
+items is a permitted output.  Under a network partition with Baccaert and
+Ketsman's placement, each side can pair its items arbitrarily.  Two sides can
+always combine their pairings, because no item can be found on both sides.
+This changes in our model, where the environment can provide an item to
+participants on both sides of the partition.  An item `i` may then be paired
+with `j` on one side and with `k` on the other, and no matching contains both
+pairs."
 
-/-- Sec. `sec:query-instance`: "The two conditions differ.  Pairing off
-nodes, leaving at most one unpaired, is node monotone.  Yet every `A` pairs
-`b` with `a` at `{a,b}` and with `c` at `{b,c}`, so the condition of
-Complete CAP fails at `{a,b,c}`."  Lean, with node names as input (`loc = id`, inputs
-`QRef.net P`): `QRef.pairing` permits symmetric pairings in which, on a
-finite network, at most one node is unpaired.  It is node monotone, every
-output at a two-node network pairs its nodes, and no total sub-behavior `A`
-has `pairing` satisfy Lifted Monotonicity for it (rows at `{0,1}` and `{1,2}`, common input extension
-`{0,1,2}`).  The surrounding prose (isolated nodes must emit; their nodes may
-wait because delays are finite; their construction waits for a group to
-confirm itself; groups sharing a node are nested; the group's choice needs a
-commitment, but placement keeps the conflict at the shared node) reads Baccaert and Ketsman's Prop. 9–11 and is not
-formalized. -/
-theorem «sec:query-instance/pairing» :
-    QRef.NodeMono id QRef.pairing ∧
-      (∀ a b K, a ≠ b → QRef.pairing.P (QRef.net fun x => x = a ∨ x = b) K → K.mem (a, b)) ∧
-      (∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
-        (∀ H, ∃ K, A H K) → (∀ H K, A H K → QRef.pairing.P H K) →
-          ¬ CAP.ConsistentOn QRef.pairing A) :=
-  ⟨QRef.pairing_nodeMono, QRef.pairing_pair, QRef.pairing_no_consistentOn⟩
+Lean: `QRef.matching loc` (items located by `loc`, outputs symmetric
+matchings of the input's items under inclusion, every matching permitted).
+First conjunct: it is node monotone for every placement.  Second conjunct, with
+each item at its own location (`loc = id`, `i = 0`, `j = 1`, `k = 2`): both
+inputs contain item `0`; the rows `({0,1}, {0–1})` and `({0,2}, {0–2})` are
+rows of the spec; `{0,1,2}` extends both inputs; no matching there contains
+both pairs; so the spec fails Lifted Monotonicity for `E = P`. -/
+theorem «sec:query-instance/matching» :
+    (∀ {F N : Type} (loc : F → N), QRef.NodeMono loc (QRef.matching loc)) ∧
+    ((QRef.net fun x => x = 0 ∨ x = 1).set.mem 0 ∧ (QRef.net fun x => x = 0 ∨ x = 2).set.mem 0 ∧
+      (QRef.matching (id : Nat → Nat)).P (QRef.net fun x => x = 0 ∨ x = 1) (QRef.pairOf 0 1) ∧
+      (QRef.matching (id : Nat → Nat)).P (QRef.net fun x => x = 0 ∨ x = 2) (QRef.pairOf 0 2) ∧
+      (QRef.net fun x => x = 0 ∨ x = 1) ≼ (QRef.net fun x => x = 0 ∨ x = 1 ∨ x = 2) ∧
+      (QRef.net fun x => x = 0 ∨ x = 2) ≼ (QRef.net fun x => x = 0 ∨ x = 1 ∨ x = 2) ∧
+      (∀ u, (QRef.matching (id : Nat → Nat)).P (QRef.net fun x => x = 0 ∨ x = 1 ∨ x = 2) u →
+        ¬ (QRef.pairOf 0 1 ≼ u ∧ QRef.pairOf 0 2 ≼ u)) ∧
+      ¬ CAP.ConsistentOn (QRef.matching (id : Nat → Nat)) (QRef.matching (id : Nat → Nat)).P) :=
+  ⟨fun loc => QRef.matching_nodeMono loc, QRef.matching_not_consistentOn⟩
 
 /-- Sec. `sec:query-instance`: "For deterministic behaviors the two conditions
 coincide."  Lean: for the graph of `b`, node monotonicity is monotonicity

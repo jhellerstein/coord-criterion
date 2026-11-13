@@ -168,7 +168,7 @@ theorem availability_contradicts_gen (Sys : System sp D) (hA : AvailabilityAtEnd
   have s1 : Step (canon sp (init q)) (.input k) τ1 := Step.input _ τ1 k ⟨x, hRk⟩ rfl rfl
   have hlq : LRun (D := D) (n := n) (canon sp (init q)) [LEv.inp k] τ1 := .inp s1 (.nil _)
   have hw1 : WF init H1 := by
-    refine ⟨fun r => ?_, fun r a'' q' kk j d b'' h => absurd h (hnrecv r a'' q' kk j d b'')⟩
+    refine wf_of_ne (fun r => ?_) (fun r a'' q' kk j d b'' h => absurd h (hnrecv r a'' q' kk j d b''))
     by_cases hr : r = p
     · subst hr; rw [h1p]
       obtain ⟨τ, hτ⟩ := hw.1 r
@@ -207,7 +207,7 @@ theorem availability_contradicts_gen (Sys : System sp D) (hA : AvailabilityAtEnd
     have hHq : (fun r => H1 r ++ ext r) q = (LEv.inp k :: a2) ++ LEv.out x :: b2 := by
       show H1 q ++ ext q = _; rw [h1q, hab]; simp
     obtain ⟨τ, hτ⟩ := hw'.1 q
-    rw [hHq] at hτ
+    rw [show H1 q ++ ext q = (LEv.inp k :: a2) ++ LEv.out x :: b2 from hHq] at hτ
     obtain ⟨σ', hσ', _⟩ := lrun_append.1 hτ
     refine ⟨σ', hHq, hσ', ?_⟩
     have hσ'' := hσ'
@@ -428,7 +428,7 @@ theorem twoOwnerSys_not_coordinationFreeH (D : Type) : ¬ (twoOwnerSys D).Coordi
     · rw [hH0] at hm; simp at hm
     · rw [hH1] at hm; simp at hm
   have hw : WF init H := by
-    refine ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩
+    refine wf_of_ne (fun r => ?_) (fun r a q k j d b h => absurd h (hnr r a q k j d b))
     rcases hfin r with rfl | rfl
     · exact ⟨ρ0, hr0⟩
     · exact ⟨ρ1, hr1⟩
@@ -504,7 +504,7 @@ theorem owner_history (D : Type) (u : Ord3) :
     rcases hfin r with rfl | rfl
     · rw [hH0] at hm; simp at hm
     · rw [hH1] at hm; simp at hm
-  refine ⟨H, ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩, ?_, hH0⟩
+  refine ⟨H, wf_of_ne (fun r => ?_) (fun r a q k j d b h => absurd h (hnr r a q k j d b)), ?_, hH0⟩
   · rcases hfin r with rfl | rfl
     · exact ⟨ρ, hr⟩
     · exact ⟨_, .nil _⟩

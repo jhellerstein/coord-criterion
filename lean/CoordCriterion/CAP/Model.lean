@@ -40,7 +40,12 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    receive `recv q k j d` names the sender `q`, the position `k` of the
    matching send in `q`'s local list, and the message content `(j, d)`; it is
    matched when `q ≠ p` and `q`'s `k`-th event is `send j d`.  The receiver
-   therefore also sees the sender's identity and sequence number.
+   therefore also sees the sender's identity and sequence number.  Each send
+   matches at most one receive (`RecvUnique`), and no history event happens
+   before itself (`Acyclic`, with `HB` the transitive closure of local order
+   and send→receive edges); equivalently the history can be laid out in time
+   (`causal_iff_acyclic`).  Receive-free continuations preserve both
+   (`wf_extend`, `wf_of_noRecv`).
 3. *Consistent cuts.*  Since local orders are total, a happens-before–closed
    set of events is a prefix of each participant's list closed under
    send→receive edges; we represent a cut by its prefix lengths `c : Fin n → Nat`.
@@ -186,10 +191,39 @@ def RecvMatched (H : History sp D n) : Prop :=
   ∀ (p : Fin n) (a : List (LEv sp D n)) (q : Fin n) (k : Nat) (j : Option I) (d : D) b, H p = a ++ LEv.recv q k j d :: b →
     q ≠ p ∧ (H q)[k]? = some (LEv.send j d)
 
-/-- Def. `def:distributed-history`: matched receives, and each participant's
-events form a legal transition sequence from `σ_P(i_p)`. -/
-def WF (init : Fin n → I) (H : History sp D n) : Prop :=
-  (∀ p, ∃ τ, LRun (canon sp (init p)) (H p) τ) ∧ RecvMatched H
+/-- Each send matches at most one receive: no two receive positions name the
+same send. -/
+def RecvUnique (H : History sp D n) : Prop :=
+  ∀ (p : Fin n) (a : List (LEv sp D n)) (q : Fin n) (k : Nat) (j : Option I) (d : D) b
+    (p' : Fin n) (a' : List (LEv sp D n)) (j' : Option I) (d' : D) b',
+    H p = a ++ LEv.recv q k j d :: b → H p' = a' ++ LEv.recv q k j' d' :: b' →
+      p = p' ∧ a.length = a'.length
+
+/-- History positions: a participant and an index into its local list. -/
+abbrev HPos (n : Nat) := Fin n × Nat
+
+/-- Generating edges of happens-before (Def. `def:happens-before`): local
+order, and each send before its matching receive. -/
+inductive Edge (H : History sp D n) : HPos n → HPos n → Prop
+  | loc (p : Fin n) (k k' : Nat) : k < k' → k' < (H p).length → Edge H (p, k) (p, k')
+  | msg (p : Fin n) (a : List (LEv sp D n)) (q : Fin n) (k : Nat) (j : Option I) (d : D)
+      (b : List (LEv sp D n)) : H p = a ++ LEv.recv q k j d :: b → Edge H (q, k) (p, a.length)
+
+/-- Happens-before. -/
+def HB (H : History sp D n) : HPos n → HPos n → Prop := Relation.TransGen (Edge H)
+
+/-- No history event happens before itself. -/
+def Acyclic (H : History sp D n) : Prop := ∀ a, ¬ HB H a a
+
+/-- Def. `def:distributed-history`: each participant's events form a legal
+transition sequence from `σ_P(i_p)`; every receive has a matching send at
+another participant; each send matches at most one receive; and no history
+event happens before itself.  `.1` and `.2` are the first two fields. -/
+structure WF (init : Fin n → I) (H : History sp D n) : Prop where
+  runs : ∀ p, ∃ τ, LRun (canon sp (init p)) (H p) τ
+  matched : RecvMatched H
+  unique : RecvUnique H
+  acyclic : Acyclic H
 
 /-- Consistent cut, as prefix lengths closed under send→receive. -/
 def IsCut (H : History sp D n) (c : Fin n → Nat) : Prop :=
@@ -668,6 +702,203 @@ theorem partitioned_extend {H H' : History sp D n} {c : Fin n → Nat}
   rw [hext p] at h
   obtain ⟨b', hb'⟩ := split_left h (hnr p q k j d)
   exact hp.2 p a q k j d _ (take_split hb')
+
+/-! ## Causality: happens-before is acyclic -/
+
+/-- A history is *causal* when it can be laid out in time: local events in
+order, and every receive after its matching send. -/
+def Causal (H : History sp D n) : Prop :=
+  ∃ t : Fin n → Nat → Nat, (∀ p k k', k < k' → t p k < t p k') ∧
+    ∀ p (a : List (LEv sp D n)) q k j d b, H p = a ++ LEv.recv q k j d :: b → t q k < t p a.length
+
+theorem hb_rank {H : History sp D n} (t : HPos n → Nat) (h : ∀ a b, Edge H a b → t a < t b)
+    {a b : HPos n} (hab : HB H a b) : t a < t b := by
+  induction hab with
+  | single he => exact h _ _ he
+  | tail _ he ih => exact Nat.lt_trans ih (h _ _ he)
+
+/-- A rank that increases along edges rules out cycles. -/
+theorem acyclic_of_rank {H : History sp D n} (t : HPos n → Nat)
+    (h : ∀ a b, Edge H a b → t a < t b) : Acyclic H :=
+  fun a ha => Nat.lt_irrefl _ (hb_rank t h ha)
+
+theorem acyclic_of_causal {H : History sp D n} (h : Causal H) : Acyclic H := by
+  obtain ⟨t, hm, hr⟩ := h
+  refine acyclic_of_rank (fun a => t a.1 a.2) fun a b he => ?_
+  cases he with
+  | loc p k k' hk _ => exact hm p k k' hk
+  | msg p a q k j d b hH => exact hr p a q k j d b hH
+
+theorem len_lt_of_eq_append {α : Type} {l a b : List α} {e : α} (h : l = a ++ e :: b) :
+    a.length < l.length := by
+  rw [h]; simp
+
+/-- A history without receives is acyclic. -/
+theorem acyclic_of_noRecv {H : History sp D n} (h : ∀ p q k j d, LEv.recv q k j d ∉ H p) :
+    Acyclic H := by
+  refine acyclic_of_rank (fun a => a.2) fun a b he => ?_
+  cases he with
+  | loc _ _ _ hk _ => exact hk
+  | msg p a q k j d b hH => exact absurd (by rw [hH]; simp) (h p q k j d)
+
+theorem recvUnique_of_noRecv {H : History sp D n} (h : ∀ p q k j d, LEv.recv q k j d ∉ H p) :
+    RecvUnique H := by
+  intro p a q k j d b _ _ _ _ _ hH _
+  exact absurd (by rw [hH]; simp) (h p q k j d)
+
+theorem recvMatched_of_noRecv {H : History sp D n} (h : ∀ p q k j d, LEv.recv q k j d ∉ H p) :
+    RecvMatched H := by
+  intro p a q k j d b hH
+  exact absurd (by rw [hH]; simp) (h p q k j d)
+
+/-- A receive-free history whose participant runs are legal is well formed. -/
+theorem wf_of_noRecv {init : Fin n → I} {H : History sp D n}
+    (hr : ∀ p, ∃ τ, LRun (canon sp (init p)) (H p) τ)
+    (h : ∀ p q k j d, LEv.recv q k j d ∉ H p) : WF init H :=
+  ⟨hr, recvMatched_of_noRecv h, recvUnique_of_noRecv h, acyclic_of_noRecv h⟩
+
+/-- A history in which no local list has a receive, with legal participant
+runs, is well formed. -/
+theorem wf_of_ne {init : Fin n → I} {H : History sp D n}
+    (hr : ∀ p, ∃ τ, LRun (canon sp (init p)) (H p) τ)
+    (h : ∀ (p : Fin n) (a : List (LEv sp D n)) (q : Fin n) (k : Nat) (j : Option I) (d : D) b,
+      H p = a ++ LEv.recv q k j d :: b → False) : WF init H :=
+  wf_of_noRecv hr fun p q k j d hm => by
+    obtain ⟨a, b, hab⟩ := List.append_of_mem hm
+    exact h p a q k j d b hab
+
+/-! ### From acyclicity to a timing -/
+
+/-- All positions of a history. -/
+def allPos (H : History sp D n) : List (HPos n) :=
+  (List.finRange n).flatMap fun p => (List.range (H p).length).map fun k => (p, k)
+
+theorem mem_allPos {H : History sp D n} {p : Fin n} {k : Nat} :
+    (p, k) ∈ allPos H ↔ k < (H p).length := by
+  simp [allPos]
+
+theorem filter_length_le {α : Type} (P Q : α → Bool) :
+    ∀ l : List α, (∀ x ∈ l, P x = true → Q x = true) → (l.filter P).length ≤ (l.filter Q).length
+  | [], _ => by simp
+  | x :: l, h => by
+    have ih := filter_length_le P Q l (fun y hy => h y (List.mem_cons_of_mem _ hy))
+    simp only [List.filter_cons]
+    by_cases hP : P x = true
+    · have hQ := h x List.mem_cons_self hP
+      simp [hP, hQ]; omega
+    · by_cases hQ : Q x = true
+      · simp [hP, hQ]; omega
+      · simp [hP, hQ]; omega
+
+theorem filter_length_lt {α : Type} (P Q : α → Bool) :
+    ∀ l : List α, (∀ x ∈ l, P x = true → Q x = true) → ∀ y ∈ l, Q y = true → P y = false →
+      (l.filter P).length < (l.filter Q).length
+  | [], _, _, hy, _, _ => by simp at hy
+  | x :: l, h, y, hy, hQy, hPy => by
+    have hle := filter_length_le P Q l (fun z hz => h z (List.mem_cons_of_mem _ hz))
+    simp only [List.filter_cons]
+    rcases List.mem_cons.1 hy with rfl | hy'
+    · simp [hPy, hQy]; omega
+    · have ih := filter_length_lt P Q l (fun z hz => h z (List.mem_cons_of_mem _ hz)) y hy' hQy hPy
+      by_cases hP : P x = true
+      · have hQ := h x List.mem_cons_self hP
+        simp [hP, hQ]; omega
+      · by_cases hQ : Q x = true
+        · simp [hP, hQ]; omega
+        · simp [hP, hQ]; omega
+
+open Classical in
+/-- The number of positions that happen before `b`. -/
+noncomputable def hbRank (H : History sp D n) (b : HPos n) : Nat :=
+  ((allPos H).filter fun a => decide (HB H a b)).length
+
+open Classical in
+theorem hbRank_lt {H : History sp D n} (hac : Acyclic H) {a b : HPos n} (he : Edge H a b)
+    (ha : a ∈ allPos H) : hbRank H a < hbRank H b := by
+  unfold hbRank
+  refine filter_length_lt _ _ _ ?_ a ha ?_ ?_
+  · intro x _ hx
+    simp only [decide_eq_true_eq] at hx ⊢
+    exact Relation.TransGen.tail hx he
+  · simp only [decide_eq_true_eq]; exact Relation.TransGen.single he
+  · simp only [decide_eq_false_iff_not]; exact hac a
+
+theorem hbRank_le (H : History sp D n) (b : HPos n) : hbRank H b ≤ (allPos H).length :=
+  List.length_filter_le _ _
+
+/-- An acyclic history with matched receives is causal (a finite partial
+order has a linear extension). -/
+theorem causal_of_acyclic {H : History sp D n} (hm : RecvMatched H) (hac : Acyclic H) :
+    Causal H := by
+  let N := (allPos H).length
+  refine ⟨fun p k => if k < (H p).length then hbRank H (p, k) else N + k, ?_, ?_⟩
+  · intro p k k' hk
+    by_cases h' : k' < (H p).length
+    · have h : k < (H p).length := Nat.lt_trans hk h'
+      simp only [h, h', ↓reduceIte]
+      exact hbRank_lt hac (.loc p k k' hk h') (mem_allPos.2 h)
+    · simp only [h', ↓reduceIte]
+      by_cases h : k < (H p).length
+      · simp only [h, ↓reduceIte]; have := hbRank_le H (p, k); omega
+      · simp only [h, ↓reduceIte]; omega
+  · intro p a q k j d b hH
+    have hp : a.length < (H p).length := len_lt_of_eq_append hH
+    have hq : k < (H q).length := (List.getElem?_eq_some_iff.1 (hm p a q k j d b hH).2).1
+    simp only [hp, hq, ↓reduceIte]
+    exact hbRank_lt hac (.msg p a q k j d b hH) (mem_allPos.2 hq)
+
+theorem causal_iff_acyclic {H : History sp D n} (hm : RecvMatched H) : Causal H ↔ Acyclic H :=
+  ⟨acyclic_of_causal, causal_of_acyclic hm⟩
+
+/-! ### Continuations without receives stay well formed -/
+
+/-- A continuation at a cut that adds no receive is acyclic. -/
+theorem acyclic_extend {H H' : History sp D n} {c : Fin n → Nat}
+    {ext : Fin n → List (LEv sp D n)} (hm : RecvMatched H) (hac : Acyclic H) (hc : IsCut H c)
+    (hext : Extends H c H' ext) (hnr : ∀ p q k j d, LEv.recv q k j d ∉ ext p) :
+    Acyclic H' := by
+  obtain ⟨t, hmo, hr⟩ := causal_of_acyclic hm hac
+  apply acyclic_of_causal
+  refine ⟨fun p k => if k < c p then t p k else t p (c p) + k, ?_, ?_⟩
+  · intro p k k' hk
+    by_cases h' : k' < c p
+    · have h : k < c p := Nat.lt_trans hk h'
+      simp only [h, h', ↓reduceIte]; exact hmo p k k' hk
+    · simp only [h', ↓reduceIte]
+      by_cases h : k < c p
+      · simp only [h, ↓reduceIte]; have := hmo p k (c p) h; omega
+      · simp only [h, ↓reduceIte]; omega
+  · intro p a q k j d b hH
+    rw [hext p] at hH
+    obtain ⟨b', hb'⟩ := split_left hH (hnr p q k j d)
+    have hk := hc.2 p a q k j d b' hb'
+    have hal : a.length < c p := by
+      have := congrArg List.length hb'
+      simp at this
+      have h2 : ((H p).take (c p)).length ≤ c p := by simp [List.length_take]; omega
+      simp at h2; omega
+    simp only [hal, hk, ↓reduceIte]
+    exact hr p a q k j d _ (take_split hb')
+
+theorem recvUnique_extend {H H' : History sp D n} {c : Fin n → Nat}
+    {ext : Fin n → List (LEv sp D n)} (hu : RecvUnique H)
+    (hext : Extends H c H' ext) (hnr : ∀ p q k j d, LEv.recv q k j d ∉ ext p) :
+    RecvUnique H' := by
+  intro p a q k j d b p' a' j' d' b' h h'
+  rw [hext p] at h
+  rw [hext p'] at h'
+  obtain ⟨b1, hb1⟩ := split_left h (hnr p q k j d)
+  obtain ⟨b2, hb2⟩ := split_left h' (hnr p' q k j' d')
+  exact hu p a q k j d _ p' a' j' d' _ (take_split hb1) (take_split hb2)
+
+/-- A continuation at a cut that adds no receive, with legal participant runs,
+is well formed. -/
+theorem wf_extend {init : Fin n → I} {H H' : History sp D n} {c : Fin n → Nat}
+    {ext : Fin n → List (LEv sp D n)} (hw : WF init H) (hc : IsCut H c)
+    (hext : Extends H c H' ext) (hnr : ∀ p q k j d, LEv.recv q k j d ∉ ext p)
+    (hr : ∀ p, ∃ τ, LRun (canon sp (init p)) (H' p) τ) : WF init H' :=
+  ⟨hr, recvMatched_extend hw.matched hc hext hnr, recvUnique_extend hw.unique hext hnr,
+    acyclic_extend hw.matched hw.acyclic hc hext hnr⟩
 
 end CAP
 end CC

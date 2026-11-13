@@ -140,6 +140,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:system/produced»
 #check @CC.Paper.«def:system/restrict»
 #check @CC.Paper.«sec:systems/one-specification»
+#check @CC.Paper.«sec:systems/all-relation»
 #check @CC.Paper.«def:system-output-event»
 #check @CC.Paper.«def:commitment-event»
 #check @CC.Paper.«sec:systems/commitment-event-unobserved»
@@ -169,6 +170,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:partitioned-history»
 #check @CC.Paper.«def:partitioned-history/unfolded»
 #check @CC.Paper.«def:explicit-relation»
+#check @CC.Paper.«def:emitted-rows»
+#check @CC.Paper.«def:emitted-rows/availability»
 #check @CC.Paper.«sec:complete-cap/system»
 #check @CC.Paper.«sec:complete-cap/system-produced»
 #check @CC.Paper.«sec:complete-cap/environment»
@@ -229,9 +232,10 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:intersection-bound»
 #check @CC.Paper.«sec:query-instance/weaker-monotonicity»
 #check @CC.Paper.«sec:query-instance/one-fact-version»
+#check @CC.Paper.«sec:query-instance/mapping»
 #check @CC.Paper.«sec:query-instance/node-monotonicity»
-#check @CC.Paper.«sec:query-instance/all-nodes»
-#check @CC.Paper.«sec:query-instance/pairing»
+#check @CC.Paper.«sec:query-instance/asks-for-more»
+#check @CC.Paper.«sec:query-instance/matching»
 #check @CC.Paper.«sec:query-instance/deterministic-behaviors»
 #check @CC.Paper.«sec:crdt-instance/state-function»
 #check @CC.Paper.«sec:crdt-instance/state-monotone»

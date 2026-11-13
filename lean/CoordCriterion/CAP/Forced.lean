@@ -103,7 +103,7 @@ theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
     have hm : LEv.recv q k j' d ∈ Lf p := by rw [h]; simp
     exact (hLs p).2.1 q k j' d hm
   have hwfc : WF init Lf :=
-    ⟨fun p => (hLs p).1, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩
+    wf_of_ne (fun p => (hLs p).1) (fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b))
   have hprodc : Produced Sys 2 init Lf := fun p => (hLs p).2.2.1
   have hpartc : Partitioned Lf comp :=
     ⟨hcomp2, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩
@@ -136,7 +136,7 @@ theorem cap_two_step_forced (Sys : System sp D) (hA : AnsweringAtEnd Sys)
     · exact hj₂
   let H0 : History sp D 2 := fun _ => []
   have hwf0 : WF init H0 :=
-    ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
+    wf_of_ne (fun p => ⟨_, .nil _⟩) (by intro p a q k j d b h; simp [H0] at h)
   have hprod0 : Produced Sys 2 init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 (fun q => q.val) :=
     ⟨⟨0, 1, by simp⟩, by intro p a q k j d b h; simp [H0] at h⟩

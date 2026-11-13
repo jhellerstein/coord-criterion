@@ -114,7 +114,32 @@ theorem fig_participant_runs (sp : Spec I O) {i j : I} (hij : i ≼ j) (hj : ∃
       | 0, h => simp at h
       | 1, h => simp at h
       | _ + 2, h => simp at h
-  refine ⟨⟨?_, ?_, fun p => ⟨_, (hioD p) ▸ hx⟩⟩, ⟨?_, ?_, fun p => ⟨_, (hioF p) ▸ hx⟩⟩,
+  -- the only receive of `Hf` is at `(1, 0)`
+  have hrecv : ∀ (p : Fin 2) (r x : Nat) (m : Option I × D),
+      ((Hf O i j d).ev p)[r]? = some (.recv x m) → p = 1 ∧ r = 0 := by
+    intro p r x m h
+    by_cases hp : p = 0
+    · simp only [Hf, hp, ite_true] at h
+      match r, h with
+      | 0, h => simp at h
+      | 1, h => simp at h
+      | _ + 2, h => simp at h
+    · have hp1 : p = 1 := by
+        have := p.isLt; apply Fin.ext; have : p.val ≠ 0 := fun h => hp (Fin.ext h); omega
+      simp only [Hf, hp, ite_false] at h
+      match r, h with
+      | 0, _ => exact ⟨hp1, rfl⟩
+      | 1, h => simp at h
+      | _ + 2, h => simp at h
+  have hDio : ∀ (p : Fin 2) (r : Nat) (e : Dist.LEv I O D), ((Hd O D i j).ev p)[r]? = some e →
+      ∃ e', e = .io e' := by
+    intro p r e h
+    simp only [Hd] at h
+    match r, h with
+    | 0, h => simp at h; exact ⟨_, h.symm⟩
+    | _ + 1, h => simp at h
+  refine ⟨⟨?_, ?_, ?_, fun p => ⟨_, (hioD p) ▸ hx⟩, Dist.History.acyclic_of_io hDio⟩,
+    ⟨?_, ?_, ?_, fun p => ⟨_, (hioF p) ▸ hx⟩, ?_⟩,
     Dist.History.endpoint_full.2 (fun p => (hioD p) ▸ hx),
     Dist.History.endpoint_full.2 (fun p => (hioF p) ▸ hx), ?_⟩
   · intro p r x m h
@@ -127,6 +152,8 @@ theorem fig_participant_runs (sp : Spec I O) {i j : I} (hij : i ≼ j) (hj : ∃
     match s, h with
     | 0, h => simp at h
     | _ + 1, h => simp at h
+  · intro p r _ _ x m _ h
+    obtain ⟨_, he⟩ := hDio p r _ h; cases he
   · intro p r x m h
     by_cases hp : p = 0
     · simp only [Hf, hp, ite_true] at h
@@ -147,6 +174,17 @@ theorem fig_participant_runs (sp : Spec I O) {i j : I} (hij : i ≼ j) (hj : ∃
     obtain ⟨hq, hs, _⟩ := hsend q s x m h
     obtain ⟨hq', hs', _⟩ := hsend q' s' x m' h'
     exact ⟨hq.trans hq'.symm, hs.trans hs'.symm⟩
+  · intro p r p' r' x m m' h h'
+    obtain ⟨hp, hr⟩ := hrecv p r x m h
+    obtain ⟨hp', hr'⟩ := hrecv p' r' x m' h'
+    exact ⟨hp.trans hp'.symm, hr.trans hr'.symm⟩
+  · refine Dist.History.acyclic_of_rank (fun a => if a.1 = 0 then a.2 else a.2 + 2) fun a b he => ?_
+    cases he with
+    | loc p k k' hk _ => by_cases hp : p = 0 <;> simp [hp] <;> omega
+    | msg q s p r x m hs hr =>
+      obtain ⟨rfl, rfl, _⟩ := hsend q s x m hs
+      obtain ⟨rfl, rfl⟩ := hrecv p r x m hr
+      decide
   · intro he
     have := congrFun he ⟨1, by decide⟩
     simp [Hd, Hf] at this
