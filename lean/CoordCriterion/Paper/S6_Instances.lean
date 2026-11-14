@@ -2,6 +2,7 @@ import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.Instances.BKTransducers
+import CoordCriterion.Instances.BKSufficiency
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
@@ -137,6 +138,29 @@ theorem «sec:query-instance/mapping» {F Msg St Out : Type} {loc : F → Nat}
         BK.Covers (BK.sysOf (sp := BK.downB B) Pg) H K) :=
   ⟨BK.sysOf_anonymous Pg, BK.placedConsistent_of_computes,
     fun hCh _ _ hf hn hK => BK.covers_of_characterizes hCh hf hn hK⟩
+
+/-- Sec. `sec:query-instance`: "Their characterization can be recovered directly
+in our formalism, which drops their requirement that programs treat data
+values only as interchangeable symbols: a behavior is computable without the
+list of all nodes exactly when it contains a node monotone behavior."
+
+Lean: "computable without the list of all nodes" is `BK.Computes` by a node
+program under Id+Ord (`BK.Prog`, their Def. 6 reading of coordination-free);
+node programs are arbitrary state machines, not required to be generic or
+domain-preserving.  First conjunct (their Lemma 4 with Thm. 5,
+`BK.bk_computable_iff`): computable iff some sub-behavior is node monotone
+with its outputs at network nodes (their Def. 1 condition, `BK.LocatedFin`).
+Second conjunct (their Thm. 5, `BK.bk_characterized_iff`): characterized by
+some program iff node monotone and located.  Sufficiency is the quorum
+program `BK.qProg` (their Prop. 10). -/
+theorem «sec:query-instance/characterization» {F Out : Type} {loc : F → Nat}
+    (B : Spec (BK.LInp loc) (CALM.PSet (Nat × Out))) :
+    ((∃ (Msg St : Type) (Pg : BK.Prog F Msg St Out), BK.Computes Pg B) ↔
+      ∃ B' : Spec (BK.LInp loc) (CALM.PSet (Nat × Out)), (∀ i K, B'.P i K → B.P i K) ∧
+        BK.NodeMonoFin loc B' ∧ BK.LocatedFin loc B') ∧
+    ((∃ (Msg St : Type) (Pg : BK.Prog F Msg St Out), BK.Characterizes Pg B) ↔
+      BK.NodeMonoFin loc B ∧ BK.LocatedFin loc B) :=
+  ⟨BK.bk_computable_iff B, BK.bk_characterized_iff B⟩
 
 /-- Sec. `sec:query-instance`: "Their aims differ from ours.  They ask which
 behaviors become computable when nodes share some piece of system knowledge,
