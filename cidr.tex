@@ -1742,17 +1742,17 @@ The computing literature has long been rich with coordination mechanisms, but
 prior to the CALM Conjecture the justifications for the mechanisms were
 generally situational. Certain guarantees---serializability being a prime
 example---provided a whole-system invariant, and coordination mechanisms like
-2PL or MTVO could be shown to be sufficient for system correctness. But
+2PL or MVTO could be shown to be sufficient for system correctness. But
 mechanisms like locks and total orders were also used liberally for guaranteeing
 local operational properties of concurrent data structures or algorithms, and
 they were often used poorly in both systems and academic literature.
 
 A suggestive example for this work arose in the misuse of the barrier mechanism
 in Google's much-cited MapReduce system~\cite{dean2004mapreduce}, which was
-based on Valiant's formal model of Bulk Synchronous Processing
+based on Valiant's formal model of Bulk Synchronous Parallel
 (BSP)~\cite{valiant1990bsp}. In database systems it has long been common for
 query engines---single-node or parallel---to pipeline data between operators in
-a query plan, and wait only where an non-monotone operator, such as aggregation,
+a query plan, and wait only where a non-monotone operator, such as aggregation,
 needs all of its input to produce an
 output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce instead tightly
 coupled a barrier coordination into every communication phase, so even monotone
@@ -1762,7 +1762,7 @@ coupling~\cite{valiant1990bsp,karloff2010mrc}. It was clear to the database
 community that this was an inessential use of
 coordination~\cite{dewitt2008mapreduce,condie2010online}.
 
-Rather then repairing a specific model, the CALM Conjecture asked the underlying
+Rather than repairing a specific model, the CALM Conjecture asked the underlying
 question: when are coordination mechanisms required, and why? The question was
 first addressed in the context of declarative
 networking~\cite{loo2009declarative}, which---in Codd's tradition of separating
@@ -1797,7 +1797,7 @@ Analysis at the level of specs also enables deeper analysis.
 Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs and
 conservatively injected coordination code in front of it. Coordination code is
 itself non-monotone, so this only adds more non-monotone syntax, leaving the
-puzzled of Section~\ref{sec:composition}. Later tools moved from syntax to
+puzzle of Section~\ref{sec:composition}. Later tools moved from syntax to
 declared contracts and invariants in specific
 contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
 operation the weakest consistency or isolation level a store offers that still

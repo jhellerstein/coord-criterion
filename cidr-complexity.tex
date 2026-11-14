@@ -1760,87 +1760,121 @@ work~\cite{power2025freetermination}.\cxbar{166}{0.4 0.4 1}{e}
 \section{Discussion}
 \label{sec:discussion}
 
-\color{black}\cxtag{167}{N/M}\cxbar{167}{0.4 0.4 1}{s}The computing literature is rich with coordination mechanisms for managing
-concurrency within and across machines. The CALM Conjecture asked a question
-still latent at the time: when are these mechanisms required, and why? It drew
-on declarative networking~\cite{loo2009declarative}, which, in Codd's tradition
-of separating specification from implementation~\cite{codd1970relational}, wrote
-the desired effects of protocols as queries to be analyzed and optimized into a
-variety of mechanisms. Could a signature property of declarative
-languages---monotonicity---be the criterion?\cxbar{167}{0.4 0.4 1}{e}
+%%%%%%%%%%%%
+% Three openings in different registers:
 
-\color{black}\cxtag{168}{N/M}\cxbar{168}{0.4 0.4 1}{s}The intuition was sharpened by a related friction in the literature on parallel
-query processing. The Google MapReduce
-paper~\cite{dean2004mapreduce} departed from prior work on parallel query
-processing~\cite{wilschut1991dataflow,graefe1990volcano}, conflating data
-redistribution (shuffle) with barrier coordination required for a non-monotone
-reduce operator. This coupling of unrelated concerns required monotone operators
-like join to block in the MapReduce model unnecessarily.  Cost models that count
-rounds, from BSP supersteps to MapReduce rounds, carry the same
-conflation~\cite{valiant1990bsp,karloff2010mrc}.\cxbar{168}{0.4 0.4 1}{e}
+    % Retrospective, plain:
 
-\color{black}\cxtag{169}{N/S}The CALM Conjecture hypothesized that the database community's more judicious
-use of barriers could be generalized: coordination---of any kind---is required
-if and only if the program is non-monotone. Ameloot et al.\
-proved it, but only for relational languages, which to date have
-still not become mainstream beyond query processing (more on this below).
+    %     With the results in hand, we return to the questions that motivated
+    %     CALM and say what the results change in how we understand them.
 
-\color{blue!75!black}\cxtag{170}{B/M}\cxbar{170}{0.4 0.4 1}{s}This paper moves the declarations one level higher, from queries to specs: all
-that matters about a spec is the mapping from a program's inputs
-to its output. Eliding the query logic frees the analysis from any particular
-language and broadens what can be specified. Prior work focused on implementing
-complex programs
-declaratively~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2011bloom}.
-This ``declarative engineering'' offered concrete benefits in
-analysis and optimization. But the higher-level model here also captures abstract
-families of guarantees, like CAP and isolation levels, which have no application or
-protocol in mind.\cxbar{170}{0.4 0.4 1}{e}
+    % Leading with the payoff:
 
-\color{blue!75!black}\cxtag{171}{B/M}\cxbar{171}{0.4 0.4 1}{s}Lifting the abstraction improves the power of analysis as well. Prior program
-analyses became enmeshed in the details of implementations, however
-declarative. Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in
-programs and conservatively injected coordination code in front of it.  Yet
-coordination code is itself non-monotone, so adding it to a Bloom program only
-adds more non-monotone syntax.  Subsequent work moved the question from syntax to declared contracts and
-invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}.  Their tools pick,
-for each operation or transaction, the weakest consistency or isolation level
-that the store offers and that still satisfies the declared properties.  We
-ask what the spec itself requires, independent of any menu of
-levels.  By Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.  Our
-composition results need no program logic, and the criteria are exact on specs.\cxbar{171}{0.4 0.4 1}{e}
+\color{black}\cxtag{167}{N/M}\cxbar{167}{0.4 0.4 1}{s}Several observations that motivated CALM can now be explained
+precisely. We revisit them briefly, both for context and because the
+explanations point to next steps for research.\cxbar{167}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{172}{N/M}\cxbar{172}{0.4 0.4 1}{s}A limitation of prior CALM work was that it was constructive on only one side of
-its boundary.  Monotone programs need no coordination; for a non-monotone
-program, CALM said only that coordination was required somewhere, not what it
-had to accomplish or where it belonged.  Complete CALM says more.  A
-spec that is not monotone needs specific \commitments: the \commitments
-its outputs require.  Every coordination mechanism, from locks to consensus,
-is a way of applying these \commitments.  The same analysis says which outputs
-need \commitments and whether conflicting choices can arise at another
-participant.  That tells an implementation when it needs agreement rather than
-a local decision.  Proper coordination
-then places the \commitments in a composition: it identifies the stage that
-must make them, as the log does in state-machine replication, and certifies
-that the stages behind it need none of their own.\cxbar{172}{0.4 0.4 1}{e}
+    % Leading with history:
 
-\color{black}\cxtag{173}{N/M}\cxbar{173}{0.4 0.4 1}{s}Underlying these issues is a reassessment of
-tradition: what is a declarative specification, and how little does it require
-to be useful? The question is timely. Coding agents increasingly write
-imperative code, often rife with bugs, which has renewed interest in formal
-specification languages like Lean~\cite{demoura2021lean4}. A higher-level
-language keeps agents out of the incidental complexity of implementations and
-pairs them with proofs of correctness: neurosymbolic
-computing~\cite{an2025neurosymbolic}. This is a renewed opportunity for logic,
-dataflow, and functional languages. Today these languages typically specify
-protocols and programs in detail, as in declarative networking; this paper
-points to specification at a higher level still, opening analyses like ours and
-potential program synthesis and optimization.\cxbar{173}{0.4 0.4 1}{e}
+    %     CALM began as a conjecture drawn from practice. Looking back from the
+    %     theorems, it is worth asking which of the original intuitions hold up,
+    %     and what they missed.
+
+%  My recommendation is option 2. It promises the reader something specific
+% ("explained precisely"). It justifies the detour ("for context" and "where the
+% work goes next"). It also sets up your closing paragraph about how simply
+% declarative we can be, so the section has a beginning and an end that connect.
+
+% A. Origins and the conjecture:
+
+\color{black}\cxtag{168}{N/M}\cxbar{168}{0.4 0.4 1}{s}The computing literature has long been rich with coordination mechanisms, but
+prior to the CALM Conjecture the justifications for the mechanisms were
+generally situational. Certain guarantees---serializability being a prime
+example---provided a whole-system invariant, and coordination mechanisms like
+2PL or MVTO could be shown to be sufficient for system correctness. But
+mechanisms like locks and total orders were also used liberally for guaranteeing
+local operational properties of concurrent data structures or algorithms, and
+they were often used poorly in both systems and academic literature.\cxbar{168}{0.4 0.4 1}{e}
+
+\color{black}\cxtag{169}{N/S}A suggestive example for this work arose in the misuse of the barrier mechanism
+in Google's much-cited MapReduce system~\cite{dean2004mapreduce}, which was
+based on Valiant's formal model of Bulk Synchronous Parallel
+(BSP)~\cite{valiant1990bsp}. In database systems it has long been common for
+query engines---single-node or parallel---to pipeline data between operators in
+a query plan, and wait only where a non-monotone operator, such as aggregation,
+needs all of its input to produce an
+output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce instead tightly
+coupled a barrier coordination into every communication phase, so even monotone
+parallel operators like join had to wait for coordination. Cost models that
+count rounds, from BSP supersteps to MapReduce rounds, carry the same
+coupling~\cite{valiant1990bsp,karloff2010mrc}. It was clear to the database
+community that this was an inessential use of
+coordination~\cite{dewitt2008mapreduce,condie2010online}.
+
+\color{blue!75!black}\cxtag{170}{B/M}\cxbar{170}{0.4 0.4 1}{s}Rather than repairing a specific model, the CALM Conjecture asked the underlying
+question: when are coordination mechanisms required, and why? The question was
+first addressed in the context of declarative
+networking~\cite{loo2009declarative}, which---in Codd's tradition of separating
+specification from implementation~\cite{codd1970relational}---wrote the desired
+effects of protocols as queries to be analyzed and optimized into a variety of
+mechanisms. Parallel query processing suggested the answer, as a generalization
+of database practice: coordination of any kind is required if and only if a
+query---or program---is non-monotone. Ameloot et al.\ proved it for relational
+languages, but these have not yet become mainstream outside query processing.\cxbar{170}{0.4 0.4 1}{e}
+
+\color{blue!75!black}\cxtag{171}{B/M}\cxbar{171}{0.4 0.4 1}{s}By raising the abstraction level of systems above implementation, declarative
+networking research went beyond analysis power to systems engineering benefits.
+A wide variety of complex distributed systems were implemented in declarative
+languages, leading to a variety of practical payoffs, including database-style
+optimizations to deploy different implementations depending on physical
+constraints, e.g., wired vs.\ wireless
+communication~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2011bloom}.\cxbar{171}{0.4 0.4 1}{e}
+
+  % B. From programs to specs (the paragraph you said needed rewording):
+\color{black}\cxtag{172}{N/M}\cxbar{172}{0.4 0.4 1}{s}This paper raises the abstraction level yet further: from logic programs to the
+\spectype[s] of any program. All that matters about a spec is which outputs it
+permits for each input, so the analysis does not depend on any particular
+language or programming model, declarative or otherwise. By going a level higher to specs, we not only set aside the lack
+of mainstream adoption of declarative languages; we also capture families of
+guarantees, like CAP and isolation levels, that have no application or protocol
+in mind.\cxbar{172}{0.4 0.4 1}{e}
+
+% C. What analysis at the level of specs gives (the two composition paragraphs
+% merged):
+
+\color{black}\cxtag{173}{N/M}\cxbar{173}{0.4 0.4 1}{s}Analysis at the level of specs also enables deeper analysis.
+Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs and
+conservatively injected coordination code in front of it. Coordination code is
+itself non-monotone, so this only adds more non-monotone syntax, leaving the
+puzzle of Section~\ref{sec:composition}. Later tools moved from syntax to
+declared contracts and invariants in specific
+contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
+operation the weakest consistency or isolation level a store offers that still
+satisfies them. We ask what a spec itself requires, independent of any menu of
+levels, and by Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}) the
+answer holds for every mechanism. Our work is also constructive on both sides of the
+boundary, as discussed in Section~\ref{sec:composition}.\cxbar{173}{0.4 0.4 1}{e}
+
+\color{black}\cxtag{174}{N/M}\cxbar{174}{0.4 0.4 1}{s}Underlying these issues is a reassessment of Codd's declarative tradition: how
+``declarative'' can a specification be, and how little structure does it need to
+be useful? The question is timely. Coding agents increasingly write imperative
+code, often rife with bugs. This has renewed interest in formal specification
+languages like Lean~\cite{demoura2021lean4}. High-level languages keep agents
+away from the incidental complexity of implementations, and pair inference with
+proofs of correctness: neurosymbolic computing~\cite{an2025neurosymbolic}. Lean
+is an example of a renewed opportunity for declarative programming languages,
+including logic, dataflow, and functional languages. Nonetheless, these
+languages still specify protocols and programs in a relatively high degree of
+detail, as in declarative networking. Our \spectype[] model and its composition
+points to the possibility of specification at a higher level still, opening new
+analyses like ours, and demonstrating that we can say far less in our
+specifications while still ensuring correct program synthesis and optimization.\cxbar{174}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-\color{black}\cxtag{174}{N/M}\cxbar{174}{0.4 0.4 1}{s}The simplicity of \spectype[s] provides a unified foundation for the
+\color{black}\cxtag{175}{N/M}\cxbar{175}{0.4 0.4 1}{s}The simplicity of \spectype[s] provides a unified foundation for the
 coordination-avoidance literature, and clarifies the intrinsic purpose of coordination:
 removing possibilities via \commitments.
 The question of coordination-free consistency becomes clear in this model:
@@ -1848,9 +1882,9 @@ when must a system make a fateful decision in order to emit an output?
 Functional CALM answers the question for functional specs: runs
 stay confluent as input arrives exactly when a spec is monotone, and then no
 output needs a \commitment.  This generalizes classic CALM to any function
-from inputs to outputs.\cxbar{174}{0.4 0.4 1}{e}
+from inputs to outputs.\cxbar{175}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{175}{N/M}\cxbar{175}{0.4 0.4 1}{s}Complete CALM extends the answer to specs that offer several outputs
+\color{black}\cxtag{176}{N/M}\cxbar{176}{0.4 0.4 1}{s}Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When the test fails, some reachable output
 requires a \commitment, which rules out an input or some of its outputs.
@@ -1861,9 +1895,9 @@ composition coordinates (\S\ref{sec:composition}).
 % guards the store, the log's \commitments are all the composition needs, and
 % the store needs none.  Multi-Paxos is one way to distribute them.
 Complete CAP is the partition form of the same equivalence: a spec escapes
-the CAP tradeoff exactly when it satisfies Lifted Monotonicity for its explicit possibility relation.\cxbar{175}{0.4 0.4 1}{e}
+the CAP tradeoff exactly when it satisfies Lifted Monotonicity for its explicit possibility relation.\cxbar{176}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{176}{N/M}\cxbar{176}{0.4 0.4 1}{s}Our model of \spectype[s] and \commitments opens a range of new questions.
+\color{black}\cxtag{177}{N/M}\cxbar{177}{0.4 0.4 1}{s}Our model of \spectype[s] and \commitments opens a range of new questions.
 One direction
 extends the boolean criterion of this paper to a quantity: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
@@ -1871,17 +1905,16 @@ needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, which brings formal models of provenance to
 concurrent systems. A third direction is to provide general-purpose static
-analysis of CALM and proper coordination in a real programming framework.\cxbar{176}{0.4 0.4 1}{e}
+analysis of CALM and proper coordination in a real programming framework.\cxbar{177}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{177}{N/M}\cxbar{177}{0.4 0.4 1}{s}\begin{acks}
+\color{black}\cxtag{178}{N/S}\begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.
 Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
 Kleppmann, Paris Koutris, Edward Lee, Shulu Li, Vincent Liu, David Chu McElroy,
 Sarah Morin, and Dan Suciu for helpful feedback. Thanks also to
-anonymous reviewers of this and previous submissions for frank feedback that pushed
-this work deeper.\cxbar{177}{0.4 0.4 1}{e}
+anonymous reviewers of this and previous submissions for frank feedback.
 
-\color{black}\cxtag{178}{N/S}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
+\color{black}\cxtag{179}{N/S}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
 reviewing assistants during the preparation of this work, including drafting
 and revising text, and checking mathematical arguments with Lean proofs.  All
 content was reviewed, validated, and approved by the author.
