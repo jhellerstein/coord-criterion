@@ -1722,8 +1722,8 @@ work~\cite{power2025freetermination}.
     % Leading with the payoff:
 
 Several observations that motivated CALM can now be explained
-precisely. We revisit them briefly, both for context and because the
-explanations point to next steps for research.
+in context. We revisit them briefly, because the
+trajectory of the work points to next steps.
 
     % Leading with history:
 
@@ -1738,62 +1738,54 @@ explanations point to next steps for research.
 
 % A. Origins and the conjecture:
 
-The computing literature has long been rich with coordination mechanisms, but
-prior to the CALM Conjecture the justifications for the mechanisms were
-generally situational. Certain guarantees---serializability being a prime
-example---provided a whole-system invariant, and coordination mechanisms like
-2PL or MVTO could be shown to be sufficient for system correctness. But
-mechanisms like locks and total orders were also used liberally for guaranteeing
-local operational properties of concurrent data structures or algorithms, and
-they were often used poorly in both systems and academic literature.
+The computing literature is rich with coordination mechanisms. Prior to the CALM
+Conjecture, the justifications for these mechanisms were often situational. In
+the best cases---serializability being a prime example---there is a crisp,
+whole-system invariant, and coordination mechanisms provably enforce system
+correctness. But mechanisms like locks, atomics and total orders are also used
+liberally for guaranteeing local operational properties of concurrent data
+structures or algorithms, and have often been used poorly in both systems and
+academic literature.
 
-A suggestive example for this work arose in the misuse of the barrier mechanism
-in Google's much-cited MapReduce system~\cite{dean2004mapreduce}, which was
-based on Valiant's formal model of Bulk Synchronous Parallel
-(BSP)~\cite{valiant1990bsp}. In database systems it has long been common for
-query engines---single-node or parallel---to pipeline data between operators in
-a query plan, and wait only where a non-monotone operator, such as aggregation,
-needs all of its input to produce an
-output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce instead tightly
-coupled a barrier coordination into every communication phase, so even monotone
-parallel operators like join had to wait for coordination. Cost models that
-count rounds, from BSP supersteps to MapReduce rounds, carry the same
-coupling~\cite{valiant1990bsp,karloff2010mrc}. It was clear to the database
-community that this was an inessential use of
+A suggestive example arose in the required barrier mechanism in Google's
+much-cited MapReduce system~\cite{dean2004mapreduce}. In database systems, query
+engines typically pipeline data between operators in a query plan, and wait only
+where a non-monotone operator, such as aggregation, needs all of its input to
+produce an output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce
+instead tightly coupled a barrier coordination into every communication phase,
+so even monotone parallel operators like join had to wait for coordination.
+Parallel complexity models that count rounds, from BSP supersteps to MapReduce
+rounds, carry the same coupling~\cite{valiant1990bsp,karloff2010mrc}.
+It was clear to the database community that this was an inessential use of
 coordination~\cite{dewitt2008mapreduce,condie2010online}.
 
 Rather than repairing a specific model, the CALM Conjecture asked the underlying
-question: when are coordination mechanisms required, and why? The question was
+question: when are coordination mechanisms inherent, and why? The question was
 first addressed in the context of declarative
-networking~\cite{loo2009declarative}, which---in Codd's tradition of separating
-specification from implementation~\cite{codd1970relational}---wrote the desired
-effects of protocols as queries to be analyzed and optimized into a variety of
-mechanisms. Parallel query processing suggested the answer, as a generalization
-of database practice: coordination of any kind is required if and only if a
-query---or program---is non-monotone. Ameloot et al.\ proved it for relational
-languages, but these have not yet become mainstream outside query processing.
-
-By raising the abstraction level of systems above implementation, declarative
-networking research went beyond analysis power to systems engineering benefits.
-A wide variety of complex distributed systems were implemented in declarative
-languages, leading to a variety of practical payoffs, including database-style
-optimizations to deploy different implementations depending on physical
-constraints, e.g., wired vs.\ wireless
-communication~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2011bloom}.
+networking~\cite{loo2009declarative}, another query processing setting. That
+research agenda took Codd's tradition of declarative
+specification~\cite{codd1970relational} and extended it to a new domain,
+demonstrating that full distributed systems could be implemented in declarative
+languages, with practical
+payoffs~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2010boom,alvaro2011bloom}.
+This validation, combined with query processing intuition, suggested the answer
+to the CALM question: coordination of any kind is required if and only if a
+system's declarative specification is non-monotone. Ameloot et al.\ proved it
+for relational languages~\cite{ameloot2013relational}.
 
   % B. From programs to specs (the paragraph you said needed rewording):
 This paper raises the abstraction level yet further: from logic programs to the
 \spectype[s] of any program. All that matters about a spec is which outputs it
-permits for each input, so the analysis does not depend on any particular
-language or programming model, declarative or otherwise. By going a level higher to specs, we not only set aside the lack
-of mainstream adoption of declarative languages; we also capture families of
-guarantees, like CAP and isolation levels, that have no application or protocol
-in mind.
+permits for each input; the analysis needs no language or programming model,
+declarative or otherwise. By going a level higher to specs, we not only set
+aside the lack of mainstream adoption of declarative languages; we also capture
+families of guarantees, like CAP and isolation levels, that have no application
+or protocol in mind.
 
 % C. What analysis at the level of specs gives (the two composition paragraphs
 % merged):
 
-Analysis at the level of specs also enables deeper analysis.
+Raising the level to specs also enables deeper analysis.
 Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs and
 conservatively injected coordination code in front of it. Coordination code is
 itself non-monotone, so this only adds more non-monotone syntax, leaving the
@@ -1804,41 +1796,40 @@ operation the weakest consistency or isolation level a store offers that still
 satisfies them. We ask what a spec itself requires, independent of any menu of
 levels, and by Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}) the
 answer holds for every mechanism. Our work is also constructive on both sides of the
-boundary, as discussed in Section~\ref{sec:composition}.
+boundary (\S\ref{sec:composition}).
 
 Underlying these issues is a reassessment of Codd's declarative tradition: how
-``declarative'' can a specification be, and how little structure does it need to
+``declarative'' can a specification be? How little structure does it need to
 be useful? The question is timely. Coding agents increasingly write imperative
 code, often rife with bugs. This has renewed interest in formal specification
-languages like Lean~\cite{demoura2021lean4}. High-level languages keep agents
-away from the incidental complexity of implementations, and pair inference with
-proofs of correctness: neurosymbolic computing~\cite{an2025neurosymbolic}. Lean
-is an example of a renewed opportunity for declarative programming languages,
-including logic, dataflow, and functional languages. Nonetheless, these
-languages still specify protocols and programs in a relatively high degree of
-detail, as in declarative networking. Our \spectype[] model and its composition
-points to the possibility of specification at a higher level still, opening new
-analyses like ours, and demonstrating that we can say far less in our
-specifications while still ensuring correct program synthesis and optimization.
+languages like Lean~\cite{demoura2021lean4}. High-level, formal languages pair heuristic
+AI-driven inference with proofs of correctness: neurosymbolic
+computing~\cite{an2025neurosymbolic}. Lean's growing adoption suggests a renewed
+opportunity for practical declarative programming languages, including logic,
+dataflow, and functional languages. These languages still specify protocols and
+programs in a relatively high degree of detail, as in declarative networking.
+Our \spectype[] model and its composition points to the possibility of
+specification at a higher level still, enabling us to declare far less detail
+and still get the neurosymbolic advantage of heuristic search for
+provably-correct implementations.
 
 % ======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
 The simplicity of \spectype[s] provides a unified foundation for the
-coordination-avoidance literature, and clarifies the intrinsic purpose of coordination:
-removing possibilities via \commitments.
-The question of coordination-free consistency becomes clear in this model:
-when must a system make a fateful decision in order to emit an output?
-Functional CALM answers the question for functional specs: runs
-stay confluent as input arrives exactly when a spec is monotone, and then no
-output needs a \commitment.  This generalizes classic CALM to any function
-from inputs to outputs.
+literature on coordination. It also clarifies the intrinsic purpose of
+coordination: removing possibilities via \commitments. The question of
+coordination-free consistency becomes clear in this model: when must a system
+make a fateful commitment in order to emit an output? Functional CALM answers
+the question for functional specs:  runs stay confluent as input arrives exactly
+when specs are monotone; otherwise \commitment is required for output.  This
+generalizes CALM to any function from inputs to outputs.
 
 Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When the test fails, some reachable output
-requires a \commitment, which rules out an input or some of its outputs.
+requires a \commitment to rule out a possible input/output pair.
 Because the model makes \commitments explicit, it can also show where a
 composition coordinates (\S\ref{sec:composition}).
 %  A totally ordered log
@@ -1856,7 +1847,7 @@ needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, which brings formal models of provenance to
 concurrent systems. A third direction is to provide general-purpose static
-analysis of CALM and proper coordination in a real programming framework.
+analysis and synthesis of properly coordinated systems in practical programming frameworks.
 
 \begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.
@@ -1867,7 +1858,7 @@ anonymous reviewers of this and previous submissions for frank feedback.
 
 Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
 reviewing assistants during the preparation of this work, including drafting
-and revising text, and checking mathematical arguments with Lean proofs.  All
+and revising text, and synthesizing Lean proofs for all mathematical arguments.  All
 content was reviewed, validated, and approved by the author.
 \end{acks}
 
