@@ -66,11 +66,11 @@ with a permitted output. The design includes the input domain $I$ and output dom
 with partial orders that help capture the spec's semantics.  On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
-means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
+means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.
 
-State-machine-style specs can be projected into this form, by skipping
+State-machine-style specs can be recast in this form, skipping
 operational details that are not externally observable (Section~\ref{sec:operational-models}).
 Despite its simplicity, our model captures not only application invariants,
 but also general-purpose consistency definitions (Appendix~\ref{app:registers},
@@ -82,8 +82,8 @@ extending that input are lost.  When the system decides among possibilities, it
 makes a controlled decision to remove rows.  The decision is incidental if each
 removed output is covered by a remaining output that \outrel it, and fateful if
 not.  Choosing between two candidates in a leader election is fateful: nothing
-remaining covers the loser's possibility of a win.  So is closing the polls,
-which rules out every row with a later ballot.  We call a fateful decision a
+remaining covers the loser's possibility of a win.  So is closing the polls early,
+ruling out every row with a later ballot.  We call a fateful decision a
 \emph{\commitment}: an irrevocable decision, enforceable by coordination
 mechanisms such as locks and consensus.
 
@@ -111,9 +111,9 @@ the CALM acronym.
 
 \subsection{Coordination is for \commitment}
 What of coordination?  A \commitment isolates the contract a coordination
-mechanism achieves, apart from how it achieves it: locks, agreement protocols,
+mechanism achieves, apart from how it achieves it: locks, consensus,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
-the \commitments a spec's outputs require, independently of the mechanism used.
+the \commitments a spec's outputs require, independent of mechanism.
 A system that omits a required \commitment can become inconsistent; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
@@ -125,7 +125,7 @@ participants.  Distributed histories are captured under the same consistency cri
 centralized ones (Section~\ref{sec:distributed-execution}).  Complete CAP
 (Section~\ref{sec:complete-cap}) says Lifted Monotonicity exactly characterizes specs
 that can keep every permitted output available and confluent during a
-partition.  The Gilbert--Lynch theorem follows directly.
+partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.
 
 \subsection{Contributions}
 We make contributions in four categories:
