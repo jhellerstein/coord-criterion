@@ -1747,12 +1747,12 @@ liberally for guaranteeing local operational properties of concurrent data
 structures or algorithms, and have often been used poorly in both systems and
 academic literature.
 
-A suggestive example arose in the required barrier mechanism in Google's
+A suggestive example arose in the conflation of barriers with communication in Google's
 much-cited MapReduce system~\cite{dean2004mapreduce}. In database systems, query
 engines typically pipeline data between operators in a query plan, and wait only
 where a non-monotone operator, such as aggregation, needs all of its input to
 produce an output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce
-instead tightly coupled a barrier coordination into every communication phase,
+instead tightly coupled barrier coordination into every communication phase,
 so even monotone parallel operators like join had to wait for coordination.
 Parallel complexity models that count rounds, including Valiant's BSP model,
 similarly conflate communication and
@@ -1761,7 +1761,7 @@ community that this was not intrinsically
 required~\cite{dewitt2008mapreduce,condie2010online}.
 
 Rather than repairing a specific model, the CALM Conjecture asked the underlying
-question: when are coordination mechanisms inherent, and why? The question was
+question: when is coordination inherent, and why? The question was
 first addressed in the context of declarative
 networking~\cite{loo2009declarative}, another query processing setting. That
 research agenda took Codd's tradition of declarative
@@ -1811,10 +1811,10 @@ computing~\cite{an2025neurosymbolic}. This presents a renewed
 opportunity for practical declarative programming languages, including logic,
 dataflow, and functional languages. These languages still specify protocols and
 programs in a relatively high degree of detail, as in declarative networking.
-Our \spectype[] model and its composition points to the possibility of
-specification at a higher level still, enabling us to declare far less detail
+Our \spectype[] model and its composition point to the possibility of
+specification at a higher level still, suggesting we could declare far less detail
 and still get the neurosymbolic advantage of heuristic search for
-provably-correct implementations.
+provably correct implementations.
 
 % ======================================================================
 \section{Conclusion}
@@ -1826,7 +1826,7 @@ coordination: removing possibilities via \commitments. The question of
 coordination-free consistency becomes clear in this model: when must a system
 make a fateful commitment in order to emit an output? Functional CALM answers
 the question for functional specs:  runs stay confluent as input arrives exactly
-when specs are monotone; otherwise \commitment is required for output.  This
+when specs are monotone; otherwise \commitment is required.  This
 generalizes CALM to any function from inputs to outputs.
 
 Complete CALM extends the answer to specs that offer several outputs
