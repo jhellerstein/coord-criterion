@@ -107,21 +107,21 @@ programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.
 
 We put them on common ground, in a formalism that clarifies the literature and
-offers new results.  A minimalist \emph{\spectype} is a possibility table containing, for
+offers new results.  A minimalist \emph{\spectype} (spec) is a possibility table containing, for
 each input, every output a system may produce, with partial orders on inputs and
 outputs.  It is \emph{consistent} when all its runs are confluent.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: consistency is monotonicity.  \emph{Complete CALM}
-extends this to nondeterministic specifications, where the test is
+extends this to nondeterministic specs, where the test is
 \emph{Lifted Monotonicity}, and \emph{Complete CAP} follows as a corollary.
 Highly Available Transactions, Invariant Confluence, and later refinements of
 CALM map into the same framework.
 
 Prior CALM results stop at monotonicity: for non-monotone
-specifications, they say only that coordination is needed somewhere.  Our
+specs, they say only that coordination is needed somewhere.  Our
 unified framework says exactly
-how much coordination a specification needs, and where.  A non-monotone
-specification's outputs drive irrevocable \emph{\commitments} that are required for consistency,
+how much coordination a spec needs, and where.  A non-monotone
+spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
 \emph{Proper Coordination} identifies which stage of a composition must make the
 \commitments and certifies that later stages need none, validating designs such
@@ -216,11 +216,11 @@ with a permitted output. The design includes the input domain $I$ and output dom
 with partial orders that help capture the spec's semantics.  On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
-means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
+means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.
 
-State-machine-style specs can be projected into this form, by skipping
+State-machine-style specs can be recast in this form, skipping
 operational details that are not externally observable (\S\ref{sec:scope}).
 Despite its simplicity, our model captures not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
 \S\ref{sec:hat-instance}).
@@ -231,8 +231,8 @@ extending that input are lost.  When the system decides among possibilities, it
 makes a controlled decision to remove rows.  The decision is incidental if each
 removed output is covered by a remaining output that \outrel it, and fateful if
 not.  Choosing between two candidates in a leader election is fateful: nothing
-remaining covers the loser's possibility of a win.  So is closing the polls,
-which rules out every row with a later ballot.  We call a fateful decision a
+remaining covers the loser's possibility of a win.  So is closing the polls early,
+ruling out every row with a later ballot.  We call a fateful decision a
 \emph{\commitment}: an irrevocable decision, enforceable by coordination
 mechanisms such as locks and consensus.
 
@@ -259,9 +259,9 @@ proves that Consistency is equivalent to Lifted Monotonicity, a new reading of
 the CALM acronym.
 
 \paragraph{Coordination is for \commitment.} What of coordination?  A \commitment isolates the contract a coordination
-mechanism achieves, apart from how it achieves it: locks, agreement protocols,
+mechanism achieves, apart from how it achieves it: locks, consensus,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
-the \commitments a spec's outputs require, independently of the mechanism used.
+the \commitments a spec's outputs require, independent of mechanism.
 A system that omits a required \commitment can become inconsistent; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
@@ -272,7 +272,7 @@ Distributed histories are captured under the same consistency criteria as
 centralized ones (\S\ref{sec:distributed-execution}).  Complete CAP
 (\S\ref{sec:complete-cap}) says Lifted Monotonicity exactly characterizes specs
 that can keep every permitted output available and confluent during a
-partition.  The Gilbert--Lynch theorem follows directly.
+partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.
 
 \paragraph{Contributions.}
 We make contributions in four categories:
@@ -1754,28 +1754,29 @@ where a non-monotone operator, such as aggregation, needs all of its input to
 produce an output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce
 instead tightly coupled a barrier coordination into every communication phase,
 so even monotone parallel operators like join had to wait for coordination.
-Parallel complexity models that count rounds, from BSP supersteps to MapReduce
-rounds, carry the same coupling~\cite{valiant1990bsp,karloff2010mrc}.
-It was clear to the database community that this was an inessential use of
-coordination~\cite{dewitt2008mapreduce,condie2010online}.
+Parallel complexity models that count rounds, including Valiant's BSP model,
+similarly conflate communication and
+coordination~\cite{valiant1990bsp,karloff2010mrc}. It was clear to the database
+community that this was not intrinsically
+required~\cite{dewitt2008mapreduce,condie2010online}.
 
 Rather than repairing a specific model, the CALM Conjecture asked the underlying
 question: when are coordination mechanisms inherent, and why? The question was
 first addressed in the context of declarative
 networking~\cite{loo2009declarative}, another query processing setting. That
 research agenda took Codd's tradition of declarative
-specification~\cite{codd1970relational} and extended it to a new domain,
+specification~\cite{codd1970relational} and extended it to a broader domain,
 demonstrating that full distributed systems could be implemented in declarative
 languages, with practical
 payoffs~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2010boom,alvaro2011bloom}.
 This validation, combined with query processing intuition, suggested the answer
-to the CALM question: coordination of any kind is required if and only if a
+to the CALM question: coordination of any kind is required if and only if the
 system's declarative specification is non-monotone. Ameloot et al.\ proved it
 for relational languages~\cite{ameloot2013relational}.
 
   % B. From programs to specs (the paragraph you said needed rewording):
 This paper raises the abstraction level yet further: from logic programs to the
-\spectype[s] of any program. All that matters about a spec is which outputs it
+\spectype[s] of any system. All that matters about a spec is which outputs it
 permits for each input; the analysis needs no language or programming model,
 declarative or otherwise. By going a level higher to specs, we not only set
 aside the lack of mainstream adoption of declarative languages; we also capture
@@ -1799,12 +1800,14 @@ answer holds for every mechanism. Our work is also constructive on both sides of
 boundary (\S\ref{sec:composition}).
 
 Underlying these issues is a reassessment of Codd's declarative tradition: how
-``declarative'' can a specification be? How little structure does it need to
-be useful? The question is timely. Coding agents increasingly write imperative
-code, often rife with bugs. This has renewed interest in formal specification
-languages like Lean~\cite{demoura2021lean4}. High-level, formal languages pair heuristic
-AI-driven inference with proofs of correctness: neurosymbolic
-computing~\cite{an2025neurosymbolic}. Lean's growing adoption suggests a renewed
+``declarative'' can a specification be? How little structure does it need to be
+useful? The question is timely. Coding agents today translate from natural
+language to imperative code, which is often rife with bugs. This has renewed
+interest in interposing formal specification languages like
+Lean~\cite{demoura2021lean4} as a narrow waist in the agentic coding pipeline~\cite{hellerstein2023codd}.
+Formal languages couple heuristic
+AI-driven inference to deterministic proofs of correctness: neurosymbolic
+computing~\cite{an2025neurosymbolic}. This presents a renewed
 opportunity for practical declarative programming languages, including logic,
 dataflow, and functional languages. These languages still specify protocols and
 programs in a relatively high degree of detail, as in declarative networking.
@@ -1830,8 +1833,8 @@ Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When the test fails, some reachable output
 requires a \commitment to rule out a possible input/output pair.
-Because the model makes \commitments explicit, it can also show where a
-composition coordinates (\S\ref{sec:composition}).
+Because the model makes \commitments explicit, Proper Coordination can also show where a
+composition coordinates.
 %  A totally ordered log
 % and a key-value store are each non-monotone on their own, yet when the log
 % guards the store, the log's \commitments are all the composition needs, and
