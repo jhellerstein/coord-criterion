@@ -283,14 +283,41 @@ theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v
 applies `order(A,B)` in a commitment event, reporting nothing. … On complete
 rows without aborts, `order(A,B)` keeps exactly those with `A` before `B`
 (Figure `fig:cc-commitments`(h))."  The omitted sentences, on when
-`order(A,B)` would remove nothing and is therefore not applied, describe a
-protocol step and are argued in prose. -/
+`order(A,B)` would remove nothing and is therefore not applied, are
+`«app:cc-bases/order-nothing»`. -/
 theorem «app:cc-bases/fig-h» {T K : Type} {A B : T}
     {σ τ : State (spec (T := T) (K := K) false)} (h : (order A B).app σ = some τ)
     {k : Inp T K} {c : Partial.ROut T K} (hp : Decides false k c.o) (hX : ∀ t, ¬ c.o.X t)
     (hA : k.mem A) (hB : k.mem B) :
     τ.R k c ↔ σ.R k c ∧ c.o.lt A B :=
   fig_h h hp hX hA hB
+
+/-- "When every remaining complete row that commits both already places `A`
+before `B`, `order(A,B)` would remove nothing, so it is undefined and the
+scheduler applies nothing.  This happens when an earlier wait has applied
+`order(A,B)`, or when a reported read result fixes the order, as when `A` has
+read the initial version of the key that `B` writes."
+
+Lean, at states where every row has a remaining complete output extension
+(`Completable`, true of every state 2PL reaches, `good_run`).  First conjunct:
+the hypothesis makes `order(A,B)` undefined.  Second conjunct (an earlier
+wait): after `order(A,B)`, every later table (one contained in the result) has
+the property, so `order(A,B)` is undefined there.  Third conjunct (a reported
+read): if `A`'s `n`-th operation reads `x`, `A` has not written `x` before it,
+and `B ≠ A` writes `x`, then after `read(A,n,⊥)` (the initial version) every
+remaining complete row that commits both places `A` before `B`. -/
+theorem «app:cc-bases/order-nothing» {T K : Type} {af : Bool} {A B : T} :
+    (∀ {σ : State (spec (T := T) (K := K) af)}, Completable σ →
+      (∀ k c, σ.R k c → Decides af k c.o → c.o.dom A → c.o.dom B → c.o.lt A B) →
+      (order A B).app σ = none) ∧
+    (∀ {σ τ τ' : State (spec (T := T) (K := K) af)}, (order A B).app σ = some τ →
+      (∀ k u, τ'.R k u → τ.R k u) → Completable τ' → (order A B).app τ' = none) ∧
+    (∀ {n : Nat} {x : K} {σ τ : State (spec (T := T) (K := K) af)},
+      (read A n none).app σ = some τ → σ.cur.op A n = some (.rd x) →
+      ¬ OwnW σ.cur A n x → σ.cur.writes B x → A ≠ B →
+      ∀ k c, τ.R k c → Decides af k c.o → c.o.dom A → c.o.dom B → c.o.lt A B) :=
+  ⟨fun hc hall => order_undefined hc hall, fun h hsub hc => order_again_undefined h hsub hc,
+   fun h hx hown hB hne => read_initial_ordered h hx hown hB hne⟩
 
 /-- "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps
 `[A,B,C]` and `[C,A,B]`, so it is a commitment, and it is not the commitment `x_o` of

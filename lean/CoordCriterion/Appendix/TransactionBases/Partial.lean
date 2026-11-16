@@ -343,6 +343,99 @@ theorem good_run {i : Inp T K} {es : List (SEvent (spec (T := T) (K := K) af))} 
 
 end Good
 
+/-! ### When `order(A,B)` removes nothing (2PL, Appendix G)
+
+"When every remaining complete row that commits both already places `A` before
+`B`, `order(A,B)` would remove nothing, so it is undefined and the scheduler
+applies nothing.  This happens when an earlier wait has applied `order(A,B)`,
+or when a reported read result fixes the order, as when `A` has read the
+initial version of the key that `B` writes." -/
+
+section OrderNothing
+variable {af : Bool}
+
+/-- If every remaining complete row that commits both `A` and `B` places `A`
+before `B`, then at a completable state `order(A,B)` keeps every row, so it is
+undefined. -/
+theorem order_undefined {A B : T} {σ : State (spec (T := T) (K := K) af)}
+    (hc : Completable σ)
+    (hall : ∀ k c, σ.R k c → Decides af k c.o → c.o.dom A → c.o.dom B → c.o.lt A B) :
+    (order A B).app σ = none := by
+  apply closeC_none.2
+  rintro ⟨_, _, k, u, hu, hnk⟩
+  obtain ⟨c, hcR, hd, hle⟩ := hc k u hu
+  refine hnk ⟨hu, c, hcR, hd, hle, fun hBA => ?_⟩
+  obtain ⟨hB, hA⟩ := c.o.supp B A hBA
+  exact c.o.irrefl _ (c.o.trans _ _ _ (hall k c hcR hd hA hB) hBA)
+
+/-- After `order(A,B)`, every complete row of any later table (one contained
+in the result) that commits both places `A` before `B`. -/
+theorem order_applied_ordered {A B : T} {σ τ τ' : State (spec (T := T) (K := K) af)}
+    (h : (order A B).app σ = some τ) (hsub : ∀ k u, τ'.R k u → τ.R k u) :
+    ∀ k c, τ'.R k c → Decides af k c.o → c.o.dom A → c.o.dom B → c.o.lt A B := by
+  intro k c hc hd hA hB
+  have hok : OrderOK A B c.o := after_complete (P := OrderOK A B) h hsub hc hd
+  have hne : A ≠ B := (order_guard h).1
+  rcases c.o.total A B hA hB hne with hab | hba
+  · exact hab
+  · exact absurd hba hok
+
+/-- **An earlier wait.**  Once `order(A,B)` has been applied, it is undefined at
+every later completable state (one whose table is contained in the result). -/
+theorem order_again_undefined {A B : T} {σ τ τ' : State (spec (T := T) (K := K) af)}
+    (h : (order A B).app σ = some τ) (hsub : ∀ k u, τ'.R k u → τ.R k u)
+    (hc : Completable τ') : (order A B).app τ' = none :=
+  order_undefined hc (order_applied_ordered h hsub)
+
+/-- At an input extension, `A` still has not written `x` before its `n`-th
+operation. -/
+theorem not_ownW_le {i k : Inp T K} (hik : i ≼ k) {A : T} {n : Nat} {x : K}
+    (hop : ∃ a, i.op A n = some a) (hown : ¬ OwnW i A n x) : ¬ OwnW k A n x := by
+  rintro ⟨m, hm, hk⟩
+  apply hown
+  obtain ⟨a, ha⟩ := hop
+  have hlen : m < ((i.tx A).ops).length := by
+    have := (List.getElem?_eq_some_iff.1 ha).1; omega
+  obtain ⟨b, hb⟩ : ∃ b, i.op A m = some b := ⟨_, List.getElem?_eq_getElem hlen⟩
+  have := Inp.le_op hik hb
+  rw [hk] at this
+  cases this
+  exact ⟨m, hm, hb⟩
+
+/-- **A reported read fixes the order.**  If `A`'s `n`-th operation reads `x`
+and `A` has not written `x` before it, then after `read(A,n,⊥)` reports the
+initial version, every remaining complete row that commits both `A` and a
+writer `B ≠ A` of `x` places `A` before `B`, so `order(A,B)` would remove
+nothing there (`order_undefined`). -/
+theorem read_initial_ordered {A B : T} {n : Nat} {x : K}
+    {σ τ : State (spec (T := T) (K := K) af)}
+    (h : (read A n none).app σ = some τ) (hx : σ.cur.op A n = some (.rd x))
+    (hown : ¬ OwnW σ.cur A n x) (hB : σ.cur.writes B x) (hne : A ≠ B) :
+    ∀ k c, τ.R k c → Decides af k c.o → c.o.dom A → c.o.dom B → c.o.lt A B := by
+  intro k c hc hd hA hBd
+  have hik : σ.cur ≼ k := by
+    have hτc : τ.cur = σ.cur := (closeC_app_iff.1 h).2.1
+    rw [← hτc]; exact τ.above k c hc
+  obtain ⟨c', hc', hd', hle, hq⟩ := after_completion h hc
+  obtain ⟨c'', hcomp, hle'⟩ := τ.sub k c' hc'
+  have ho1 : c.o = c'.o := same_o hd hd' hle
+  have ho2 : c'.o = c''.o := same_o hd' hcomp.1 hle'
+  have hρ : c''.ρ A n = some none := le_ρ hle' hq
+  obtain ⟨x', hx', _, hro⟩ := hcomp.2 A n none hρ
+  have hkx : k.op A n = some (.rd x) := Inp.le_op hik hx
+  rw [hkx] at hx'
+  cases hx'
+  have hA'' : c''.o.dom A := by rw [← ho2, ← ho1]; exact hA
+  have hlw := (hro hA'').2 (not_ownW_le hik ⟨_, hx⟩ hown)
+  have hBk : k.writes B x := Inp.le_writes hik hB
+  rcases c.o.total A B hA hBd hne with hab | hba
+  · exact hab
+  · have hba'' : c''.o.lt B A := by rw [← ho2, ← ho1]; exact hba
+    exact absurd hBk (hlw B hba'')
+
+end OrderNothing
+
+
 /-! ### Inputs in which every transaction has requested commit -/
 
 /-- At an input in which every transaction has requested commit, a pair `(L,X)`

@@ -30,18 +30,21 @@ import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.Register
 import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AsyncGilbertLynch
+import CoordCriterion.CAP.AsyncGLFair
 import CoordCriterion.CAP.FullKnowledge
 -- §6 Instances (incl. invariant confluence, Appendix B)
 import CoordCriterion.Instances.InvariantConfluence
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.QueryRefinements
+import CoordCriterion.Instances.Placement
 import CoordCriterion.Instances.BaccaertKetsman
 import CoordCriterion.Instances.BKTransducers
 import CoordCriterion.Instances.BKSufficiency
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineCofinal
+import CoordCriterion.Instances.TestingLimits
 import CoordCriterion.Instances.HATRC
 import CoordCriterion.Instances.HATSpec
 import CoordCriterion.Instances.HATUnion
@@ -70,6 +73,8 @@ import CoordCriterion.Appendix.Frontiers
 import CoordCriterion.Appendix.ProductFrontier
 import CoordCriterion.Appendix.Registers
 import CoordCriterion.Appendix.RealTimeCausal
+import CoordCriterion.Appendix.RealTimeTies
+import CoordCriterion.Appendix.MahajanRTC
 -- Dataflow graphs of stages (not in the paper; exploration)
 import CoordCriterion.Appendix.Graphs
 -- Appendix H additional applications

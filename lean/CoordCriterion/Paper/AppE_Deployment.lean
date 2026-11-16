@@ -3,6 +3,8 @@ import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.DeploymentSystems
 import CoordCriterion.Appendix.Registers
 import CoordCriterion.Appendix.RealTimeCausal
+import CoordCriterion.Appendix.RealTimeTies
+import CoordCriterion.Appendix.MahajanRTC
 import CoordCriterion.Appendix.DeploymentFor
 
 /-!
@@ -578,6 +580,51 @@ theorem «app:registers/same-read-incompatible» :
 section RTC
 variable {α : Type} {n : Nat}
 
+/-- "[A] system can provide real-time causal consistency, but no stronger
+consistency, while staying always available … and one-way convergent …  We
+recover both parts with real-time precedence recorded in the input."  (First
+paragraph of `app:rtc`, on the theorem of Mahajan et al.)
+
+Lean: their Theorem 3.1 ("no consistency semantics stronger than real time
+causal consistency can be implemented using a one-way convergent and always
+available distributed storage implementation"), derived from ours.  Let `T`
+be strict (stronger than RTC) and real-time blind (does not observe real
+time), and let `Sys` be any system for `T`'s specification with Deployment
+Availability under the owner deployment (always available; one-way
+convergence is in the input).  Then `Sys` produces a partitioned,
+message-free history where every replica emits a real-time causal view at one
+input `i` and `T` rejects the combined execution `y`, so `Sys` lacks Partition
+Consistency.  The same holds for an implementation that does not observe real
+time.  The proof is carried by Prop. `prop:rtc-maximal` (its step
+`rtc_locCons`) and Theorem `thm:product-frontier`(2) in witness form
+(`strengthening_witness`); Deployment Availability runs that theorem's
+separable family in the system (`da_realize`). -/
+theorem «app:rtc/mahajan» (G : OpSig α n) (hn : 2 ≤ n)
+    (T : NormStr (W := fun _ => SMap α) (RView G))
+    (sp : Spec (RHist G) (PTd (fun _ : Fin n => SMap α)))
+    (hsp : ∀ i x, sp.P i x ↔ T.table i x) (hbl : RBlind T) (hst : T.Strict)
+    {D : Type} (Sys : CAP.System sp D) (hDA : DeploymentAvailability Sys (ownerD sp)) :
+    (∃ (i : RHist G) (y : Fin n → SMap α) (H : CAP.History sp D n),
+      (∀ p, RView G p i (y p)) ∧ ¬ T.sel i y ∧
+      CAP.WF (fun _ => i) H ∧ CAP.Produced Sys n (fun _ => i) H ∧
+      CAP.Partitioned H (fun p => p.val) ∧
+      (∀ p q k j d, CAP.LEv.recv q k j d ∉ H p) ∧ (∀ p j, CAP.LEv.inp j ∉ H p) ∧
+      (∀ p, CAP.LEv.out (restrictTo y p) ∈ H p) ∧
+      ¬ ∃ u, sp.P i u ∧ ∀ p, restrictTo y p ≼ u) ∧
+    ¬ CAP.PartitionConsistency Sys :=
+  ⟨mahajan_rtc hn T sp hsp hbl hst Sys hDA,
+   mahajan_rtc_not_partitionConsistency hn T sp hsp hbl hst Sys hDA⟩
+
+/-- The "no stronger consistency" part for an implementation that does not observe real time:
+if its strengthening is strict and its specification is total, no system for
+it with Deployment Availability has Partition Consistency. -/
+theorem «app:rtc/mahajan-impl» (G : OpSig α n) (hn : 2 ≤ n) (Im : MImpl G)
+    (hrt : Im.NoRealTime) (sp : Spec (RHist G) (PTd (fun _ : Fin n => SMap α)))
+    (hsp : ∀ i x, sp.P i x ↔ Im.str.table i x) (hst : Im.str.Strict)
+    {D : Type} (Sys : CAP.System sp D) (hDA : DeploymentAvailability Sys (ownerD sp)) :
+    ¬ CAP.PartitionConsistency Sys :=
+  mahajan_rtc_impl hn Im hrt sp hsp hst Sys hDA
+
 /-- **Theorem `thm:product-frontier`** (Independent products).  "(1) If views
 continue (for `i ⊑ j` and `v ∈ V_p(i)` some `w ∈ V_p(j)` has `v ≤_p w`), the
 product interface is monotone across partitions under the owner deployment.
@@ -619,6 +666,43 @@ theorem «app:rtc/views» (G : OpSig α n) (p : Fin n) (i : RHist G) (v : SMap �
     RView G p i v ↔ (∀ r, (∃ s, v.f r = some s) ↔ PRead G i.h p r) ∧
       (∀ r s, v.f r = some s → RSrc G i r s) ∧ RMono G i p v :=
   Iff.rfl
+
+/-- "Intuitively, these are Mahajan et al.'s checks for the order that `p`'s
+reads expose, in which each visible write precedes the read and each
+overwritten write precedes the source.  Item (1) says a replica returns only
+writes it has received, (2) is their real-time check 'time doesn't travel
+backward', and (3) keeps one replica's overwrites consistent."
+
+Lean (`Appendix/MahajanRTC.lean`): `HBCheck i p v HB` is Mahajan et al.'s RTC
+check (TR-11-22, §2.1) for `p`'s reads: `HB` is a strict partial order with
+CC1 (one replica's operations ordered by program order), "each visible write
+precedes the read" (`vis`, their Lemma 3.2), CC2 with writeList `{s(r)}`
+(`∅` for `v₀`), CC3 ("time doesn't travel backward": `a ≺ b → ¬ HB b a`), and
+"only received writes are returned" (`rcv`, their Lemma 3.3).  The views are
+exactly the source maps of `p`'s reads passing the check.  The order is
+`→` plus "each overwritten write precedes the source" (`Kv` at `hbRt i`).
+In the converse, item (1) comes from `rcv` and CC2, item (2) from CC3, and
+item (3) from one order serving all of `p`'s reads (CC1 and CC2). -/
+theorem «app:rtc/mahajan-checks» (G : OpSig α n) (p : Fin n) (i : RHist G) (v : SMap α) :
+    (RView G p i v ↔ RTCCheck G p i v) ∧
+    (RView G p i v → HBCheck i p v (Kv G (hbRt i) v)) :=
+  ⟨rview_iff_check G p i v, rview_check⟩
+
+/-- "Their reads return all concurrent latest writes; ours return one, so a
+view matches their check when that write is the only latest one."
+
+Lean: the match is with a singleton writeList (`«app:rtc/mahajan-checks»`),
+not with one element of theirs.  At the
+two-write history where `a` ended before `b` began, `→` passes CC1, delivery
+and CC3 with writeList `{a, b}` for the read `r`, yet returning `a` is not a
+real-time causal view. -/
+theorem «app:rtc/one-source» :
+    (∀ a, ¬ Tie.hb0 a a) ∧ (∀ a b c, Tie.hb0 a b → Tie.hb0 b c → Tie.hb0 a c) ∧
+    (∀ a b, Tie.i1.h.hb a b ↔ Tie.hb0 a b) ∧
+    (∀ a b, Tie.i1.rt a b → ¬ Tie.hb0 b a) ∧
+    WL Tie.G Tie.hb0 2 0 ∧ WL Tie.G Tie.hb0 2 1 ∧ Tie.i1.rt 0 1 ∧
+    ¬ RView Tie.G 0 Tie.i1 Tie.va :=
+  wl_member_not_rview
 
 /-- "Views exist … Views also continue. … All views of `p` at an input are
 defined on the same reads, so no view extends a different one, and they form
@@ -670,6 +754,97 @@ theorem «prop:rtc-maximal/locally-conservative» (G : OpSig α n)
   rtc_locCons T sp hsp hbl
 
 end RTC
+
+section RTCHyp
+variable {α : Type} {n : Nat}
+
+/-- "Each hypothesis has a counterpart in Mahajan et al.'s theorem.  Their
+always availability corresponds to two conditions here: `T` selects a tuple at
+every input, so every replica can answer every read, and the system has
+Deployment Availability."
+
+Lean: their always availability (TR-11-22, App. A.2: every read and write
+completes in every environment, whatever messages are lost).  `T` selects a
+tuple `y` at every input because its specification is total; `y p` answers
+every read of `p`.  With Deployment Availability under the owner deployment,
+in every partition `comp` and at every input `i`, replica `p` emits `y`
+restricted to `p` in a run that adds events only at `p`'s block and no input. -/
+theorem «app:rtc/always-available» (G : OpSig α n)
+    (T : NormStr (W := fun _ => SMap α) (RView G))
+    (sp : Spec (RHist G) (PTd (fun _ : Fin n => SMap α)))
+    (hsp : ∀ i x, sp.P i x ↔ T.table i x) {D : Type} (Sys : CAP.System sp D)
+    (hDA : DeploymentAvailability Sys (ownerD sp)) (comp : Fin n → Nat)
+    (hcomp : ∃ p q, comp p ≠ comp q) (i : RHist G) (p : Fin n) :
+    ∃ (y : Fin n → SMap α) (ext : CAP.History sp D n), T.sel i y ∧
+      (∀ r, PRead G i.h p r ↔ ∃ s, (y p).f r = some s) ∧
+      CAP.WF (fun _ => i) ext ∧ CAP.Produced Sys n (fun _ => i) ext ∧
+      CAP.Partitioned ext comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧
+      (∀ q j, CAP.LEv.inp j ∉ ext q) ∧ CAP.LEv.out (restrictTo y p) ∈ ext p :=
+  always_available T sp hsp Sys hDA comp hcomp i p
+
+/-- "One-way convergence needs no separate hypothesis: the input records which
+writes each replica has received, the environment supplies that input, and
+views must respect `→`."
+
+Lean: their one-way convergence (TR-11-22, Def. 2.2: once `s` has sent its
+updates to `d`, `d` reflects them).  Here delivery is part of the input: for
+any input `i`, replica `d` and causally closed set `S` of operations
+containing `d`'s own (for delivery from `s`: `s`'s operations, their causal
+past and `d`'s), some input extension adds a read `r` of `d` that has received
+`S`.  Every view of `d` there has a check order, and in every check order
+each write of `S` is `r`'s source or precedes it. -/
+theorem «app:rtc/one-way-convergence» {G : OpSig α n} (i : RHist G) (d : Fin n)
+    (S : α → Prop) (hSm : ∀ a, S a → i.h.mem a) (hSc : ∀ a b, i.h.hb a b → S b → S a)
+    (hSd : ∀ a, i.h.mem a → G.rep a = d → S a)
+    (r : α) (hr : ¬ i.h.mem r) (hrW : G.isW r = false) (hrd : G.rep r = d) :
+    ∃ j : RHist G, i ≼ j ∧ PRead G j.h d r ∧ (∀ a, S a → j.h.hb a r) ∧
+      ∀ v, RView G d j v → (∃ HB, HBCheck j d v HB) ∧
+        ∀ HB, HBCheck j d v HB → ∀ w, S w → G.isW w = true →
+          ∃ m, v.f r = some (some m) ∧ (w = m ∨ HB w m) :=
+  one_way_convergence i d S hSm hSc hSd r hr hrW hrd
+
+/-- "Real-time blindness is their assumption that an implementation does not
+observe real time, which their proof uses to swap the real-time order of
+concurrent writes."
+
+Lean: an implementation, at the level of its executions, returns set-valued
+writeLists `Im.wl i r` (`MImpl`), and it does not observe real time when they
+depend only on the history (`NoRealTime`).  Its strengthening `Im.str`
+selects the tuples of real-time causal views whose sources come from those
+writeLists, and it is real-time blind.  Their proof makes one concurrent write
+end before the other begins (execution `e''`).  Ours (Prop.
+`prop:rtc-maximal`) adds real-time edges `x ≺ w` from a write `x` a read saw
+to its source `w` where `w ≺ x` did not hold, keeping the history. -/
+theorem «app:rtc/no-real-time» (G : OpSig α n) (Im : MImpl G) (hrt : Im.NoRealTime) :
+    RBlind Im.str ∧
+    ∀ {i : RHist G} {p : Fin n} {v : SMap α} (hv : RView G p i v) {r x w : α},
+      Ed G i v r x w →
+      (forceRt i (rview_good G hv)).h = i.h ∧
+      (∀ a b, i.rt a b → (forceRt i (rview_good G hv)).rt a b) ∧
+      (forceRt i (rview_good G hv)).rt x w ∧ ¬ i.rt w x :=
+  ⟨Im.rblind hrt, fun hv _ _ _ e => forceRt_swap hv e⟩
+
+end RTCHyp
+
+/-- Last paragraph of `app:rtc`: "The proof of Proposition `prop:rtc-maximal`
+needs it too, since a strengthening may read real time from the input, for
+instance to break ties between writes that overlap in real time."
+
+Lean (`Appendix/RealTimeTies.lean`): two replicas, writes `a` (replica `0`)
+and `b` (replica `1`), and a read `r` at replica `0`.  The strengthening
+`Tie.tieStr` keeps every real-time causal view except that `r` returns `a`
+whenever `a` is a source for it, which depends on real time: when `a` and `b`
+are both visible to `r` and overlap in real time, it breaks the tie toward `a`.
+Its spec is the product interface of the kept views.  It is strict, and it is
+monotone across partitions under its owner deployment, so the conclusion of
+Prop. `prop:rtc-maximal` fails without blindness; by the proposition it is not
+real-time blind.  (The other sentences of the paragraph are
+`«app:rtc/always-available»`, `«app:rtc/one-way-convergence»` and
+`«app:rtc/no-real-time»`.) -/
+theorem «app:rtc/reads-real-time» :
+    (∀ i x, Tie.tieSpec.P i x ↔ Tie.tieStr.table i x) ∧ Tie.tieStr.Strict ∧
+      MonoAcrossPartitions (ownerD Tie.tieSpec) ∧ ¬ RBlind (G := Tie.G) Tie.tieStr :=
+  Tie.tie_counterexample
 
 end Paper
 end CC

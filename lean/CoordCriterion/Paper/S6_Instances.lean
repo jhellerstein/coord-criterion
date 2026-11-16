@@ -1,12 +1,16 @@
 import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.QueryRefinements
+import CoordCriterion.Instances.Placement
 import CoordCriterion.Instances.BKTransducers
 import CoordCriterion.Instances.BKSufficiency
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineCofinal
+import CoordCriterion.Instances.TestingLimits
+import CoordCriterion.Distributed.Histories
+import CoordCriterion.CAP.CompleteCAP
 import CoordCriterion.Instances.HATSpec
 import CoordCriterion.Instances.HATInter
 
@@ -23,7 +27,8 @@ it formalizes.
 * Unlabeled claims are named `«<enclosing label>/<slug>»`, e.g.
   `«sec:iconfluence-instance/iconfluence-is-consistency»`.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
-  `Instances/QueryRefinements.lean`, `Instances/InvariantConfluence.lean`,
+  `Instances/QueryRefinements.lean`, `Instances/Placement.lean`,
+  `Instances/InvariantConfluence.lean`,
   `Instances/BailisDefinition.lean`, `Instances/StateMachine.lean`,
   `Instances/IOMachine.lean`, `Instances/IOMachineCofinal.lean`).
 
@@ -60,9 +65,10 @@ that theorem.  It restates the result as a property of a spec, which can be
 compared with specs outside Datalog.").  The abstraction is
 `«eq:query-monotonicity»` (§2); the transducer theorem itself is cited, not
 formalized.  The entries below check the mapping of its output extensions into our
-frame (`Instances/QueryRefinements.lean`); the operational statements of
-those papers (placement policies, transducers, which orders their placement
-models justify) are cited, not formalized. -/
+frame (`Instances/QueryRefinements.lean`).  Which order a placement model
+justifies, and the resulting weaker CALM variants, are checked at the level of
+a node's view (`Instances/Placement.lean`); the transducer runs of those
+papers are cited, not formalized. -/
 
 /-- Sec. `sec:query-instance`: "A query is domain-distinct-monotone when
 `Q(I) ⊆ Q(I ∪ J)` for every `J` whose facts each contain a value that does
@@ -87,6 +93,72 @@ theorem «sec:query-instance/weaker-monotonicity» {F V A : Type} (vals : F → 
         QRef.DisjointMono vals Q)) ∧
     (QRef.RMono (QRef.allAdm F) Q ↔ ∀ J J' : CALM.PSet F, J ≼ J' → Q J ≼ Q J') :=
   ⟨QRef.distinctMono_iff vals Q, QRef.disjointMono_iff vals Q, QRef.allAdm_rmono_iff Q⟩
+
+/-- Sec. `sec:query-instance`: "Under policy-aware placement, a node can learn
+which facts over its known values are absent, so the input it cannot yet rule
+out is a domain-distinct `J`."  Lean (Zinn's model `N1`, CoRR 1202.0242
+§2.2): a policy `P` assigns each fact to a non-empty set of nodes, and a node
+can ask the policy about the facts it can construct from its known values.
+Node `x` has received the complete local inputs of the nodes in `C`
+(`Place.known P H C`); its view is those local inputs and the policy answers
+of `C` on constructible facts.  It cannot rule out `H'` when some policy gives
+the same view (`Place.Model.Unruled`).  It "knows which facts over its known
+values are absent" when each such fact is assigned to a node of `C`
+(`Place.Complete`), a property of the view (second conjunct).  At such a
+view, while some node `y` has not been heard from, the unruled inputs are
+exactly the extensions of what `x` holds in the domain-distinct order
+`QRef.ExtInp (QRef.distinctAdm vals)` (first conjunct). -/
+theorem «sec:query-instance/policy-aware-order» {F V N : Type} (vals : F → V → Prop)
+    {P : Place.Policy F N} {H : CALM.PSet F} {C : N → Prop} {y : N} (hP : Place.Total P)
+    (hy : ¬ C y) (hc : Place.Complete vals P H C) :
+    (∀ H', (Place.policyAware vals N).Unruled P H C H' ↔
+      (⟨Place.known P H C⟩ : QRef.ExtInp (QRef.distinctAdm vals)) ≼ ⟨H'⟩) ∧
+    (∀ P' H', Place.SameView vals P H P' H' C → Place.Complete vals P' H' C) :=
+  ⟨Place.policyAware_unruled vals hP hy hc, fun _ _ hs => Place.complete_of_sameView hs hc⟩
+
+/-- Sec. `sec:query-instance`: "Under domain-guided placement it is a
+domain-disjoint `J`."  Lean (Zinn's model `N2`): admissible policies place
+each non-nullary fact at `⋃_{v ∈ f} α(v)` for some `α` assigning each value a
+non-empty node set (`Place.DomainGuided`); views and completeness as for
+policy-aware placement.  At a complete view, with some node not yet heard
+from, the unruled inputs are exactly the extensions in the domain-disjoint
+order.  Hypothesis `Place.HasDiag`: every value `v` has a fact whose only value
+is `v`, such as `R(v,…,v)` for any relation of arity at least one.  Under the
+original placement (`N0`: any placement, no knowledge of it) they are exactly
+the supersets (third conjunct, `QRef.allAdm`). -/
+theorem «sec:query-instance/domain-guided-order» {F V N : Type} (vals : F → V → Prop)
+    (hd : Place.HasDiag vals) {P : Place.Policy F N} {H : CALM.PSet F} {C : N → Prop} {y : N}
+    (hy : ¬ C y) :
+    (Place.DomainGuided vals P → Place.Complete vals P H C → ∀ H',
+      ((Place.domainGuided vals N).Unruled P H C H' ↔
+        (⟨Place.known P H C⟩ : QRef.ExtInp (QRef.disjointAdm vals)) ≼ ⟨H'⟩)) ∧
+    (Place.Total P → ∀ H', ((Place.oblivious F N).Unruled P H C H' ↔
+        (⟨Place.known P H C⟩ : QRef.ExtInp (QRef.allAdm F)) ≼ ⟨H'⟩)) :=
+  ⟨fun hP hc => Place.domainGuided_unruled vals hd hP hy hc,
+    fun hP => Place.oblivious_unruled hP hy⟩
+
+/-- Sec. `sec:query-instance`: "When the order lets `I ∪ J` extend `I` only for
+such `J`, each condition is functional monotonicity.  Functional CALM takes
+the order as given."  Lean: their weaker CALM variants derived from Functional
+CALM through the orders above.  `Place.CFComputes M x Q out` reads
+coordination-free computation at the level of views: node `x`'s output is a
+function of its view, never outside `Q(H)`, all of `Q(H)` once `x` has heard
+from every node, and all of `Q(H)` before any message when all input is placed
+at `x` (the one-node network of Zinn's Lemma 3.7).  For any model that
+justifies an order, such a computation exists iff the graph of `Q` over that
+order is consistent (`Place.cf_iff_consistent`, carried by
+`QRef.rmono_iff_consistent`, i.e. `functional_calm`).  Instantiated:
+policy-aware iff domain-distinct-monotone, domain-guided iff
+domain-disjoint-monotone, original placement iff monotone.  Transducer runs
+are not modeled. -/
+theorem «sec:query-instance/placement-calm» {F V N A : Type} (vals : F → V → Prop)
+    (hd : Place.HasDiag vals) {x y : N} (hxy : x ≠ y) (Q : CALM.PSet F → CALM.PSet A) :
+    ((∃ out, Place.CFComputes (Place.policyAware vals N) x Q out) ↔ QRef.DistinctMono vals Q) ∧
+    ((∃ out, Place.CFComputes (Place.domainGuided vals N) x Q out) ↔ QRef.DisjointMono vals Q) ∧
+    ((∃ out, Place.CFComputes (Place.oblivious F N) x Q out) ↔
+      ∀ J J' : CALM.PSet F, J ≼ J' → Q J ≼ Q J') :=
+  ⟨Place.policyAware_cf_iff vals hxy Q, Place.domainGuided_cf_iff vals hd hxy Q,
+    Place.oblivious_cf_iff hxy Q⟩
 
 /-- Sec. `sec:query-instance`: "Ameloot et al. characterized the new classes
 by weaker forms of monotonicity, correcting an earlier one-fact version."
@@ -204,7 +276,8 @@ extension at the union of disjoint networks; the two witness histories are
 placed side by side, since no strategy can tell.  Third conjunct: through the
 translation, a behavior characterizing a transducer is node monotone on finite
 networks (their Prop. 11).  Their characterization theorem (Thm. 5 with
-Lemma 4) is cited; its sufficiency half (Prop. 10) is not formalized. -/
+Lemma 4) is proved in both directions in
+`«sec:query-instance/characterization»`. -/
 theorem «sec:query-instance/node-monotonicity» :
     (∀ {F N G : Type} (loc : F → N) (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)),
       QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
@@ -775,8 +848,7 @@ client sent after which outputs, so the input remembers what the
 environment's choices depended on.") explain the model and state no claim of
 their own.  The sentence "Distributing the machine is then direct: … among
 participants Section `sec:distributed-execution` applies, using the induced
-spec." is argued in prose only (see the
-README). -/
+spec." is `«sec:operational-models/distributing»`. -/
 theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
     (G : IOM.Machine C P Q O) :
     (∀ (β : List (IOM.Act C P O)) e, (IOM.input β).mem e ↔ .recv e ∈ β) ∧
@@ -797,6 +869,31 @@ Lean: `IOM.input β` (membership: `recv e ∈ β`; order: happens-before between
 the positions sending the two events), the order `IOM.Inp.instPO`. -/
 abbrev «def:execution-input» {C P O : Type} (β : List (IOM.Act C P O)) : IOM.Inp C P :=
   IOM.input β
+
+/-- "Distributing the machine is then direct: the clients remain the
+environment, each client's state-machine events are sent to some participant,
+and among participants Section `sec:distributed-execution` applies, using the
+induced spec."
+
+Lean: the results of Section `sec:distributed-execution` are stated for every
+spec, so they apply to the induced spec `IOM.spec k G` of any machine `G`.
+First conjunct (distributed consistency, Prop. `prop:distributed-consistency`
+with Complete CALM): the induced spec has distributed consistency, for any
+message type `D`, exactly when it satisfies Lifted Monotonicity, exactly when
+the machine's observations are confluent.  Second conjunct (Theorem
+`thm:complete-cap`): some system for the induced spec has Availability and
+Partition Consistency exactly when it satisfies Lifted Monotonicity.  In both,
+input events at any participant are the clients' state-machine events. -/
+theorem «sec:operational-models/distributing» {C P Q O : Type} [PO O]
+    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) (D : Type) :
+    (Dist.DistConsistent (IOM.spec (C := C) k G) D ↔ (IOM.spec (C := C) k G).LiftedMono) ∧
+    ((IOM.spec (C := C) k G).LiftedMono ↔ IOM.ObsConfluent (C := C) k G) ∧
+    ((∃ Sys : CAP.System (IOM.spec (C := C) k G) D,
+        CAP.Availability Sys ∧ CAP.PartitionConsistency Sys) ↔
+      (IOM.spec (C := C) k G).LiftedMono) :=
+  ⟨(Dist.consistent_iff_distConsistent _ D).symm.trans (complete_calm _),
+   (IOM.confluent_iff_liftedMono k G).1.symm,
+   CAP.complete_cap _ D⟩
 
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
 "(1) The induced specification is an I/O specification, and the input of
@@ -916,7 +1013,7 @@ when the exploration covers every execution with input `h`, so that its fiber
 there is complete": a finite list containing every observation at `h`, each
 failing to refine some `βᵣ`'s, refutes Lifted Monotonicity.  The next sentence ("Testing cannot
 show that Lifted Monotonicity holds, since that is a claim about every
-input.") is argued in prose only (see the README). -/
+input.") is `«sec:operational-models/testing-cannot-show»`. -/
 theorem «sec:operational-models/testing-witness» {C P Q O : Type} [PO O]
     (k : IOM.ChanKind) (G : IOM.Machine C P Q O) :
     ¬ (IOM.spec (C := C) k G).LiftedMono ↔
@@ -926,6 +1023,20 @@ theorem «sec:operational-models/testing-witness» {C P Q O : Type} [PO O]
           ∀ β' s', IOA.Execution (IOM.sys k G) β' s' → IOM.input β' = IOM.input β →
             ∃ r ∈ fam, ¬ G.obs (r.2 .mach) ≼ G.obs (s' .mach) :=
   IOM.not_liftedMono_iff_witness k G
+
+/-- "Testing cannot show that Lifted Monotonicity holds, since that is a claim
+about every input."
+
+Lean (`Testing.testing_cannot_show`): for every finite set `X` of explored
+inputs (a chain of stages), the spec `Testing.base`, which satisfies Lifted
+Monotonicity, and the spec `Testing.spoil X` have the same fiber at every input
+of `X`, but `Testing.spoil X` fails Lifted Monotonicity at an input outside
+`X`.  So the fibers at finitely many inputs never determine whether Lifted
+Monotonicity holds. -/
+theorem «sec:operational-models/testing-cannot-show» (X : List Testing.Stage) :
+    (∀ s ∈ X, ∀ o, Testing.base.P s o ↔ (Testing.spoil X).P s o) ∧
+      Testing.base.LiftedMono ∧ ¬ (Testing.spoil X).LiftedMono :=
+  Testing.testing_cannot_show X
 
 /-- "The second is proof.  Instead of computing the induced spec,
 a designer writes one down.  A *declared* spec `D` gives, for

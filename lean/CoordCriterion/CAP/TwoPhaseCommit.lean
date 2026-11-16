@@ -168,5 +168,113 @@ theorem voteSpec_coordinationFree (n : Nat) (D : Type) :
     (CALM.commonExpansion_iff_monoF (voteSpec_functional n)).2 (voteSpec_monotone n)
   exact ⟨respSystem_coordinationFree _ hce, respSystem_coordinationFreeH _ hce⟩
 
+/-! ## Prepares report the owners' commitments (§4.3)
+
+"Each owner's prepare reports the commitment it has already made.  The
+coordinator then makes the monotone decision whether all owners prepared; it
+detects whether their commitments agree and aborts when they do not.  It does
+not make the owners agree."
+
+Owner `p` works from its own spec `sp p` and is at state `σ p`; `C p u` says
+that output `u` of owner `p` commits the transaction.  The owner's prepare
+reports whether the commitments it has made still allow commit: some remaining
+row at its current input commits.  Its vote is that report.  The coordinator's
+decision `decide2PC` commits exactly when every owner's commitments allow
+commit, aborts exactly when some owner's rule it out, reads only the votes,
+and changes no owner's state. -/
+
+/-- Owner `p`'s prepare: yes exactly when its commitments still allow commit. -/
+noncomputable def prepareVote {n : Nat} {I : Fin n → Type} {O : Fin n → Type}
+    [∀ p, PO (I p)] [∀ p, PO (O p)] {sp : ∀ p, Spec (I p) (O p)}
+    (C : ∀ p, O p → Prop) (σ : ∀ p, State (sp p)) : Votes n :=
+  fun p => some (decide (∃ u, (σ p).R (σ p).cur u ∧ C p u))
+
+/-- **The coordinator detects agreement.**  With every prepare in, the
+decision commits exactly when every owner's commitments still allow commit,
+and aborts exactly when some owner's commitments rule commit out. -/
+theorem prepare_decide {n : Nat} {I : Fin n → Type} {O : Fin n → Type}
+    [∀ p, PO (I p)] [∀ p, PO (O p)] {sp : ∀ p, Spec (I p) (O p)}
+    (C : ∀ p, O p → Prop) (σ : ∀ p, State (sp p)) :
+    (decide2PC (prepareVote C σ) = .commit ↔
+      ∀ p, ∃ u, (σ p).R (σ p).cur u ∧ C p u) ∧
+    (decide2PC (prepareVote C σ) = .abort ↔
+      ∃ p, ¬ ∃ u, (σ p).R (σ p).cur u ∧ C p u) := by
+  obtain ⟨hab, hco, _⟩ := decide2PC_detects (prepareVote C σ)
+  refine ⟨hco.trans ?_, hab.trans ?_⟩
+  · refine forall_congr' fun p => ?_
+    simp [prepareVote]
+  · refine exists_congr fun p => ?_
+    simp [prepareVote]
+
+/-! ## The voters' spec and its explicit relation (§4.4)
+
+Supports the example after Def. `def:explicit-relation`: "consider two-phase
+commit (2PC).  We focus on the spec for the voters; the coordinator is an
+observer of that spec.  We're interested in the fiber at the input
+`prepare(tx)`: how each voter responds to that prepare message.  Each possible
+explicit response is a row of `E`.  The overall *set* of responses the
+coordinator might observe across voters is in `P \ E`.  The spec includes
+these as implicit outputs, representing the possible combined outcomes that
+respect each voter's response."
+
+The single input is `prepare(tx)` (`Unit`); an output records the responses
+received so far, voter by voter (`Votes n`, ordered as above).  Every
+combination is permitted.  `E` contains the outputs in which exactly one
+voter has responded. -/
+
+/-- The voters' spec at the input `prepare(tx)`: every combination of
+responses is permitted. -/
+def votersSpec (n : Nat) : Spec Unit (Votes n) where
+  P _ _ := True
+  total _ := ⟨fun _ => none, trivial⟩
+
+/-- Voter `p`'s response `b`, and no other. -/
+def single {n : Nat} (p : Fin n) (b : Bool) : Votes n := fun q => if q = p then some b else none
+
+/-- The explicit relation: one voter's response. -/
+def votersE (n : Nat) : Table Unit (Votes n) := fun _ v => ∃ p b, v = single p b
+
+theorem single_le_iff {n : Nat} {p : Fin n} {b : Bool} {u : Votes n} :
+    single p b ≼ u ↔ u p = some b := by
+  constructor
+  · intro h
+    rcases h p with h | h
+    · simp [single] at h
+    · simpa [single] using h.symm
+  · intro h q
+    by_cases hq : q = p
+    · subst hq; exact Or.inr (by simp [single, h])
+    · exact Or.inl (by simp [single, hq])
+
+/-- **The voters' example.**  (1) `E ⊆ P`.  (2) With two voters or more, the
+combined responses of two voters are permitted but not in `E`.  (3) Every
+permitted output respects each voter's response: it is the least output that
+extends all the single responses it contains. -/
+theorem voters_explicit (n : Nat) :
+    (∀ i v, votersE n i v → (votersSpec n).P i v) ∧
+    (∀ (p q : Fin n), p ≠ q → ∀ b c : Bool,
+      let u : Votes n := fun r => if r = p then some b else if r = q then some c else none
+      (votersSpec n).P () u ∧ ¬ votersE n () u ∧ single p b ≼ u ∧ single q c ≼ u) ∧
+    (∀ u : Votes n, (votersSpec n).P () u ∧
+      (∀ p b, u p = some b → votersE n () (single p b) ∧ single p b ≼ u) ∧
+      ∀ w : Votes n, (∀ p b, u p = some b → single p b ≼ w) → u ≼ w) := by
+  refine ⟨fun _ _ _ => trivial, ?_, ?_⟩
+  · intro p q hpq b c
+    refine ⟨trivial, ?_, ?_, ?_⟩
+    · rintro ⟨r, d, h⟩
+      have hp := congrFun h p
+      have hq := congrFun h q
+      simp only [single, if_pos rfl, if_neg (Ne.symm hpq)] at hp hq
+      by_cases hrp : p = r
+      · subst hrp; simp [hpq.symm] at hq
+      · simp [hrp] at hp
+    · exact single_le_iff.2 (by simp)
+    · exact single_le_iff.2 (by simp [hpq.symm])
+  · intro u
+    refine ⟨trivial, fun p b h => ⟨⟨p, b, rfl⟩, single_le_iff.2 h⟩, fun w hw p => ?_⟩
+    cases hu : u p with
+    | none => exact Or.inl rfl
+    | some b => exact Or.inr ((single_le_iff.1 (hw p b hu)).symm ▸ rfl)
+
 end CAP
 end CC

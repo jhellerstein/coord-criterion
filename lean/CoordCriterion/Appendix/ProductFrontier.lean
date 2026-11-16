@@ -10,7 +10,8 @@ the deployment notions of `CC.Deploy`:
   owner deployment `ownerD`; `product_common`, `product_monoAcross` (part 1),
   `product_confluent`;
 * normalized strengthenings `NormStr`, local conservativity and strictness;
-  `strengthening_not_monoAcross` (part 2);
+  `strengthening_not_monoAcross` (part 2), via its witness form
+  `strengthening_witness`;
 * the "deployment is essential" remark, in the corrected form "no common
   upper bound in `V_p(i)`" (`product_not_liftedMono`,
   `product_full_not_monoAcross`), and a counterexample to the literal wording
@@ -166,15 +167,17 @@ def NormStr.Strict {V : (p : Fin n) → I → W p → Prop} (T : NormStr V) : Pr
 def restrictTo (y : (p : Fin n) → W p) (p : Fin n) : PTd W :=
   ⟨fun q => if q = p then some (y q) else none⟩
 
-/-- **Theorem `thm:product-frontier` (2)** (with `|𝒩| ≥ 2`): no strict,
-normalized, locally conservative strengthening is monotone across partitions
-under its owner deployment.  `sp` is any specification whose table is that of
-`T`. -/
-theorem strengthening_not_monoAcross (hn : 2 ≤ n) (V : (p : Fin n) → I → W p → Prop)
+/-- The proof of **Theorem `thm:product-frontier` (2)**, in witness form:
+strictness gives a tuple `y` of views that `T` does not select at some input
+`i`; by local conservativity each restriction `e_p` of `y` to coordinate `p`
+is a row of `T` at `i`, authorized for `p` under the owner deployment; and no
+row of `T` at `i` extends every `e_p` (the antichain property). -/
+theorem strengthening_witness (V : (p : Fin n) → I → W p → Prop)
     (hAC : Antichain V) (T : NormStr V) (sp : Spec I (PTd W))
     (hsp : ∀ i x, sp.P i x ↔ T.table i x) (hLC : T.LocCons) (hst : T.Strict) :
-    ¬ MonoAcrossPartitions (ownerD sp) := by
-  intro hM
+    ∃ (i : I) (y : (p : Fin n) → W p), (∀ p, V p i (y p)) ∧ ¬ T.sel i y ∧
+      (∀ p, (ownerD sp).A p i (restrictTo y p)) ∧
+      ¬ ∃ u, sp.P i u ∧ ∀ p, restrictTo y p ≼ u := by
   obtain ⟨i, x, ⟨y, hyV, hxy⟩, hnot⟩ := hst
   have hny : ¬ T.sel i y := fun hs => hnot ⟨y, hs, hxy⟩
   have hsing : ∀ p, sp.P i (restrictTo y p) := by
@@ -184,16 +187,40 @@ theorem strengthening_not_monoAcross (hn : 2 ≤ n) (V : (p : Fin n) → I → W
     by_cases hq : q = p
     · subst hq; right; simp [restrictTo, hzp]
     · left; simp [restrictTo, hq]
+  refine ⟨i, y, hyV, hny, fun p => ⟨hsing p, fun q hq => by simp [restrictTo, hq]⟩, ?_⟩
+  rintro ⟨u, hu, hall⟩
+  obtain ⟨z, hz, hzu⟩ := (hsp _ _).1 hu
+  have hyz : ∀ p, y p = z p := by
+    intro p
+    have h1 : OLe ((restrictTo y p).t p) (u.t p) := hall p p
+    have e : (restrictTo y p).t p = some (y p) := by simp [restrictTo]
+    rw [e] at h1
+    rcases hzu p with h0 | h0 <;> rw [h0] at h1
+    · exact False.elim h1
+    · exact hAC p i _ _ (hyV p) (T.sub i z hz p) h1
+  exact hny (by have : y = z := funext hyz; rw [this]; exact hz)
+
+/-- **Theorem `thm:product-frontier` (2)** (with `|𝒩| ≥ 2`): no strict,
+normalized, locally conservative strengthening is monotone across partitions
+under its owner deployment.  `sp` is any specification whose table is that of
+`T`.  The separable family: every participant emits `e_p` at `i`
+(`strengthening_witness`). -/
+theorem strengthening_not_monoAcross (hn : 2 ≤ n) (V : (p : Fin n) → I → W p → Prop)
+    (hAC : Antichain V) (T : NormStr V) (sp : Spec I (PTd W))
+    (hsp : ∀ i x, sp.P i x ↔ T.table i x) (hLC : T.LocCons) (hst : T.Strict) :
+    ¬ MonoAcrossPartitions (ownerD sp) := by
+  intro hM
+  obtain ⟨i, y, _, _, hauth, hno⟩ := strengthening_witness V hAC T sp hsp hLC hst
   let p0 : Fin n := ⟨0, by omega⟩
   let p1 : Fin n := ⟨1, by omega⟩
-  let F : Family sp n := fun p => some (oneShot sp i (restrictTo y p) (hsing p))
+  let F : Family sp n := fun p => some (oneShot sp i (restrictTo y p) (hauth p).1)
   have hem : ∀ p r, Emits F p r ↔ r = (i, restrictTo y p) := by
     intro p r
     rw [emits_some (rfl : F p = _)]; simp
   have hAuth : Authorized (ownerD sp) F := by
     intro p r hr
     rw [hem] at hr; subst hr
-    exact ⟨hsing p, fun q hq => by simp [restrictTo, hq]⟩
+    exact hauth p
   have hSep : Separable F (fun p => p.val) :=
     Or.inl ⟨p0, p1, _, _, (hem _ _).2 rfl, (hem _ _).2 rfl, by simp [p0, p1]⟩
   have hub : UB F i := by
@@ -201,16 +228,7 @@ theorem strengthening_not_monoAcross (hn : 2 ≤ n) (V : (p : Fin n) → I → W
     cases hm
     exact PO.refl i
   obtain ⟨u, hu, hall⟩ := hM _ ⟨p0, p1, by simp [p0, p1]⟩ F hAuth hSep i hub
-  obtain ⟨z, hz, hzu⟩ := (hsp _ _).1 hu
-  have hyz : ∀ p, y p = z p := by
-    intro p
-    have h1 : OLe ((restrictTo y p).t p) (u.t p) := hall p _ ((hem _ _).2 rfl) p
-    have e : (restrictTo y p).t p = some (y p) := by simp [restrictTo]
-    rw [e] at h1
-    rcases hzu p with h0 | h0 <;> rw [h0] at h1
-    · exact False.elim h1
-    · exact hAC p i _ _ (hyV p) (T.sub i z hz p) h1
-  exact hny (by have : y = z := funext hyz; rw [this]; exact hz)
+  exact hno ⟨u, hu, fun p => hall p _ ((hem _ _).2 rfl)⟩
 
 /-! ### "The deployment is essential" -/
 

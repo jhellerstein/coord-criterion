@@ -3,6 +3,7 @@ import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.Forced
 import CoordCriterion.CAP.Coordination
+import CoordCriterion.CAP.TwoPhaseCommit
 import CoordCriterion.Distributed.Commitments
 import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.Appendix.DeploymentExamples
@@ -114,11 +115,36 @@ theorem «def:partitioned-history/unfolded» (H : History sp D n) (comp : Fin n 
 *explicit possibility relation* `E ⊆ P` is a set of rows whose outputs
 participants actually emit.  Write `E(i)` for its outputs at input `i`."
 The paper follows the definition with the two-phase-commit example of the
-voters' spec (prose only).
+voters' spec (`«def:explicit-relation/two-phase-commit»`).
 
 Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
 abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
+
+/-- Example after Def. `def:explicit-relation`: "consider two-phase commit
+(2PC).  We focus on the spec for the voters; the coordinator is an observer of
+that spec.  We're interested in the fiber at the input `prepare(tx)`: how each
+voter responds to that prepare message.  Each possible explicit response is a
+row of `E`.  The overall *set* of responses the coordinator might observe
+across voters is in `P \ E`.  The spec includes these as implicit outputs,
+representing the possible combined outcomes that respect each voter's
+response."
+
+Lean (`CAP.votersSpec`, `CAP.votersE`): the input is `prepare(tx)`; an output
+records the responses received, voter by voter.  First conjunct: `E ⊆ P`.
+Second: the combined responses of two voters are permitted, not in `E`, and
+extend both voters' single responses.  Third: every permitted output respects
+each voter's response, being the least output extending the single responses
+it contains, each a row of `E`. -/
+theorem «def:explicit-relation/two-phase-commit» (n : Nat) :
+    (∀ i v, CAP.votersE n i v → (CAP.votersSpec n).P i v) ∧
+    (∀ (p q : Fin n), p ≠ q → ∀ b c : Bool,
+      let u : CAP.Votes n := fun r => if r = p then some b else if r = q then some c else none
+      (CAP.votersSpec n).P () u ∧ ¬ CAP.votersE n () u ∧ CAP.single p b ≼ u ∧ CAP.single q c ≼ u) ∧
+    (∀ u : CAP.Votes n, (CAP.votersSpec n).P () u ∧
+      (∀ p b, u p = some b → CAP.votersE n () (CAP.single p b) ∧ CAP.single p b ≼ u) ∧
+      ∀ w : CAP.Votes n, (∀ p b, u p = some b → CAP.single p b ≼ w) → u ≼ w) :=
+  CAP.voters_explicit n
 
 /-! ### Definition `def:emitted-rows` (Emitted rows) -/
 

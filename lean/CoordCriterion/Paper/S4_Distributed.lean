@@ -8,6 +8,7 @@ import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
 import CoordCriterion.Appendix.TransactionBases.CommitmentEvent
 import CoordCriterion.Appendix.ComponentSystems
+import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.Deployment
 import CoordCriterion.Instances.QueryRefinements
 
@@ -857,6 +858,51 @@ theorem «prop:commitment-conflict/any-event» {sp : Spec I O}
   let h := Dist.conflicting_events (B1 := B1) (B2 := B2) h1 hno h2
   ⟨h.1, h.2.1, h.2.2, Dist.conflicting_events_reach h1 hno h2⟩
 
+/-- Paragraph "Placement": "Whether a coordination mechanism must span
+participants depends on who can make each choice.  A deployment records which
+outputs each participant may produce.  With unrestricted placement, the two
+conflicting runs can occur at different participants; ownership can keep them
+at one.  Appendix `app:deployment` formalizes this distinction as monotonicity
+across partitions."
+
+Lean (`Deploy`, Appendix E).  First conjunct (unrestricted placement): with
+at least two participants and the deployment that lets every participant emit
+every row, monotonicity across partitions is Lifted Monotonicity, so any two
+conflicting rows can be emitted by different participants.  Second conjunct
+(ownership): under the deployment in which one participant may emit every row
+and the other none (`Deploy.leadD`), the spec with two incomparable outputs at
+every input is monotone across partitions although it does not satisfy Lifted
+Monotonicity. -/
+theorem «sec:systems/placement» :
+    (∀ {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}, 2 ≤ n →
+      ∀ Dp : Deploy.Deployment sp n, (∀ p, Dp.A p = sp.P) →
+        (Deploy.MonoAcrossPartitions Dp ↔ sp.LiftedMono)) ∧
+    (∀ {I : Type} [PO I], Deploy.MonoAcrossPartitions (Deploy.leadD I) ∧
+      ∀ i : I, ¬ (Deploy.leadSpec I).LiftedMono) :=
+  ⟨fun hn Dp hA => Deploy.full_deployment_iff hn Dp hA,
+   fun {_} _ => ⟨Deploy.lead_monoAcross, Deploy.lead_not_liftedMono⟩⟩
+
+/-- Paragraph "Locks in a shared-nothing database": "Consider a database
+partitioned by key, with each key owned and locked by one participant.
+Ordering two transactions on one key makes a commitment, but ownership keeps
+both choices at that owner.  A transaction spanning two keys is different:
+each owner orders its own part, and the two owners can order the same pair
+oppositely.  They must agree on one order."
+
+Lean (`CAP/Coordination.lean`, `CAP.ordSpec`: one input, outputs
+`undecided ≼ A before B, B before A`).  First conjunct: emitting an order is a
+commitment (it is not legal at the canonical state).  Second: when only the
+owner (participant `0`) may choose an order (`CAP.ownerSys`), no history has
+another participant contradict its choice (`CoordinationFreeH`).  Third: when
+two participants each order the pair (`CAP.twoOwnerSys`, the two owners of a
+transaction spanning two keys), some history has one order the pair against
+the other's choice, so they must agree. -/
+theorem «sec:systems/shared-nothing» (D : Type) :
+    ¬ Exposable (canon CAP.ordSpec ()) .ab ∧ (CAP.ownerSys D).CoordinationFreeH ∧
+      ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
+  ⟨CAP.ordSpec_ab_not_exposable, CAP.ownerSys_coordinationFreeH D,
+    CAP.twoOwnerSys_not_coordinationFreeH D⟩
+
 /-- Paragraph "Locks in a shared-nothing database": two-phase commit combines
 local prepares with the coordinator's monotone decision whether all owners
 prepared.
@@ -887,13 +933,36 @@ prepare succeeded): the decision is `abort` exactly when some received vote is
 no and `commit` exactly when every vote is yes, so once every vote is in it
 aborts exactly when the votes do not all say yes.  "Does not make the owners
 agree" follows from the monotone decision in `«sec:systems/two-phase-commit»`;
-that a yes vote reports a successful local prepare is the protocol, not
-modeled. -/
+that a vote reports the owner's commitments is
+`«sec:systems/two-phase-commit-prepare»`. -/
 theorem «sec:systems/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n) :
     (CAP.decide2PC v = .abort ↔ ∃ p, v p = some false) ∧
     (CAP.decide2PC v = .commit ↔ ∀ p, v p = some true) ∧
     ((∀ p, v p ≠ none) → (CAP.decide2PC v = .abort ↔ ¬ ∀ p, v p = some true)) :=
   CAP.decide2PC_detects v
+
+/-- Paragraph "Locks in a shared-nothing database": "Each owner's prepare
+reports the commitment it has already made.  The coordinator then makes the
+monotone decision whether all owners prepared; it detects whether their
+commitments agree and aborts when they do not."
+
+Lean (`CAP.prepareVote`, `CAP.prepare_decide`): owner `p` works from its own
+spec and is at state `σ p`; `C p u` says that its output `u` commits the
+transaction.  Its prepare votes yes exactly when the commitments it has made
+still allow commit (a remaining row at its current input commits).  The
+coordinator's decision commits exactly when every owner's commitments allow
+commit and aborts exactly when some owner's rule it out.  The decision reads
+only the votes, so it changes no owner's state ("It does not make the owners
+agree"), and it is monotone and applies no commitment
+(`«sec:systems/two-phase-commit»`). -/
+theorem «sec:systems/two-phase-commit-prepare» {n : Nat} {I O : Fin n → Type}
+    [∀ p, PO (I p)] [∀ p, PO (O p)] {sp : ∀ p, Spec (I p) (O p)}
+    (C : ∀ p, O p → Prop) (σ : ∀ p, State (sp p)) :
+    (CAP.decide2PC (CAP.prepareVote C σ) = .commit ↔
+      ∀ p, ∃ u, (σ p).R (σ p).cur u ∧ C p u) ∧
+    (CAP.decide2PC (CAP.prepareVote C σ) = .abort ↔
+      ∃ p, ¬ ∃ u, (σ p).R (σ p).cur u ∧ C p u) :=
+  CAP.prepare_decide C σ
 
 /-- Paragraph "Locks in a shared-nothing database": "If the coordinator
 instead aborts on timeout before the last vote arrives, that abort applies

@@ -1,3 +1,4 @@
+import CoordCriterion.CAP.AsyncGLFair
 import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.CAP.ChosenAvailability
@@ -773,9 +774,31 @@ fair execution with no new request in which every message is lost; …
 Atomicity of the fair extension gives atomicity of the finite execution, since
 atomicity is a safety property …"
 
-Prose only: infinite (fair) executions are not modeled.  The Lean
-`Available` and `Atomic` are the finite forms of the proposition, so the
-step from Gilbert–Lynch's fair-execution notions to these forms is argued in
-the paper, not formalized. -/
+Lean (`CAP/AsyncGLFair.lean`): an infinite execution is a chain of finite
+executions with node states (`AsyncGL.IExec`); it is fair when each node, from
+every point, later performs a locally controlled action or has none enabled
+(`IExec.Fair`).  `AvailableFair` and `AtomicFair` are Gilbert and Lynch's
+notions over fair executions with well-formed clients.  Every finite execution
+extends to a fair execution that adds no request and no receipt, so every
+message is lost (`AsyncGL.fair_extension`, round robin over the nodes).
+Availability then answers the pending request at a finite point, and that
+prefix is the extension the finite form requires (`available_of_fair`); the
+finite execution is the first prefix of its fair extension, so atomicity of
+the extension gives its atomicity (`atomic_of_fair`).  Atomicity of an
+infinite execution is taken as atomicity of each finite prefix; that this
+agrees with Lynch's definition is her result that atomicity is a safety
+property, which the paper cites. -/
+
+/-- The fair-execution forms imply the finite forms, and Gilbert and Lynch's
+Theorem 1 holds as they state it. -/
+theorem «prop:gl-async/fair-executions» {N : Nat} {M : Type} (A : CC.AsyncGL.Alg N M) :
+    (∀ E, CC.AsyncGL.IsGExec A E → ∃ ρ : CC.AsyncGL.IExec A, ρ.E 0 = E ∧ ρ.Fair ∧
+      ∀ t j, ∃ β, (ρ.E t).tr j = E.tr j ++ β ∧
+        ∀ y ∈ β, (∀ j' x, x ∈ E.tr j' → x.1 < y.1) ∧ CC.AsyncGL.Local y.2) ∧
+    (CC.AsyncGL.AvailableFair A → CC.AsyncGL.Available A) ∧
+    (CC.AsyncGL.AtomicFair A → CC.AsyncGL.Atomic A) ∧
+    (2 ≤ N → ¬ (CC.AsyncGL.AvailableFair A ∧ CC.AsyncGL.AtomicFair A)) :=
+  ⟨CC.AsyncGL.fair_extension A, CC.AsyncGL.available_of_fair, CC.AsyncGL.atomic_of_fair,
+   fun hN => CC.AsyncGL.gilbert_lynch_fair hN A⟩
 
 end CC.Paper

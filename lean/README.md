@@ -25,35 +25,23 @@ The index below lists every `Paper/` declaration.  The library files carry
 module docstrings that name the paper section they support, what they
 contain, and their modeling choices.
 
-What is argued only in prose, not in Lean: the step from Gilbert and Lynch's
-fair-execution definitions to the finite forms used in
-`«prop:gl-async»` (Appendix F); the protocol steps of 2PL and MVTO (which
-arrival makes a lock wait, issues a timestamp, or triggers the write rule;
-Appendix G, where Lean checks the exclusions those steps apply and the MVTO
-run driven by arrivals); the
-  protocol steps of two-phase commit in §4.3 (prepare messages, logging,
-  blocking; Lean checks only that the vote-counting decision is monotone,
-  applies no commitment, and aborts exactly when the votes do not all say yes);
-  the placement discussion closing §4.3 (Lean checks the local and replicated
-  cases with its internal operational predicates); the
+What is argued only in prose, not in Lean: in Appendix F, Lynch's result that atomicity is a safety property (Lean takes atomicity of an infinite execution to be atomicity of each finite prefix, `«prop:gl-async/fair-executions»`); the description of the 2PL and MVTO protocols themselves (which arrival makes a lock wait, issues a timestamp, or triggers the write rule; Appendix G, where Lean checks the commitments those steps apply, when `order(A,B)` removes nothing, and the MVTO run driven by arrivals); the messaging of two-phase commit in §4.3 (prepare messages, logging, blocking; Lean checks that a prepare reports the owner's commitments, that the decision is monotone, applies no commitment, and commits exactly when every owner's commitments allow commit); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
-al., Zinn et al., and Baccaert and Ketsman, which input order a placement
-model justifies, and their notion of coordination; for Baccaert and Ketsman
+al., Zinn et al., and Baccaert and Ketsman as statements about transducer
+runs (which input order policy-aware, domain-guided and original placement
+justify, and the resulting CALM variants at the level of a node's view, are
+proved in Lean, `«sec:query-instance/policy-aware-order»`,
+`«sec:query-instance/domain-guided-order»`,
+`«sec:query-instance/placement-calm»`), and their notion of coordination; for Baccaert and Ketsman
 also that they were the first to extend CALM beyond deterministic queries,
 that leader election is their running example, how Ameloot et al. and they
 model placement, that an identifier and an order on identifiers is what their
 coordination-free transducers know, that their programs must treat data values only as interchangeable symbols (their characterization theorem itself is proved in Lean, both directions, `«sec:query-instance/characterization»`); and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node chooses); in §4 (`sec:systems`), that Ameloot et al. show a list of
 all participants enlarges what a system can compute; in
-Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
-al.'s checks, the correspondence of the hypotheses to theirs, and the remark
-that a strengthening may read real time from the input; in §6.3, that HAT's session guarantees under sticky availability are deployments; in §6.5, that
-distributing a compiled state machine is direct (each client's events go to
-some participant and §4 applies with the induced specification), and in its
-"Testing and proof" paragraph that simulators and model checkers run the
+Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.3, that HAT's session guarantees under sticky availability are deployments; in §6.5, in its "Testing and proof" paragraph, that simulators and model checkers run the
 machine on bounded inputs and that the input/output pairs they collect form a
 finite specification that can be checked for violations, that this is routine engineering practice and has
-found serious bugs in production systems, that testing cannot show Lifted
-Monotonicity holds, the example rules of a declared specification ("the set
+found serious bugs in production systems, the example rules of a declared specification ("the set
 of ballots received", "the largest timestamp seen"), and the relation of the
 two obligations to the verification literature (invariants, forward
 simulations, refinement mappings, mechanized proofs, realizability typically
@@ -101,12 +89,13 @@ first and supporting claims and examples follow.
 | `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: exclusions, histories (local events: inputs, output events `out o`, exclusion events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.4 | Thm. Complete CAP; deterministic strategies do not suffice |
 | `CAP/FullKnowledge.lean` | `CC.CAP` | §4 | Strategies that see the participant set and all initial inputs (`KSystem`); every system is one; the necessity half of Complete CAP for an explicit relation holds for them |
-| `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.3 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
+| `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.3–4.4 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free; prepares report the owners' commitments; the voters' spec and its explicit relation |
 | `CAP/TimeoutAbort.lean` | `CC.CAP.Timeout` | §4.3 | Two-phase commit aborting on timeout: on the vote-decision specification, closing the polls excludes every future input that adds a missing vote; run by the coordinator alone this is local coordination, replicated it is distributed; on a specification where abort remains allowed until a decision, aborting excludes the commit outputs at later inputs while keeping those inputs legal, so it is local coordination when only the coordinator decides and distributed when the decision is replicated |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
 | `CAP/Register.lean` | `CC.GL` | App. F | Linearizable register, realized histories, Cor. Gilbert–Lynch |
 | `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.4, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
 | `CAP/AsyncGilbertLynch.lean` | `CC.AsyncGL` | App. F | Gilbert–Lynch Theorem 1 (asynchronous model) by reduction to the corollary |
+| `CAP/AsyncGLFair.lean` | `CC.AsyncGL` | App. F | Fair infinite executions; every finite execution extends fairly with no new request and every message lost; Gilbert and Lynch's fair-execution availability and atomicity imply the finite forms |
 | `CAP/ChosenAvailability.lean` | `CC.CAP`, `CC.AsyncGL` | App. F | End-of-history forms of Response Availability / RPC / Answering; RPC is the converse's common-refinement condition; a response interface as a chosen explicit relation; Lemma forced-answer and Cor. Gilbert–Lynch at the end of histories |
 | `Instances/InvariantConfluence.lean` | `CC.IConf` | §6, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
@@ -115,12 +104,14 @@ first and supporting claims and examples follow.
 | `Instances/HATUnion.lean` | `CC.HATUnion` | — (not cited) | Bailis's dissertation frame (histories merged by union): two read-committed histories whose union has G1c; with the Lamport condition unions never do |
 | `Instances/HATSpec.lean` | `CC.HATSpec` | §6.3 | Def. hat-spec, Thm. hat-levels: event-history inputs with happens-before (optionally with the timestamp condition), read-answer outputs, HAT levels (RU, RC, SI, RR, SER; item-only); HAT's read rule as explicit relation; RU/RC available under the timestamp condition; any level proscribing Lost Update unavailable; without the condition the read rule leaves `S_RC` |
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity, matching over located items |
+| `Instances/Placement.lean` | `CC.Place` | §6.1 | Policy-aware, domain-guided and original placement at the level of a node's view: the inputs a node cannot rule out are the domain-distinct, domain-disjoint, or inclusion extensions; coordination-free computation under each iff the matching monotonicity, via Functional CALM |
 | `Instances/BaccaertKetsman.lean` | `CC.BK`, `CC.CAP` | §6.1 | Baccaert and Ketsman's setting as an anonymous cluster: anonymized strategies, histories side by side, causal histories, placement (participants are nodes, inputs only held, node-closed facts), consistency on placed histories, realized rows; their Prop. 11 (necessity: realized rows are node monotone) |
 | `Instances/BKTransducers.lean` | `CC.BK` | §6.1 | Baccaert and Ketsman's operational model (node programs under Id+Ord, networks, broadcast log, fair runs, quiescent output, computes/characterizes) and its translation into an anonymous cluster: computing implies consistency on placed histories (`placedConsistent_of_computes`), characterized rows are covered by placed histories (`covers_of_characterizes`), and their Prop. 11 on finite networks through our necessity theorem (`nodeMono_of_characterizes`) |
 | `Instances/BKSufficiency.lean` | `CC.BK` | §6.1 | Sufficiency (their Prop. 10): a node program under Id+Ord (`qProg`: gossip records, quorums confirmed by every member, the least node decides once, decisions extend all known ones) computes and characterizes every node monotone behavior whose outputs lie at network nodes (`computes_qProg`, `characterizes_qProg`); with Prop. 11, their Thm. 5 (`bk_characterized_iff`) and its computability form with their Lemma 4 (`bk_computable_iff`) |
 | `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by Prop. induced-specification (2)); arrival-order independence; the election as an induced specification |
 | `Instances/IOMachine.lean` | `CC.IOM` | §6 | A general machine automaton (receives, outputs and internal steps that may change state; state machines as the special case `ofSM`), clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; fibers are reached by machine executions on arrival orders, every one over a bag without observations; FIFO single client is the table of payload sequences under prefix (the prefix encoding for state machines); confluence across executions ⇔ Lifted Monotonicity, also for emitted outputs when outputs report observations; later sends after an output (Def./Prop. induced-specification) |
 | `Instances/IOMachineCofinal.lean` | `CC.IOM` | §6.5 | Prop. declared-specification (machine bridge): a declared spec over the occurring inputs (or along an order embedding of them) whose rows are produced by executions and dominate every execution's final observation is Lifted Monotone iff the induced spec is, iff observations are confluent; re-derives single-client FIFO stationary consistency ⇔ `TransMono` and Lifted Monotonicity of the transient dip (a machine whose internal step lowers the observation); finite witnesses of a violation of Lifted Monotonicity, certified by the machine's own runs or a finite list containing the fiber; the `fork` machine, showing neither obligation alone suffices |
+| `Instances/TestingLimits.lean` | `CC.Testing` | §6.5 | Testing cannot show Lifted Monotonicity: for every finite set of explored inputs, two specs agree on those fibers, one Lifted Monotone and one not |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
 | `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no exclusion; pipeline runs as composite runs, confluence, where the upstream must apply an exclusion), systems with strategies, exclusion-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
@@ -140,16 +131,18 @@ first and supporting claims and examples follow.
 | `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; Proper Coordination for products; parameterized composition as a product |
 | `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers) | Causal and linearizable registers, two-write history, causal-register frontier |
 | `Appendix/RealTimeCausal.lean` | `CC.Deploy` | App. E (real-time causal) | Histories with real-time precedence, real-time causal views, their product interface, forcing, maximality for real-time blind strengthenings |
+| `Appendix/MahajanRTC.lean` | `CC.Deploy` | App. E (real-time causal) | Mahajan et al.'s RTC check for one replica's reads is the real-time causal views (single-source writeLists; one element of a set-valued writeList is not enough); always availability as totality plus Deployment Availability; one-way convergence from delivery in the input; implementations that do not observe real time induce real-time blind strengthenings; their Theorem 3.1 derived from Prop. rtc-maximal and Thm. independent products (2), realized in any system with Deployment Availability |
+| `Appendix/RealTimeTies.lean` | `CC.Deploy.Tie` | App. E | A strict strengthening of the real-time causal product interface that reads real time to break ties is monotone across partitions under its owner deployment, so real-time blindness is needed |
 | `Appendix/Applications.lean` | `CC.Apps` | App. H | Committed authority, `k`-set agreement, tight renaming, snapshots |
 
-`ProductFrontier`, `Registers`, and `RealTimeCausal` are in `CC.Deploy` because they are stated
+`ProductFrontier`, `Registers`, `RealTimeCausal`, and `MahajanRTC` are in `CC.Deploy` because they are stated
 in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 ## Paper index
 
 <!-- BEGIN PAPER INDEX -->
 
-635 entries.
+654 entries.
 
 ### §2 Functional CALM
 
@@ -330,8 +323,11 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:commitment-conflict/any-bases»` | theorem | Supporting output-only form of Prop. |
 | `«prop:commitment-conflict/reach»` | theorem | Prop. |
 | `«prop:commitment-conflict/any-event»` | theorem | Prop. |
+| `«sec:systems/placement»` | theorem | Paragraph "Placement": |
+| `«sec:systems/shared-nothing»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:systems/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:systems/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:systems/two-phase-commit-prepare»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:systems/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:systems/2pc-timeout-abort-local»` | theorem | A timeout before the final vote applies the nonempty poll-closing commitment. |
 
@@ -345,6 +341,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partitioned-history»` | abbrev | **Def. |
 | `«def:partitioned-history/unfolded»` | theorem | Def. |
 | `«def:explicit-relation»` | abbrev | **Def. |
+| `«def:explicit-relation/two-phase-commit»` | theorem | Example after Def. |
 | `«def:emitted-rows»` | abbrev | **Def. |
 | `«def:emitted-rows/availability»` | theorem | After Def. |
 | `«sec:complete-cap/system»` | abbrev | Paragraph after Def. |
@@ -420,6 +417,9 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
 | `«sec:query-instance/weaker-monotonicity»` | theorem | Sec. |
+| `«sec:query-instance/policy-aware-order»` | theorem | Sec. |
+| `«sec:query-instance/domain-guided-order»` | theorem | Sec. |
+| `«sec:query-instance/placement-calm»` | theorem | Sec. |
 | `«sec:query-instance/one-fact-version»` | theorem | Sec. |
 | `«sec:query-instance/mapping»` | theorem | Sec. |
 | `«sec:query-instance/characterization»` | theorem | Sec. |
@@ -455,8 +455,10 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:operational-models/later-sends»` | theorem | "An output of the machine is an input of the client that receives it, so a client's later sends happen after everything the machine had received when it emit… |
 | `«def:induced-specification»` | theorem | **Def. |
 | `«def:execution-input»` | abbrev | **Def. |
+| `«sec:operational-models/distributing»` | theorem | "Distributing the machine is then direct: |
 | `«prop:induced-specification»` | theorem | **Prop. |
 | `«sec:operational-models/testing-witness»` | theorem | "If Lifted Monotonicity fails, finitely many executions show it: |
+| `«sec:operational-models/testing-cannot-show»` | theorem | "Testing cannot show that Lifted Monotonicity holds, since that is a claim about every input." Lean (`Testing.testing_cannot_show`): |
 | `«sec:operational-models/both-halves»` | theorem | "The second is proof. |
 | `«prop:declared-specification»` | theorem | **Prop. |
 
@@ -751,14 +753,22 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:registers/serialization-extends»` | theorem | Proof step: |
 | `«app:registers/linear-extension»` | theorem | Supporting fact: |
 | `«app:registers/same-read-incompatible»` | theorem | "Two answers to the same read remain incompatible, but only the reading replica may emit either." The causal register is not monotone: |
+| `«app:rtc/mahajan»` | theorem | "[A] system can provide real-time causal consistency, but no stronger consistency, while staying always available … and one-way convergent … We recover both… |
+| `«app:rtc/mahajan-impl»` | theorem | The "no stronger consistency" part for an implementation that does not observe real time: |
 | `«thm:product-frontier»` | theorem | **Theorem `thm:product-frontier`** (Independent products). |
 | `«app:rtc/input»` | theorem | "Consider the histories of Appendix `app:registers` with a second strict partial order `≺`: |
 | `«app:rtc/views»` | theorem | "A *real-time causal view* of replica `p` assigns to every read `r` of `p` a source `s(r)` such that (1) `s(r)` is a write visible to `r`, or `v₀` if none is… |
+| `«app:rtc/mahajan-checks»` | theorem | "Intuitively, these are Mahajan et al.'s checks for the order that `p`'s reads expose, in which each visible write precedes the read and each overwritten wri… |
+| `«app:rtc/one-source»` | theorem | "Their reads return all concurrent latest writes; ours return one, so a view matches their check when that write is the only latest one." Lean: |
 | `«app:rtc/monotone-across»` | theorem | "Views exist … Views also continue. |
 | `«app:rtc/blind»` | theorem | "A strengthening is *real-time blind* when a tuple it selects at an input stays selected at the same history with fewer real-time edges, provided its views a… |
 | `«prop:rtc-maximal»` | theorem | **Proposition `prop:rtc-maximal`** (Real-time causal maximality). |
 | `«prop:rtc-maximal/forced»` | theorem | Proof of `prop:rtc-maximal`: |
 | `«prop:rtc-maximal/locally-conservative»` | theorem | Proof of `prop:rtc-maximal`: |
+| `«app:rtc/always-available»` | theorem | "Each hypothesis has a counterpart in Mahajan et al.'s theorem. |
+| `«app:rtc/one-way-convergence»` | theorem | "One-way convergence needs no separate hypothesis: |
+| `«app:rtc/no-real-time»` | theorem | "Real-time blindness is their assumption that an implementation does not observe real time, which their proof uses to swap the real-time order of concurrent… |
+| `«app:rtc/reads-real-time»` | theorem | Last paragraph of `app:rtc`: |
 
 ### Appendix F: Response availability and Gilbert–Lynch
 
@@ -819,6 +829,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«prop:gl-async/proof»` | theorem | Proof sketch of Prop. |
 | `«prop:gl-async/atomic-view»` | theorem | Proof sketch of Prop. |
 | `«prop:gl-async/non-vacuity»` | theorem | Non-vacuity (not a claim of the paper): |
+| `«prop:gl-async/fair-executions»` | theorem | The fair-execution forms imply the finite forms, and Gilbert and Lynch's Theorem 1 holds as they state it. |
 
 ### Appendix G: 2PL and MVTO
 
@@ -854,6 +865,7 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/run-states»` | theorem | "Every state that a run under either basis reaches has two properties: |
 | `«app:cc-bases/read-emit»` | theorem | "Because of these properties, a scheduler reports a read by first applying `read(A,k,v)` in a commitment event; emitting the result is then a legal output."… |
 | `«app:cc-bases/fig-h»` | theorem | "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler applies `order(A,B)` in a commitment event, reporting nothing. |
+| `«app:cc-bases/order-nothing»` | theorem | "When every remaining complete row that commits both already places `A` before `B`, `order(A,B)` would remove nothing, so it is undefined and the scheduler a… |
 | `«app:cc-bases/order-at-ABC»` | theorem | "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps `[A,B,C]` and `[C,A,B]`, so it is a commitment, and it is not the commitment `x_o` of any… |
 | `«app:cc-bases/deadlock»` | theorem | "A deadlock between `A` and `B` arises when `B` waits for a lock that `A` holds and an operation of `A` then waits for a lock that `B` holds: |
 | `«app:cc-bases/deadlock-resolution»` | theorem | "Once the scheduler applies `TxCommit(A)`, every remaining complete row aborts `B`, and `TxCommit(B)` is never again defined." |
