@@ -261,6 +261,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:hat-levels/answers-stable»
 #check @CC.Paper.«thm:hat-levels/lost-update-pair»
 #check @CC.Paper.«sec:hat-instance/rc-timestamps»
+#check @CC.Paper.«sec:hat-instance/session-guarantees»
+#check @CC.Paper.«sec:hat-instance/myr-as-written»
 #check @CC.Paper.«sec:iconfluence-instance/model»
 #check @CC.Paper.«sec:iconfluence-instance/reachable»
 #check @CC.Paper.«sec:iconfluence-instance/iconfluent-def»

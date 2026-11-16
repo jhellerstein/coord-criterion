@@ -13,6 +13,8 @@ import CoordCriterion.Distributed.Histories
 import CoordCriterion.CAP.CompleteCAP
 import CoordCriterion.Instances.HATSpec
 import CoordCriterion.Instances.HATInter
+import CoordCriterion.Instances.HATWriteSkew
+import CoordCriterion.Instances.HATTaxonomyWitness
 
 /-!
 # Paper §6, "Instances Across the Literature" (`sections/instances.tex`)
@@ -450,7 +452,11 @@ intersections satisfy Lifted Monotonicity.") is realized by `HATSpec.store`,
 `HATSpec.spec`, and `Inter.inter` (`«def:store-spec»`, `«thm:hat-levels»`).  The closing sentence on session guarantees ("Session
 guarantees, which Bailis et al. achieve under sticky availability, are
 deployments in our terms (Proposition `thm:complete-cap-deployment`); we do
-not treat them here.") is argued only in prose. -/
+not treat them here.") is `«sec:hat-instance/session-guarantees»`, which
+derives Bailis et al.'s whole classification (Table 3) from our theorems in the
+model of `Instances/HATTaxonomy.lean`; `«sec:hat-instance/myr-as-written»`
+records that the extended paper's formal definition of read your writes
+(Def. 34) is not sticky available. -/
 
 /-- **Definition `def:hat-spec`** (HAT specification): "An input is a history
 ordered by happens-before: reads, each tagged with its replica; commits, each
@@ -639,6 +645,87 @@ theorem «sec:hat-instance/rc-timestamps» :
         ¬ HATRC.G1c (HATRC.run .lamport l) :=
   ⟨⟨HATSpec.timestamp_condition_needed.1, HATSpec.timestamp_condition_needed.2.2⟩,
     HATRC.g1c_witness.2.2.2, fun l => let h := HATRC.lamport_pl2 l; ⟨h.1, h.2.2⟩⟩
+
+/-- Sec. `sec:hat-instance`: "Session guarantees, which Bailis et al. achieve
+under sticky availability, are deployments in our terms (Proposition
+`thm:complete-cap-deployment`); we do not treat them here."  Lean: Bailis et
+al.'s classification (VLDB 2014, Table 3; guarantees as the phenomena of the
+extended paper's App. A), derived from our theorems in the model of
+`Instances/HATTaxonomy.lean` (the HAT histories of Def. `def:hat-spec` with
+item replica sets, predicate reads and sessions; each guarantee is the
+visibility store held to it, `HATTax.tax`):
+
+* *highly available* (RC and MAV under the timestamp condition, I-CI, P-CI,
+  MR, MW, WFR): the stabilized read rule of Bailis §5.1.2–5.1.3 is an explicit
+  relation inside the specification that answers every read and is monotone,
+  so by Complete CAP for an explicit relation (`CAP.complete_cap_for`) some
+  system has Availability for it and Partition Consistency
+  (`HATTax.ha_of_rule`);
+* *sticky available* (RYW, PRAM, causal): the same for the sticky rule, which
+  must answer only reads whose replica reflects the client's earlier writes
+  (`HATTax.sticky_of_rule`); as a deployment (each client's reads answered by
+  its sticky server, `HATTax.stickyD`) it is monotone across partitions, and by
+  the existence half of Prop. `thm:complete-cap-deployment`
+  (`Deploy.deployment_complete_cap`) some system has Deployment Availability
+  and Partition Consistency for it (`HATTax.stickyD_available`);
+* *not highly available*: RYW, PRAM and causal (`HATTax.ryw_not_ha`), because
+  at Bailis's input (a client's write not yet at the replica it next reads
+  from) no permitted answer exists, so no explicit relation inside the
+  specification answers every read; recency, which is not sticky available
+  either (`HATTax.recency_not_ha`, `HATTax.recency_not_sticky`); and any level
+  proscribing Write Skew (`HATSpec.WS.writeSkew_unavailable`; Lost Update is
+  `«thm:hat-levels»`), by Complete CAP for an explicit relation.
+
+So the sentence holds in this form: sticky availability is availability for the
+explicit relation of sticky reads, and assigning each client's reads to its
+sticky server is a deployment that is monotone across partitions.  Not every
+session guarantee needs it: MR, MW and WFR are highly available, as in Bailis
+et al. -/
+theorem «sec:hat-instance/session-guarantees» (reps : Nat → List Nat) (lam : Bool) (D : Type) :
+    (∀ g, HATTax.HAGuar lam g → HATTax.HighlyAvailable (reps := reps) (lam := lam) (HATTax.tax g) D) ∧
+    (∀ g (hg : HATTax.StickyGuar g),
+      HATTax.StickyAvailable (reps := reps) (lam := lam) (HATTax.tax g) D ∧
+      ∀ (n : Nat) (srv : Nat → Fin n), 2 ≤ n →
+        Deploy.MonoAcrossPartitions (HATTax.stickyD (reps := reps) (lam := lam) hg srv) ∧
+        ∃ Sys : CAP.System (HATTax.tax (reps := reps) (lam := lam) g) D,
+          Deploy.DeploymentAvailability Sys (HATTax.stickyD hg srv) ∧
+          Deploy.PartitionConsistencyAt Sys n) ∧
+    (0 ∈ reps 0 →
+      (∀ g, (g = .RYW ∨ g = .PRAM ∨ g = .Causal) →
+        ¬ HATTax.HighlyAvailable (reps := reps) (lam := lam) (HATTax.tax g) D) ∧
+      ¬ HATTax.HighlyAvailable (reps := reps) (lam := lam) (HATTax.tax .Rec) D ∧
+      ¬ HATTax.StickyAvailable (reps := reps) (lam := lam) (HATTax.tax .Rec) D) ∧
+    (∀ (L : HATSpec.Level), (L = .RR ∨ L = .SER) →
+      ∀ A : Table (HATSpec.Inp lam) (IConf.St HATSpec.Fact), (∀ i o, A i o → (HATSpec.spec L).P i o) →
+        (∀ i, ∃ o, A i o) → (∀ i o e, A i o → HATSpec.IsRd i e → ∃ v, o (.read e v)) →
+        ¬ ∃ Sys : CAP.System (HATSpec.spec L) D,
+          CAP.AvailabilityFor A Sys ∧ CAP.PartitionConsistencyAtEnd Sys) :=
+  ⟨fun _ hg => HATTax.ha_of_rule hg D,
+   fun _ hg => ⟨HATTax.sticky_of_rule hg D, fun _ srv hn =>
+     ⟨HATTax.stickyD_monoAcross hg srv, HATTax.stickyD_available hg hn srv D⟩⟩,
+   fun h0 => ⟨fun _ hg => HATTax.ryw_not_ha h0 hg D, HATTax.recency_not_ha h0 D,
+     HATTax.recency_not_sticky h0 D⟩,
+   fun L hL A hAS ht ha => (HATSpec.WS.writeSkew_unavailable L hL D A hAS ht ha).2⟩
+
+/-- Sec. `sec:hat-instance`, on the formal definitions behind the sentence on
+session guarantees: the extended HAT paper's Def. 34 defines the phenomenon
+that read your writes proscribes (MYR) as "a directed cycle consisting of a
+transitive session-dependency between transactions `T_j` and `T_i`, at least
+one anti-dependency edge, and the remainder anti-dependency or
+write-dependency edges".  Lean: so defined (`HATTax.MYRlit`), read your writes
+is not sticky available (`HATTax.myrLit_not_sticky`): client 1 commits
+`T₁ : w x` and then reads `x` and `y` in `T₂` at its own replica, while client 2
+reads `x` and writes `y` in `T₃` at a partitioned replica; each read's only
+visible answer is forced and every read is sticky, yet together they form
+`T₁ →s T₂ →rw_y T₃ →rw_x T₁`.  The single-item form of the cycle (`HATTax.MYR`),
+which the definition's own example exhibits, is sticky available
+(`«sec:hat-instance/session-guarantees»`). -/
+theorem «sec:hat-instance/myr-as-written» (reps : Nat → List Nat) (lam : Bool) (D : Type)
+    (h00 : 0 ∈ reps 0) (h01 : 0 ∈ reps 1) (h10 : 1 ∈ reps 0) :
+    ¬ HATTax.StickyAvailable (reps := reps) (lam := lam) (HATTax.tax .RYWlit) D ∧
+      HATTax.StickyAvailable (reps := reps) (lam := lam) (HATTax.tax .RYW) D :=
+  ⟨HATTax.myrLit_not_sticky h00 h01 h10 D, HATTax.sticky_of_rule (Or.inr (Or.inr (Or.inr
+    (Or.inr (Or.inr (Or.inl rfl)))))) D⟩
 
 /-! ## Invariant confluence (`sec:iconfluence-instance`) -/
 

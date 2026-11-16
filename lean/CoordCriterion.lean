@@ -50,6 +50,9 @@ import CoordCriterion.Instances.HATSpec
 import CoordCriterion.Instances.HATUnion
 import CoordCriterion.Instances.HATInter
 import CoordCriterion.Instances.HATWriteSkew
+import CoordCriterion.Instances.HATTaxonomy
+import CoordCriterion.Instances.HATTaxonomyRules
+import CoordCriterion.Instances.HATTaxonomyWitness
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
 -- §5 and Appendix D composition

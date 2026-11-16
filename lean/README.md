@@ -38,7 +38,7 @@ that leader election is their running example, how Ameloot et al. and they
 model placement, that an identifier and an order on identifiers is what their
 coordination-free transducers know, that their programs must treat data values only as interchangeable symbols (their characterization theorem itself is proved in Lean, both directions, `«sec:query-instance/characterization»`); and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node chooses); in §4 (`sec:systems`), that Ameloot et al. show a list of
 all participants enlarges what a system can compute; in
-Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.3, that HAT's session guarantees under sticky availability are deployments; in §6.5, in its "Testing and proof" paragraph, that simulators and model checkers run the
+Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, in its "Testing and proof" paragraph, that simulators and model checkers run the
 machine on bounded inputs and that the input/output pairs they collect form a
 finite specification that can be checked for violations, that this is routine engineering practice and has
 found serious bugs in production systems, the example rules of a declared specification ("the set
@@ -103,6 +103,10 @@ first and supporting claims and examples follow.
 | `Instances/HATRC.lean` | `CC.HATRC` | §6.3 | HAT's Read Committed algorithm (App. B pseudocode, partial replication, anti-entropy): a G1c witness with timestamps fixed at `BEGIN`; with Lamport timestamps chosen at commit every run is PL-2 |
 | `Instances/HATUnion.lean` | `CC.HATUnion` | — (not cited) | Bailis's dissertation frame (histories merged by union): two read-committed histories whose union has G1c; with the Lamport condition unions never do |
 | `Instances/HATSpec.lean` | `CC.HATSpec` | §6.3 | Def. hat-spec, Thm. hat-levels: event-history inputs with happens-before (optionally with the timestamp condition), read-answer outputs, HAT levels (RU, RC, SI, RR, SER; item-only); HAT's read rule as explicit relation; RU/RC available under the timestamp condition; any level proscribing Lost Update unavailable; without the condition the read rule leaves `S_RC` |
+| `Instances/HATWriteSkew.lean` | `CC.HATSpec.WS` | §6.3 | Write Skew (Adya G2-item, Bailis et al. §5.2.1 and extended Def. 39) is unavailable: Bailis's `T₁ : r y w x`, `T₂ : r x w y` at two partitioned replicas; any level proscribing it (RR, SER) has no consistent explicit relation answering every read |
+| `Instances/HATTaxonomy.lean` | `CC.HATTax` | §6.3 | Bailis et al.'s taxonomy, model: HAT histories with item replica sets, predicate reads, sessions; the extended paper's phenomena (IMP, PMP, OTV, N-MR, N-MW, MRWD, MYR, as written and repaired), recency; the visibility store; specs `tax g`; high and sticky availability as Availability for an explicit relation answering every (sticky) read |
+| `Instances/HATTaxonomyRules.lean` | `CC.HATTax` | §6.3 | Pending-stable and dependency-stable reveal (Bailis §5.1.2–5.1.3, App. B) with per-transaction snapshots; RC, MAV, I-CI, P-CI, MR, MW, WFR highly available and RYW, PRAM, causal sticky available, via Complete CAP for an explicit relation; the sticky deployment is monotone across partitions and has a system with Deployment Availability and Partition Consistency |
+| `Instances/HATTaxonomyWitness.lean` | `CC.HATTax` | §6.3 | RYW, PRAM, causal not highly available (Bailis's partitioned-replica history); recency neither highly nor sticky available; finding: MYR as the extended paper's Def. 34 writes it is not sticky available |
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity, matching over located items |
 | `Instances/Placement.lean` | `CC.Place` | §6.1 | Policy-aware, domain-guided and original placement at the level of a node's view: the inputs a node cannot rule out are the domain-distinct, domain-disjoint, or inclusion extensions; coordination-free computation under each iff the matching monotonicity, via Functional CALM |
 | `Instances/BaccaertKetsman.lean` | `CC.BK`, `CC.CAP` | §6.1 | Baccaert and Ketsman's setting as an anonymous cluster: anonymized strategies, histories side by side, causal histories, placement (participants are nodes, inputs only held, node-closed facts), consistency on placed histories, realized rows; their Prop. 11 (necessity: realized rows are node monotone) |
@@ -121,6 +125,7 @@ first and supporting claims and examples follow.
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
 | `Appendix/DeploymentFor.lean` | `CC.Deploy` | App. E | Deployment Availability at the end of histories; uniform deployment is Availability for `E`; Lifted Monotonicity for `E` implies monotone across partitions; single authority: exclusions that remove competing outputs while keeping their inputs legal need not require distributed coordination |
+| `Appendix/DeploymentCAP.lean` | `CC.Deploy` | App. E | Existence half of Prop. complete-cap-deployment: with two or more participants, monotone across partitions makes every authorized family compatible, and the deployment's canonical system has Deployment Availability and Partition Consistency |
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter exclusions on antichain fibers (used by Fig. cc-exclusions in §4.3 and App. C) |
 | `Appendix/TransactionBases/Spec.lean` | `CC.Txn.Partial` | App. G | The specification: inputs are transactions with operation sequences (prefix order, frozen after the commit request); outputs `(L,X,ρ)` with reads by position; complete outputs, read rule, abort-free variant |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | Closure exclusions; 2PL/MVTO bases; bases differ at three transactions that requested commit; deadlock (and under abort-free: the two commit requests are never both accepted); MVTO: what a reported read commits to, when the writer's abort is entailed |
@@ -142,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-654 entries.
+656 entries.
 
 ### §2 Functional CALM
 
@@ -443,6 +448,8 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«thm:hat-levels/answers-stable»` | theorem | Proof sketch of Thm. |
 | `«thm:hat-levels/lost-update-pair»` | theorem | Proof sketch of Thm. |
 | `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition is required, correcting an error in the pseudocode of the extended HAT paper. |
+| `«sec:hat-instance/session-guarantees»` | theorem | Sec. |
+| `«sec:hat-instance/myr-as-written»` | theorem | Sec. |
 | `«sec:iconfluence-instance/model»` | abbrev | Sec. |
 | `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
 | `«sec:iconfluence-instance/iconfluent-def»` | theorem | "`T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." Lean: |
