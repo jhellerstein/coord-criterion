@@ -6,6 +6,7 @@ import CoordCriterion.Appendix.RealTimeCausal
 import CoordCriterion.Appendix.RealTimeTies
 import CoordCriterion.Appendix.MahajanRTC
 import CoordCriterion.Appendix.DeploymentFor
+import CoordCriterion.Appendix.DeploymentCAP
 
 /-!
 # Paper, Appendix E: Deployments: One Explicit Relation per Participant
@@ -406,6 +407,94 @@ theorem «app:deployment/system-runs» {D : Type} {m : Nat} (Dp : Deployment sp 
      history_monoAcross Dp hmono init H comp hP c σ hσ hsep hauth j hj⟩
 
 end Deployment3
+
+/-! ### Complete CAP for a deployment -/
+
+section DeploymentCAP
+variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
+
+/-- **Lemma `lem:deployment-compatible`** (Compatibility of participant run
+families).  "Fix a deployment with `|𝒩| ≥ 2`.  Then `P` is monotone across
+partitions if and only if, for every participant run family and every common
+input extension `j` of its participants' current inputs, some `u ∈ P(j)`
+extends every emitted output."  (Introduced by: "Proposition
+`thm:complete-cap-deployment` concerns runs.  For systems, a deployment has its
+own form of Complete CAP.  It rests on one more fact about families: with two
+or more participants, monotonicity across partitions already covers every
+family, separable or not.")
+
+Proof sketch: "If participants `p` and `q` both emit, a partition with `p` on
+one side and `q` on the other makes the family separable, and the separable
+case applies.  Otherwise one participant `p` emits.  Its outputs form a chain,
+so the last of them extends the rest.  Its last row, beside any other
+participant placed on another side and kept silent, is a separable family at
+the same `j`, and the common output extension for that row extends every output
+of `p`."  Lean: `Deploy.monoAcrossPartitions_iff_compatible` (the hard
+direction is `Deploy.compatible_of_monoAcrossPartitions`). -/
+theorem «lem:deployment-compatible» (hn : 2 ≤ n) (Dp : Deployment sp n) :
+    MonoAcrossPartitions Dp ↔
+      ∀ F : Family sp n, Authorized Dp F → ∀ j, UB F j →
+        ∃ u, sp.P j u ∧ ∀ p r, Emits F p r → r.2 ≼ u :=
+  monoAcrossPartitions_iff_compatible hn Dp
+
+/-- "The *canonical system* of a deployment is the system whose participants
+follow canonical runs, each participant `p` emitting any output of `E_p` at its
+current input that extends its earlier outputs."  Lean: `Deploy.depSystem`,
+in which participant `p` runs the canonical response strategy for `E_p`
+(`CAP.respSystem (Dp.A p)`); it is canonical (`Deploy.depSystem_canonical`). -/
+noncomputable abbrev «app:deployment/canonical-system» (D : Type) (Dp : Deployment sp n) :
+    CAP.System sp D :=
+  depSystem Dp
+
+/-- **Proposition `prop:deployment-complete-cap`** (Complete CAP for a
+deployment).  "Fix a deployment with `|𝒩| ≥ 2`.  Some system has Deployment
+Availability and Partition Consistency on histories over `𝒩` if and only if
+`P` is monotone across partitions.  When it is, the deployment's canonical
+system is such a system."  Lean: Partition Consistency on histories over `𝒩`
+is `Deploy.PartitionConsistencyAt Sys n`; `Deploy.deployment_complete_cap_iff`
+and `Deploy.deployment_complete_cap`. -/
+theorem «prop:deployment-complete-cap» (D : Type) (hn : 2 ≤ n) (Dp : Deployment sp n) :
+    ((∃ Sys : CAP.System sp D, DeploymentAvailability Sys Dp ∧ PartitionConsistencyAt Sys n) ↔
+      MonoAcrossPartitions Dp) ∧
+    (MonoAcrossPartitions Dp →
+      DeploymentAvailability (depSystem (D := D) Dp) Dp ∧
+        PartitionConsistencyAt (depSystem (D := D) Dp) n) :=
+  ⟨deployment_complete_cap_iff hn Dp, deployment_complete_cap hn Dp⟩
+
+/-- Proof of Prop. `prop:deployment-complete-cap`, sufficiency: "The canonical
+system has Deployment Availability, since each participant can emit any
+authorized output that its state allows.  Its participants' runs in a
+partitioned history form a participant run family, so by Lemma
+`lem:deployment-compatible` their emitted outputs have a common output
+extension in `P(j)`.  By Lemma `lem:reconciliation` the runs are then confluent
+at `j`, which is Partition Consistency."  Lean:
+`Deploy.depSystem_availability` (for every deployment) and
+`Deploy.depSystem_pc`. -/
+theorem «prop:deployment-complete-cap/proof-sufficiency» (D : Type) (hn : 2 ≤ n)
+    (Dp : Deployment sp n) :
+    DeploymentAvailability (depSystem (D := D) Dp) Dp ∧
+      (MonoAcrossPartitions Dp → PartitionConsistencyAt (depSystem (D := D) Dp) n) :=
+  ⟨depSystem_availability Dp, depSystem_pc hn Dp⟩
+
+/-- Proof of Prop. `prop:deployment-complete-cap`, necessity: "Each
+participant's emitted outputs form a chain, so it suffices to reach each
+participant's last emitted row.  We start each participant alone on its own
+side, at the input of that row.  Deployment Availability lets it emit the row's
+output, and Partition Consistency gives the emitted outputs a common output
+extension in `P(j)`."  Lean: `Deploy.authorized_reconciled` (each participant
+`p` starts at `init p` and emits an authorized `o p`, or nothing), then
+`Deploy.compatible_of_system` for families. -/
+theorem «prop:deployment-complete-cap/proof-necessity» {D : Type} (hn : 2 ≤ n)
+    {Dp : Deployment sp n} (Sys : CAP.System sp D)
+    (hDA : DeploymentAvailability Sys Dp) (hPC : PartitionConsistencyAt Sys n) :
+    (∀ (init : Fin n → I) (o : Fin n → Option O), (∀ p v, o p = some v → Dp.A p (init p) v) →
+      ∀ j : I, (∀ p, init p ≼ j) → ∃ u, sp.P j u ∧ ∀ p v, o p = some v → v ≼ u) ∧
+    (∀ F : Family sp n, Authorized Dp F → ∀ j, UB F j →
+      ∃ u, sp.P j u ∧ ∀ p r, Emits F p r → r.2 ≼ u) :=
+  ⟨fun init o ho j hj => authorized_reconciled hn Sys hDA hPC init o ho j hj,
+   fun F hA j hj => compatible_of_system hn Sys hDA hPC F hA j hj⟩
+
+end DeploymentCAP
 
 /-- "It does not follow that the deployment authorizes any participant to emit
 `u`.  Confluence through authorized output events would also require that

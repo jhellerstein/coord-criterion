@@ -38,7 +38,7 @@ that leader election is their running example, how Ameloot et al. and they
 model placement, that an identifier and an order on identifiers is what their
 coordination-free transducers know, that their programs must treat data values only as interchangeable symbols (their characterization theorem itself is proved in Lean, both directions, `«sec:query-instance/characterization»`); and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node chooses); in §4 (`sec:systems`), that Ameloot et al. show a list of
 all participants enlarges what a system can compute; in
-Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, in its "Testing and proof" paragraph, that simulators and model checkers run the
+Appendix B (`app:hat-taxonomy`), what the extended HAT paper's text says (its descriptions of its algorithms, the wording, names and examples of Defs. 14, 24, 26, 28, 30, 32 and 34, and the legend of its dependency graphs, which swaps the labels of read- and anti-dependencies relative to its figures; the definitions as we read them, and the consequences of the literal readings of Defs. 26 and 34, are in Lean, `Paper/AppB_HATTaxonomy.lean`, `«sec:hat-instance/myr-as-written»`); in Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, in its "Testing and proof" paragraph, that simulators and model checkers run the
 machine on bounded inputs and that the input/output pairs they collect form a
 finite specification that can be checked for violations, that this is routine engineering practice and has
 found serious bugs in production systems, the example rules of a declared specification ("the set
@@ -107,6 +107,7 @@ first and supporting claims and examples follow.
 | `Instances/HATTaxonomy.lean` | `CC.HATTax` | §6.3 | Bailis et al.'s taxonomy, model: HAT histories with item replica sets, predicate reads, sessions; the extended paper's phenomena (IMP, PMP, OTV, N-MR, N-MW, MRWD, MYR, as written and repaired), recency; the visibility store; specs `tax g`; high and sticky availability as Availability for an explicit relation answering every (sticky) read |
 | `Instances/HATTaxonomyRules.lean` | `CC.HATTax` | §6.3 | Pending-stable and dependency-stable reveal (Bailis §5.1.2–5.1.3, App. B) with per-transaction snapshots; RC, MAV, I-CI, P-CI, MR, MW, WFR highly available and RYW, PRAM, causal sticky available, via Complete CAP for an explicit relation; the sticky deployment is monotone across partitions and has a system with Deployment Availability and Partition Consistency |
 | `Instances/HATTaxonomyWitness.lean` | `CC.HATTax` | §6.3 | RYW, PRAM, causal not highly available (Bailis's partitioned-replica history); recency neither highly nor sticky available; finding: MYR as the extended paper's Def. 34 writes it is not sticky available |
+| `Instances/HATAppB.lean` | `CC.HATTax` | §6.3 | App. B's MAV algorithm (good/pending, GET with required timestamps, per-transaction required map) as explicit relation, for every acknowledgment schedule: MAV highly available under the timestamp condition; findings F7 (App. B fixes timestamps at BEGIN: G1c, not RC) and F5 (App. B's answers exhibit OTV as Def. 26 literally writes it); F1 in deployment form (literal MYR has no sticky deployment with Deployment Availability and Partition Consistency) |
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity, matching over located items |
 | `Instances/Placement.lean` | `CC.Place` | §6.1 | Policy-aware, domain-guided and original placement at the level of a node's view: the inputs a node cannot rule out are the domain-distinct, domain-disjoint, or inclusion extensions; coordination-free computation under each iff the matching monotonicity, via Functional CALM |
 | `Instances/BaccaertKetsman.lean` | `CC.BK`, `CC.CAP` | §6.1 | Baccaert and Ketsman's setting as an anonymous cluster: anonymized strategies, histories side by side, causal histories, placement (participants are nodes, inputs only held, node-closed facts), consistency on placed histories, realized rows; their Prop. 11 (necessity: realized rows are node monotone) |
@@ -125,7 +126,7 @@ first and supporting claims and examples follow.
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
 | `Appendix/DeploymentFor.lean` | `CC.Deploy` | App. E | Deployment Availability at the end of histories; uniform deployment is Availability for `E`; Lifted Monotonicity for `E` implies monotone across partitions; single authority: exclusions that remove competing outputs while keeping their inputs legal need not require distributed coordination |
-| `Appendix/DeploymentCAP.lean` | `CC.Deploy` | App. E | Existence half of Prop. complete-cap-deployment: with two or more participants, monotone across partitions makes every authorized family compatible, and the deployment's canonical system has Deployment Availability and Partition Consistency |
+| `Appendix/DeploymentCAP.lean` | `CC.Deploy` | App. E | Existence half of Prop. complete-cap-deployment: with two or more participants, monotone across partitions makes every authorized family compatible, and the deployment's canonical system has Deployment Availability and Partition Consistency; necessity for authorized rows (`authorized_reconciled`) |
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter exclusions on antichain fibers (used by Fig. cc-exclusions in §4.3 and App. C) |
 | `Appendix/TransactionBases/Spec.lean` | `CC.Txn.Partial` | App. G | The specification: inputs are transactions with operation sequences (prefix order, frozen after the commit request); outputs `(L,X,ρ)` with reads by position; complete outputs, read rule, abort-free variant |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | Closure exclusions; 2PL/MVTO bases; bases differ at three transactions that requested commit; deadlock (and under abort-free: the two commit requests are never both accepted); MVTO: what a reported read commits to, when the writer's abort is entailed |
@@ -147,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-656 entries.
+679 entries.
 
 ### §2 Functional CALM
 
@@ -448,7 +449,9 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«thm:hat-levels/answers-stable»` | theorem | Proof sketch of Thm. |
 | `«thm:hat-levels/lost-update-pair»` | theorem | Proof sketch of Thm. |
 | `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition is required, correcting an error in the pseudocode of the extended HAT paper. |
+| `«sec:hat-instance/mav-timestamps»` | theorem | Sec. |
 | `«sec:hat-instance/session-guarantees»` | theorem | Sec. |
+| `«sec:hat-instance/form-choices»` | theorem | Sec. |
 | `«sec:hat-instance/myr-as-written»` | theorem | Sec. |
 | `«sec:iconfluence-instance/model»` | abbrev | Sec. |
 | `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
@@ -616,6 +619,29 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 | `«app:iconfluence/proof-backward»` | theorem | (⇐): |
 | `«app:iconfluence/proof-directed-suffices»` | theorem | (⇐): |
 
+### Appendix B: The HAT taxonomy
+
+File `Paper/AppB_HATTaxonomy.lean`; paper source `appendices/proof-machinery.tex`.
+
+| Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
+|---|---|---|
+| `«app:hat-taxonomy/inputs»` | abbrev | Opening paragraph: |
+| `«app:hat-taxonomy/guarantees»` | theorem | Paragraph "Guarantees": |
+| `«def:hat-availability»` | theorem | **Definition `def:hat-availability`** (Guarantee spec, high availability, sticky read, sticky availability). |
+| `«app:hat-taxonomy/complete-cap»` | theorem | "Sticky availability follows Bailis et al.: |
+| `«app:hat-taxonomy/read-rules»` | theorem | Paragraph "Read rules": |
+| `«thm:hat-taxonomy»` | theorem | **Theorem `thm:hat-taxonomy`** (HAT taxonomy). |
+| `«thm:hat-taxonomy/proof-ha»` | theorem | Proof of Theorem `thm:hat-taxonomy`, item (1): |
+| `«thm:hat-taxonomy/proof-sticky»` | theorem | Proof of Theorem `thm:hat-taxonomy`, item (2): |
+| `«thm:hat-taxonomy/proof-unavailable»` | theorem | Proof of Theorem `thm:hat-taxonomy`, item (3): |
+| `«app:hat-taxonomy/mav-algorithm»` | theorem | Paragraph "The algorithm for monotonic atomic view": |
+| `«prop:hat-mav-algorithm»` | theorem | **Proposition `prop:hat-mav-algorithm`** (The algorithm provides monotonic atomic view). |
+| `«app:hat-taxonomy/pmp-for-some»` | theorem | Predicate cut isolation, read "for some": |
+| `«app:hat-taxonomy/otv-literal»` | theorem | Monotonic atomic view, read literally: |
+| `«app:hat-taxonomy/nmr-intermediate»` | theorem | Monotonic reads across intermediate versions: |
+| `«app:hat-taxonomy/nmw-example»` | theorem | Monotonic writes and its example: |
+| `«app:hat-taxonomy/mrwd-reading»` | theorem | Writes follow reads, as we read it: |
+
 ### Appendix C: Commitment bases
 
 File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-bases-general.tex`.
@@ -745,6 +771,11 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«thm:complete-cap-deployment/proof»` | theorem | Proof of Prop. |
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
 | `«app:deployment/system-runs»` | theorem | "So if `P` is monotone across partitions, the outputs that a separable family of system runs emits in a partitioned history, as Deployment Availability permi… |
+| `«lem:deployment-compatible»` | theorem | **Lemma `lem:deployment-compatible`** (Compatibility of participant run families). |
+| `«app:deployment/canonical-system»` | abbrev | "The *canonical system* of a deployment is the system whose participants follow canonical runs, each participant `p` emitting any output of `E_p` at its curr… |
+| `«prop:deployment-complete-cap»` | theorem | **Proposition `prop:deployment-complete-cap`** (Complete CAP for a deployment). |
+| `«prop:deployment-complete-cap/proof-sufficiency»` | theorem | Proof of Prop. |
+| `«prop:deployment-complete-cap/proof-necessity»` | theorem | Proof of Prop. |
 | `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`. |
 | `«app:deployment/full-deployment-step»` | theorem | "With `\|𝒩\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity. |
 | `«app:registers/history»` | abbrev | "An input is a finite operation history `h`: |

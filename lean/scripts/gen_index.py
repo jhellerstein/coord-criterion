@@ -27,6 +27,7 @@ ORDER = [
     ("AppB_Proofs", "Appendix B: Deferred proofs", "appendices/proof-machinery.tex"),
     ("AppB_ProofsDistributed", "Appendix B: Deferred proofs for §4", "appendices/proof-machinery.tex"),
     ("AppB_InvariantConfluence", "Appendix B: Invariant confluence", "appendices/proof-machinery.tex"),
+    ("AppB_HATTaxonomy", "Appendix B: The HAT taxonomy", "appendices/proof-machinery.tex"),
     ("AppC_CommitmentBases", "Appendix C: Commitment bases", "appendices/commitment-bases-general.tex"),
     ("AppD_Composition", "Appendix D: Proofs and details for composition", "appendices/composition.tex"),
     ("AppE_Deployment", "Appendix E: Deployment", "appendices/deployment.tex"),

@@ -134,6 +134,57 @@ $p$, item~(2) is Lifted Monotonicity.  The proposition is then the step behind
 Theorem~\ref{thm:complete-cap} with $E=P$: separable families are confluent at
 every common \indesc exactly when Lifted Monotonicity holds.
 
+Proposition~\ref{thm:complete-cap-deployment} concerns runs.  For systems, a
+deployment has its own form of Complete CAP.  It rests on one more fact about
+families: with two or more participants, monotonicity across partitions
+already covers every family, separable or not.
+
+\begin{lemma}[Compatibility of participant run families]
+\label{lem:deployment-compatible}
+Fix a deployment with $|\mathcal N|\ge2$.  Then $\Spec$ is monotone across
+partitions if and only if, for every participant run family and every common
+\indesc $j$ of its participants' current inputs, some $u\in\fiber{j}$
+\outrel every emitted output.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+The condition is stronger, so only one direction needs an argument.  If
+participants $p$ and $q$ both emit, a partition with $p$ on one side and $q$ on
+the other makes the family separable, and the separable case applies.
+Otherwise one participant $p$ emits.  Its outputs form a chain, so the last of
+them \outrel the rest.  Its last row, beside any other participant placed on
+another side and kept silent, is a separable family at the same $j$, and the
+common \outnoun for that row \outrel every output of $p$.
+\end{proof}
+
+The \emph{canonical system} of a deployment is the system whose participants
+follow canonical runs, each participant $p$ emitting any output of $E_p$ at
+its current input that extends its earlier outputs.
+
+\begin{proposition}[Complete CAP for a deployment]
+\label{prop:deployment-complete-cap}
+Fix a deployment with $|\mathcal N|\ge2$.  Some system has Deployment
+Availability and Partition Consistency on histories over $\mathcal N$ if and
+only if $\Spec$ is monotone across partitions.  When it is, the deployment's
+canonical system is such a system.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Suppose $\Spec$ is monotone across partitions.  The canonical system has
+Deployment Availability, since each participant can emit any authorized output
+that its state allows.  Its participants' runs in a partitioned history form a
+participant run family, so by Lemma~\ref{lem:deployment-compatible} their
+emitted outputs have a common \outnoun in $\fiber{j}$.  By
+Lemma~\ref{lem:reconciliation} the runs are then confluent at $j$, which is
+Partition Consistency.  Conversely, suppose some system has both properties,
+and take a participant run family and a common \indesc $j$.  Each
+participant's emitted outputs form a chain, so it suffices to reach each
+participant's last emitted row.  We start each participant alone on its own
+side, at the input of that row.  Deployment Availability lets it emit the
+row's output, and Partition Consistency gives the emitted outputs a common
+\outnoun in $\fiber{j}$.  So $\Spec$ is monotone across partitions.
+\end{proof}
+
 \subsection{Registers}
 \label{app:registers}
 

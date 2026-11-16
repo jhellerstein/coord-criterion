@@ -232,9 +232,66 @@ up, since the read rule's output at such an input is not in $P_{\mathrm{RC}}$.
 Taking each timestamp at commit, above every version read, repairs the
 algorithm.
 
-Session guarantees, which Bailis et al.\ achieve under sticky availability,
-are deployments in our terms (Proposition~\ref{thm:complete-cap-deployment});
-we do not treat them here.
+The extended paper's algorithm for monotonic atomic view has the same
+error~\cite[App.~B]{bailis2013hatextended}.  Its clients run the read committed
+algorithm and also fix each timestamp when the transaction begins.  When a
+transaction reads a version with a higher timestamp than its own and then
+overwrites that item, the algorithm's answers contain the same G1c cycle.  So
+the algorithm does not guarantee read committed, and therefore not monotonic
+atomic view either.  With timestamps taken at commit, above every version
+read, it provides monotonic atomic view (Appendix~\ref{app:hat-taxonomy}).
+
+The same reasoning recovers the rest of Bailis et al.'s classification
+(Appendix~\ref{app:hat-taxonomy}).  Each guarantee becomes a spec: a store that
+returns only versions the reading replica has received, held to the guarantee.
+A guarantee is highly available when some explicit relation inside its spec
+answers every read and some system has Availability for that relation and
+Partition Consistency.  By Theorem~\ref{thm:complete-cap}, this holds exactly
+when the spec satisfies Lifted Monotonicity for such a relation.  Bailis et
+al.'s algorithms supply the relations.  For monotonic atomic view they reveal a
+write only once every replica of the items its transaction wrote has received
+it, and for the session guarantees only once the same holds for every
+transaction committed before it.  With these read rules, monotonic atomic
+view, item cut isolation, predicate cut isolation, monotonic reads, monotonic
+writes, and writes follow reads are highly available, as Bailis et al.\
+report.  Read your writes, PRAM,
+and causal consistency are not.  They are sticky available: the same holds for
+a relation that answers every read at a replica that already holds the
+client's earlier writes.  Assigning each client to such a replica is a
+deployment, and some system has Deployment Availability and Partition
+Consistency for it (Proposition~\ref{prop:deployment-complete-cap}).  Levels
+that rule out Lost Update or Write Skew are unavailable, and so are guarantees
+on recency, with or without stickiness.
+
+Our classification matches theirs, and it differs in form in three ways.
+First, read your writes without stickiness, and recency in every case, fail
+because no permitted answer exists.  When a client's write has not reached the
+replica that serves its next read, every version that replica holds violates
+read your writes.  Recency fails the same way when the missing write comes
+from another client, so stickiness does not help.  No explicit relation inside the spec can answer that read, so
+Lifted Monotonicity never comes into question.  The unavailable isolation
+levels fail differently: answers that each side is forced to give have no
+common extension.  Second, monotonic writes needs the version order to follow
+each session's order.  Bailis et al.\ obtain this from client timestamps, and
+our inputs assume it: a client's commit timestamps increase along its session.
+Third, a predicate is a fixed range of items, and one recency guarantee, that a
+read returns a version at least as new as every write whose commit happens
+before it, stands for the four recency guarantees of Bailis et al.
+
+Stating the classification precisely also exposed a mismatch in the extended
+paper.  Its formal definition of the anomaly that read your writes rules out
+lets the forbidden cycle pass through other clients' transactions on other
+items~\cite[Def.~34]{bailis2013hatextended}.  Read that way, read your writes
+is not sticky available.  Consider two clients at partitioned replicas.
+Client~1 writes $x$, and then a second transaction of client~1 reads $x$ and
+$y$ at its own replica, which has its write of $x$ but no write of $y$.
+Client~2 reads $x$ at the other replica, which has no write of $x$, and writes
+$y$.  Every read is sticky, and each replica can return only the initial
+version of the item it lacks.  Together these answers form the forbidden
+cycle, so no system can keep both clients available and stay consistent, even
+with each client assigned to its own replica.  The definition's own example
+uses a single item, and in that form read your writes is sticky available, as
+Bailis et al.\ state.
 
 Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent
