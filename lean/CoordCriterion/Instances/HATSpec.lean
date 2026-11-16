@@ -22,7 +22,12 @@ replica's arrival order.  Events (`Ev`):
   transaction commits iff its client requests it, so the outcome is in the
   input);
 * `dl c n k r`: replica `r` receives `(c,n)`'s write of `k` (from the client
-  at commit, or by anti-entropy).
+  at commit, or by anti-entropy);
+* `prd c n ks r`: transaction `n` of client `c` performs a predicate read over
+  the item range `ks`, received by replica `r`.  Only the taxonomy of
+  `Instances/HATTaxonomy.lean` (predicate cut isolation) answers predicate
+  reads; the isolation-level specifications here are item-only and ignore
+  them.
 
 `WF` is the legality of inputs: one commit per transaction, unique
 timestamps different from the initial version's, deliveries after the
@@ -81,12 +86,14 @@ inductive Ev where
   | rd (c n k r : Nat)
   | cm (c n : Nat) (ts : Ts) (ks : List Nat)
   | dl (c n k r : Nat)
+  | prd (c n : Nat) (ks : List Nat) (r : Nat)
   deriving DecidableEq
 
 /-- The event is received by replica `r`. -/
 def AtReplica : Option Ev → Nat → Prop
   | some (.rd _ _ _ r), r' => r = r'
   | some (.dl _ _ _ r), r' => r = r'
+  | some (.prd _ _ _ r), r' => r = r'
   | _, _ => False
 
 /-- Legal inputs. -/

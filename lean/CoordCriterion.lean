@@ -49,6 +49,7 @@ import CoordCriterion.Instances.HATRC
 import CoordCriterion.Instances.HATSpec
 import CoordCriterion.Instances.HATUnion
 import CoordCriterion.Instances.HATInter
+import CoordCriterion.Instances.HATWriteSkew
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
 -- §5 and Appendix D composition
@@ -62,6 +63,7 @@ import CoordCriterion.Appendix.ComponentSystems
 import CoordCriterion.Appendix.Deployment
 import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.DeploymentSystems
+import CoordCriterion.Appendix.DeploymentCAP
 -- Appendix G transaction bases
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Appendix.TransactionBases.Spec
