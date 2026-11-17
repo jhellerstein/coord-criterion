@@ -247,7 +247,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:directed-outputs»` | abbrev | **Def. |
 | `«def:fiber-directedness/singleton»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/subsequence-example»` | theorem | "A common output extension, like a common input extension, need not be unique or least. |
-| `«sec:lifted-monotonicity/directed-example»` | theorem | "For outputs, directedness asks only that each finite set have some common output extension in the fiber, not a least one or one given by a fixed merge opera… |
+| `«sec:lifted-monotonicity/directed-example»` | theorem | "Directedness asks only that each finite set have some common output extension in the fiber, not a least one or one given by a fixed merge operator, so it is… |
 | `«sec:lifted-monotonicity/figure-fibers»` | theorem | "The traceroute fiber of Figure `fig:ambiguity-frames`(g) is directed for a simpler reason: |
 | `«eq:joint-output-order»` | abbrev | **Eq. |
 | `«def:lifted-monotonicity»` | abbrev | **Def. |
@@ -290,7 +290,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:distributed-consistency/literal-matching»` | theorem | Prop. |
 | `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, a spec has distributed consistency exactly when it satisfies Lifted Monotonici… |
 | `«cor:distributed-calm»` | theorem | **Corollary `cor:distributed-calm`** (Complete CALM at consistent cuts). |
-| `«sec:distributed-consistency/constructive-continuation»` | theorem | "Under Lifted Monotonicity, this confluence has a concrete witness. |
+| `«sec:distributed-consistency/constructive-continuation»` | theorem | "For specs with Lifted Monotonicity, the Survivor test (Proposition `prop:confluence`) gives a row `(j,u)` that every participant's state still contains, whe… |
 | `«cor:convergence»` | theorem | **Cor. |
 | `«cor:convergence/relational-fails»` | theorem | After Cor. |
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
@@ -448,7 +448,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«thm:hat-levels»` | theorem | **Theorem `thm:hat-levels`** (HAT levels): |
 | `«thm:hat-levels/answers-stable»` | theorem | Proof sketch of Thm. |
 | `«thm:hat-levels/lost-update-pair»` | theorem | Proof sketch of Thm. |
-| `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition is required, correcting an error in the pseudocode of the extended HAT paper. |
+| `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition in the theorem is required, correcting an error in the extended HAT paper. |
 | `«sec:hat-instance/mav-timestamps»` | theorem | Sec. |
 | `«sec:hat-instance/session-guarantees»` | theorem | Sec. |
 | `«sec:hat-instance/form-choices»` | theorem | Sec. |

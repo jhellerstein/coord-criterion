@@ -44,8 +44,7 @@ Figure~\ref{fig:ambiguity-frames} contrasts two specs with several outputs in
 one fiber: serial schedules for two transactions and route sets observed by a
 traceroute-like tool.  For the discussion here, transaction outputs are simply
 serial schedules, to which executions correspond via equivalence;
-Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study more
-thorough transactional specs.
+Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study richer transactional specs.
 
 \label{sec:ambiguity-story}
 \begin{figure}[t]
@@ -89,15 +88,18 @@ thorough transactional specs.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-In the transaction spec, no output \outrel both $[A,B]$ and $[B,A]$, so
-emitting either requires a \commitment that removes the other.  In the
-traceroute spec, every route set that an output removes is \outrelpast by a
-remaining one that also \outrelbase the emitted observation, so the removal is
-an \emph{output subsumption}, not a \commitment.  Lifted Monotonicity, defined
-below, combines two requirements.  Relational Monotonicity accounts for input
-growth: each output keeps an \outnoun as input \ingrows.  Directedness, a
-standard notion from order theory, asks for common \outnouns within each
-fiber.
+The two specs behave differently when an output is emitted.  In the transaction
+spec, no output \outrel both $[A,B]$ and $[B,A]$, so emitting either requires a
+\commitment that removes the other.  In the traceroute spec, by contrast, every
+route set that an output removes is contained in a remaining one that also
+contains the emitted observation, so the removal is an \emph{output
+subsumption}: it loses nothing and needs no \commitment.
+
+Lifted Monotonicity captures this difference.  It combines two properties:
+Relational Monotonicity requires each output to keep some \outnoun as input
+\ingrows, while \emph{directedness}, a standard notion from order theory,
+requires the outputs in each fiber to have common \outnouns.  We define them in
+turn.
 
 \label{sec:lifted-monotonicity}
 \begin{definition}[Relational Monotonicity]
@@ -113,7 +115,8 @@ when every output keeps some \outnoun as input \ingrows:
 \end{definition}
 
 For singleton fibers this is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  It treats each output separately,
+Equation~\ref{eq:functional-monotonicity}.  Relational Monotonicity treats each
+output separately,
 so it does not require several outputs in one fiber to have a common \outnoun.
 For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
@@ -131,13 +134,12 @@ An \spectype has \emph{directed fibers} when every
 fiber $\fiber{i}$ is directed.
 \end{definition}
 
-A singleton fiber is trivially directed.  A common \outnoun, like a common
-\indesc, need not be unique or least.  For inputs, take two independent
+A singleton fiber is trivially directed.  Directedness asks only that each
+finite set have some common \outnoun in the fiber, not a least one or one given
+by a fixed merge operator, so it is weaker than requiring a join-semilattice: a
+common \outnoun, like a common \indesc, need not be unique or least.  For inputs, take two independent
 transactions $u$ and $v$, with schedules ordered by subsequence: $uv$ and $vu$
-are both minimal common \indescs of $u$ and $v$, and neither \inrel the other.
-For outputs, directedness asks only that each finite set have some common
-\outnoun in the fiber, not a least one or one given by a fixed merge operator,
-so it is weaker than requiring a join-semilattice.  For example, under
+are both minimal common \indescs of $u$ and $v$, and neither \inrel the other.  For example, under
 inclusion the fiber $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ is
 directed, since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$
 have two minimal common \outnouns, $\{a,b,c\}$ and $\{a,b,d\}$.  Those two are
@@ -165,8 +167,9 @@ $\fiber{j}$; with $j=i$, this is directedness.
 \begin{definition}[Lifted Monotonicity]
 \label{def:lifted-monotonicity}
 An \spectype satisfies \emph{Lifted Monotonicity}, and
-is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
-under the joint refinement lift:
+is called \emph{monotone}, when, for every $i\InputOrd j$ and every nonempty
+finite $X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$;
+that is, $i\mapsto\fiber{i}$ is monotone under the joint refinement lift:
         \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
@@ -227,34 +230,38 @@ asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \subsection{Lifted output events}
 \label{sec:lifted-output-events}
 
-For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
-again emits $o$ and keeps exactly the rows whose outputs \outrelbase $o$,
-ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}.
-Every later output must \outrelbase $o$, so the event removes the rows whose
-outputs do not.  Each removed row $(k,x)$ falls into one of two classes:
-subsumed or excluded.  A row $(k,x)$ is placed in $\Subsumed_o$ if some
-$u\in R(k)$ \outrel both $x$ and $o$.  Then a later output $u$ reports
-everything $x$ would have, and the removal, an output subsumption, loses
-nothing.  Every other removed row is placed in $\Excluded_o$.  With several
-outputs at an input, the canonical \commitment $x_o$ is the removal of the rows
-in $\Excluded_o$ only (Definition~\ref{def:canonical-commitment}); the output
-event still removes the rows in $\Subsumed_o$, but that removal is not a
-\commitment.  If $x_o$ removes every row at $k$, it rules out the input $k$;
-otherwise it rules out only the excluded outputs at $k$.
+To connect Lifted Monotonicity to consistency, we return to runs, where
+nondeterminism raises a new question: when emitting one output removes others,
+is that removal a \commitment?  The output event is unchanged from the
+functional case: at a state $(i,R)$ with $o\in R(i)$, $\mathsf{output}(o)$ emits
+$o$ and keeps exactly the rows whose outputs \outrelbase $o$, ending at
+$(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).
+
+Removing a row $(k,x)$ does not always lose the information in its output.  If
+some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
+nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
+would have.  This is output subsumption, and we put $(k,x)$ in $\Subsumed_o$.
+Every other removed row goes in $\Excluded_o$.  With several outputs at an
+input, the canonical \commitment $x_o$ removes only the rows in $\Excluded_o$
+(Definition~\ref{def:canonical-commitment}); the output event still removes the
+rows in $\Subsumed_o$, but that removal is not a \commitment.  If $x_o$ removes
+every row at $k$, it rules out the input $k$; otherwise it rules out only the
+excluded outputs at $k$.  In the functional case every removed row is excluded,
+so $x_o$ is as before.
 
 These are the cases of Section~\ref{sec:ambiguity-story}.  Emitting $\bot$
 under the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows
 for $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs.  Emitting
 $[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in
 $\Excluded_o$ and rules out that output at $\{A,B\}$.  The route sets removed in
-panel~(g) are in $\Subsumed_o$.  In the functional case $\Subsumed_o$ is empty,
-so this is the output event of Definition~\ref{def:output-event}.
+panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
-With several outputs at one input, legality is more permissive: an output
-event may remove rows by output subsumption without applying a \commitment.
-As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
-\commitment, exactly when $\Excluded_o$ is empty.  Equivalently, at every legal
+Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
+applies no \commitment, that is, when $\Excluded_o$ is empty.  With several
+outputs at one input, this is more permissive than in the functional case,
+since an output event may remove rows by output subsumption without a
+\commitment.  Equivalently, at every legal
 \indesc $j$ of $i$, $o$ and each remaining output at $j$ have a common
 \outnoun at $j$ (Proposition~\ref{prop:exposability}).
 
@@ -284,7 +291,8 @@ reconciled there.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
 The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
-ordinary monotonicity.
+ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that both
+theorems hold for distributed histories.
 
 The same condition decides which outputs need a \commitment.
 

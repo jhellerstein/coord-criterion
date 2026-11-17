@@ -128,7 +128,7 @@ pipeline is proper, and fix any system for `𝒮₁`.  Then `𝒮₂|_{𝒮₁}`
 each output of a run `ρ` of that system as its next input and answer it without
 commitment.  Replacing each output of `ρ` by these answers, and dropping the
 commitment events of `ρ`, gives a canonical run of `P₂ ∘ P₁`.  Such runs are
-confluent whenever the runs of the system are.  (3) If the pipeline is proper
+confluent whenever the runs of the chosen system for `𝒮₁` are.  (3) If the pipeline is proper
 and `P₂ ∘ P₁` does not satisfy Lifted Monotonicity, some output of `𝒮₁` needs
 a commitment."
 Lean: (1) `Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`),
@@ -306,7 +306,7 @@ the upstream itself needs no commitment."  And, from the subsection's puzzle:
 "Consider the spec for an incrementing counter that is capped at `9`, and
 compose it with a downstream spec for a double-digit threshold test, which
 outputs `false` for values up through `9` and `true` from `10` on. … Suppose
-instead that every answer must be final.  Then the output order is equality,
+instead that every answer must be final: unchanging in the face of more input.  Then the output order is equality,
 and the test cannot emit `false` without a commitment, since a later count of
 `10` would contradict it.  Yet when composed after the capped counter, the pair
 of components needs no commitment."

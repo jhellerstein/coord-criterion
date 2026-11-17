@@ -11,13 +11,12 @@ applying either CALM theorem.
 \label{sec:query-instance}
 
 The CALM Theorem of Ameloot et al.\ (\S\ref{sec:functional-calm}) is stated in
-a particular operational model, relational languages on transducer networks: a
-program
-can be evaluated without coordination exactly when it is monotone, under that
-model's assumptions about data placement and
-execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
-does not replace the details of that theorem.  It restates the result as a
-property of a spec, which can be compared with specs outside Datalog.
+a particular operational model, relational languages on transducer networks: a query can be evaluated without
+coordination exactly when it is monotone, under that model's assumptions about
+data placement and execution~\cite{ameloot2013relational,ameloot2015weaker}.
+Functional CALM restates the result as a property of a spec, so that it can be
+compared with specs outside Datalog; it does not replace the operational details
+of that theorem.
 
 Subsequent extensions to the original CALM Theorem become changes to the input
 domain and its order, or to the notion of coordination.  Zinn et al.\ gave transducers partial knowledge of how data is
@@ -114,10 +113,11 @@ pairs.  For deterministic behaviors the two conditions coincide.
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
 
-A CRDT guarantees that replicas receiving the same updates converge to
-equivalent states, whatever the order of delivery and merge.  But the Strong
-Eventual Consistency property it offers provides no guarantee on what the
-environment may observe, and is subject to Lamport's ``anomalous
+A CRDT uses join semilattices to guarantee that replicas that have received the
+same updates converge to equivalent states, whatever the order of delivery and
+merge.  That guarantee, Strong Eventual Consistency, says nothing about what a
+client observes when it queries a replica that has not yet received every
+update.  Such a query risks Lamport's ``anomalous
 behavior''~\cite{lamport1978time} (\S\ref{sec:functional-events}). Laddad et al.\
 proposed monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Their example is a two-phase set, whose state
@@ -168,7 +168,8 @@ replica; commits, each with its client timestamp and write set; and deliveries
 of committed writes to replicas.  The history preserves
 each client's program order and each replica's arrival order, and a
 transaction's reads precede its commit, which precedes its deliveries.
-Inputs are ordered by downward-closed extension.  An output is a set of read
+One input \inrel another when it adds events, none of which happens before an
+event already present.  An output is a set of read
 answers, ordered by inclusion.  A history is \emph{complete} when it answers
 every read and orders versions by timestamp.  For an isolation level $L$, the table $P_L$ of $\Spec_L$ contains
 an output at an input when the input extends to a complete history that includes the output and exhibits
@@ -221,8 +222,8 @@ The store needs no \commitment on its own, so this need comes from the
 intersection with $\Spec_L$.
 \end{proof}
 
-The timestamp condition is required, correcting an error in the pseudocode of
-the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
+The timestamp condition in the theorem is required, correcting an error in the
+extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
 is ordered before the version it read: a G1c cycle, which read committed

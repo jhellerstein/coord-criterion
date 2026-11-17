@@ -11,19 +11,18 @@ canonical runs, and show where \commitments conflict; Complete CAP follows.
 \subsection{Systems and canonical runs}
 \label{sec:systems}
 
-A spec describes which behaviors are permitted, but not how a system chooses
-among them.  We now model those choices, and show that a system's inputs and
-outputs always remain those of a canonical run.
+A spec says which behaviors are permitted, not how a system chooses among them.
+We now model those choices, and show that a system's inputs and outputs always
+match a canonical run's.
 
 For example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
 Appendix~\ref{app:cc-bases}).  Two-phase locking (2PL) orders transactions
-pairwise through lock requests: when $B$ waits for a lock $A$ holds,
-$\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else.  Multiversion
+pairwise through lock requests: when $B$ waits for a lock $A$ holds, the 2PL \commitment $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else.  Multiversion
 timestamp ordering (MVTO)~\cite{bernstein1981concurrency} orders them totally
-through timestamp assignment: $\mathsf{stamp}(B)$ fixes $B$ before any
+through timestamp assignment: the MVTO \commitment $\mathsf{stamp}(B)$ fixes $B$ before any
 transaction not yet stamped.  The
-two narrow the spec differently.
+two narrow the spec differently (Figure~\ref{fig:cc-commitments}).
 
 The registrar of Section~\ref{sec:election-story} is a similar example.  When
 it emits $\bot$, it also closes the polls (Figure~\ref{fig:election-frames}(d)),
@@ -332,8 +331,8 @@ separates the participants.
 \label{def:partitioned-history}
 A \emph{partitioned history} divides the participants into two or more
 sides and contains no receive whose matching send lies on another
-side.  Participants on the same side may still exchange messages, and every
-participant still receives environment input and emits outputs.
+side.  Same-side messages are allowed, and participants still receive environment input
+and emit outputs.
 \end{definition}
 
 \begin{definition}[Explicit possibility relation]
@@ -468,9 +467,8 @@ output during a partition.  Each vote is cast by a different voter, so votes
 emitted on different sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this placement as a deployment), and every
 set of votes an observer may collect is consistent.
 
-A partition does not change the intrinsic \commitments a spec needs; rather,
-it prevents separated participants from jointly enforcing those \commitments
-via coordination.  When Lifted
+A partition does not change the intrinsic \commitments a spec needs; it prevents
+separated participants from jointly enforcing them through coordination.  When Lifted
 Monotonicity for $E$ fails, some output of $E$ waits for another side,
 sacrificing Availability, or is emitted anyway, sacrificing Partition
 Consistency.

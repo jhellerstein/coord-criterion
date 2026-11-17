@@ -62,10 +62,10 @@ it states no claim of its own.
 
 The first paragraph recalls the relational-transducer CALM Theorem ("The CALM
 Theorem of Ameloot et al. is stated in a particular operational model,
-relational languages on transducer networks: a program can be evaluated without coordination
-exactly when it is monotone … Functional CALM does not replace the details of
-that theorem.  It restates the result as a property of a spec, which can be
-compared with specs outside Datalog.").  The abstraction is
+relational languages on transducer networks: a query can be evaluated without coordination
+exactly when it is monotone … Functional CALM restates the result as a property
+of a spec, so that it can be compared with specs outside Datalog; it does not
+replace the operational details of that theorem.").  The abstraction is
 `«eq:query-monotonicity»` (§2); the transducer theorem itself is cited, not
 formalized.  The entries below check the mapping of its output extensions into our
 frame (`Instances/QueryRefinements.lean`).  Which order a placement model
@@ -344,10 +344,11 @@ theorem «sec:query-instance/deterministic-behaviors» {F N G : Type} (loc : F �
 
 /-! ## CRDTs: monotone queries over convergent state (`sec:crdt-instance`)
 
-The opening paragraph ("A CRDT guarantees that replicas receiving the same
-updates converge to equivalent states … But the Strong Eventual Consistency
-property it offers provides no guarantee on what the environment may observe,
-and is subject to Lamport's "anomalous behavior" (§`sec:functional-events`).
+The opening paragraph ("A CRDT uses join semilattices to guarantee that
+replicas that have received the same updates converge to equivalent states …
+That guarantee, Strong Eventual Consistency, says nothing about what a client
+observes when it queries a replica that has not yet received every update.
+Such a query risks Lamport's "anomalous behavior" (§`sec:functional-events`).
 Laddad et al. proposed monotonicity as the right test for safe observation
 from CRDT state.") cites rather than proves; its two-phase-set example is
 checked in `«sec:crdt-instance/two-phase»` below. -/
@@ -465,8 +466,8 @@ ordered by happens-before: reads, each tagged with its replica; commits, each
 with its client timestamp and write set; and deliveries of committed writes
 to replicas.  The history preserves each client's program order and each
 replica's arrival order, and a transaction's reads precede its commit, which
-precedes its deliveries.  Inputs are ordered by
-downward-closed extension.  An output is a set of read answers, ordered by
+precedes its deliveries.  One input extends another when it adds events, none of which
+happens before an event already present.  An output is a set of read answers, ordered by
 inclusion.  A history is *complete* when it answers every read and orders
 versions by timestamp.  For an isolation level `L`, the table `P_L` of `𝒮_L`
 contains an output at an input when the input extends to a complete history
@@ -492,7 +493,8 @@ are item-only (`HATSpec.Level`: RU, RC, SI, RR, SER). -/
 abbrev «def:hat-spec» (L : HATSpec.Level) : Spec (HATSpec.Inp true) (IConf.St HATSpec.Fact) :=
   HATSpec.spec L
 
-/-- Def. `def:hat-spec`: "Inputs are ordered by downward-closed extension."
+/-- Def. `def:hat-spec`: "One input extends another when it adds events, none of
+which happens before an event already present."
 Lean: inputs are closed under the order: a downward-closed sub-history of a
 legal input is legal, and satisfies the timestamp condition if the input
 does. -/
@@ -623,7 +625,7 @@ theorem «thm:hat-levels/lost-update-pair» :
   ⟨fun _ h => HATSpec.i1_ver h, fun _ h => HATSpec.i2_ver h, HATSpec.le_hJ _ HATSpec.hk1,
     HATSpec.le_hJ _ HATSpec.hk2, fun H h => HATSpec.lu_cycle H h⟩
 
-/-- "The timestamp condition is required, correcting an error in the pseudocode of
+/-- "The timestamp condition in the theorem is required, correcting an error in
 the extended HAT paper.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write

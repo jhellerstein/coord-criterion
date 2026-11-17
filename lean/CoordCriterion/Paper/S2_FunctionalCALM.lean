@@ -344,8 +344,8 @@ theorem «sec:functional-events/input-cumulative» {I O : Type} [PO I] [PO O]
   ⟨input_input, input_self⟩
 
 /-- **Def. `def:output-event`** (Output event).  "At a state `(i,R)` with
-current output `o`, the *output event* `output(o)` keeps exactly the rows whose
-outputs extend `o`, and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`."
+current output `o`, the *output event* `output(o)` atomically keeps only the rows whose outputs extend `o`,
+  and then emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`."
 
 Lean: `Step σ (.output o) τ` (constructor `Step.output`) requires
 `σ.R σ.cur o` and sets `τ.R = outputTable σ o = R[out ⪰ o]`.  The general
@@ -357,9 +357,11 @@ abbrev «def:output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   outputTable σ o
 
   /-- **Def. `def:canonical-commitment-functional`**.  "When `o` is not legal,
-  equivalently `R' ≠ R`, the transition applies the *canonical commitment*
-  `x_o(i,R) = (i,R')`.  For every row it removes, no row remains at
-  the same input.  It is a commitment."
+  equivalently `R' ≠ R`, some rows have outputs that do not extend `o`, and the
+  transition applies the *canonical commitment* `x_o(i,R) = (i,R')`, which
+  removes them.  In a functional table each input has only one row, so `x_o`
+  rules out those rows' inputs (`x_o` is a commitment in the sense of
+  Definition `def:commitment`)."
 
 Lean: `canonicalCommitment o : Commitment sp` (`commitmentApp o`): the commitment that removes the
 rows in `Excluded_o`, defined at states where `o ∈ R(i)` and `Excluded_o ≠ ∅`. -/
@@ -526,10 +528,8 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   ConfluentAt fam j
 
 /-- **Def. `def:consistency`** (Consistency).  "An I/O specification is
-*consistent* when every finite family of runs is confluent at every common
-input extension of their current inputs."
-
-  "Consistency requires confluence at every common input extension, not just
+*consistent* when every finite family of runs is confluent at every common input extension of their current inputs, including
+inputs that some run's commitments have ruled out." "Consistency requires confluence at every common input extension, not just
   at some later one, because conflicting outputs could otherwise escape before
   the runs reconcile.  In the equality-order election, `f(ab·)=⊥` and `f(aba)=a`
   are incomparable.  One run can emit `⊥` at `ab·`, while another accepts
@@ -546,9 +546,10 @@ abbrev «def:consistency» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.Consistent
 
 /-- **Prop. `prop:confluence`** (Survivor test).  "Runs ending at states
-`(i_r,R_r)` are confluent at `j` if and only if some row at `j` survives in
-every final state … For any such `u`, `input(j)` followed by `output(u)` takes
-every final state to the state `(j, P[in ⪰ j, out ⪰ u])`."
+`(i_r,R_r)` are confluent at a common input extension `j` of their current inputs if and
+only if some row `(j,u)` is in every `R_r`.  For any such `u`, `input(j)`
+followed by `output(u)` brings every run to the same state,
+`(j, P[in ⪰ j, out ⪰ u])`."
 
 Lean: the first conjunct is the equivalence; the second is the explicit
 continuation, where `meetState sp j u _` is `(j, P[in ⪰ j, out ⪰ u])`. -/

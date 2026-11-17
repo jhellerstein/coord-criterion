@@ -12,11 +12,13 @@ from the environment, a participant can learn cumulative input from another
 participant.
 
 Participants exchange messages by $\mathsf{send}(m)$ and
-$\mathsf{receive}(m)$.  A \emph{message} is a pair $m=(j,d)$ of a cumulative
-input $j$, or $\varnothing$ if it carries none, and application-specific data $d$, described below.  A receive does not change the specification state.  A participant at $(i,R)$ that receives $(j,d)$ with
+$\mathsf{receive}(m)$.  A \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$ if it
+carries none, and application-specific data $d$, such as timestamps, version
+vectors, or state identifiers (described below).  Receiving a message does not
+change the specification state.  A participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
-legal common \indesc $k$ of $i$ and $j$, when one exists.  Which $k$ to use is
-the system's choice (\S\ref{sec:systems}).
+legal common \indesc $k$ of $i$ and $j$, when one exists.  The system chooses $k$ (\S\ref{sec:systems}); the data $d$
+can influence that choice but never changes the state directly.
 
 Send and receive events connect the participants' locally ordered runs.  Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -163,18 +165,22 @@ consistency.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-The participant runs at a cut are a family of runs, and any family
-of runs can be placed at separate participants that exchange no messages.  Full proof in Appendix~\ref{app:proofs-sec4}.
+The participant runs at a cut are a finite family of runs, so consistency gives
+distributed consistency.  Conversely, any finite family of runs can be placed at
+participants that exchange no messages.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 By Complete CALM, which reduces to Functional CALM with one output per input,
 a spec has distributed consistency exactly when it satisfies Lifted
-Monotonicity.  Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common \indesc $j$, the Survivor test (Proposition~\ref{prop:confluence}) supplies a
-$u\in\fiber{j}$ that survives in every endpoint; by
-Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted.  At
-each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
-the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  The witness shows only that such a state exists in the transition system.  Choosing $u$, communicating it, and scheduling the transitions are up to the
-system (\S\ref{sec:systems}).
+Monotonicity.  For specs with Lifted Monotonicity, the Survivor test
+(Proposition~\ref{prop:confluence}) gives a row $(j,u)$ that every participant's
+state still contains, where $j$ is a common \indesc of all participants' current
+inputs; by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have
+emitted.  Each participant can then perform $\mathsf{input}(j)$ and
+$\mathsf{output}(u)$ and reach the same state without \commitment
+(Proposition~\ref{prop:exposure-boundary}).  The spec guarantees only that such
+a $u$ exists; choosing it, communicating it, and scheduling the events are up
+to the system (\S\ref{sec:systems}).
 
 For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence:

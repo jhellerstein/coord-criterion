@@ -3,8 +3,8 @@
 
 This section focuses on functional specs, in which each input has a
 single specified output.  We walk through the framework informally on an
-election, make it precise, and prove Functional CALM, identifying along the
-way when an output can be emitted without \commitment.
+election, state it precisely, and prove Functional CALM, identifying when an
+output can be emitted without \commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -132,8 +132,7 @@ the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
 closes the polls.  Closing the polls is a \emph{\commitment}: it removes the
 still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$.
 The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result.
-The spec did not require this \commitment: emitting $\bot$ alone would remove
-nothing, since every output still possible extends $\bot$.  Closing the polls is
+The spec did not require this \commitment: emitting $\bot$ removes nothing by itself, since every output still possible extends $\bot$.  Closing the polls is
 the registrar's own fateful decision.
 
 \begin{figure}[t]
@@ -232,9 +231,8 @@ A \emph{functional \spectype} is a tuple
 The unique output paired with $i$ induces the function
 \[f:(I,\InputOrd)\to(O,\OutputOrd)\]
 with $P=\{(i,f(i)):i\in I\}.$
-We call
-$\InputOrd$ the \emph{input order}.  Because an output may depend on everything
-a system has received, we model inputs as \emph{cumulative}: an input
+We call $\InputOrd$ the \emph{input order}.  Inputs are \emph{cumulative}, since an
+output may depend on everything a system has received: an input
 records everything received so far, not a single message, and $i\InputOrd j$
 means that $j$ contains at least the input information in $i$.  We say that $j$
 \emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself. We call $\OutputOrd$ the
@@ -248,6 +246,8 @@ $i_1,\ldots,i_k$ is an input that \inrel every $i_r$, and a
 
 A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
 when $w$ \outrel $u$.
+
+A functional spec is monotone when growing input only ever extends its output.
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -265,12 +265,11 @@ Thus an output emitted on partial input is \outrelpast by the output at every \i
 
 \paragraph{Relational notation.}
 For a relation $R\subseteq I\times O$, we say that a row $(k,u)$ is
-\emph{at input} $k$.  A predicate on the columns
+\emph{at input} $k$.  To describe tables compactly, a predicate on the columns
 $\mathrm{in}$ and $\mathrm{out}$ in square brackets selects rows, and commas
 separate conjuncts: $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the
 table of rows whose input \inrel $j$ and whose output \outrel $o$.  As in
-relational algebra, $\pi_{\mathrm{out}}(R)$ is the set of outputs that appear in
-$R$.
+relational algebra, $\pi_{\mathrm{out}}(R)$ is the set of outputs in $R$.
 
 A spec describes every permitted input/output pair.  During execution,
 input arrives and outputs are emitted, so only some of those pairs remain
@@ -328,14 +327,15 @@ output events record what the system has emitted.  Each may remove rows from
 the remainder table.
 
 \paragraph{Input events.}
+Each event applies a selection predicate on one column of the remainder table.
 For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{input}(j)}
   \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr).
   \label{eq:input-event}
 \end{equation}
-It makes $j$ current and causes the remainder table to lose the rows whose
-input does not \inrelbase $j$.  We call this \emph{input loss}.
+It makes $j$ current and drops the rows whose input does not \inrelbase $j$,
+which we call \emph{input loss}.
 
 An input event names the cumulative input $j$: everything received so far,
 including all of $i$, not just what arrived since $i$.  Thus $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the
@@ -343,8 +343,9 @@ effect of $\mathsf{input}(k)$ alone; $\mathsf{input}(i)$ at
 $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-A system controls what it tells the world, but each later output must
-\outrelbase the earlier ones.
+Inputs arrive from the environment, but outputs are the system's to choose, and
+once emitted they cannot be retracted: later outputs must \outrelbase earlier
+ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
 output the system may emit.
@@ -365,8 +366,8 @@ a \commitment that rules out every legal input whose output does not
 \begin{definition}[Output event]
 \label{def:output-event}
 At a state $(i,R)$ with current output $o$, the \emph{output event}
-$\mathsf{output}(o)$ performs two steps atomically: it keeps exactly the rows
-whose outputs \outrelbase $o$, and emits $o$ to the environment:
+$\mathsf{output}(o)$ atomically keeps only the rows whose outputs \outrelbase $o$,
+and then emits $o$:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
@@ -375,9 +376,11 @@ whose outputs \outrelbase $o$, and emits $o$ to the environment:
 
 \begin{definition}[Canonical \commitment]
 \label{def:canonical-commitment-functional}
-When $o$ is not legal, equivalently $R'\neq R$, the transition applies the
-\emph{canonical \commitment} $x_o(i,R)=(i,R')$.  For every row it removes, no
-row remains at the same input.  It is a \commitment.
+When $o$ is not legal, equivalently $R'\neq R$, some rows have outputs that do
+not \outrelbase $o$, and the transition applies the \emph{canonical
+\commitment} $x_o(i,R)=(i,R')$, which removes them.  In a functional table each
+input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a
+\commitment in the sense of Definition~\ref{def:commitment}).
 \end{definition}
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  The
@@ -434,9 +437,9 @@ A run is \emph{\commitment-free} when none of its output events applies a
 \commitment.  A state is \emph{reachable without \commitment} when
 some \commitment-free run reaches it.
 
-A run's state has a simple description.  Input and output events are both
-relational selections, and selections commute.  Since inputs only \ingrow during a run, the selection for the last
-input subsumes the earlier ones.
+Input and output events are both relational selections, and selections
+commute, so a run's remainder table depends only on its last input and the
+outputs it emitted:
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -470,7 +473,8 @@ A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{c
 \begin{definition}[Consistency]
 \label{def:consistency}
 An \spectype is \emph{consistent} when every finite family of
-runs is confluent at every common \indesc of their current inputs.
+runs is confluent at every common \indesc of their current inputs, including
+inputs that some run's \commitments have ruled out.
 \end{definition}
 
 Consistency requires confluence at every common \indesc, not just at some
@@ -490,31 +494,27 @@ in every run.
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
-Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent
-at $j$ if and only if some row at $j$ survives in every final state:
-\begin{equation}
-  (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in\fiber{j}.
-  \label{eq:reconciliation}
-\end{equation}
-For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
-every final state to the state
+Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent at a common
+\indesc $j$ of their current inputs if and only if some row $(j,u)$ is in every
+$R_r$.  For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$
+brings every run to the same state,
 $\bigl(j,\ P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Rows are never added, so the row of a common state at $j$ was there
-in every run.  Full proof in Appendix~\ref{app:proofs-sec2}.
+Rows are never added, so a row of a common state at $j$ was already in every
+$R_r$.  Conversely, the two events above reach a common state.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 In a functional spec the only row at $j$ is $(j,f(j))$, so the test
 asks whether $(j,f(j))$ survives in every run.
 
-Consistency guarantees that runs never diverge irreparably: there is no
-``split brain.''  Whatever events a finite collection of runs has taken, at any
-input \inrelpart all of their inputs there is a state that every run can reach.
-That state honors all of their emitted outputs and accepts all of that input,
-and Proposition~\ref{prop:confluence} identifies it.  Consistency is a
-property of the spec, not of a protocol (Section~\ref{sec:scope}).
+Consistency thus ensures that runs never diverge irreparably: there is no
+``split brain.''  Whatever events a finite collection of runs contains, at any
+common \indesc of their current inputs, some state is reachable by every run
+and contradicts none of their outputs; Proposition~\ref{prop:confluence}
+identifies it.  Consistency is a safety property of the spec: it describes no
+protocol and promises no delivery or termination (Section~\ref{sec:scope}).
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -529,10 +529,12 @@ monotone.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A monotone $f$ only emits outputs that all of its future outputs \outrelbase,
-so the row $(j,f(j))$ at a common \indesc $j$ survives in every run.
-If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.  Full proof in Appendix~\ref{app:proofs-sec2}.
+If $f$ is monotone, each output a run has emitted lies below $f(j)$ at every
+\indesc $j$ of its current input, so the row $(j,f(j))$ survives in every run,
+and the Survivor test (Proposition~\ref{prop:confluence}) gives confluence at
+$j$.  If $f$ is not monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.
+Emitting $f(i)$ removes the only row at $k$, so a run that does so can never be
+reconciled at $k$ with one that receives $k$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 In the functional case, consistency has a strong consequence: emitting outputs
@@ -574,7 +576,7 @@ spec is non-monotone, then for some $i\InputOrd k$,
 $f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
 $\mathsf{output}(f(i))$ applies $x_{f(i)}$ and rules out input $k$.
 
-Functional CALM is the familiar CALM dichotomy stated at the level of the spec
+Functional CALM restates the familiar CALM dichotomy at the level of the spec
 rather than inside a particular programming language.
 Classical CALM fits, with inputs $J$ as sets of facts ordered by
 inclusion and output views $Q(J)$ ordered by inclusion.  Functional

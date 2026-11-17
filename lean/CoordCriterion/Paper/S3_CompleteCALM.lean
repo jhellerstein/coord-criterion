@@ -208,9 +208,9 @@ theorem «sec:lifted-monotonicity/subsequence-example» {T : Type} {a b : T}
     ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ :=
   ⟨sched_le_iff, sched_two_minimal hab⟩
 
-/-- "For outputs, directedness asks only that each finite set have some common
-output extension in the fiber, not a least one or one given by a fixed merge
-operator, so it is weaker than requiring a join-semilattice.  For example,
+/-- "Directedness asks only that each finite set have some common output
+extension in the fiber, not a least one or one given by a fixed merge operator,
+so it is weaker than requiring a join-semilattice … For example,
 under inclusion the fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` is directed,
 since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two minimal
 common output extensions, `{a,b,c}` and `{a,b,d}`.  Those two are
@@ -243,8 +243,9 @@ theorem «sec:lifted-monotonicity/figure-fibers» :
 abbrev «eq:joint-output-order» {O : Type} [PO O] (A B : O → Prop) : Prop :=
   JointLift A B
 
-/-- **Def. `def:lifted-monotonicity`** (Lifted Monotonicity).  "`i ≼ j ⟹
-P(i) ⊑ P(j)`." -/
+/-- **Def. `def:lifted-monotonicity`** (Lifted Monotonicity).  "for every
+`i ≼ j` and every nonempty finite `X ⊆ P(i)`, some `u ∈ P(j)` extends every
+member of `X`; that is, … `i ≼ j ⟹ P(i) ⊑ P(j)`." -/
 abbrev «def:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.LiftedMono
 
@@ -332,9 +333,11 @@ Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
   event to rule out `k`.  This is formalized by
   `«def:canonical-commitment/subsumed-keeps-fiber»`. -/
 
-  /-- §3.2: "With several outputs at one input, legality is more permissive:
-  an output event may remove rows by output subsumption without applying a
-  commitment. … `o` is a legal output exactly when `Excluded_o` is empty."
+  /-- §3.2: "Legality is defined as before: `o` is a legal output when
+  `output(o)` applies no commitment, that is, when `Excluded_o` is empty.  With
+  several outputs at one input, this is more permissive than in the functional
+  case, since an output event may remove rows by output subsumption without a
+  commitment."
 
   In the functional case, `Subsumed_o` is empty, so every removed row belongs
 to `Excluded_o`; at each such input, the event excludes its sole output and

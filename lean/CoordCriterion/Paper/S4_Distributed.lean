@@ -233,13 +233,14 @@ theorem «cor:distributed-calm» (sp : Spec I O) (D : Type) :
     sp.LiftedMono ↔ Dist.DistConsistent sp D :=
   (Dist.distConsistent_iff_liftedMono sp D).symm
 
-/-- "Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common input extension `j`, the Survivor test (Proposition `prop:confluence`) supplies a
-`u ∈ P(j)` that survives in every endpoint; by Lemma run-residual, `u` extends
-everything they have emitted.  At each participant, `input(j)` followed by
-`output(u)` reaches the same state without commitment (Proposition
-`prop:exposure-boundary`).  The witness shows only that such a state exists
-in the transition system.  Choosing `u`, communicating it, and scheduling the
-transitions are up to the system."
+/-- "For specs with Lifted Monotonicity, the Survivor test (Proposition
+`prop:confluence`) gives a row `(j,u)` that every participant's state still
+contains, where `j` is a common input extension of all participants' current
+inputs; by Lemma run-residual, `u` extends everything they have emitted.  Each
+participant can then perform `input(j)` and `output(u)` and reach the same state
+without commitment (Proposition `prop:exposure-boundary`).  The spec guarantees
+only that such a `u` exists; choosing it, communicating it, and scheduling the
+events are up to the system."
 
 Lean: `Dist.reconcile_cf` supplies `u`, proves that `(j,u)` survives in every
 endpoint, and gives the commitment-free two-event continuation from each one. -/
@@ -330,8 +331,7 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
 
 /-! ## Systems and canonical runs (§4.3, `sec:systems`)
 
-A spec describes which behaviors are permitted, but not how a system chooses
-among them.  The section models those choices, then shows that their commitments
+A spec says which behaviors are permitted, not how a system chooses among them.  The section models those choices, then shows that their commitments
 can be assessed against canonical runs regardless of system implementation
 choices. -/
 
