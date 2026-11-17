@@ -261,7 +261,9 @@ A functional \spectype $\Spec$, with induced function $f$, is
 \end{equation}
 \end{definition}
 
-In a monotone functional spec, if an output is emitted at any input, subsequent outputs will \outrelbase it.
+In a monotone functional spec, if an output is emitted at some input, the
+remainder table contains only rows whose input is an \indesc, and whose output
+is an \outnoun.  So no output is ever contradicted at a later input.
 
 \paragraph{Relational notation.}
 For a relation $R\subseteq I\times O$, we say that a row $(k,u)$ is
@@ -355,15 +357,31 @@ The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
 upper fiber \outrel $o$.
 \end{definition}
 
-%%%% \jmh{Confusing and unhelpful}
-% Equivalently, since the only row at a legal input $j$ is $(j,f(j))$, $o$ is
-% legal exactly when $f(j)$ \outrel $o$ for every legal input $j$.
+Emitting an output can require removing rows that no remaining output covers.
+We call such a removal a \commitment:
 
-Since every later output must \outrelbase $o$, it is not possible to simply emit
-a non-legal $o$. A decision to emit a non-legal $o$ must be combined atomically with
-a \commitment that rules out every row whose output does not
-\outrelbase $o$. In a functional spec, those rows contain the only copies of their input values, so
-those inputs become illegal inputs.
+\begin{definition}[\Commitment]
+\label{def:commitment}
+A \emph{\commitment} is a partial function $e$ on specification states that
+removes a nonempty set of rows, none of which is \outrelpast by a row that
+remains at the same input.  That is, whenever $e(i,R)=(j,R')$, we have
+$R'\subsetneq R$ and
+\begin{equation}
+  (k,u)\in R\setminus R',\ (k,w)\in R'
+  \quad\Longrightarrow\quad
+  u\not\OutputOrd w.
+  \label{eq:commitment-unsubsumed}
+\end{equation}
+It leaves the current input unchanged: $j=i$.
+\end{definition}
+
+In a functional spec each input has one row, so the last condition always
+holds: a \commitment rules out the inputs of the rows it removes.
+
+Since every later output must \outrelbase $o$, a system cannot simply emit a
+non-legal $o$.  It must emit $o$ atomically with a \commitment that removes every
+row whose output does not \outrelbase $o$.  In a functional spec each such row
+is the only row at its input, so the \commitment rules out those inputs.
 
 \begin{definition}[Output event]
 \label{def:output-event}
@@ -381,13 +399,12 @@ and then emits $o$:
 When $o$ is not legal, equivalently $R'\neq R$, some rows have outputs that do
 not \outrelbase $o$, and the transition applies the \emph{canonical
 \commitment} $x_o(i,R)=(i,R')$, which removes them.  In a functional table each
-input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a
-\commitment in the sense of Definition~\ref{def:commitment}).
+input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a \commitment).
 \end{definition}
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  The
 current row $(i,o)$ remains, since $o$ \outrel itself, so the event always ends
-at a value specification state with current input $i$.  A \commitment removes rows that input alone would
+at a specification state with current input $i$.  A \commitment removes rows that input alone would
 keep; after the canonical \commitment, the inputs of the removed rows are no
 longer legal.  This section uses only canonical \commitments.  Systems
 may issue more \commitments than an output requires, as the registrar does in
@@ -396,17 +413,12 @@ system's choice, not the spec's (Section~\ref{sec:systems}).
 
 \paragraph{Determination.}
 A spec with multiple distinct outputs can have undetermined states, as in panel~(b) of
-Figure~\ref{fig:election-frames}.  
+Figure~\ref{fig:election-frames}.
 A state is \emph{determined} when its upper fiber has one element: one result
 remains, whatever legal input still arrives.  This is a property of the state
-alone.  
-% \jmh{this is more distracting than helpful}
-% Under the functional dependency each input determines its own
-% output; a determined state goes further, since its current input determines
-% the output of every input that may still arrive.  
-\emph{Determination} is the process of reaching a determined state.  
+alone.  \emph{Determination} is the process of reaching a determined state.
 An input event can achieve determination through input loss, as in panel~(c), and a
-\commitment can do so by removing fibers that would otherwise remain possible,
+\commitment can do so by ruling out inputs that would otherwise remain possible,
 as in panel~(d).
 An event from a determined state always leads to another determined state with the same output:
 events only remove rows, and a row at the current input always remains.
@@ -414,9 +426,10 @@ events only remove rows, and a row at the current input always remains.
 \subsection{Executions and consistency}
 \label{sec:executions}
 
-\jmh{This uses "runs" before defined, and the claim of checking a single row is weird and I don't think it's paid of below; I couldn't see it.}
-When runs take different paths through the spec, can they still be
-brought to a common state?  The answer reduces to a check on a single row.
+Input and output events move a spec from state to state.  We now consider
+sequences of them, which we call runs, and ask when runs that took different
+paths can still be brought to a common state.  The answer turns on the
+existence of one row: some row at a common \indesc must survive in every run.
 
 \begin{definition}[Specification event]
 \label{def:specification-event}
@@ -436,9 +449,10 @@ A \emph{canonical run}, or just \emph{run}, is any finite transition sequence of
 canonical state $\sigma_P(i)$ at some input $i$.
 \end{definition}
 
-\jmh{Why is this paragraph here? There seems to be a flow problem in this subsection.}
-We compare a system's choices with every behavior the declared spec permits,
-not only the behaviors that system happens to produce.
+Runs range over every behavior the spec permits, not only the behaviors a
+particular system happens to produce.  A system that never uses some of the
+spec's latitude is better described by a narrower spec.  For the spec as
+written, we assume that any permitted behavior may occur.
 
 A run is \emph{\commitment-free} when none of its output events applies a
 \commitment.  A state is \emph{reachable without \commitment} when
@@ -484,20 +498,20 @@ runs is confluent at every common \indesc of their current inputs, including
 inputs that some run's \commitments have ruled out.
 \end{definition}
 
-Consistency requires confluence at every common \indesc, not just at some
-later one, because conflicting outputs could otherwise escape before the runs
-reconcile at a common \indesc.
+Consistency requires confluence at every common \indesc of the runs' current
+inputs, not just at some larger common \indesc that arrives later.  Otherwise
+the runs could emit conflicting outputs before that larger input arrives.
 In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
 incomparable.  One run can emit $\bot$ at $ab\cdot$, while another accepts
-$aba$ and can emit $a$.  The two runs cannot reconcile at their common \indesc $aba$, and waiting cannot
+$aba$ and can emit $a$.  The two runs are not confluent at their common \indesc $aba$, and waiting cannot
 retract either output from the environment.  More generally, even when later
-input could reconcile the internal states, the environment may already have
+input could bring the runs to a common state, the environment may already have
 acted on the outputs through channels the system does not see, as in Lamport's
-``anomalous behavior''~\cite{lamport1978time}. Moreover, even if there were a reconciling input,
-it might never arrive.
+``anomalous behavior''~\cite{lamport1978time}. And even when such a larger input exists, it might
+never arrive.
 
-Confluence has a simple test: some row at the common \indesc must survive
-in every run.
+We can now state the condition promised above: some row at the common
+\indesc must survive in every run.
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}

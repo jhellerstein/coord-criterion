@@ -449,7 +449,7 @@ run of the pipeline has one with the same outputs in which `𝒮₂|_{𝒮₁}` 
 under the empty basis.  Theorem `thm:proper-coordination`(2), applied to it
 and a prefix of the run of `𝒮₁`, gives a run of `P₂ ∘ P₁` with these outputs,
 and the canonical basis supplies the canonical commitment of each output event
-that needs one (Definition `def:system-output-event`), so it is a run under the
+that needs one (Definition `def:run-under-basis`), so it is a run under the
 canonical basis."  Lean: inside `Guard.proper_pipeline_step`, via `Guard.erase_simulates`,
 `Guard.emitted_prefix`, `Guard.proper_run`, `exec_canonExec` and
 `canonExec_sysExec`; the same step for a Lifted-Monotone downstream and any

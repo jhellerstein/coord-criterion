@@ -306,25 +306,18 @@ abbrev «app:notation/strategy» {sp : Spec I O} {D : Type} (Sys : CAP.System sp
 (Def. `def:system`).  Lean: `CAP.System sp D` (fields `basis`, `rule`). -/
 abbrev «app:notation/system» (sp : Spec I O) (D : Type) := CAP.System sp D
 
-/-- *basis* (Def. `def:system`: "A commitment basis is a set of commitments
-shared by all participants").  Lean: `CommitmentBasis sp := Commitment sp → Prop`
+/-- *commitment basis* (Def. `def:commitment-basis`: "A commitment basis is a
+set `ℬ` of commitments").  Lean: `CommitmentBasis sp := Commitment sp → Prop`
 (in `CC.CAP`: the field `System.basis`). -/
 abbrev «app:notation/basis» (sp : Spec I O) := CommitmentBasis sp
 
-/-- *produced* — every event other than an input or receive permitted by its
-strategy and using only commitments from `𝓑` (Def. `def:system`).  Lean:
+/-- *history of a system* — every event other than an input or receive
+permitted by its strategy and using only commitments from `𝓑` (Defs.
+`def:system`, `def:produced-history`).  Lean:
 `CAP.Produced`. -/
 abbrev «app:notation/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) (n : Nat)
     (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
   CAP.Produced Sys n init H
-
-/-- *system output event* — the lifted output event `output(o)`; when `o` is
-not legal, its commitment `x_o` must be in the basis (Def.
-`def:system-output-event`).  Lean: the event `SEvent.output o`, with transition
-`SysStep B σ (.output o) τ`. -/
-abbrev «app:notation/system-output-event» {sp : Spec I O} (B : CommitmentBasis sp) :
-    State sp → SEvent sp → State sp → Prop :=
-  SysStep B
 
 /-- *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of
 commitments, emits nothing (Def. `def:commitment-event`); when run by a
@@ -334,8 +327,10 @@ abbrev «app:notation/commitment-event» {sp : Spec I O} (B : CommitmentBasis sp
     (γ : List (Commitment sp)) (τ : State sp) : Prop :=
   SysStep B σ (.commitment γ) τ
 
-/-- *run under a basis* — specification events whose commitments come from the basis
-(Def. `def:run-under-basis`).  Lean: `RunUnder B es τ`. -/
+/-- *commitment basis; run under a basis* — a set `ℬ` of commitments; input,
+output, and commitment events whose commitments, including each non-legal
+output's `x_o`, come from `ℬ` (Def. `def:run-under-basis`).  Lean:
+`RunUnder B es τ`. -/
 abbrev «app:notation/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ

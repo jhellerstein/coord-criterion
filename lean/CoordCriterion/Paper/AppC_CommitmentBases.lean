@@ -106,7 +106,7 @@ theorem «eq:canonical-commitment-basis-relational» {sp : Spec I O} (c : Commit
       ∃ σ τ : State sp, (canonicalCommitment o).app σ = some τ :=
   Iff.rfl
 
-/-- Supporting fact for Def. `def:system-output-event`: the output event
+/-- Supporting fact for Def. `def:run-under-basis`: the output event
 `output(o)` is available under `ℬ_P` at every `o ∈ R(i)` and ends at
 `(i, R[out ⪰ o])`; it applies `x_o` exactly when `Excluded_o ≠ ∅`, in which case
 `x_o` is defined there. -/
@@ -142,7 +142,7 @@ theorem «lem:canonical-equivalent/output-case» {sp : Spec I O}
       ∀ k u, outputTable σ o k u → outputTable σ' o k u :=
   ⟨hc ▸ hsub _ _ ho, canonical_support _ _ _, outputTable_mono hsub _⟩
 
-/-- Supporting facts for Def. `def:system-output-event` and Def.
+/-- Supporting facts for Def. `def:run-under-basis` and Def.
 `def:lifted-output-event`, cited where the paper uses what an output event does:
 every system output event (under any basis) keeps the current input, needs
 `o ∈ R(i)`, and ends at `R[out ⪰ o]`; it applies `x_o` exactly when
@@ -198,8 +198,8 @@ theorem «app:bases/canonical-system/no-commitment-event» {sp : Spec I O} {σ �
 
 /-! ## Composite commitments (Def. `def:commitment-event`) -/
 
-/-- Supporting form of Def. `def:commitment-event`: "Since later commitments
-only remove rows, the sequence as a whole is itself a commitment."  Lean: the
+/-- Supporting form of Def. `def:commitment-event`: "The sequence as a whole is
+itself a commitment."  Lean: the
 composite of `c :: cs` is a `Commitment sp` (the type is the claim). -/
 noncomputable abbrev «app:bases/composite-commitment» {sp : Spec I O} (c : Commitment sp)
     (cs : List (Commitment sp)) : Commitment sp :=
@@ -216,13 +216,17 @@ theorem «app:bases/composite-commitment-defined» {sp : Spec I O} (c : Commitme
 
 /-! ## Runs under a basis -/
 
-/-- **Def. `def:run-under-basis`** (Run under a basis).  "A run under `ℬ` is
-a finite transition sequence from a canonical state `σ_P(i)` of input events,
-output events (Definition system-output-event), and commitment events
-(Definition commitment-event) that use only commitments from `ℬ`."
+/-- **Def. `def:run-under-basis`** (Commitment basis, run under a basis; in
+§4.3).  "A *commitment basis* is a set `ℬ` of commitments.  A *run under `ℬ`*
+is a finite transition sequence from a canonical state `σ_P(i)` of input,
+output, and commitment events in which every commitment event applies only
+commitments in `ℬ`, and every output event of a non-legal output `o` applies
+its canonical commitment `x_o ∈ ℬ`."
 
-Lean: `RunUnder B es τ`, an execution of `SysStep B` (input, output and
-commitment events `SEvent.commitment γ`) from `σ_P(i)`. -/
+Lean: `CommitmentBasis sp := Commitment sp → Prop`, and `RunUnder B es τ`, an
+execution of `SysStep B` from `σ_P(i)`: `SysStep.output` requires
+`Exposable σ o ∨ B (canonicalCommitment o)`, and `SysStep.commitment` requires
+every commitment of `γ` to be in `B`. -/
 abbrev «def:run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ

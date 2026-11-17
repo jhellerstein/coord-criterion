@@ -66,25 +66,25 @@ Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study richer tran
   \end{minipage}\hfill
   \begin{minipage}[t]{0.6\columnwidth}
     \raggedright
-    (g) After $\{s{\to}\texttt{s1}\}$\par\smallskip
+    (g) After $\{\texttt{s}{\to}\texttt{s1}\}$\par\smallskip
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-      $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
-      \grayrow{$i$} & \grayrow{$\{s{\to}h\}$} \\
-      \grayrow{$i$} & \grayrow{$\{s{\to}h,\ s{\to}h{\to}\texttt{s2}\}$} \\
-      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}h\}$} \\
-      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}h,\ s{\to}h{\to}\texttt{s2}\}$} \\
+      $i$ & \sh{$\{\texttt{s}{\to}\texttt{s1}\}$} \\
+      \grayrow{$i$} & \grayrow{$\{\texttt{s}{\to}\texttt{h}\}$} \\
+      \grayrow{$i$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      $i$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h}\}$} \\
+      $i$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
       \bottomrule
     \end{tabular*}\par\smallskip
     {\footnotesize each removed row is \outrelpast by a remaining one: an output
     subsumption}
   \end{minipage}
-  \caption{\jmh{Why are $s$ and $h$ in math font, but the destinations \texttt{s1, s2} are in textt?} Two specs with several rows at one input, each after one output
+  \caption{Two specs with several rows at one input, each after one output
   event.  (f) Serial orders of two concurrent transactions, under the equality
-  order.  (g) Route sets from a source $s$ to a service on \texttt{s1} and
-  \texttt{s2}, ordered by inclusion; $s$ reaches \texttt{s1} directly and
-  \texttt{s2} through hop $h$.  Legend as in Figure~\ref{fig:election-frames};
+  order.  (g) Route sets from a source \texttt{s} to a service on \texttt{s1} and
+  \texttt{s2}, ordered by inclusion; \texttt{s} reaches \texttt{s1} directly and
+  \texttt{s2} through hop \texttt{h}.  Legend as in Figure~\ref{fig:election-frames};
   here gray alone marks output subsumption.}
   \label{fig:ambiguity-frames}
 \end{figure}
@@ -123,37 +123,28 @@ For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
 \emph{incompatible in $F$} otherwise.
 
-\begin{definition}[Directed fiber]
-\label{def:fiber-directedness}
+\begin{definition}[Directed fiber, directed fibers]
+\label{def:fiber-directedness}\label{def:directed-outputs}
 A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
-$X\subseteq F$ is compatible in $F$.
+$X\subseteq F$ is compatible in $F$.  A spec has \emph{directed fibers} when
+every fiber is directed.
 \end{definition}
 
-\begin{definition}[Directed fibers]
-\label{def:directed-outputs}
-\jmh{does this merit mentioning at all? if so it doesn't seem to merit a definition.}
-An \spectype has \emph{directed fibers} when every
-fiber $\fiber{i}$ is directed.
-\end{definition}
+A singleton fiber is trivially directed.  The traceroute fiber of
+Figure~\ref{fig:ambiguity-frames}(g) is directed too: finitely many route sets
+in it always have a common \outnoun in the fiber, their union.  The two
+transaction orders in panel~(f), by contrast, are incompatible.
 
-\jmh{Why does this paragraph walk through two examples of directedness without a least common ancestor. Why is that worthwhile?}
-A singleton fiber is trivially directed.  Directedness asks only that each
-finite set have some common \outnoun in the fiber, not a least one or one given
-by a fixed merge operator, so it is weaker than requiring a join-semilattice: a
-common \outnoun, like a common \indesc, need not be unique or least.  For inputs, take two independent
-transactions $u$ and $v$, with schedules ordered by subsequence: $uv$ and $vu$
-are both minimal common \indescs of $u$ and $v$, and neither \inrel the other.  For example, under
-inclusion the fiber $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ is
-directed, since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$
-have two minimal common \outnouns, $\{a,b,c\}$ and $\{a,b,d\}$.  Those two are
-incomparable but compatible, since $\{a,b,c,d\}$ \outrel both: compatibility
-does not require comparability.  The traceroute fiber of
-Figure~\ref{fig:ambiguity-frames}(g) is directed for a simpler reason: finitely
-many of its route sets always have a common \outnoun in the fiber, their union.
-The two transaction orders in panel~(f), by contrast, are incompatible.
+Directedness asks for some common \outnoun of each finite set, not a least one
+or one given by a fixed merge operator, so it is weaker than requiring a
+join-semilattice.  Under inclusion, for example, the fiber
+$\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ is directed, since
+$\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$ have two
+incomparable minimal common \outnouns.
 
 \paragraph{Lifted Monotonicity.}
-To state both requirements at once, we lift $\OutputOrd$ to sets.  For nonempty
+To state both requirements at once, we lift $\OutputOrd$ from outputs to a
+relation on sets of outputs.  For nonempty
 $A,B\subseteq O$, define
         \begin{equation}
   A\LiftedOrd B
@@ -161,7 +152,9 @@ $A,B\subseteq O$, define
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint refinement lift} of $\OutputOrd$.  We apply it with $A=\fiber{i}$ and
+the \emph{joint refinement lift} of $\OutputOrd$.  The lift compares two sets
+of outputs; Lifted Monotonicity, defined next, is the property that fibers rise
+in this relation as input \ingrows.  We apply it with $A=\fiber{i}$ and
 $B=\fiber{j}$ for $i\InputOrd j$.  When $X$ is a single output $o$, it asks
 that $o$ have an \outnoun in $\fiber{j}$, which is Relational Monotonicity.
 When $X$ holds several outputs, it asks that they have a common \outnoun in
@@ -182,8 +175,9 @@ that is, $i\mapsto\fiber{i}$ is monotone under the joint refinement lift:
 \end{definition}
 
 With singleton fibers, Lifted Monotonicity is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).  \jmh{What does ``By the reading above'' mean?} By the reading above, it
-implies Relational Monotonicity and directed fibers.  Conversely, suppose both
+(Definition~\ref{def:functional-monotonicity}).  Taking $X$ to be a single
+output gives Relational Monotonicity, and taking $j=i$ gives directed fibers,
+so Lifted Monotonicity implies both.  Conversely, suppose both
 hold, and take $i\InputOrd j$ and a finite nonempty $X\subseteq\fiber{i}$.
 Relational Monotonicity gives each $x\in X$ an \outnoun in $\fiber{j}$, and
 since $\fiber{j}$ is directed, those \outnouns have a common \outnoun in
@@ -193,9 +187,11 @@ $i\mapsto\fiber{i}$ under the Hoare preorder~\cite{abramsky1994domain}, which
 asks only that each output in $A$ have an \outnoun in $B$.  The joint
 refinement lift asks that every finite set of them have a common one, and the
 two agree when $B$ is directed.  Unlike the Hoare preorder, the joint
-refinement lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
-directed. \jmh{But why is it not reflexive, given that $\LiftedOrd$ entails directedness?} The transaction fiber of Figure~\ref{fig:ambiguity-frames}(f)
-therefore fails it already at $j=i$.
+refinement lift, as a relation on sets, is not reflexive: $A\LiftedOrd A$ holds
+only when $A$ is directed.  So Lifted Monotonicity already constrains a spec at
+$j=i$, where it asks $\fiber{i}\LiftedOrd\fiber{i}$, that is, that each fiber be
+directed.  The transaction fiber of Figure~\ref{fig:ambiguity-frames}(f) is
+not, so that spec fails Lifted Monotonicity already at $j=i$.
 
 \paragraph{The common-extension condition.}
 Lifted Monotonicity is stated for one input and its extensions, but runs may
@@ -245,15 +241,16 @@ some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
 nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
 would have.  This is output subsumption, and we put $(k,x)$ in $\Subsumed_o$.
 Every other removed row goes in $\Excluded_o$.  With several outputs at an
-input, the canonical \commitment $x_o$ removes only the rows in $\Excluded_o$
-(Definition~\ref{def:canonical-commitment}); the output event still removes the
-rows in $\Subsumed_o$, but that removal is not a \commitment.  If $x_o$ removes
+input, the canonical \commitment $x_o(i,R)=(i,R\setminus\Excluded_o)$ removes
+only the rows in $\Excluded_o$; the output event still removes the rows in
+$\Subsumed_o$, but that removal is not a \commitment.  This is where the last
+condition of Definition~\ref{def:commitment} matters: each row in
+$\Subsumed_o$ has a remaining \outnoun at its input.  If $x_o$ removes
 every row at $k$, it rules out the input $k$; otherwise it rules out only the
 excluded outputs at $k$.  In the functional case every removed row is excluded,
 so $x_o$ is as before.
 
-\jmh{What does it mean "These are the cases"? That's very vague.}
-These are the cases of Section~\ref{sec:ambiguity-story}.  Emitting $\bot$
+Each of our examples falls on one side of this split.  Emitting $\bot$
 under the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows
 for $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs.  Emitting
 $[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in

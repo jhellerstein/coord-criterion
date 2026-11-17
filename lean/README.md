@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-679 entries.
+675 entries.
 
 ### §2 Functional CALM
 
@@ -194,15 +194,17 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:canonical-commitment-functional»` | abbrev | **Def. |
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commitment-iff-excluded»` | theorem | Def. |
-| `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a specification state." |
+| `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a specification state with current input `i`." |
 | `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments than an output requires, as the registrar does in Figure `fig:election-frames`(d), but such extra commitments are a syste… |
 | `«def:exposable»` | abbrev | **Def. |
 | `«def:exposable/no-commitment»` | theorem | Def. |
-| `«sec:functional-events/functional-exposable»` | theorem | "Equivalently, since the only row at a legal input `j` is `(j, f(j))`, `o` is legal exactly when `f(j)` extends `o` for every legal input `j`." |
+| `«def:commitment»` | abbrev | "Emitting an output can require removing rows that no remaining output covers. |
+| `«eq:commitment-unsubsumed»` | theorem | **Eq. |
+| `«def:commitment/functional»` | theorem | After Def. |
 | `«sec:functional-events/determined»` | abbrev | §2.3 "Determination": |
 | `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
-| `«sec:functional-events/determination-examples»` | theorem | "A functional spec can therefore have undetermined states, as in panel (b) … An input event can do so through input loss, as in panel (c), and a commitment c… |
-| `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state: |
+| `«sec:functional-events/determination-examples»` | theorem | "A spec with multiple distinct outputs can have undetermined states, as in panel (b) … An input event can achieve determination through input loss, as in pan… |
+| `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state with the same output: |
 | `«def:specification-event»` | abbrev | **Def. |
 | `«def:transition-system»` | abbrev | **Def. |
 | `«def:run»` | abbrev | **Def. |
@@ -244,11 +246,10 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:relational-monotonicity/functional»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/compatible»` | abbrev | "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in `F`* if some `u ∈ F` extends all of them." Lean: |
 | `«def:fiber-directedness»` | abbrev | **Def. |
-| `«def:directed-outputs»` | abbrev | **Def. |
+| `«def:directed-outputs»` | abbrev | Def. |
 | `«def:fiber-directedness/singleton»` | theorem | After Def. |
-| `«sec:lifted-monotonicity/subsequence-example»` | theorem | "A common output extension, like a common input extension, need not be unique or least. |
-| `«sec:lifted-monotonicity/directed-example»` | theorem | "Directedness asks only that each finite set have some common output extension in the fiber, not a least one or one given by a fixed merge operator, so it is… |
-| `«sec:lifted-monotonicity/figure-fibers»` | theorem | "The traceroute fiber of Figure `fig:ambiguity-frames`(g) is directed for a simpler reason: |
+| `«sec:lifted-monotonicity/directed-example»` | theorem | "Directedness asks for some common output extension of each finite set, not a least one or one given by a fixed merge operator, so it is weaker than requirin… |
+| `«sec:lifted-monotonicity/figure-fibers»` | theorem | "A singleton fiber is trivially directed. |
 | `«eq:joint-output-order»` | abbrev | **Eq. |
 | `«def:lifted-monotonicity»` | abbrev | **Def. |
 | `«eq:lifted-monotonicity»` | theorem | **Eq. |
@@ -294,12 +295,9 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«cor:convergence»` | theorem | **Cor. |
 | `«cor:convergence/relational-fails»` | theorem | After Cor. |
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
-| `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which history events occur next at the receiver, but it never directly changes the receiver's specification state, and no… |
+| `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which history events occur next at the receiver, but can never directly change the receiver's specification state, and no… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
 | `«sec:systems/registrar»` | theorem | "The registrar of Section election-story is a similar example. |
-| `«def:commitment»` | abbrev | **Def. |
-| `«eq:commitment-unsubsumed»` | theorem | **Eq. |
-| `«sec:systems/canonical-commitment»` | theorem | The canonical commitment of Definition `def:canonical-commitment` satisfies Definition `def:commitment`. |
 | `«def:local-history»` | abbrev | **Def. |
 | `«def:strategy»` | abbrev | **Def. |
 | `«def:system»` | abbrev | **Def. |
@@ -308,7 +306,6 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system/restrict»` | theorem | Def. |
 | `«sec:systems/one-specification»` | theorem | After Def. |
 | `«sec:systems/all-relation»` | theorem | After Def. |
-| `«def:system-output-event»` | abbrev | **Def. |
 | `«def:commitment-event»` | abbrev | **Def. |
 | `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
 | `«sec:systems/commitment-then-output»` | theorem | After Def. |
@@ -318,7 +315,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«fig:cc-commitments»` | theorem | Fig. |
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments that leave some rows at the input." Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the canonical commitment `x_o` of an output." At the canonical state of an input whose transactions `A`, `B`, `C` have each requested commi… |
-| `«sec:systems/run-under-basis»` | abbrev | "A run under a basis `ℬ` is one whose output and commitment events apply only commitments from `ℬ` (Definition run-under-basis)." (Formal definitions: |
+| `«sec:systems/run-under-basis»` | abbrev | After Def. |
 | `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
@@ -329,13 +326,13 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:commitment-conflict/any-bases»` | theorem | Supporting output-only form of Prop. |
 | `«prop:commitment-conflict/reach»` | theorem | Prop. |
 | `«prop:commitment-conflict/any-event»` | theorem | Prop. |
-| `«sec:systems/placement»` | theorem | Paragraph "Placement": |
-| `«sec:systems/shared-nothing»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:systems/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:systems/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:systems/two-phase-commit-prepare»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:systems/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:systems/2pc-timeout-abort-local»` | theorem | A timeout before the final vote applies the nonempty poll-closing commitment. |
+| `«sec:commitment-conflict/deployments»` | theorem | §`sec:commitment-conflict`, after Prop. |
+| `«sec:commitment-conflict/shared-nothing»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:commitment-conflict/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:commitment-conflict/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:commitment-conflict/two-phase-commit-prepare»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:commitment-conflict/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:commitment-conflict/2pc-timeout-abort-local»` | theorem | A timeout before the final vote applies the nonempty poll-closing commitment. |
 
 ### §4.4 Complete CAP
 
@@ -530,11 +527,10 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/commitment»` | abbrev | *commitment* — partial function on states removing rows, none extended by a remaining row at the same input (Def. |
 | `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, commitment, and send events `p` may perform next (Def. |
 | `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
-| `«app:notation/basis»` | abbrev | *basis* (Def. |
-| `«app:notation/produced»` | abbrev | *produced* — every event other than an input or receive permitted by its strategy and using only commitments from `𝓑` (Def. |
-| `«app:notation/system-output-event»` | abbrev | *system output event* — the lifted output event `output(o)`; when `o` is not legal, its commitment `x_o` must be in the basis (Def. |
+| `«app:notation/basis»` | abbrev | *commitment basis* (Def. |
+| `«app:notation/produced»` | abbrev | *history of a system* — every event other than an input or receive permitted by its strategy and using only commitments from `𝓑` (Defs. |
 | `«app:notation/commitment-event»` | abbrev | *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of commitments, emits nothing (Def. |
-| `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
+| `«app:notation/run-under-basis»` | abbrev | *commitment basis; run under a basis* — a set `ℬ` of commitments; input, output, and commitment events whose commitments, including each non-legal output's `… |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, no message crosses sides (Def. |

@@ -17,8 +17,8 @@ carries none, and application-specific data $d$, such as timestamps, version
 vectors, or state identifiers (described below).  Receiving a message does not
 change the specification state.  A participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
-legal common \indesc $k$ of $i$ and $j$, when one exists.  The system chooses $k$ (\S\ref{sec:systems}); the data $d$
-can influence that choice but never changes the state directly.
+legal common \indesc $k$ of $i$ and $j$, when one exists.  The system chooses $k$; the data $d$ can influence that choice but never
+changes the state directly.
 
 Send and receive events connect the participants' locally ordered runs.  Adding
 an edge from each send to its matching receive gives the standard model of a
@@ -39,8 +39,7 @@ $\mathsf{receive}(m)$, with:
   \item for each participant $p$, its specification events, in local order,
         form a defined transition sequence from $\sigma_P(i_p)$: each
         is legal at the state where it occurs; and
-  \item no history event happens before itself
-        (Definition~\ref{def:happens-before}). \jmh{that's ugly, fw referencing a later def!}
+    \item no history event happens before itself.
 \end{enumerate}
 \end{definition}
 
@@ -179,8 +178,8 @@ inputs; by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have
 emitted.  Each participant can then perform $\mathsf{input}(j)$ and
 $\mathsf{output}(u)$ and reach the same state without \commitment
 (Proposition~\ref{prop:exposure-boundary}).  The spec guarantees only that such
-a $u$ exists; choosing it, communicating it, and scheduling the events are up
-to the system (\S\ref{sec:systems}). \jmh{I don't love the fw ref here.}
+a $u$ exists; choosing it, communicating it, and scheduling the events are left
+to the system.
 
 For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence:
@@ -197,19 +196,17 @@ regardless of message paths, arrival order, or the outputs they emitted.
 Each participant run is a run, so Corollary~\ref{cor:state-by-input} applies.
 \end{proof}
 
-\jmh{Does this really belong here, or should we just do a fw pointer to the CRDT section below. Also I made a small edit so we dont use "emit" and "omit" in the same sentence!}
-This is the convergence that strong eventual consistency~\cite{shapiro2011crdt} asks of replicated state: replicas that have received the same updates are in equivalent states.  CRDTs obtain it from a semilattice merge, which suffices but is not needed, since every consistent functional spec has it.  With several outputs per input, convergence fails even for consistent specs.  In Figure~\ref{fig:ambiguity-frames}(g), a run that emitted $\{s{\to}\texttt{s1}\}$
+With several outputs per input, convergence can fail even for consistent
+specs.  In Figure~\ref{fig:ambiguity-frames}(g), a run that emitted $\{\texttt{s}{\to}\texttt{s1}\}$
 has subsumed the route sets that leave it out, while a run at the same input that
-emitted nothing keeps them.  Consistency then guarantees only that such replicas can be reconciled, not that they agree.
+emitted nothing keeps them.  Consistency then guarantees only that such participants can be reconciled, not
+that they agree.
 
 \paragraph{Message data.}
 The data $d$ of a message is any application state other than input that a
 participant chooses to send, such as timestamps, version vectors, gossip, or votes.  Data
 can influence which history events occur next at the receiver, but can
 never directly change the receiver's specification state, and nothing in the
-definitions above depends on it.  \jmh{Why the preview in the following sentences?} Section~\ref{sec:systems} calls the
-rule that makes these choices a participant's \emph{strategy}.  Data can
-influence the strategy, but the strategy can decide only within the
-spec.
+definitions above depends on it.
 Participants may also share emitted outputs in $d$; this does not change
 which cuts are confluent (Appendix~\ref{app:exchanging-outputs}).

@@ -45,7 +45,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:functional-events/extra-commitments»
 #check @CC.Paper.«def:exposable»
 #check @CC.Paper.«def:exposable/no-commitment»
-#check @CC.Paper.«sec:functional-events/functional-exposable»
+#check @CC.Paper.«def:commitment»
+#check @CC.Paper.«eq:commitment-unsubsumed»
+#check @CC.Paper.«def:commitment/functional»
 #check @CC.Paper.«sec:functional-events/determined»
 #check @CC.Paper.«sec:functional-events/determined-one-element»
 #check @CC.Paper.«sec:functional-events/determination-examples»
@@ -86,7 +88,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:fiber-directedness»
 #check @CC.Paper.«def:directed-outputs»
 #check @CC.Paper.«def:fiber-directedness/singleton»
-#check @CC.Paper.«sec:lifted-monotonicity/subsequence-example»
 #check @CC.Paper.«sec:lifted-monotonicity/directed-example»
 #check @CC.Paper.«sec:lifted-monotonicity/figure-fibers»
 #check @CC.Paper.«eq:joint-output-order»
@@ -130,9 +131,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:distributed-consistency/message-data»
 #check @CC.Paper.«sec:distributed-consistency/sharing-outputs»
 #check @CC.Paper.«sec:systems/registrar»
-#check @CC.Paper.«def:commitment»
-#check @CC.Paper.«eq:commitment-unsubsumed»
-#check @CC.Paper.«sec:systems/canonical-commitment»
 #check @CC.Paper.«def:local-history»
 #check @CC.Paper.«def:strategy»
 #check @CC.Paper.«def:system»
@@ -141,7 +139,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:system/restrict»
 #check @CC.Paper.«sec:systems/one-specification»
 #check @CC.Paper.«sec:systems/all-relation»
-#check @CC.Paper.«def:system-output-event»
 #check @CC.Paper.«def:commitment-event»
 #check @CC.Paper.«sec:systems/commitment-event-unobserved»
 #check @CC.Paper.«sec:systems/commitment-then-output»
@@ -162,13 +159,13 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:commitment-conflict/any-bases»
 #check @CC.Paper.«prop:commitment-conflict/reach»
 #check @CC.Paper.«prop:commitment-conflict/any-event»
-#check @CC.Paper.«sec:systems/placement»
-#check @CC.Paper.«sec:systems/shared-nothing»
-#check @CC.Paper.«sec:systems/two-phase-commit»
-#check @CC.Paper.«sec:systems/two-phase-commit-detects»
-#check @CC.Paper.«sec:systems/two-phase-commit-prepare»
-#check @CC.Paper.«sec:systems/2pc-timeout-abort»
-#check @CC.Paper.«sec:systems/2pc-timeout-abort-local»
+#check @CC.Paper.«sec:commitment-conflict/deployments»
+#check @CC.Paper.«sec:commitment-conflict/shared-nothing»
+#check @CC.Paper.«sec:commitment-conflict/two-phase-commit»
+#check @CC.Paper.«sec:commitment-conflict/two-phase-commit-detects»
+#check @CC.Paper.«sec:commitment-conflict/two-phase-commit-prepare»
+#check @CC.Paper.«sec:commitment-conflict/2pc-timeout-abort»
+#check @CC.Paper.«sec:commitment-conflict/2pc-timeout-abort-local»
 #check @CC.Paper.«sec:complete-cap/intro»
 #check @CC.Paper.«def:partitioned-history»
 #check @CC.Paper.«def:partitioned-history/unfolded»
@@ -337,7 +334,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/system»
 #check @CC.Paper.«app:notation/basis»
 #check @CC.Paper.«app:notation/produced»
-#check @CC.Paper.«app:notation/system-output-event»
 #check @CC.Paper.«app:notation/commitment-event»
 #check @CC.Paper.«app:notation/run-under-basis»
 #check @CC.Paper.«app:notation/canonical-run»

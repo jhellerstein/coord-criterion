@@ -360,8 +360,7 @@ abbrev «def:output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   equivalently `R' ≠ R`, some rows have outputs that do not extend `o`, and the
   transition applies the *canonical commitment* `x_o(i,R) = (i,R')`, which
   removes them.  In a functional table each input has only one row, so `x_o`
-  rules out those rows' inputs (`x_o` is a commitment in the sense of
-  Definition `def:commitment`)."
+  rules out those rows' inputs (`x_o` is a commitment)."
 
 Lean: `canonicalCommitment o : Commitment sp` (`commitmentApp o`): the commitment that removes the
 rows in `Excluded_o`, defined at states where `o ∈ R(i)` and `Excluded_o ≠ ∅`. -/
@@ -385,11 +384,12 @@ theorem «def:output-event/commitment-iff-excluded» {I O : Type} [PO I] [PO O] 
   functional_exclude_iff_excluded hf σ o
 
 /-- "The current row `(i,o)` remains, since `o` extends itself, so the event
-always ends at a specification state." -/
+always ends at a specification state with current input `i`." -/
 theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (σ : State sp) (o : O) (h : σ.R σ.cur o) :
-    Step σ (.output o) (outputState σ o h) ∧ (outputState σ o h).R σ.cur o :=
-  ⟨step_outputState σ o h, ⟨h, PO.refl o⟩⟩
+    Step σ (.output o) (outputState σ o h) ∧ (outputState σ o h).R σ.cur o ∧
+      (outputState σ o h).cur = σ.cur :=
+  ⟨step_outputState σ o h, ⟨h, PO.refl o⟩, rfl⟩
 
 /-- "Systems may issue more commitments than an output requires, as the
 registrar does in Figure `fig:election-frames`(d), but such extra commitments
@@ -420,12 +420,40 @@ theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I 
     Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x :=
   exposable_iff_no_commitment σ o
 
-/-- "Equivalently, since the only row at a legal input `j` is `(j, f(j))`,
-`o` is legal exactly when `f(j)` extends `o` for every legal input `j`." -/
-theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O]
-    {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
-    (Exposable σ o ↔ outputTable σ o = σ.R) ∧ (Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x) :=
-  ⟨exposable_iff_functional hf σ o, exposable_iff_refines_all hf σ o⟩
+/-- "Emitting an output can require removing rows that no remaining output
+covers.  We call such a removal a commitment:"
+
+**Def. `def:commitment`** (Commitment).  "A commitment is a partial function `e`
+on specification states that removes a nonempty set of rows, none of which is
+extended by a row that remains at the same input.  That is, whenever
+`e(i,R) = (j,R')`, we have `R' ⊊ R` and
+`(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w` (Eq. commitment-unsubsumed).  It leaves
+the current input unchanged: `j=i`."
+
+Lean: `Commitment sp`: `app : State sp → Option (State sp)` with fields
+`cur_eq`, `sub`, `removes` (`R' ⊊ R`), `unsubsumed` (Eq.
+commitment-unsubsumed). -/
+abbrev «def:commitment» {I O : Type} [PO I] [PO O] (sp : Spec I O) := Commitment sp
+
+/-- **Eq. `eq:commitment-unsubsumed`**: whenever `c(i,R) = (i,R')`,
+"`(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w`" (field `Commitment.unsubsumed`). -/
+theorem «eq:commitment-unsubsumed» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (c : Commitment sp) (σ τ : State sp) (h : c.app σ = some τ) :
+    ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) :=
+  c.unsubsumed σ τ h
+
+/-- After Def. `def:commitment`: "In a functional spec each input has one row,
+so the last condition always holds: a commitment rules out the inputs of the
+rows it removes."  Lean: in a functional specification, if a commitment
+removes the row `(k,u)`, no row at `k` remains. -/
+theorem «def:commitment/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (hf : sp.Functional) (c : Commitment sp) {σ τ : State sp} (h : c.app σ = some τ)
+    {k : I} {u : O} (hu : σ.R k u) (hnu : ¬ τ.R k u) : ∀ w, ¬ τ.R k w := by
+  intro w hw
+  have hw' : σ.R k w := c.sub σ τ h k w hw
+  have : u = w := hf k u w (σ.sub k u hu) (σ.sub k w hw')
+  subst this
+  exact hnu hw
 
 /-- §2.3 "Determination": "A state is *determined* when its upper fiber has
 one element."  Lean: `CALM.Determined σ` is `∃ o, ∀ k x, σ.R k x → x = o`;
@@ -440,24 +468,29 @@ theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO
     Determined σ ↔ ∃ o, (∃ k, σ.R k o) ∧ ∀ k x, σ.R k x → x = o :=
   determined_upper_fiber σ
 
-/-- "A functional spec can therefore have undetermined states, as in
-panel (b) … An input event can do so through input loss, as in panel (c), and
-a commitment can do so by emptying fibers that would otherwise remain
-possible, as in panel (d)." -/
+/-- "A spec with multiple distinct outputs can have undetermined states, as in
+panel (b) … An input event can achieve determination through input loss, as in
+panel (c), and a commitment can do so by ruling out inputs that would otherwise
+remain possible, as in panel (d)." -/
 theorem «sec:functional-events/determination-examples» :
     elec.Functional ∧ ¬ Determined (canon elec bab) ∧ Determined (canon elec baa) ∧
       Determined Figures.Elec.panelD :=
   ⟨elec_functional, elec_panel_b_undetermined, elec_panel_c_determined,
    Figures.Elec.panelD_determined.1⟩
 
-/-- "An event from a determined state always leads to another determined
-state: events only remove rows, and a row at the current input always
-remains." -/
+/-- "An event from a determined state always leads to another determined state
+with the same output: events only remove rows, and a row at the current input
+always remains."  Lean: the next state is determined (first two conjuncts), and
+every row it keeps has the determined output `o` of the previous state (third
+conjunct). -/
 theorem «sec:functional-events/stays-determined» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} :
     (∀ {σ τ : State sp} {e : Event I O}, Step σ e τ → Determined σ → Determined τ) ∧
-      (∀ {σ τ : State sp}, Reach σ τ → Determined σ → Determined τ) :=
-  ⟨step_determined, reach_determined⟩
+      (∀ {σ τ : State sp}, Reach σ τ → Determined σ → Determined τ) ∧
+      (∀ {σ τ : State sp} {e : Event I O} {o : O}, Step σ e τ →
+        (∀ k x, σ.R k x → x = o) → ∀ k x, τ.R k x → x = o) :=
+  ⟨step_determined, reach_determined,
+   fun hs ho k x hx => ho k x (step_sub hs k x hx)⟩
 
 /-! ## Executions and consistency (`sec:executions`) -/
 
@@ -475,9 +508,12 @@ abbrev «def:transition-system» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Pr
 
 /-- **Def. `def:run`** (Canonical run).  "A *canonical run*, or just *run*, is any finite transition sequence of
 the transition system from the canonical state `σ_P(i)` at some input `i`."
-The following scope convention says: "We compare a system's choices with every
-behavior the declared spec permits, not only the behaviors that system happens
-to produce."
+The following scope convention says: "Runs range over every behavior the spec
+permits, not only the behaviors a particular system happens to produce.  A
+system that never uses some of the spec's latitude is better described by a
+narrower spec.  For the spec as written, we assume that any permitted behavior
+may occur."  This is the paper's modeling convention; it is reflected in
+`IsRun` ranging over all runs of the transition system.
 
 Lean: `Exec σ es τ` is execution along the event list `es`; `IsRun τ` says
 that `τ` is the final state of some run (`∃ i es, Exec (canon sp i) es τ`). -/
@@ -529,16 +565,18 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- **Def. `def:consistency`** (Consistency).  "An I/O specification is
 *consistent* when every finite family of runs is confluent at every common input extension of their current inputs, including
-inputs that some run's commitments have ruled out." "Consistency requires confluence at every common input extension, not just
-  at some later one, because conflicting outputs could otherwise escape before
-  the runs reconcile.  In the equality-order election, `f(ab·)=⊥` and `f(aba)=a`
-  are incomparable.  One run can emit `⊥` at `ab·`, while another accepts
-  `aba` and can emit `a`.  The two runs cannot reconcile at their common
-  input extension `aba`, and waiting cannot retract either output from the
-  environment.  More generally, even when later input could reconcile the
-  internal states, the environment may already have acted on the outputs
-  through channels the system does not see, as in Lamport's 'anomalous
-  behavior', and the reconciling input may never arrive."  The observability claim
+inputs that some run's commitments have ruled out."  "Consistency requires
+  confluence at every common input extension of the runs' current inputs, not
+  just at some larger common input extension that arrives later.  Otherwise the
+  runs could emit conflicting outputs before that larger input arrives.  In the
+  equality-order election, `f(ab·)=⊥` and `f(aba)=a` are incomparable.  One run
+  can emit `⊥` at `ab·`, while another accepts `aba` and can emit `a`.  The two
+  runs are not confluent at their common input extension `aba`, and waiting
+  cannot retract either output from the environment.  More generally, even when
+  later input could bring the runs to a common state, the environment may
+  already have acted on the outputs through channels the system does not see,
+  as in Lamport's 'anomalous behavior'.  And even when such a larger input
+  exists, it might never arrive."  The observability claim
   is the paper's modeling rationale.
 
 Lean: `Spec.Consistent`. -/

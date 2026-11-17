@@ -80,12 +80,11 @@ rows at $k$.
   distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
   \commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
   local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, \commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
-    system; basis; produced & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
-  system output event & the lifted output event $\mathsf{output}(o)$; when $o$ is not legal, its \commitment $x_o$ must be in the basis & Def.~\ref{def:system-output-event}\\
+    system; history of a system & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
   \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
-  run under a basis & specification events whose \commitments come from the basis & Def.~\ref{def:run-under-basis}\\
+    \commitment basis; run under a basis & a set $\mathcal B$ of \commitments; input, output, and \commitment events whose \commitments, including each non-legal output's $x_o$, come from $\mathcal B$ & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
-  conflicting runs & a run applies a \commitment removing $(k,x)$; another issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\
+  conflicting runs & a run applies a \commitment removing $(k,x)$; another, under any basis, issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\
   partitioned history; side; explicit possibility relation $E$ & participants divided into two or more sides, no message crosses sides; $E\subseteq P$, the rows whose outputs participants actually emit & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
   same-side continuation for $p$ & extends a partitioned history with events on $p$'s side alone, with no new input and no message from another side & Def.~\ref{def:local-continuation}\\
   Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable in a same-side continuation; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\

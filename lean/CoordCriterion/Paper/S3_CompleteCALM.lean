@@ -168,15 +168,15 @@ the outputs as a list `X`. -/
 abbrev «sec:lifted-monotonicity/compatible» {O : Type} [PO O] (F : O → Prop) (X : List O) : Prop :=
   CompatibleIn F X
 
-/-- **Def. `def:fiber-directedness`** (Directed fiber).  "A fiber `F ⊆ O` is
-*directed* when every nonempty finite `X ⊆ F` is compatible in `F`."  Lean:
-`F` is directed iff `JointLift F F`. -/
+/-- **Def. `def:fiber-directedness`** (Directed fiber, directed fibers).  "A
+fiber `F ⊆ O` is *directed* when every nonempty finite `X ⊆ F` is compatible in
+`F`.  A spec has *directed fibers* when every fiber is directed."  Lean: `F` is
+directed iff `JointLift F F`; the second sentence is `«def:directed-outputs»`. -/
 abbrev «def:fiber-directedness» {O : Type} [PO O] (F : O → Prop) : Prop :=
   JointLift F F
 
-/-- **Def. `def:directed-outputs`** (directed fibers).  "An interface
-specification has *directed fibers* when every fiber `P(i)` is
-directed."  Lean: `Spec.DirectedOutputs` is `∀ i, JointLift (sp.P i)
+/-- Def. `def:fiber-directedness` (label `def:directed-outputs`), second
+sentence: "A spec has *directed fibers* when every fiber is directed."  Lean: `Spec.DirectedOutputs` is `∀ i, JointLift (sp.P i)
 (sp.P i)`. -/
 abbrev «def:directed-outputs» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.DirectedOutputs
@@ -187,36 +187,13 @@ theorem «def:fiber-directedness/singleton» {I O : Type} [PO I] [PO O] {sp : Sp
     (hf : sp.Functional) : sp.DirectedOutputs :=
   functional_directed hf
 
-/-- "A common output extension, like a common input extension, need not be
-unique or least.  For inputs, take two independent transactions `u` and `v`,
-with schedules ordered by subsequence: `uv` and `vu` are both minimal common
-input extensions of `u` and `v`, and neither extends the other."  (Lean names the transactions `a` and `b`.)
-
-Lean: schedules `Sched T` are lists ordered by `List.Sublist` (a `PO`
-instance); "independent" is read as `a ≠ b`.  Both `ab` and `ba` are common
-input extensions of `a` and `b`, each minimal among common input extensions, and they are
-incomparable. -/
-theorem «sec:lifted-monotonicity/subsequence-example» {T : Type} {a b : T}
-    (hab : a ≠ b) :
-    (∀ s t : Sched T, s ≼ t ↔ s.txs.Sublist t.txs) ∧
-    ((⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
-      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
-        u ≼ ⟨[a, b]⟩ → u = ⟨[a, b]⟩) ∧
-    ((⟨[a]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧
-      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
-        u ≼ ⟨[b, a]⟩ → u = ⟨[b, a]⟩) ∧
-    ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ :=
-  ⟨sched_le_iff, sched_two_minimal hab⟩
-
-/-- "Directedness asks only that each finite set have some common output
-extension in the fiber, not a least one or one given by a fixed merge operator,
-so it is weaker than requiring a join-semilattice … For example,
-under inclusion the fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` is directed,
-since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two minimal
-common output extensions, `{a,b,c}` and `{a,b,d}`.  Those two are
-incomparable but compatible, since `{a,b,c,d}` extends both: compatibility
-does not require comparability."  The fiber is the
-type `F5` (all of it). -/
+/-- "Directedness asks for some common output extension of each finite set, not
+a least one or one given by a fixed merge operator, so it is weaker than
+requiring a join-semilattice.  Under inclusion, for example, the fiber
+`{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` is directed, since `{a,b,c,d}` extends
+every member, yet `{a}` and `{b}` have two incomparable minimal common output
+extensions."  The fiber is the type `F5` (all of it); the two minimal common
+output extensions are `{a,b,c}` and `{a,b,d}`. -/
 theorem «sec:lifted-monotonicity/directed-example» :
     JointLift (fun _ : F5 => True) (fun _ : F5 => True) ∧
       (∀ u, (F5.a ≼ u ∧ F5.b ≼ u) ↔ (u = .abc ∨ u = .abd ∨ u = .abcd)) ∧
@@ -226,10 +203,10 @@ theorem «sec:lifted-monotonicity/directed-example» :
       CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] :=
   ⟨f5_directed, f5_common_refinements, f5_minimal_incomparable, f5_compatible⟩
 
-/-- "The traceroute fiber of Figure `fig:ambiguity-frames`(g) is directed for
-a simpler reason: finitely many of its route sets always have a common output
-extension in the fiber, their union.  The two transaction orders in panel (f),
-by contrast, are incompatible." -/
+/-- "A singleton fiber is trivially directed.  The traceroute fiber of Figure
+`fig:ambiguity-frames`(g) is directed too: finitely many route sets in it
+always have a common output extension in the fiber, their union.  The two
+transaction orders in panel (f), by contrast, are incompatible." -/
 theorem «sec:lifted-monotonicity/figure-fibers» :
     (∀ x y, Figures.Trace.inFib x → Figures.Trace.inFib y →
         Figures.Trace.inFib (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) ∧
@@ -237,8 +214,12 @@ theorem «sec:lifted-monotonicity/figure-fibers» :
       ¬ CompatibleIn (Figures.Txn.spec.P ()) [.ab, .ba] :=
   ⟨Figures.Trace.union_mem, Figures.Trace.directed.1, Figures.Txn.not_monotone.1⟩
 
-/-- **Eq. `eq:joint-output-order`** (joint refinement lift).  "For nonempty `A,B ⊆ O`,
-`A ⊑ B ⟺ every nonempty finite X ⊆ A is compatible in B`."  Lean:
+/-- **Eq. `eq:joint-output-order`** (joint refinement lift).  "To state both
+requirements at once, we lift `≼` from outputs to a relation on sets of
+outputs.  For nonempty `A,B ⊆ O`, `A ⊑ B ⟺ every nonempty finite X ⊆ A is
+compatible in B` … The lift compares two sets of outputs; Lifted Monotonicity,
+defined next, is the property that fibers rise in this relation as input
+grows."  Lean:
 `JointLift A B`, with `X` a nonempty list. -/
 abbrev «eq:joint-output-order» {O : Type} [PO O] (A B : O → Prop) : Prop :=
   JointLift A B
@@ -260,8 +241,10 @@ theorem «def:lifted-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : 
     (hf : sp.Functional) : sp.LiftedMono ↔ sp.MonotoneF :=
   liftedMono_iff_monoF hf
 
-/-- After Def. `def:lifted-monotonicity`: "So Lifted Monotonicity holds
-exactly when both [Relational Monotonicity and directed fibers] do." -/
+/-- After Def. `def:lifted-monotonicity`: "Taking `X` to be a single output gives
+Relational Monotonicity, and taking `j=i` gives directed fibers, so Lifted
+Monotonicity implies both.  Conversely, … So Lifted Monotonicity holds exactly
+when both do." -/
 theorem «def:lifted-monotonicity/relmono-directed» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) : sp.LiftedMono ↔ sp.RelMono ∧ sp.DirectedOutputs :=
   liftedMono_iff_relMono_directed sp
@@ -283,9 +266,11 @@ theorem «def:lifted-monotonicity/hoare» {I O : Type} [PO I] [PO O] :
    fun _ _ => Front.hoare_iff_jointLift_of_directed⟩
 
 /-- After Def. `def:lifted-monotonicity`: "Unlike the Hoare preorder, the
-joint refinement lift is not reflexive: `A ⊑ A` holds exactly when `A` is
-directed.  The transaction fiber of Figure `fig:ambiguity-frames`(f) therefore
-fails it already at `j = i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
+joint refinement lift, as a relation on sets, is not reflexive: `A ⊑ A` holds
+only when `A` is directed.  So Lifted Monotonicity already constrains a spec at
+`j=i`, where it asks `P(i) ⊑ P(i)`, that is, that each fiber be directed.  The
+transaction fiber of Figure `fig:ambiguity-frames`(f) is not, so that spec
+fails Lifted Monotonicity already at `j=i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
 directedness of `A` (Def. `def:fiber-directedness`); the panel (f) fiber
 `{[A,B],[B,A]}` is not directed, so `P(i) ⊑ P(i)` fails at `i = {A,B}`. -/
 theorem «def:lifted-monotonicity/not-reflexive» :
