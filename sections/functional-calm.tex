@@ -66,7 +66,7 @@ output can be emitted without \commitment.
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(d) (b), then polls closed}\\
+    \multicolumn{2}{@{}l}{(d) After (b), then polls closed}\\
     \rowhdr
     \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
     \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
@@ -261,7 +261,7 @@ A functional \spectype $\Spec$, with induced function $f$, is
 \end{equation}
 \end{definition}
 
-Thus an output emitted on partial input is \outrelpast by the output at every \indesc.
+In a monotone functional spec, if an output is emitted at any input, subsequent outputs will \outrelbase it.
 
 \paragraph{Relational notation.}
 For a relation $R\subseteq I\times O$, we say that a row $(k,u)$ is
@@ -300,8 +300,7 @@ nothing:
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
-An input event from a canonical state leads to another canonical state, and
-runs start at one.
+An input event from a canonical state leads to another canonical state.
 
 Two sets of outputs recur throughout: those a table permits at a given input,
 and those it still permits there or once more input arrives.  In panel~(b) of
@@ -356,12 +355,15 @@ The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
 upper fiber \outrel $o$.
 \end{definition}
 
-Equivalently, since the only row at a legal input $j$ is $(j,f(j))$, $o$ is
-legal exactly when $f(j)$ \outrel $o$ for every legal input $j$.
+%%%% \jmh{Confusing and unhelpful}
+% Equivalently, since the only row at a legal input $j$ is $(j,f(j))$, $o$ is
+% legal exactly when $f(j)$ \outrel $o$ for every legal input $j$.
 
-Since every later output must \outrelbase $o$, emitting a non-legal $o$ requires
-a \commitment that rules out every legal input whose output does not
-\outrelbase it.
+Since every later output must \outrelbase $o$, it is not possible to simply emit
+a non-legal $o$. A decision to emit a non-legal $o$ must be combined atomically with
+a \commitment that rules out every row whose output does not
+\outrelbase $o$. In a functional spec, those rows contain the only copies of their input values, so
+those inputs become illegal inputs.
 
 \begin{definition}[Output event]
 \label{def:output-event}
@@ -385,7 +387,7 @@ input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a
 
 Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  The
 current row $(i,o)$ remains, since $o$ \outrel itself, so the event always ends
-at a specification state.  A \commitment removes rows that input alone would
+at a value specification state with current input $i$.  A \commitment removes rows that input alone would
 keep; after the canonical \commitment, the inputs of the removed rows are no
 longer legal.  This section uses only canonical \commitments.  Systems
 may issue more \commitments than an output requires, as the registrar does in
@@ -393,22 +395,26 @@ Figure~\ref{fig:election-frames}(d), but such extra \commitments are a
 system's choice, not the spec's (Section~\ref{sec:systems}).
 
 \paragraph{Determination.}
+A spec with multiple distinct outputs can have undetermined states, as in panel~(b) of
+Figure~\ref{fig:election-frames}.  
 A state is \emph{determined} when its upper fiber has one element: one result
 remains, whatever legal input still arrives.  This is a property of the state
-alone.  Under the functional dependency each input determines its own
-output; a determined state goes further, since its current input determines
-the output of every input that may still arrive.  A functional spec
-can therefore have undetermined states, as in panel~(b) of
-Figure~\ref{fig:election-frames}.  \emph{Determination} is the process of
-reaching a determined state.  An input event can do so through input loss, as in panel~(c), and a
-\commitment can do so by emptying fibers that would otherwise remain possible,
+alone.  
+% \jmh{this is more distracting than helpful}
+% Under the functional dependency each input determines its own
+% output; a determined state goes further, since its current input determines
+% the output of every input that may still arrive.  
+\emph{Determination} is the process of reaching a determined state.  
+An input event can achieve determination through input loss, as in panel~(c), and a
+\commitment can do so by removing fibers that would otherwise remain possible,
 as in panel~(d).
-An event from a determined state always leads to another determined state:
+An event from a determined state always leads to another determined state with the same output:
 events only remove rows, and a row at the current input always remains.
 
 \subsection{Executions and consistency}
 \label{sec:executions}
 
+\jmh{This uses "runs" before defined, and the claim of checking a single row is weird and I don't think it's paid of below; I couldn't see it.}
 When runs take different paths through the spec, can they still be
 brought to a common state?  The answer reduces to a check on a single row.
 
@@ -430,6 +436,7 @@ A \emph{canonical run}, or just \emph{run}, is any finite transition sequence of
 canonical state $\sigma_P(i)$ at some input $i$.
 \end{definition}
 
+\jmh{Why is this paragraph here? There seems to be a flow problem in this subsection.}
 We compare a system's choices with every behavior the declared spec permits,
 not only the behaviors that system happens to produce.
 
@@ -479,15 +486,15 @@ inputs that some run's \commitments have ruled out.
 
 Consistency requires confluence at every common \indesc, not just at some
 later one, because conflicting outputs could otherwise escape before the runs
-reconcile.
+reconcile at a common \indesc.
 In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
 incomparable.  One run can emit $\bot$ at $ab\cdot$, while another accepts
 $aba$ and can emit $a$.  The two runs cannot reconcile at their common \indesc $aba$, and waiting cannot
 retract either output from the environment.  More generally, even when later
 input could reconcile the internal states, the environment may already have
 acted on the outputs through channels the system does not see, as in Lamport's
-``anomalous behavior''~\cite{lamport1978time}, and the reconciling input may
-never arrive.
+``anomalous behavior''~\cite{lamport1978time}. Moreover, even if there were a reconciling input,
+it might never arrive.
 
 Confluence has a simple test: some row at the common \indesc must survive
 in every run.

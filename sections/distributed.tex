@@ -36,6 +36,8 @@ system issue \commitments of its own.  A system for a spec fixes a basis of
 \commitments that its participants may apply, and each participant's strategy
 (Definition~\ref{def:strategy}) decides which to apply and when.
 
+\jmh{It's a bit weird to define \commitment this late; we've been using them for a long time. 
+Should this be an [Adjective] Commitment? What adjective?}
 \begin{definition}[\Commitment]
 \label{def:commitment}
 A \emph{\commitment} is a partial function $e$ on specification states that
@@ -58,6 +60,7 @@ Section~\ref{sec:lifted-output-events} satisfy this definition too.
 
 A system draws its \commitments from a basis (Definition~\ref{def:system}).
 
+\jmh{Why is this not in Section~\ref{sec:lifted-output-events}?}
 \begin{definition}[System output event]
 \label{def:system-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  A system emits $o$ by the output
@@ -71,7 +74,9 @@ the system's basis.
 \label{def:commitment-event}
 A \emph{\commitment event} $\mathsf{apply}(\gamma)$ applies a nonempty
 sequence $\gamma=e_1\cdots e_n$ of \commitments, each defined at the state
-its predecessors leave, and emits nothing.  Since later \commitments only
+its predecessors leave, and emits nothing.  
+\jmh{What is the point of this next sentence? How does the first clause justify the second? What thought are we trying to rule out here?}
+Since later \commitments only
 remove rows, the sequence as a whole is itself a \commitment.
 \end{definition}
 
@@ -92,13 +97,15 @@ history events, including the messages it has received.
 A \emph{strategy} for a participant $p$ is a nondeterministic transition
 function: it maps each local history $\lambda$ of $p$ to a set
 $\theta_p(\lambda)$ of output, \commitment, and send events of $p$, and $p$ next
-performs any one of them, or waits.  Input and receive events are not chosen
+performs any one of them, or waits. \jmh{it sounds like $p$ does this in some way other than its strategy. That doesn't make sense.}  Input and receive events are not chosen
 by the strategy: inputs come from the environment and receives from matching
 sends.
 \end{definition}
 
 A strategy says how one participant acts; a system packages one basis with
 a strategy for every participant.
+
+\jmh{Shouldn't commitment basis be defined on its own here (and the preceding glue sentence fixed?}
 
 \begin{definition}[System]
 \label{def:system}
@@ -108,6 +115,7 @@ for each participant $p$, whose output and \commitment events apply only
 \commitments from $\mathcal B$.
 \end{definition}
 
+\jmh{"Produced history" sounds silly. Is it a ``global'' history to complement the Local history?}
 \begin{definition}[Produced history]
 \label{def:produced-history}
 A distributed history \emph{produced} by a system consists of input events
@@ -118,13 +126,16 @@ supplied by the environment, receives of matching sends, and output,
 Coordination mechanisms live in the system: its strategies describe how
 participants use them, and its basis records the \commitments they can enforce.
 A system's strategies select the events of an actual execution; they need not
-realize every run the spec permits.  A deployment can separately restrict which
+realize every run the spec permits.  
+\jmh{This discussion of deployment is too little to be helpful, and just enough to be confusing.
+I'd recommend removing it rather than expanding it; do we need to use it in the body? If so it needs more consideration and careful placement.}
+A deployment can separately restrict which
 participants may emit which rows (Appendix~\ref{app:deployment}).
 
 Participants may behave differently; a replicated (SPMD) system is the special
 case in which they share one strategy (Appendix~\ref{app:cap-response}).
 Systems for different specs compose as components
-(Section~\ref{sec:proper-coordination}).
+(Section~\ref{sec:proper-coordination}). \jmh{The fw ref to composition here is also to little to be helpful.}
 
 Our model places no bound on the set of participants, and a strategy has no way
 to enumerate them.  In general there is no list of all participants, which
@@ -138,6 +149,8 @@ common knowledge, available to each participant's strategy from its initial
 input.
 
 \paragraph{Two bases on three transactions.}
+\jmh{Shouldn't this come earlier, after defining a commitment basis or a system?
+Maybe the issue is that the preceding few paragraphs aren't carrying their weight.}
 We return to the concurrency protocols from the start of this subsection.
 Each protocol's basis contains its ordering \commitments, $\mathsf{order}$ for
 $\mathcal B_{\mathrm{2PL}}$ and $\mathsf{stamp}$ for $\mathcal B_{\mathrm{MVTO}}$,
@@ -190,7 +203,7 @@ an output.
 \paragraph{Observable equivalence.}
 A \emph{run under a basis} $\mathcal B$ is one whose output and
 \commitment events apply only \commitments from $\mathcal B$
-(Definition~\ref{def:run-under-basis}).  Locks, timestamps, quorums, and
+(Definition~\ref{def:run-under-basis}).  \jmh{Citing definitions that are buried in an appendix is uncool.} Locks, timestamps, quorums, and
 consensus differ in how and when they decide.  The next lemma relates runs
 under any such basis to canonical runs.
 
@@ -211,13 +224,19 @@ own.  Full proof in
 Appendix~\ref{app:bases}.
 \end{proof}
 
+\jmh{I'd like some discussion of how and why the output events canonical commitments expand to apply the 
+commitments that were previously applied by system commitment events. }
+
 To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
 where $B$ waits for a lock that $A$ holds.  When $B$ begins to wait, 2PL applies
 $\mathsf{order}(A,B)$ in a \commitment event, before any output, keeping only
 rows that can be completed without placing $B$ before $A$.  Its canonical run
 drops that event, so it keeps every row, including the one completed by
-$[B,A,C]$.  Suppose 2PL later commits all three transactions and orders $A$
+$[B,A,C]$.  
+\jmh{I found the rest of this paragraph less than clear. I think we want to say that the canonical run
+emits a total order of all transactions, which has the 2PL ordering as a subsequence---so all the orderings that 2PL chose are in the output.}
+Suppose 2PL later commits all three transactions and orders $A$
 before $C$ before $B$ in a \commitment event, and then emits $[A,C,B]$.  Every
 row whose output \outrel $[A,C,B]$ satisfies 2PL's \commitments, so 2PL
 removed none of them, and after the output both runs keep exactly these rows.
@@ -240,13 +259,14 @@ confluence directly, since its runs are canonical runs.  For a system with
 argument about that system, which is outside the scope of this paper.
 
 \paragraph{Commitments and conflict.}
-The registrar's failure is one case of a general fact.  Suppose one run
+The registrar's failure \jmh{what failure??} is one case of a general fact.  Suppose one run
 applies a \commitment that removes a row, and another run emits that row's
 output at its input.  Then no continuation brings the two runs to a common
 state at that input.
 
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
+\jmh{Why is conflict defined only wrt a canonical run on one side?}
 Let a run under some \commitment basis from $\sigma_P(i)$ apply a \commitment
 that removes the row $(k,x)$, and let a canonical run from $\sigma_P(i)$ issue
 $\mathsf{input}(k)$ followed by $\mathsf{output}(x)$.  These two runs
@@ -263,24 +283,27 @@ in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 Familiar coordination mechanisms, such as locks and consensus, keep two such
-runs from both occurring.
+runs from both occurring. \jmh{They do? How? Do you expect the reader to be able
+to put together by now? Maybe that's justified by prior examples, maybe not. We haven't
+formalized it at this point, to my knowledge.}
 
 \paragraph{Placement.}
 Whether a coordination mechanism must span participants depends on who can make
 each choice.  A deployment records which outputs each participant may produce.
-With unrestricted placement, the two conflicting runs can occur at different
+With unrestricted placement \jmh{of what, where? what is ``placement''?}, the two conflicting runs can occur at different
 participants; ownership can keep them at one.  Appendix~\ref{app:deployment}
-formalizes this distinction as monotonicity across partitions.
+formalizes this distinction as monotonicity across partitions. \jmh{This paragraph says to little to be scrutable.}
 
 \paragraph{Locks in a shared-nothing database.}
 Consider a database partitioned by key, with each key owned and locked by one
-participant~\cite{stonebraker1986sharednothing}.  Ordering two transactions on
-one key makes a \commitment, but ownership keeps both choices at that owner.  A
+participant~\cite{stonebraker1986sharednothing}.  Choosing an order of two transactions on
+one key requires a \commitment, but ownership of keys and locks keeps both choices \jmh{what do you mean both choices?, and what do you mean "keep"? We just chose an order so discarded one choice.} at that owner.  A
 transaction spanning two keys is different: each owner orders its own part, and
 the two owners can order the same pair oppositely.  They must agree on one
 order.
 
-Two-phase commit adds no further \commitment.  Each owner's prepare reports the
+Two-phase commit adds no further \commitment.  Each data owner's response to a \texttt{prepare} message
+from the coordinator reports the
 \commitment it has already made.  The coordinator then makes the monotone
 decision whether all owners prepared; it detects whether their \commitments
 agree and aborts when they do not.  It does not make the owners agree.  If the
@@ -288,6 +311,8 @@ coordinator instead aborts on timeout before the last vote arrives, that abort
 applies another \commitment, like closing the polls.  One coordinator can make
 that choice locally.  Replicated coordinators need distributed agreement to
 make it, as in Paxos Commit~\cite{gray2006consensus}.
+
+\jmh{I think the flow in the preceding subsection needs to be revisited.}
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
