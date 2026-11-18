@@ -269,8 +269,13 @@ means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-releva
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.\cxbar{9}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{10}{N/M}\cxbar{10}{0.4 0.4 1}{s}State-machine-style specs can be recast in this form, skipping
-operational details that are not externally observable (\S\ref{sec:scope}).
+\color{black}\cxtag{10}{N/M}\cxbar{10}{0.4 0.4 1}{s}An I/O automaton projects onto an \spectype[] that captures the observable
+behavior of all executions of the automaton (\S\ref{sec:scope}).  The
+projection drops the order in which an execution passes through the spec's
+rows, so the spec may also allow behaviors the automaton cannot produce.
+Modeling the automaton itself bridges this gap and separates two questions:
+does any implementation of the spec need coordination, and does this automaton
+need more, because of decisions the spec does not require?
 Despite its simplicity, our model captures not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
 \S\ref{sec:hat-instance}).\cxbar{10}{0.4 0.4 1}{e}
 
@@ -1240,9 +1245,9 @@ can emit $\bot$, accept $aba$, and emit $a$.\cxbar{109}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{110}{N/M}\cxbar{110}{0.4 0.4 1}{s}The CALM and CAP criteria are
 about specs and their canonical runs. A system with no \commitment events
-inherits their confluence, since its runs are canonical runs. For a
-system with \commitments of its own, showing that it inherits that confluence
-requires an argument about that system, which is beyond this paper's scope.\cxbar{110}{0.4 0.4 1}{e}
+inherits their confluence, since its runs are canonical runs. A system
+with \commitments of its own keeps at most the rows of its canonical runs, and
+its confluence depends on which rows those \commitments remove.\cxbar{110}{0.4 0.4 1}{e}
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
@@ -1730,25 +1735,19 @@ invariant confluent.\cxbar{164}{0.4 0.4 1}{e}
 \subsection{Operational models and scope}
 \label{sec:scope}
 
-\color{blue!75!black}\cxtag{165}{B/M}\cxbar{165}{0.4 0.4 1}{s}Automata are a traditional way to model operational behavior
-abstractly~\cite{lynch1987io}.  Our model keeps only the
-inputs and outputs of that behavior and drops the operational details.  The
-mapping is straightforward: for each input, record the outputs of the runs that
-consume it.  Two standard approaches then apply, both used widely and with
-success.  Model checkers explore runs on bounded
-inputs~\cite{newcombe2015aws};
-their input/output pairs become a finite spec in our model that can be tested for
-violations of Lifted Monotonicity.  The only additional requirement is on the
-checker's bounds: any input it reports on must have had all its executions
-explored. The more comprehensive approach is to use
-formal proofs to declare a spec and show, by the standard obligations
-of refinement~\cite{abadi1991refinement}, that it represents
-the machine: every execution's output is dominated by a declared one, and every
-declared row is produced by some execution.  Such proofs are routinely
-mechanized~\cite{hawblitzel2015ironfleet}, and Lifted Monotonicity is then
-checked on the declared spec; \extended{} gives the details.  Work that
-models systems as state machines therefore maps naturally into our model, where
-Complete CALM assesses its consistency directly.\cxbar{165}{0.4 0.4 1}{e}
+\color{blue!75!black}\cxtag{165}{B/M}\cxbar{165}{0.4 0.4 1}{s}An I/O automaton~\cite{lynch1987io} projects onto a spec that pairs each
+execution's receive sequence with its reply sequence, ordered by prefix.
+Every execution is a run of this spec, but the projection drops which rows
+occur in the same execution: a registrar that may reply early and then
+ignore later ballots has a consistent projected spec, yet its executions
+cannot all be reconciled.  Modeling the automaton as a system, with its
+choices as \commitment events, recovers what is dropped:
+the automaton is confluent exactly when its \commitments never remove every
+row its canonical runs could still agree on.  Model checkers can refute
+consistency on bounded inputs~\cite{newcombe2015aws}, and mechanized
+proofs~\cite{hawblitzel2015ironfleet} can show, by the standard obligations of
+refinement~\cite{abadi1991refinement}, that a declared spec stands in for the
+projected one; \extended{} gives the details.\cxbar{165}{0.4 0.4 1}{e}
 
   \color{black}\cxtag{166}{N/M}\cxbar{166}{0.4 0.4 1}{s}Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,

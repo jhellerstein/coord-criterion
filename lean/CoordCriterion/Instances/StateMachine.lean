@@ -2,14 +2,12 @@ import CoordCriterion.FunctionalCALM.Theorem
 import CoordCriterion.CALM.Examples
 
 /-!
-# Specifications induced by state machines (§6, `sec:operational-models`)
+# Specifications induced by state machines
 
-Supports §6.5 (`sec:operational-models`) of `sections/instances.tex`:
-Definition `def:induced-specification`, Proposition
-`prop:induced-specification`, and the single-client remark after it.  The
-"parts" below number this file's own results (an earlier version of the
-proposition); part (2) feeds the single-client remark through
-`IOM.runSpec`.
+A functional-state-machine library from an earlier version of §6.5
+(`sec:operational-models`).  The current §6.5 projects I/O automata instead
+(`Instances/IOTrace.lean`), and no paper entry cites this file.  The "parts"
+below number this file's own results.
 
 * `Machine` — states `Q`, initial state `q0`, environment events `E`, a
   transition relation `step` that accepts every event in every state, and

@@ -372,163 +372,286 @@ preserves the declared invariants.
 
 \subsection{General operational specification models}
 \label{sec:operational-models}
-Many systems are specified as state machines.  This subsection shows how a
-state machine yields an \spectype, so that Complete CALM applies to it.  We
-first fix the machine model, I/O automata, and say which of its parts our spec
-keeps.  We then define the spec a machine induces and show that the projection
-is faithful: the machine's observations are confluent exactly when the induced
-spec satisfies Lifted Monotonicity.  Finally, we discuss how the projection is
-used in practice, by testing on bounded inputs and by proving that a declared
-spec can stand in for the machine.
+Many systems are specified as state machines.  This subsection shows how to
+project a state machine written as an I/O automaton~\cite{lynch1987io} onto a
+spec, and how to analyze the automaton with our results.  Each row of the
+projected spec is a pair the automaton can be observed in: the requests it has
+received and the replies it has sent, as they occur together in some trace.
+Every execution of the automaton is a run of this spec.  The projection drops
+the order in which an execution passes through these rows, however, so a run of
+the spec may combine rows that no single execution reaches in that order.  An
+automaton may make \commitments along the way, like the registrar that closes
+the polls early (Section~\ref{sec:systems}).  After such a \commitment, it can
+no longer reach some rows that other executions do reach.  We therefore also
+map the automaton into our system model, with its choices as \commitment
+events.  Complete CALM tells whether the projected spec is consistent.
+Comparing the automaton's runs with the spec's canonical runs tells whether the
+automaton itself is: it is confluent exactly when its \commitments never remove
+every row its canonical runs could still agree on.  We close with two ways to
+check these properties in practice: testing on bounded inputs, and proof.
 
-\paragraph{The machine model.}
-We take the standard I/O-automaton model~\cite{lynch1987io,lynch1996distributed}
-of a state machine, its clients, and the channel that carries their
-state-machine events.  The machine $M$ has states $Q$, an initial state $q_0$,
-receive transitions for state-machine events that accept every payload in every
-state, reply transitions that send a reply to a client and may change state,
-internal transitions, and an \emph{observation} $\mathrm{obs}:Q\to O$.
-Replies are messages to clients.  The observation is what our spec judges: the
-output of the induced spec at an input is the observation of the machine's
-state.  There are finitely many clients.  Each may send a state-machine event
-with any payload at any time, and receives the machine's replies.  A channel
-carries each state-machine event at most once to the machine's input queue,
-possibly reordering events on the way, and the machine consumes the queue in
-order.  In an execution of the composed automaton, \emph{happens-before} is
-Lamport's order~\cite{lamport1978time}: the transitive closure of the local
-order at the machine and at each client and of the edge from sending a
-state-machine event to receiving it.
+\paragraph{The automaton model.}
+We use the standard I/O-automaton
+model~\cite{lynch1987io,lynch1996distributed}.  An automaton has input, output,
+and internal actions, a set of states with a nonempty set of start states, and
+a transition relation in which every input action is enabled in every state.
+A finite execution takes a sequence of steps from a start state.  We read the
+automaton as a server.  A client sends a request, the request arrives at the
+server, and the server later hands it to its computation.  The arrival is the
+automaton's input action.  Buffering requests, handing them to the computation,
+and deciding when a reply fires are the automaton's own internal behavior, and
+its replies are its output actions.  The \emph{receive sequence} of an
+execution lists its input actions in order, and its \emph{reply sequence} lists
+its output actions in order.  We order both kinds of sequence by prefix.  This
+subsection treats a single automaton.  A server built from several
+communicating automata is a distributed system in the sense of
+Section~\ref{sec:distributed-execution}.
 
-\paragraph{The induced spec.}
-Each finite execution of the automaton determines an input and an output in
-our sense.
-
-\begin{definition}[Input of an execution]
-\label{def:execution-input}
-The \emph{input} of a finite execution of the automaton is the input, in our
-sense, that records the state-machine events the machine has received, ordered
-by happens-before between their sends.  One such input \inrel another,
-$h\InputOrd h'$, when $h\subseteq h'$ and the two orders agree on $h$.
+\begin{definition}[Projection of an automaton]
+\label{def:projection}
+The \emph{projection} of an automaton $M$ is the \spectype $P_M$ whose inputs
+are receive sequences and whose outputs are reply sequences, and whose rows
+are the pairs $(w,t)$ for which some finite execution of $M$ has receive
+sequence $w$ and reply sequence $t$.  We call $P_M$ the \emph{projected spec}
+of $M$.
 \end{definition}
 
-The input orders state-machine events by their sends, not their arrivals:
-arrival order is what differs between executions.  Clients may react to
-replies.  If a client sends an event after receiving a reply, that send happens
-after every event the machine had received when it replied, so the input
-records what the client's choice could depend on.
+Followed step by step, an execution is a run of $P_M$.  An arrival is an input
+event carrying the receive sequence so far, a reply is an output event carrying
+the reply sequence so far, and an internal step is no event.  What grows along
+the execution is the reply sequence, whatever the replies say: a counter's
+reports may go up, down, and up again, and its reply sequence still only
+grows.
 
-\begin{definition}[Induced specification]
-\label{def:induced-specification}
-The specification \emph{induced} by $M$ and its environment is the \spectype
-whose inputs are the inputs of the automaton's finite executions
-(Definition~\ref{def:execution-input}), and whose fiber at an input $h$
-contains the observation of the machine's final state in every execution with
-input $h$.
-\end{definition}
-
-The machine is a single participant.  The clients and the channel are its
-environment, and, as in Section~\ref{sec:election-story}, the environment may
-react to what it sees when choosing later input.  Distributing the machine is
-then direct: the clients remain the environment, each client's state-machine
-events are sent to some participant, and among participants
-Section~\ref{sec:distributed-execution} applies, using the induced spec.
-
-The machine's observations are \emph{confluent across its executions} when,
-for executions with inputs $h_1,\ldots,h_k$ and any input $h$ of an execution
-that \inrel each $h_r$, some execution with input $h$ ends in an observation
-that \outrel each of theirs.
-
-\begin{proposition}[Induced specifications]
-\label{prop:induced-specification}
-The induced specification is an \spectype, and the input of an execution only
-\ingrows as the execution continues.  The machine's observations are confluent
-across its executions exactly when the induced specification satisfies Lifted
-Monotonicity.
+\begin{proposition}[Projection]
+\label{prop:projection}
+Let $M$ be an automaton.
+\begin{enumerate}
+  \item $P_M$ is an \spectype, and every finite execution of $M$ is a run of
+        $P_M$ from the canonical state at the empty receive sequence, with
+        one input event per arrival and one output event per reply.
+  \item $P_M$ satisfies Relational Monotonicity.  It is consistent exactly
+        when, at each receive sequence, any two reply sequences in its fiber
+        are one a prefix of the other.
+\end{enumerate}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Inclusion with agreeing orders is a partial order, and continuing an execution
-only adds received events.  For the second claim we use the common-extension
-form of Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  A
-row of the induced spec at $h_r$ is the final observation of an execution with
-input $h_r$, and a common \outnoun at $h$ is the observation of an execution
-with input $h$, so the common-extension condition says exactly that the
-observations are confluent.
+(1) Every receive sequence has a row, since every input action is always
+enabled.  Each event of the run is legal because the execution itself reaches
+the row the event needs.  (2) An execution can receive any further requests
+before it replies again, which gives Relational Monotonicity.  Finitely many
+reply sequences have a common extension exactly when any two of them are one
+a prefix of the other, and then the longest of them is one.  Complete CALM
+(Theorem~\ref{thm:complete-calm}) then gives the stated condition.
 \end{proof}
 
-With one client whose events arrive in the order it sent them, every input is
-a sequence of payloads, ordered by prefix.  If, in addition, reply and internal
-transitions leave the state unchanged and receiving is deterministic, the
-induced spec is functional, and it is consistent exactly when
-$\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every receive transition
-$q\to q'$ from a reachable state.
+Since $P_M$ is an \spectype, the results of
+Section~\ref{sec:distributed-execution} apply to it as to any other spec.
+
+The converse of item~(1) fails.  Consider a registrar that receives ballots
+$p$.  After the first ballot it may reply $x$ at once and ignore later
+ballots, which closes the polls.  Or it may wait for a second ballot, reply
+$x$, and later reply $z$.  Its projected spec has a run that receives $p$,
+replies $x$, receives a second $p$, and replies $z$: each row the run passes
+through occurs in some execution.  No execution has that trace, because a
+registrar that replied early never replies $z$.  Every reply sequence of the
+registrar is empty, $x$, or $xz$, so its projected spec is consistent.
+
+\paragraph{The automaton as a system.}
+To recover what the projection drops, we map the automaton into our system
+model (Definition~\ref{def:system}) with a single participant.  The rows of
+$P_M$ that a finite execution can still reach, by continuing from its final
+state, are its \emph{reachable rows}.  Removing every other row from a table
+that contains them is a \commitment whenever it removes a row.  Suppose the
+execution can reach $(k,w)$, and $u$ is a prefix of $w$ that extends the
+execution's reply sequence.  The execution can stop replying once it has
+replied $u$ and then receive the rest of $k$, so it also reaches $(k,u)$.  No
+removed row is therefore \outrelpast by a kept row at the same input.
+
+\begin{definition}[System of an automaton]
+\label{def:automaton-system}
+An execution of $M$ \emph{matches} a local history $\lambda$ when the input
+and output events of $\lambda$ carry the execution's arrivals and replies in
+order, and the table after $\lambda$ keeps all of the execution's reachable
+rows.  An input event may carry several consecutive arrivals, or none.  The
+\emph{system of} $M$ has one participant and runs over $P_M$.  Its basis
+contains the canonical \commitments and, for each finite execution, the
+\commitment that keeps only that execution's reachable rows.  After a local
+history $\lambda$, its strategy allows the events that some execution matching
+$\lambda$ allows next: the output event that adds a reply the execution's
+final state can send, and the \commitment event that keeps only the
+execution's reachable rows.
+\end{definition}
+
+\begin{proposition}[System of an automaton]
+\label{prop:automaton-system}
+Let $M$ be an automaton.
+\begin{enumerate}
+  \item Every history of the system of $M$ is matched by some execution of
+        $M$.
+  \item Every execution of $M$ is matched by a history of the system whose
+        input and output events are its run of $P_M$
+        (Proposition~\ref{prop:projection}) and whose table is exactly its
+        reachable rows.
+  \item After any history, one \commitment event brings the table down to
+        exactly the reachable rows of a matching execution, unless the table
+        is already there.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+(1) By induction on the history.  An input event extends the current receive
+sequence, and the matching execution receives the added requests.  An output
+or \commitment event is chosen by the strategy for some matching execution,
+which then takes the corresponding step.  (2) By induction on the execution.
+After each step, internal steps included, the history adds the step's event,
+if any, and then, if the step lost reachable rows, the \commitment event
+of~(3).  (3) The \commitment of the basis for the matching execution applies
+by the argument above.
+\end{proof}
+
+Item~(3) reflects the one difference between the two models.  In the
+automaton, a reply and the loss of reachable rows it causes happen in one
+step.  In the system, the loss is a separate \commitment event, so an input
+may arrive in between, and the \commitment then applies after that input.
+
+The \commitment events record choices that traces do not show.  Consider an
+automaton that, after the first request, takes an internal step to one of two
+states.  Both reply $x$, but only the second can then reply $z$.  A second
+automaton has only the second state.  The two automata have the same traces,
+and therefore the same projected spec.  In the first, the internal step to the
+first state loses reachable rows, so its system removes the rows with reply
+sequence $xz$ in a \commitment event.  The system of the second automaton never
+does.
+
+\paragraph{When the automaton itself is confluent.}
+\begin{definition}[Confluent automaton]
+\label{def:confluent-automaton}
+An automaton is \emph{confluent} when, for any finitely many finite executions
+and any receive sequence $j$ that \inrel the receive sequence of each, there
+is a reply sequence $u$ such that each of the executions can continue to an
+execution with receive sequence $j$ and reply sequence $u$.
+\end{definition}
+
+\begin{proposition}[Confluent automata]
+\label{prop:automaton-confluence}
+Let $M$ be an automaton.
+\begin{enumerate}
+  \item Every finite family of histories of the system of $M$ is confluent at
+        every common \indesc of their current inputs, by continuations that
+        may apply any \commitments, exactly when $M$ is confluent.
+  \item For an execution of $M$, the canonical run of its run of $P_M$ keeps
+        the rows at extensions of its receive sequence whose reply sequences
+        extend its own.  The history of item~(2) of
+        Proposition~\ref{prop:automaton-system} keeps those rows less the rows
+        its \commitment events removed.  $M$ is confluent exactly when, for any
+        finitely many executions and any common \indesc $j$ of their receive
+        sequences, some row at $j$ lies in the canonical table of each and in
+        none of the sets of removed rows.
+  \item If $M$ is confluent, $P_M$ is consistent.  The converse fails.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+(1) By Proposition~\ref{prop:automaton-system}, each history's table keeps the
+reachable rows of a matching execution, and each execution has a history whose
+table is exactly those rows.  By Proposition~\ref{prop:system-confluence},
+the histories are confluent at $j$ exactly when some row at $j$ survives in
+all of their tables, that is, when it is reachable from every matching
+execution.  (2) This is Proposition~\ref{prop:system-confluence}(1) for the
+histories of Proposition~\ref{prop:automaton-system}(2).  (3) A row at $j$
+reachable from executions with rows $(w_1,t_1),\ldots,(w_n,t_n)$ is a row of
+$P_M$ whose reply sequence extends each $t_r$, which is the common-extension
+condition (Proposition~\ref{prop:common-expansion-form}).  The registrar is a
+counterexample to the converse.
+\end{proof}
+
+For the registrar, replying early loses every reachable row with reply
+sequence $xz$, so its system removes them in a \commitment event.  An execution
+that replied early and one that waited and replied $xz$ then have no common
+reachable row at two ballots, and the registrar is not confluent, although its
+projected spec is consistent.  Closing the polls is a \commitment the projected
+spec does not require: a canonical run can emit $x$ after one ballot and still
+emit $xz$ after the second.
+
+Inconsistency can also come from the projected spec itself.  Consider a counter
+whose report carries the count at the moment the report fires.  After two
+arrivals, one execution has reported $1$, before the second arrival, and
+another has reported $2$.  Neither reply sequence is a prefix of the other, so
+the projected spec is inconsistent.  A counter that records the count when each
+request arrives, and later reports from that record, sends the reports
+$1,2,\ldots,m$ in order.  Its projected spec is consistent, and the counter
+itself is confluent.
 
 \paragraph{Testing and proof.}
-The induced spec is defined by every finite execution of the machine
-and its environment.  There are infinitely many such executions, so the
-induced spec is a semantic object: we can reason about it, but not
-list it.  Two standard approaches make that reasoning practical.
+The projected spec and the system of an automaton are defined by every finite
+execution of the automaton.  There are infinitely many such executions, so
+both are semantic objects: we can reason about them, but not list them.  Two
+standard approaches make that reasoning practical.
 
-The first is testing.  A simulator or model checker runs the machine and its
-environment on bounded inputs~\cite{misra1986des,flanagan2005dpor}; the
-input/output pairs it collects form a finite spec in our model,
-which can be checked for violations of Lifted Monotonicity.  This is routine engineering
+The first is testing.  A simulator or model checker runs the automaton on
+bounded inputs~\cite{misra1986des,flanagan2005dpor}; the pairs of receive and
+reply sequences it collects form a finite spec in our model, which can be
+checked for violations of Lifted Monotonicity.  This is routine engineering
 practice and has found serious bugs in production
 systems~\cite{newcombe2015aws,zhou2021foundationdb}.  Testing suits
-refutation.  If Lifted Monotonicity fails, finitely many executions show it:
-executions with inputs $h_1,\ldots,h_k$, and a common \indesc $h$ at which no
-execution's observation \outrel all of theirs.  A violation found in the
-finite spec is such a witness when the exploration covers every
-execution with input $h$, so that its fiber there is complete.  Testing cannot show that
-Lifted Monotonicity holds, since that is a claim about every input.
+refutation.  If the projected spec is inconsistent, two executions show it:
+they have the same receive sequence, and neither reply sequence is a prefix of
+the other.  A violation of the automaton's own confluence is shown by finitely
+many executions and a receive sequence at which they have no common reachable
+row, and confirming that they have none means exploring all of their
+continuations to that receive sequence.  Testing cannot show that Lifted
+Monotonicity holds, since that is a claim about every input.
 
-The second approach is proof.  Verification work routinely proves that a
-machine refines a spec: every observation of every execution is allowed by the
-spec, up to refinement of outputs.  Such proofs use invariants, properties of
-the machine's state that hold initially and are preserved by every step, so
-they are checked one step at a time and never by enumerating executions.  They
-appear as forward simulations~\cite{lynch1995forward} and refinement
+The second approach is proof.  Verification work routinely proves that an
+automaton refines a spec: every trace of the automaton is allowed by the spec.
+Such proofs use invariants, properties of the automaton's state that hold
+initially and are preserved by every step, so they are checked one step at a
+time and never by enumerating executions.  They appear as forward
+simulations~\cite{lynch1995forward} and refinement
 mappings~\cite{abadi1991refinement}, and are mechanized for practical
 distributed systems~\cite{hawblitzel2015ironfleet}.  Our use adds one
-obligation.  A \emph{declared} spec $D$ gives, for each input, a set of outputs
-by a rule, such as ``the set of ballots received'' or ``the largest timestamp
-seen''; it does not enumerate executions.  To check Lifted Monotonicity on $D$
-instead of on the induced spec, two things must be shown, and both are needed,
-because neither alone preserves Lifted Monotonicity: if $D$ omits an output the
-machine can produce, it may hide an incompatibility, and if $D$ adds an output
-the machine cannot produce, it may supply a common \outnoun that no execution
-reaches.
+obligation.  A \emph{declared} spec $D$ gives, for each receive sequence, a set
+of reply sequences by a rule; it does not enumerate executions.  To check
+consistency on $D$ instead of on the projected spec, two things must be shown,
+and both are needed: if $D$ omits a reply sequence the automaton can produce,
+it may hide an incompatibility, and if $D$ adds one the automaton cannot
+produce, it may create an incompatibility the automaton does not have.
 \begin{itemize}
-  \item \emph{Realizability.}  Every output that $D$ allows at an input is the
-        observation of some execution with that input.
-  \item \emph{Domination.}  Every execution's final observation is
-        \outrelpast by some output that $D$ allows at its input.
+  \item \emph{Realizability.}  Every reply sequence that $D$ allows at a
+        receive sequence is the reply sequence of some execution with that
+        receive sequence.
+  \item \emph{Domination.}  Every execution's reply sequence is a prefix of
+        one that $D$ allows at its receive sequence.
 \end{itemize}
-Domination is the refinement obligation above.  Realizability is its converse,
-that $D$ allows nothing the machine cannot produce; it too is proved once for
-all inputs, typically by induction on the input.  $D$ need not match the
-machine exactly: it may leave out observations that others \outrelbase, such
-as transient intermediate states.
+Domination is the counterpart, for receive and reply sequences, of the
+refinement obligation above.  Realizability is its converse, that $D$ allows
+nothing the automaton cannot produce; it too is proved once for all inputs,
+typically by induction on the input.  $D$ need not match the automaton
+exactly: it may leave out reply sequences that others extend.  For the
+recording counter, the rule ``after $n$ arrivals, the reports $1,\ldots,n$''
+satisfies both obligations.
 
 \begin{proposition}[Declared specifications]
 \label{prop:declared-specification}
-Let $D$ be an \spectype whose inputs correspond, by an order
-isomorphism, to the inputs that occur.  If $D$ satisfies realizability and
-domination, then $D$ satisfies Lifted Monotonicity exactly when the induced
-specification does, and so exactly when the machine's observations are
-confluent across its executions.
+Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
+correspond, by an order isomorphism, to receive sequences.  If $D$ satisfies
+realizability and domination, then $D$ is consistent exactly when the
+projected spec is.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-We use the common-extension form.  Given rows of the induced spec, we
+We use the common-extension form.  Given rows of the projected spec, we
 dominate each by a row of $D$, take their common \outnoun in $D$, and realize
-it.  Conversely, rows of $D$ are rows of the induced spec, and their
-common \outnoun there is dominated back into $D$.
+it.  Conversely, rows of $D$ are rows of the projected spec, and their common
+\outnoun there is dominated back into $D$.
 \end{proof}
 
-Together, the two obligations let $D$ stand in for the machine: Lifted
-Monotonicity is checked on $D$ exactly as everywhere else in this paper, and
-nothing about coordination needs to be proved about the machine itself.
+Together, the two obligations let $D$ stand in for the projected spec:
+consistency is checked on $D$ exactly as everywhere else in this paper.
+Whether the automaton itself is confluent is a question about its executions
+(Proposition~\ref{prop:automaton-confluence}).
 
 \subsection{Scope}
 \label{sec:scope}

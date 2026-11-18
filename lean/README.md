@@ -38,13 +38,12 @@ that leader election is their running example, how Ameloot et al. and they
 model placement, that an identifier and an order on identifiers is what their
 coordination-free transducers know, that their programs must treat data values only as interchangeable symbols (their characterization theorem itself is proved in Lean, both directions, `«sec:query-instance/characterization»`); and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node chooses); in §4 (`sec:systems`), that Ameloot et al. show a list of
 all participants enlarges what a system can compute; in
-Appendix B (`app:hat-taxonomy`), what the extended HAT paper's text says (its descriptions of its algorithms, the wording, names and examples of Defs. 14, 24, 26, 28, 30, 32 and 34, and the legend of its dependency graphs, which swaps the labels of read- and anti-dependencies relative to its figures; the definitions as we read them, and the consequences of the literal readings of Defs. 26 and 34, are in Lean, `Paper/AppB_HATTaxonomy.lean`, `«sec:hat-instance/myr-as-written»`); in Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, in its "Testing and proof" paragraph, that simulators and model checkers run the
-machine on bounded inputs and that the input/output pairs they collect form a
+Appendix B (`app:hat-taxonomy`), what the extended HAT paper's text says (its descriptions of its algorithms, the wording, names and examples of Defs. 14, 24, 26, 28, 30, 32 and 34, and the legend of its dependency graphs, which swaps the labels of read- and anti-dependencies relative to its figures; the definitions as we read them, and the consequences of the literal readings of Defs. 26 and 34, are in Lean, `Paper/AppB_HATTaxonomy.lean`, `«sec:hat-instance/myr-as-written»`); in Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, the reading of an automaton as a server (arrival, handing a request to the computation, when a reply fires) and that a server built from several communicating automata is a distributed system; in its "Testing and proof" paragraph, that simulators and model checkers run the
+automaton on bounded inputs and that the pairs of receive and reply sequences they collect form a
 finite specification that can be checked for violations, that this is routine engineering practice and has
-found serious bugs in production systems, the example rules of a declared specification ("the set
-of ballots received", "the largest timestamp seen"), and the relation of the
+found serious bugs in production systems, that confirming a violation of an automaton's confluence means exploring the continuations of the executions involved, and the relation of the
 two obligations to the verification literature (invariants, forward
-simulations, refinement mappings, mechanized proofs, realizability typically
+simulations, refinement mappings, mechanized proofs, domination as the counterpart of refinement, realizability typically
 proved by induction on the input); in Appendix D (`app:components`),
 that a system's messages and partitions stay inside its component, that the
 implementation form determines which internal system model and coordination
@@ -114,9 +113,9 @@ first and supporting claims and examples follow.
 | `Instances/BaccaertKetsman.lean` | `CC.BK`, `CC.CAP` | §6.1 | Baccaert and Ketsman's setting as an anonymous cluster: anonymized strategies, histories side by side, causal histories, placement (participants are nodes, inputs only held, node-closed facts), consistency on placed histories, realized rows; their Prop. 11 (necessity: realized rows are node monotone) |
 | `Instances/BKTransducers.lean` | `CC.BK` | §6.1 | Baccaert and Ketsman's operational model (node programs under Id+Ord, networks, broadcast log, fair runs, quiescent output, computes/characterizes) and its translation into an anonymous cluster: computing implies consistency on placed histories (`placedConsistent_of_computes`), characterized rows are covered by placed histories (`covers_of_characterizes`), and their Prop. 11 on finite networks through our necessity theorem (`nodeMono_of_characterizes`) |
 | `Instances/BKSufficiency.lean` | `CC.BK` | §6.1 | Sufficiency (their Prop. 10): a node program under Id+Ord (`qProg`: gossip records, quorums confirmed by every member, the least node decides once, decisions extend all known ones) computes and characterizes every node monotone behavior whose outputs lie at network nodes (`computes_qProg`, `characterizes_qProg`); with Prop. 11, their Thm. 5 (`bk_characterized_iff`) and its computability form with their Lemma 4 (`bk_computable_iff`) |
-| `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by the single-client remark after Prop. induced-specification); arrival-order independence; the election as an induced specification |
-| `Instances/IOMachine.lean` | `CC.IOM` | §6 | A general machine automaton (receives, outputs and internal steps that may change state; state machines as the special case `ofSM`), clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; fibers are reached by machine executions on arrival orders, every one over a bag without observations; FIFO single client is the table of payload sequences under prefix (the prefix encoding for state machines); confluence across executions ⇔ Lifted Monotonicity, also for emitted outputs when outputs report observations; later sends after an output (Def./Prop. induced-specification) |
-| `Instances/IOMachineCofinal.lean` | `CC.IOM` | §6.5 | Prop. declared-specification (machine bridge): a declared spec over the occurring inputs (or along an order embedding of them) whose rows are produced by executions and dominate every execution's final observation is Lifted Monotone iff the induced spec is, iff observations are confluent; re-derives single-client FIFO stationary consistency ⇔ `TransMono` and Lifted Monotonicity of the transient dip (a machine whose internal step lowers the observation); finite witnesses of a violation of Lifted Monotonicity, certified by the machine's own runs or a finite list containing the fiber; the `fork` machine, showing neither obligation alone suffices |
+| `Instances/StateMachine.lean` | `CC.SM` | — | State machines and the prefix-ordered table of event sequences; arrival-order independence; the election as an induced specification (from an earlier version of §6.5; not cited by the paper) |
+| `Instances/IOTrace.lean` | `CC.IOT` | §6.5 | The projection of an I/O automaton (receive and reply sequences under prefix): executions are runs; Relational Monotonicity; consistency iff reply sequences at each receive sequence are pairwise prefix-comparable; reachable rows and the narrowing commitment; the system of an automaton (soundness, completeness, catching up); confluent automata, system confluence and removed rows; a confluent automaton has a consistent projected spec; testing witness; declared specs |
+| `Instances/IOTraceExamples.lean` | `CC.IOT` | §6.5 | The early-closing registrar (consistent projected spec, not confluent; a run of the projected spec no execution has); a hidden internal choice that is a commitment event; racing and recording counters; neither declared-spec obligation suffices alone; a declared rule for the recording counter |
 | `Instances/TestingLimits.lean` | `CC.Testing` | §6.5 | Testing cannot show Lifted Monotonicity: for every finite set of explored inputs, two specs agree on those fibers, one Lifted Monotone and one not |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
 | `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no exclusion; pipeline runs as composite runs, confluence, where the upstream must apply an exclusion), systems with strategies, exclusion-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
@@ -149,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-687 entries.
+695 entries.
 
 ### §2 Functional CALM
 
@@ -469,15 +468,23 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | Invariant confluence is consistency of `𝒮_𝓘`: |
 | `«sec:iconfluence-instance/uniqueness»` | theorem | The uniqueness example: |
 | `«sec:iconfluence-instance/concurrency-decides»` | theorem | "Concurrency, not the transactions alone, decides the outcome: |
-| `«sec:operational-models/later-sends»` | theorem | "The input orders state-machine events by their sends, not their arrivals: |
-| `«def:induced-specification»` | theorem | **Def. |
-| `«def:execution-input»` | abbrev | **Def. |
-| `«sec:operational-models/distributing»` | theorem | "Distributing the machine is then direct: |
-| `«prop:induced-specification»` | theorem | "The machine's observations are *confluent across its executions* when, for executions with inputs `h₁,…,hₖ` and any input `h` of an execution that extends e… |
-| `«sec:operational-models/single-client»` | theorem | "With one client whose events arrive in the order it sent them, every input is a sequence of payloads, ordered by prefix. |
-| `«sec:operational-models/testing-witness»` | theorem | "If Lifted Monotonicity fails, finitely many executions show it: |
+| `«def:projection»` | theorem | **Def. |
+| `«sec:operational-models/step-by-step»` | theorem | "Followed step by step, an execution is a run of `P_M`. |
+| `«prop:projection»` | theorem | **Prop. |
+| `«sec:operational-models/distributing»` | theorem | "Since `P_M` is an I/O specification, the results of Section `sec:distributed-execution` apply to it as to any other spec." Lean: |
+| `«sec:operational-models/registrar»` | theorem | "The converse of item (1) fails. |
+| `«sec:operational-models/reachable-rows»` | theorem | "The automaton as a system": |
+| `«def:automaton-system»` | abbrev | **Def. |
+| `«prop:automaton-system»` | theorem | **Prop. |
+| `«sec:operational-models/hidden-choice»` | theorem | "The commitment events record choices that traces do not show. |
+| `«def:confluent-automaton»` | abbrev | **Def. |
+| `«prop:automaton-confluence»` | theorem | **Prop. |
+| `«sec:operational-models/registrar-commitment»` | theorem | "For the registrar, replying early loses every reachable row with reply sequence `xz`, so its system removes them in a commitment event. |
+| `«sec:operational-models/counters»` | theorem | "Inconsistency can also come from the projected spec itself. |
+| `«sec:operational-models/testing-witness»` | theorem | "If the projected spec is inconsistent, two executions show it: |
 | `«sec:operational-models/testing-cannot-show»` | theorem | "Testing cannot show that Lifted Monotonicity holds, since that is a claim about every input." Lean (`Testing.testing_cannot_show`): |
 | `«sec:operational-models/both-halves»` | theorem | "The second approach is proof. |
+| `«sec:operational-models/recording-rule»` | theorem | "Domination is the counterpart, for receive and reply sequences, of the refinement obligation above. |
 | `«prop:declared-specification»` | theorem | **Prop. |
 
 ### Appendix A: Notation

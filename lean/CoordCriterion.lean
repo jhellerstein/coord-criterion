@@ -43,8 +43,8 @@ import CoordCriterion.Instances.BaccaertKetsman
 import CoordCriterion.Instances.BKTransducers
 import CoordCriterion.Instances.BKSufficiency
 import CoordCriterion.Instances.StateMachine
-import CoordCriterion.Instances.IOMachine
-import CoordCriterion.Instances.IOMachineCofinal
+import CoordCriterion.Instances.IOTrace
+import CoordCriterion.Instances.IOTraceExamples
 import CoordCriterion.Instances.TestingLimits
 import CoordCriterion.Instances.HATRC
 import CoordCriterion.Instances.HATSpec

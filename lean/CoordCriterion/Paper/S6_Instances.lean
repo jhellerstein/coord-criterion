@@ -5,9 +5,7 @@ import CoordCriterion.Instances.Placement
 import CoordCriterion.Instances.BKTransducers
 import CoordCriterion.Instances.BKSufficiency
 import CoordCriterion.CALM.Lemmas
-import CoordCriterion.Instances.StateMachine
-import CoordCriterion.Instances.IOMachine
-import CoordCriterion.Instances.IOMachineCofinal
+import CoordCriterion.Instances.IOTraceExamples
 import CoordCriterion.Instances.TestingLimits
 import CoordCriterion.Distributed.Histories
 import CoordCriterion.CAP.CompleteCAP
@@ -32,8 +30,8 @@ it formalizes.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
   `Instances/QueryRefinements.lean`, `Instances/Placement.lean`,
   `Instances/InvariantConfluence.lean`,
-  `Instances/BailisDefinition.lean`, `Instances/StateMachine.lean`,
-  `Instances/IOMachine.lean`, `Instances/IOMachineCofinal.lean`).
+  `Instances/BailisDefinition.lean`, `Instances/IOTrace.lean`,
+  `Instances/IOTraceExamples.lean`).
 
 Conventions shared by the entries (details in `Instances/Examples.lean`):
 finite payload sets are `Inst.FSet P` (inclusion); a join-semilattice is
@@ -936,244 +934,392 @@ theorem «sec:iconfluence-instance/concurrency-decides» :
 /-! ## General operational specification models (`sec:operational-models`)
 
 The opening paragraph ("Many systems are specified as state machines.  This
-subsection shows how a state machine yields an I/O specification, so that
-Complete CALM applies to it. … Finally, we discuss how the projection is used
-in practice, by testing on bounded inputs and by proving that a declared spec
-can stand in for the machine.") outlines the subsection.  Its claim that "the
-projection is faithful: the machine's observations are confluent exactly when
-the induced spec satisfies Lifted Monotonicity" is
-Prop. `prop:induced-specification` (`IOM.confluent_iff_liftedMono`).
+subsection shows how to project a state machine written as an I/O automaton
+onto a spec, and how to analyze the automaton with our results. … We close
+with two ways to check these properties in practice: testing on bounded
+inputs, and proof.") outlines the subsection.  Its claims are the entries
+below: "Each row of the projected spec is a pair the automaton can be observed
+in: the requests it has received and the replies it has sent, as they occur
+together in some trace" is Def. `def:projection`; "Every execution of the
+automaton is a run of this spec" is Prop. `prop:projection` (1); "a run of the
+spec may combine rows that no single execution reaches in that order" and
+"After such a commitment, it can no longer reach some rows that other
+executions do reach" are `«sec:operational-models/registrar»`; "Complete CALM
+tells whether the projected spec is consistent" is Prop. `prop:projection`
+(2); and "it is confluent exactly when its commitments never remove every row
+its canonical runs could still agree on" is Prop. `prop:automaton-confluence`
+(2).
 
-"The machine model": "We take the standard I/O-automaton model of a state
-machine, its clients, and the channel that carries their state-machine
-events.  The machine `M` has states `Q`, an initial state `q₀`, receive
-transitions for state-machine events that accept every payload in every
-state, reply transitions that send a reply to a client and may change state,
-internal transitions, and an observation `obs : Q → O`.  Replies are messages
-to clients.  The observation is what our spec judges: the output of the
-induced spec at an input is the observation of the machine's state.  There
-are finitely many clients.  Each may send a state-machine event with any
-payload at any time, and receives the machine's replies.  A channel carries
-each state-machine event at most once to the machine's input queue, possibly
-reordering events on the way, and the machine consumes the queue in order.
-In an execution of the composed automaton, *happens-before* is Lamport's
-order: the transitive closure of the local order at the machine and at each
-client and of the edge from sending a state-machine event to receiving it."
+"The automaton model": "We use the standard I/O-automaton model.  An
+automaton has input, output, and internal actions, a set of states with a
+nonempty set of start states, and a transition relation in which every input
+action is enabled in every state.  A finite execution takes a sequence of
+steps from a start state.  We read the automaton as a server. … The
+*receive sequence* of an execution lists its input actions in order, and its
+*reply sequence* lists its output actions in order.  We order both kinds of
+sequence by prefix."
 
-Lean: Lynch–Tuttle I/O automata and their composition are `CC.IOA`
-(`Foundations/IOAutomata.lean`).  The machine is a general machine automaton
-`G : IOM.Machine C P Q O` (payloads `P`; fields `q0`; receive transitions
-`recv` with `recv_enabled`; reply transitions `out q c o q'`, sending reply
-`o` to client `c` and moving to `q'`; internal transitions `tau`; `obs`), as
-the I/O automaton `IOM.machA G` (inputs `recv e`, outputs `out c o`, internal
-action `tau`).  The library calls replies `out` actions; they are the
-automaton's output actions, not outputs of the induced spec, which are
-observations.  A state machine `M : SM.Machine Q P O` is the special case
-`IOM.ofSM M`.  `IOM.sys k G` composes `IOM.machA G`, the clients `IOM.cliA c`
-(outputs `send e` with any payload at any time, inputs `out c o`), and the
-channel `IOM.chanA k`, which neither loses nor duplicates.  The machine's
-input queue is folded into the channel: the machine's `recv e` is the
-channel's delivery of `e`, i.e. the machine consuming `e` from its queue.  A
-channel that may reorder is the bag, `k = .bag` (any state-machine event in
-transit is consumed next); the case in which state-machine events arrive in
-the order sent (the remark after Prop. `prop:induced-specification`) is the
-FIFO queue, `k = .fifo`.  Events `IOM.Ev C P` carry a client, a sequence
-number, and a payload.  `IOM.HB β` is happens-before on positions of the
-schedule `β`.  The client type `C` is arbitrary; finiteness is not needed.  A
-sent state-machine event may stay in transit in a finite execution.
+Lean: Lynch–Tuttle I/O automata are `CC.IOA.Automaton`
+(`Foundations/IOAutomata.lean`: signature, start states with
+`start_nonempty`, transitions with `input_enabled`); a finite execution is
+`IOA.Execution M β s` (schedule `β`, final state `s`).  The receive and reply
+sequences are `IOT.recvs M β` and `IOT.replies M β`, as elements of
+`IOT.InS M` and `IOT.OutS M` (`IOT.inW`, `IOT.outW`), ordered by prefix
+(`IOT.Wd.instPO`).  The reading as a server (arrival, handing to the
+computation, when a reply fires) and the closing remarks ("This subsection
+treats a single automaton.  A server built from several communicating
+automata is a distributed system in the sense of Section
+`sec:distributed-execution`.") describe the model and are argued in prose
+only (see the README). -/
 
-"The induced spec": "Each finite execution of the automaton determines an
-input and an output in our sense."  These are Defs. `def:execution-input` and
-`def:induced-specification` below. -/
+/-- **Def. `def:projection`** (Projection of an automaton).  "The
+*projection* of an automaton `M` is the I/O specification `P_M` whose inputs
+are receive sequences and whose outputs are reply sequences, and whose rows
+are the pairs `(w,t)` for which some finite execution of `M` has receive
+sequence `w` and reply sequence `t`.  We call `P_M` the *projected spec* of
+`M`."
 
-/-- "The input orders state-machine events by their sends, not their
-arrivals: arrival order is what differs between executions.  Clients may
-react to replies.  If a client sends an event after receiving a reply, that
-send happens after every event the machine had received when it replied, so
-the input records what the client's choice could depend on."
+Lean: `IOT.spec M`; this theorem gives the rows and the prefix order. -/
+theorem «def:projection» {A : Type} (M : IOA.Automaton A) :
+    (∀ w t, (IOT.spec M).P w t ↔
+      ∃ β s, IOA.Execution M β s ∧ IOT.inW M β = w ∧ IOT.outW M β = t) ∧
+    (∀ w w' : IOT.InS M, w ≼ w' ↔ w.val <+: w'.val) ∧
+    (∀ t t' : IOT.OutS M, t ≼ t' ↔ t.val <+: t'.val) :=
+  ⟨fun _ _ => Iff.rfl, fun _ _ => Iff.rfl, fun _ _ => Iff.rfl⟩
 
-Lean (general machine `G`): in an execution `β`, if the machine received `e`
-(position `r`) before sending reply `out c o` (position `m`), and client `c`
-sends `e'` at a later position `j`, then the send of `e` happens before the
-send of `e'`, every delivery of `e'` in `β` comes after position `r`, and if
-`e'` is received the input of `β` orders `e` before `e'`.  That the input
-orders events by their sends is Def. `def:execution-input`
-(`IOM.input`). -/
-theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
-    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) {β : List (IOM.Act C P O)}
-    {s : (IOM.sys (C := C) k G).St} (hx : IOA.Execution (IOM.sys k G) β s)
-    {m r j : Nat} {c : C} {o : O} {e e' : IOM.Ev C P}
-    (hm : β[m]? = some (.out c o)) (hrv : β[r]? = some (.recv e)) (hrm : r < m)
-    (hj : IOM.SendAt β j e') (hmj : m < j) (hc : e'.client = c) :
-    (∃ i, IOM.SendAt β i e ∧ IOM.HB β i j) ∧ (∀ t, β[t]? = some (.recv e') → r < t) ∧
-      (.recv e' ∈ β → (IOM.input β).lt e e') :=
-  IOM.send_after_out ⟨s, hx, rfl⟩ hm hrv hrm hj hmj hc
+/-- "Followed step by step, an execution is a run of `P_M`.  An arrival is an
+input event carrying the receive sequence so far, a reply is an output event
+carrying the reply sequence so far, and an internal step is no event.  What
+grows along the execution is the reply sequence, whatever the replies say: a
+counter's reports may go up, down, and up again, and its reply sequence still
+only grows."
 
-/-- **Def. `def:induced-specification`** (Induced specification).  "The
-specification *induced* by `M` and its environment is the I/O specification
-whose inputs are the inputs of the automaton's finite executions
-(Definition `def:execution-input`), and whose fiber at an input `h` contains
-the observation of the machine's final state in every execution with input
-`h`."
+Lean: `IOT.evs M β` is defined this way (`IOT.evsFrom`); the run itself is
+Prop. `prop:projection` (1).  The reply and receive sequences grow along an
+execution whatever the actions are (`IOT.outW_le_append`,
+`IOT.inW_le_append`), and the events determine the trace
+(`IOT.evs_inj`). -/
+theorem «sec:operational-models/step-by-step» {A : Type} (M : IOA.Automaton A) :
+    (∀ (pre : List A) (a : A) (r : List A),
+      (M.sig.inp a → IOT.evsFrom M pre (a :: r) =
+        .input (IOT.inW M (pre ++ [a])) :: IOT.evsFrom M (pre ++ [a]) r) ∧
+      (M.sig.out a → IOT.evsFrom M pre (a :: r) =
+        .output (IOT.outW M (pre ++ [a])) :: IOT.evsFrom M (pre ++ [a]) r) ∧
+      (M.sig.int a → IOT.evsFrom M pre (a :: r) = IOT.evsFrom M (pre ++ [a]) r)) ∧
+    (∀ β γ : List A, IOT.outW M β ≼ IOT.outW M (β ++ γ) ∧ IOT.inW M β ≼ IOT.inW M (β ++ γ)) ∧
+    (∀ β β' : List A, IOT.evs M β = IOT.evs M β' → IOT.trace M β = IOT.trace M β') :=
+  ⟨IOT.evsFrom_cons M, fun β γ => ⟨IOT.outW_le_append β γ, IOT.inW_le_append β γ⟩,
+    fun _ _ h => IOT.evs_inj h⟩
 
-Lean: the table `IOM.spec k G` on `IOM.OccInp C P k G` (the inputs that occur,
-i.e. inputs of finite executions); this theorem gives the unfolded conditions
-for input membership, order, and fiber membership together.
+/-- **Prop. `prop:projection`** (Projection).  "Let `M` be an automaton.
+(1) `P_M` is an I/O specification, and every finite execution of `M` is a run
+of `P_M` from the canonical state at the empty receive sequence, with one
+input event per arrival and one output event per reply.  (2) `P_M` satisfies
+Relational Monotonicity.  It is consistent exactly when, at each receive
+sequence, any two reply sequences in its fiber are one a prefix of the other."
 
-The remark that follows ("The machine is a single participant.  The clients
-and the channel are its environment, and, as in Section
-`sec:election-story`, the environment may react to what it sees when choosing
-later input.") explains the model and states no claim of its own.  The
-sentence "Distributing the machine is then direct: … among participants
-Section `sec:distributed-execution` applies, using the induced spec." is
-`«sec:operational-models/distributing»`. -/
-theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
-    (G : IOM.Machine C P Q O) :
-    (∀ (β : List (IOM.Act C P O)) e, (IOM.input β).mem e ↔ .recv e ∈ β) ∧
-    (∀ (β : List (IOM.Act C P O)) a b, (IOM.input β).lt a b ↔
-      (.recv a ∈ β ∧ .recv b ∈ β) ∧ ∃ i j, IOM.SendAt β i a ∧ IOM.SendAt β j b ∧ IOM.HB β i j) ∧
-    (∀ h h' : IOM.Inp C P, h ≼ h' ↔
-      (∀ e, h.mem e → h'.mem e) ∧ ∀ a b, h.mem a → h.mem b → (h.lt a b ↔ h'.lt a b)) ∧
-    (∀ (h : IOM.OccInp C P k G) o, (IOM.spec k G).P h o ↔
-      ∃ β s, IOA.Execution (IOM.sys k G) β s ∧ IOM.input β = h.val ∧ G.obs (s .mach) = o) :=
-  ⟨fun _ _ => Iff.rfl, fun _ _ _ => Iff.rfl, fun _ _ => Iff.rfl, fun _ _ => Iff.rfl⟩
+Lean: (1) every receive sequence has a row (`IOT.spec` is a `Spec`), and
+`IOT.exec_run`: the events `IOT.evs M β` run from `canon (spec M) (inW M [])`
+to the state at `inW M β` whose table is the canonical table `IOT.Canon M β`;
+(2) `IOT.relMono` and `IOT.consistent_iff`.  The proof follows the sketch:
+legality of each event comes from the execution's own row
+(`IOT.inv_step`); Relational Monotonicity receives the added requests by
+input-enabledness; and pairwise comparable reply sequences have the longest
+as common extension (`IOT.max_of_comparable`), with Complete CALM in the form
+`liftedMono_iff_relMono_directed`. -/
+theorem «prop:projection» {A : Type} (M : IOA.Automaton A) :
+    ((∀ w, ∃ t, (IOT.spec M).P w t) ∧
+      ∀ β s, IOA.Execution M β s → ∃ σ,
+        Exec (canon (IOT.spec M) (IOT.inW M [])) (IOT.evs M β) σ ∧ σ.cur = IOT.inW M β ∧
+          ∀ k u, σ.R k u ↔ IOT.Canon M β k u) ∧
+    (IOT.spec M).RelMono ∧
+    ((IOT.spec M).Consistent ↔
+      ∀ w t t', (IOT.spec M).P w t → (IOT.spec M).P w t' → t ≼ t' ∨ t' ≼ t) :=
+  ⟨⟨(IOT.spec M).total, fun _ _ h => IOT.exec_run h⟩, IOT.relMono, IOT.consistent_iff⟩
 
-/-- **Def. `def:execution-input`** (Input of an execution).  "The *input* of
-a finite execution of the automaton is the input, in our sense, that records
-the state-machine events the machine has received, ordered by happens-before
-between their sends.  One such input extends another, `h ⊑ h'`, when
-`h ⊆ h'` and the two orders agree on `h`."
-
-Lean: `IOM.input β` (membership: `recv e ∈ β`; order: happens-before between
-the positions sending the two events), the order `IOM.Inp.instPO`. -/
-abbrev «def:execution-input» {C P O : Type} (β : List (IOM.Act C P O)) : IOM.Inp C P :=
-  IOM.input β
-
-/-- "Distributing the machine is then direct: the clients remain the
-environment, each client's state-machine events are sent to some participant,
-and among participants Section `sec:distributed-execution` applies, using the
-induced spec."
+/-- "Since `P_M` is an I/O specification, the results of Section
+`sec:distributed-execution` apply to it as to any other spec."
 
 Lean: the results of Section `sec:distributed-execution` are stated for every
-spec, so they apply to the induced spec `IOM.spec k G` of any machine `G`.
-First conjunct (distributed consistency, Prop. `prop:distributed-consistency`
-with Complete CALM): the induced spec has distributed consistency, for any
-message type `D`, exactly when it satisfies Lifted Monotonicity, exactly when
-the machine's observations are confluent.  Second conjunct (Theorem
-`thm:complete-cap`): some system for the induced spec has Availability and
-Partition Consistency exactly when it satisfies Lifted Monotonicity.  In both,
-input events at any participant are the clients' state-machine events. -/
-theorem «sec:operational-models/distributing» {C P Q O : Type} [PO O]
-    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) (D : Type) :
-    (Dist.DistConsistent (IOM.spec (C := C) k G) D ↔ (IOM.spec (C := C) k G).LiftedMono) ∧
-    ((IOM.spec (C := C) k G).LiftedMono ↔ IOM.ObsConfluent (C := C) k G) ∧
-    ((∃ Sys : CAP.System (IOM.spec (C := C) k G) D,
-        CAP.Availability Sys ∧ CAP.PartitionConsistency Sys) ↔
-      (IOM.spec (C := C) k G).LiftedMono) :=
-  ⟨(Dist.consistent_iff_distConsistent _ D).symm.trans (complete_calm _),
-   (IOM.confluent_iff_liftedMono k G).1.symm,
-   CAP.complete_cap _ D⟩
+spec.  For instance, the projected spec has distributed consistency, for any
+message type `D`, exactly when it satisfies Lifted Monotonicity
+(Prop. `prop:distributed-consistency` with Complete CALM), and some system for
+it has Availability and Partition Consistency exactly when it satisfies
+Lifted Monotonicity (Theorem `thm:complete-cap`). -/
+theorem «sec:operational-models/distributing» {A : Type} (M : IOA.Automaton A) (D : Type) :
+    (Dist.DistConsistent (IOT.spec M) D ↔ (IOT.spec M).LiftedMono) ∧
+    ((∃ Sys : CAP.System (IOT.spec M) D, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys) ↔
+      (IOT.spec M).LiftedMono) :=
+  ⟨(Dist.consistent_iff_distConsistent _ D).symm.trans (complete_calm _), CAP.complete_cap _ D⟩
 
-/-- "The machine's observations are *confluent across its executions* when,
-for executions with inputs `h₁,…,hₖ` and any input `h` of an execution that
-extends each `hᵣ`, some execution with input `h` ends in an observation that
-extends each of theirs."  With **Prop. `prop:induced-specification`**
-(Induced specifications): "The induced specification is an I/O
-specification, and the input of an execution only grows as the execution
-continues.  The machine's observations are confluent across its executions
-exactly when the induced specification satisfies Lifted Monotonicity."
+/-- "The converse of item (1) fails.  Consider a registrar that receives
+ballots `p`.  After the first ballot it may reply `x` at once and ignore later
+ballots, which closes the polls.  Or it may wait for a second ballot, reply
+`x`, and later reply `z`.  Its projected spec has a run that receives `p`,
+replies `x`, receives a second `p`, and replies `z`: each row the run passes
+through occurs in some execution.  No execution has that trace, because a
+registrar that replied early never replies `z`.  Every reply sequence of the
+registrar is empty, `x`, or `xz`, so its projected spec is consistent."
 
-Lean, for a general machine `G` and either channel: every input that occurs
-has a row (`IOM.spec` is a `Spec`), and `IOM.input_mono`; `IOM.ObsConfluent k G`
-is the confluence condition, and `IOM.confluent_iff_liftedMono`.  The proof
-follows the sketch: it unfolds the fiber in the common-extension condition
-(`IOM.obsConfluent_iff_commonExpansion`) and applies
-`liftedMono_iff_commonExpansion`.  The library also proves that every
-observation in a fiber is reached by a run of the machine automaton receiving
-the input's events once (`IOM.fiber_sub_run`, `IOM.bag_fiber_of_run`), and the
-version for replies that report observations
-(`IOM.emitConfluent_iff_liftedMono_of`). -/
-theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
-    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) :
-    ((∀ h : IOM.OccInp C P k G, ∃ o, (IOM.spec k G).P h o) ∧
-      ∀ (β γ : List (IOM.Act C P O)) (s : (IOM.sys (C := C) k G).St),
-        IOA.Execution (IOM.sys k G) (β ++ γ) s → IOM.input β ≼ IOM.input (β ++ γ)) ∧
-    (IOM.ObsConfluent (C := C) k G ↔ (IOM.spec (C := C) k G).LiftedMono) :=
-  ⟨⟨(IOM.spec k G).total, fun _ _ s hx => IOM.input_mono ⟨s, hx, rfl⟩⟩,
-    (IOM.confluent_iff_liftedMono k G).1⟩
+Lean: the registrar is `IOT.Poll.M` (`s1 → cl` replies early; `cl` ignores
+later ballots).  `IOT.Poll.spec_run`: the events of `p, x, p, z` form a run of
+the projected spec; `IOT.Poll.no_execution`: no execution has those events
+(they determine the trace, and the registrar has no internal actions);
+`IOT.Poll.replies_cases` and `IOT.Poll.consistent`. -/
+theorem «sec:operational-models/registrar» :
+    (∃ σ, Exec (canon (IOT.spec IOT.Poll.M) (IOT.inW IOT.Poll.M []))
+      (IOT.evs IOT.Poll.M [.p, .x, .p, .z]) σ) ∧
+    (∀ β s, IOA.Execution IOT.Poll.M β s →
+      IOT.evs IOT.Poll.M β ≠ IOT.evs IOT.Poll.M [.p, .x, .p, .z]) ∧
+    (∀ β s, IOA.Execution IOT.Poll.M β s →
+      IOT.replies IOT.Poll.M β = [] ∨ IOT.replies IOT.Poll.M β = [.x] ∨
+        IOT.replies IOT.Poll.M β = [.x, .z]) ∧
+    (IOT.spec IOT.Poll.M).Consistent :=
+  ⟨IOT.Poll.spec_run, fun _ _ h => IOT.Poll.no_execution h, fun _ _ h => IOT.Poll.replies_cases h,
+    IOT.Poll.consistent⟩
 
-/-- "With one client whose events arrive in the order it sent them, every
-input is a sequence of payloads, ordered by prefix.  If, in addition, reply
-and internal transitions leave the state unchanged and receiving is
-deterministic, the induced spec is functional, and it is consistent exactly
-when `obs(q) ⪯ obs(q')` for every receive transition `q → q'` from a
-reachable state."
+/-- "The automaton as a system": "To recover what the projection drops, we
+map the automaton into our system model with a single participant.  The rows
+of `P_M` that a finite execution can still reach, by continuing from its final
+state, are its *reachable rows*.  Removing every other row from a table that
+contains them is a commitment whenever it removes a row.  Suppose the
+execution can reach `(k,w)`, and `u` is a prefix of `w` that extends the
+execution's reply sequence.  The execution can stop replying once it has
+replied `u` and then receive the rest of `k`, so it also reaches `(k,u)`.  No
+removed row is therefore extended by a kept row at the same input."
 
-Lean: one client is `C = Unit`, and arrival in the order sent is the channel
-`.fifo`; `IOM.fifo_single_run`: every input is a chain, `IOM.word` (payloads in
-sequence order) is an order isomorphism onto `SM.Seq P` under the prefix order,
-and it carries each fiber to the fiber of `IOM.runSpec G` (the observations at
-the end of runs of the machine whose receives carry the sequence in order).
-`IOM.Stationary G` (reply and internal steps leave the state unchanged) and
-`SM.Deterministic (IOM.recvSM G)` (receiving is deterministic);
-`IOM.fifo_single_stationary` gives functionality and consistency iff
-`SM.TransMono (IOM.recvSM G)` (observations grow along every receive
-transition from a state reachable by receives, which for a stationary machine
-are all its reachable states). -/
-theorem «sec:operational-models/single-client» {P Q O : Type} [PO O]
-    (G₁ : IOM.Machine Unit P Q O) :
-    (∀ h : IOM.OccInp Unit P .fifo G₁, ∀ a b, h.val.mem a → h.val.mem b → a ≠ b →
-        h.val.lt a b ∨ h.val.lt b a) ∧
-      (∀ h h' : IOM.OccInp Unit P .fifo G₁, h ≼ h' ↔ IOM.word h ≼ IOM.word h') ∧
-      (∀ w : SM.Seq P, ∃ h : IOM.OccInp Unit P .fifo G₁, IOM.word h = w) ∧
-      (∀ h o, (IOM.spec .fifo G₁).P h o ↔ (IOM.runSpec G₁).P (IOM.word h) o) ∧
-      (IOM.Stationary G₁ → SM.Deterministic (IOM.recvSM G₁) →
-        (IOM.spec (C := Unit) .fifo G₁).Functional ∧
-          ((IOM.spec (C := Unit) .fifo G₁).Consistent ↔ SM.TransMono (IOM.recvSM G₁))) :=
-  have h2 := IOM.fifo_single_run G₁
-  ⟨h2.1, h2.2.1, h2.2.2.1, h2.2.2.2.1, IOM.fifo_single_stationary⟩
+Lean: the reachable rows are `IOT.Live M β s`; `IOT.live_closed` is the
+argument; `IOT.narrow M X` keeps the rows in `X`, and it applies (is a
+commitment at the state) when it removes a row, keeps a row at the current
+input, and removes no row below a kept row (`IOT.NarrowOK`).  At a produced
+history matched by the execution (Def. `def:automaton-system`), every row of
+the table extends the execution's reply sequence, and `IOT.narrowOK_of_matches`
+gives the commitment. -/
+theorem «sec:operational-models/reachable-rows» {A : Type} (M : IOA.Automaton A) :
+    (∀ (β : List A) (s : M.St) (k : IOT.InS M) (u w : IOT.OutS M),
+      IOT.Live M β s k w → IOT.outW M β ≼ u → u ≼ w → IOT.Live M β s k u) ∧
+    (∀ l σ β s, SysExec (IOT.basis M) (canon (IOT.spec M) (IOT.inW M [])) l σ →
+      IOT.Matches l σ β s → (∃ k u, σ.R k u ∧ ¬ IOT.Live M β s k u) →
+        (IOT.narrow M (IOT.Live M β s)).app σ ≠ none) := by
+  refine ⟨fun _ _ _ _ _ hw hlo huw => IOT.live_closed hw hlo huw, fun l σ β s hp hm hs => ?_⟩
+  rw [IOT.narrow_app_of (IOT.narrowOK_of_matches hp hm hs)]
+  simp
 
-/-! "Testing and proof": "The induced spec is defined by every
-finite execution of the machine and its environment.  There are infinitely
-many such executions, so the induced spec is a semantic object: we
-can reason about it, but not list it.  Two standard approaches make that
-reasoning practical."  This frames the paragraph.  "The first is testing.  A
-simulator or model checker runs the machine and its environment on bounded
-inputs; the input/output pairs it collects form a finite spec in our
-model, which can be checked for violations of Lifted Monotonicity.  This is
-routine engineering practice and has found serious bugs in production
-systems.  Testing suits refutation."
+/-- **Def. `def:automaton-system`** (System of an automaton).  "An execution
+of `M` *matches* a local history `λ` when the input and output events of `λ`
+carry the execution's arrivals and replies in order, and the table after `λ`
+keeps all of the execution's reachable rows.  An input event may carry
+several consecutive arrivals, or none.  The *system of* `M` has one
+participant and runs over `P_M`.  Its basis contains the canonical
+commitments and, for each finite execution, the commitment that keeps only
+that execution's reachable rows.  After a local history `λ`, its strategy
+allows the events that some execution matching `λ` allows next: the output
+event that adds a reply the execution's final state can send, and the
+commitment event that keeps only the execution's reachable rows."
+
+Lean: `IOT.sys M : Guard.Sys (IOT.spec M)` (a one-participant system: basis
+and strategy; `Guard.Produces` are its histories), with basis `IOT.basis M`;
+matching is `IOT.Matches` (with `IOT.Corr` for "carry the arrivals and
+replies in order"). -/
+noncomputable abbrev «def:automaton-system» {A : Type} (M : IOA.Automaton A) :
+    Guard.Sys (IOT.spec M) :=
+  IOT.sys M
+
+/-- **Prop. `prop:automaton-system`** (System of an automaton).  "Let `M` be
+an automaton.  (1) Every history of the system of `M` is matched by some
+execution of `M`.  (2) Every execution of `M` is matched by a history of the
+system whose input and output events are its run of `P_M` (Proposition
+`prop:projection`) and whose table is exactly its reachable rows.  (3) After
+any history, one commitment event brings the table down to exactly the
+reachable rows of a matching execution, unless the table is already there."
+
+Lean: (1) `IOT.sound`; (2) `IOT.complete`, whose history's input and output
+events (`filterMap SEvent.erase`) are `IOT.evs M β`; (3) `IOT.catchup`.  The
+proof follows the sketch, by induction on the history and on the execution
+(after each step the history adds the step's event and, if the step lost
+reachable rows, the commitment event of (3)).  The remark after it ("Item (3)
+reflects the one difference between the two models. … an input may arrive in
+between, and the commitment then applies after that input.") explains (3):
+input events are always allowed, and `IOT.catchup` applies at every
+history. -/
+theorem «prop:automaton-system» {A : Type} (M : IOA.Automaton A) :
+    (∀ l σ, Guard.Produces (IOT.sys M) (IOT.inW M []) l σ → ∃ β s, IOT.Matches l σ β s) ∧
+    (∀ β s, IOA.Execution M β s → ∃ l σ, Guard.Produces (IOT.sys M) (IOT.inW M []) l σ ∧
+      IOT.Matches l σ β s ∧ (∀ k u, σ.R k u ↔ IOT.Live M β s k u) ∧
+      l.filterMap SEvent.erase = IOT.evs M β) ∧
+    (∀ l σ β s, Guard.Produces (IOT.sys M) (IOT.inW M []) l σ → IOT.Matches l σ β s →
+      (∀ k u, σ.R k u ↔ IOT.Live M β s k u) ∨
+        ∃ σ', Guard.Produces (IOT.sys M) (IOT.inW M [])
+          (l ++ [.commitment [IOT.narrow M (IOT.Live M β s)]]) σ' ∧
+          ∀ k u, σ'.R k u ↔ IOT.Live M β s k u) :=
+  ⟨IOT.sound, IOT.complete, fun _ _ _ _ hp hm => (IOT.catchup hp hm).imp id
+    fun ⟨σ', h1, _, h3⟩ => ⟨σ', h1, h3⟩⟩
+
+/-- "The commitment events record choices that traces do not show.  Consider
+an automaton that, after the first request, takes an internal step to one of
+two states.  Both reply `x`, but only the second can then reply `z`.  A second
+automaton has only the second state.  The two automata have the same traces,
+and therefore the same projected spec.  In the first, the internal step to the
+first state loses reachable rows, so its system removes the rows with reply
+sequence `xz` in a commitment event.  The system of the second automaton never
+does."
+
+Lean: the automata `IOT.Hid.H` and `IOT.Hid.V` (states `sA`, `sB`; later
+requests are ignored).  They have the same execution schedules, hence the same
+traces (`IOT.Hid.same_executions`), and the same pairs of receive and reply
+sequences (`IOT.Hid.same_rows`).  `IOT.Hid.hid_narrows`: `H`'s system has a
+history that has emitted `[x]` and whose table has no row with `[x, z]` at its
+current input; `IOT.Hid.vis_keeps`: every history of `V`'s system that has
+emitted `[x]` keeps that row. -/
+theorem «sec:operational-models/hidden-choice» :
+    (∀ β, (∃ s, IOA.Execution IOT.Hid.H β s) ↔ (∃ s, IOA.Execution IOT.Hid.V β s)) ∧
+    (∀ w t, (∃ β s, IOA.Execution IOT.Hid.H β s ∧ IOT.recvs IOT.Hid.H β = w ∧
+        IOT.replies IOT.Hid.H β = t) ↔
+      (∃ β s, IOA.Execution IOT.Hid.V β s ∧ IOT.recvs IOT.Hid.V β = w ∧
+        IOT.replies IOT.Hid.V β = t)) ∧
+    (∃ l σ, Guard.Produces (IOT.sys IOT.Hid.H) (IOT.inW IOT.Hid.H []) l σ ∧
+      l.foldl IOT.outStep (IOT.outW IOT.Hid.H []) = IOT.Hid.xH ∧ ¬ σ.R σ.cur IOT.Hid.xzH) ∧
+    (∀ l σ, Guard.Produces (IOT.sys IOT.Hid.V) (IOT.inW IOT.Hid.V []) l σ →
+      l.foldl IOT.outStep (IOT.outW IOT.Hid.V []) = IOT.Hid.xV → σ.R σ.cur IOT.Hid.xzV) :=
+  ⟨IOT.Hid.same_executions, IOT.Hid.same_rows, IOT.Hid.hid_narrows,
+    fun _ _ hp ho => IOT.Hid.vis_keeps hp ho⟩
+
+/-- **Def. `def:confluent-automaton`** (Confluent automaton).  "An automaton
+is *confluent* when, for any finitely many finite executions and any receive
+sequence `j` that extends the receive sequence of each, there is a reply
+sequence `u` such that each of the executions can continue to an execution
+with receive sequence `j` and reply sequence `u`."
+
+Lean: `IOT.Confluent M` (finitely many executions as a list; "can continue
+to" is `IOT.Live`). -/
+abbrev «def:confluent-automaton» {A : Type} (M : IOA.Automaton A) : Prop := IOT.Confluent M
+
+/-- **Prop. `prop:automaton-confluence`** (Confluent automata).  "Let `M` be
+an automaton.  (1) Every finite family of histories of the system of `M` is
+confluent at every common input extension of their current inputs, by
+continuations that may apply any commitments, exactly when `M` is confluent.
+(2) For an execution of `M`, the canonical run of its run of `P_M` keeps the
+rows at extensions of its receive sequence whose reply sequences extend its
+own.  The history of item (2) of Proposition `prop:automaton-system` keeps
+those rows less the rows its commitment events removed.  `M` is confluent
+exactly when, for any finitely many executions and any common input
+extension `j` of their receive sequences, some row at `j` lies in the
+canonical table of each and in none of the sets of removed rows.  (3) If `M`
+is confluent, `P_M` is consistent.  The converse fails."
+
+Lean: (1) `IOT.sys_consistent_iff` (`Guard.SysConsistent` of the system's
+history endpoints `IOT.SysRun`), proved with the Survivor test for runs
+under bases of Prop. `prop:system-confluence` (`Dist.sysConfluentAt_iff`);
+(2) `IOT.tables`: the matching history and the canonical run of its input and
+output events, with tables `IOT.Live` and `IOT.Canon`, and `IOT.Removed`
+(canonical rows no longer reachable) is the canonical part of the set `Δ` of
+Prop. `prop:system-confluence` (`Dist.Removed`, by `Dist.table_decomp`);
+`IOT.confluent_iff_removed`; (3) `IOT.consistent_of_confluent` (through the
+common-extension form), and the registrar `IOT.Poll.M`
+(`IOT.Poll.consistent`, `IOT.Poll.not_confluent`). -/
+theorem «prop:automaton-confluence» {A : Type} (M : IOA.Automaton A) :
+    (Guard.SysConsistent (IOT.SysRun (M := M)) ↔ IOT.Confluent M) ∧
+    (∀ β s, IOA.Execution M β s → ∃ l σ ρh,
+      Guard.Produces (IOT.sys M) (IOT.inW M []) l σ ∧ IOT.Matches l σ β s ∧
+      l.filterMap SEvent.erase = IOT.evs M β ∧
+      Exec (canon (IOT.spec M) (IOT.inW M [])) (l.filterMap SEvent.erase) ρh ∧
+      (∀ k u, σ.R k u ↔ IOT.Live M β s k u) ∧ (∀ k u, ρh.R k u ↔ IOT.Canon M β k u) ∧
+      ∀ k u, IOT.Removed M β s k u ↔
+        ρh.R k u ∧ Dist.Removed (IOT.basis M) (canon (IOT.spec M) (IOT.inW M [])) l k u) ∧
+    (IOT.Confluent M ↔
+      ∀ fam : List (List A × M.St), (∀ e ∈ fam, IOA.Execution M e.1 e.2) →
+        ∀ j : IOT.InS M, (∀ e ∈ fam, IOT.inW M e.1 ≼ j) →
+          ∃ u, ∀ e ∈ fam, IOT.Canon M e.1 j u ∧ ¬ IOT.Removed M e.1 e.2 j u) ∧
+    (IOT.Confluent M → (IOT.spec M).Consistent) ∧
+    ((IOT.spec IOT.Poll.M).Consistent ∧ ¬ IOT.Confluent IOT.Poll.M) :=
+  ⟨IOT.sys_consistent_iff, fun _ _ h => IOT.tables h, IOT.confluent_iff_removed,
+    IOT.consistent_of_confluent, IOT.Poll.consistent, IOT.Poll.not_confluent⟩
+
+/-- "For the registrar, replying early loses every reachable row with reply
+sequence `xz`, so its system removes them in a commitment event.  An execution
+that replied early and one that waited and replied `xz` then have no common
+reachable row at two ballots, and the registrar is not confluent, although its
+projected spec is consistent.  Closing the polls is a commitment the projected
+spec does not require: a canonical run can emit `x` after one ballot and still
+emit `xz` after the second."
+
+Lean: from the early execution `p, x` (state `cl`), every reachable row has
+reply sequence `[x]` (`IOT.Poll.live_quiet`), so the row at two ballots with
+`[x, z]`, which is in its canonical table, is removed (`IOT.Poll.early_removes`);
+`IOT.Poll.not_confluent`, `IOT.Poll.consistent`; the canonical run is
+`IOT.Poll.spec_run`. -/
+theorem «sec:operational-models/registrar-commitment» :
+    IOT.Removed IOT.Poll.M [.p, .x] .cl ⟨[.p, .p], by simp [IOT.Poll.M, IOT.Poll.sig]⟩
+      ⟨[.x, .z], by simp [IOT.Poll.M, IOT.Poll.sig]⟩ ∧
+    ¬ IOT.Confluent IOT.Poll.M ∧ (IOT.spec IOT.Poll.M).Consistent ∧
+    (∃ σ, Exec (canon (IOT.spec IOT.Poll.M) (IOT.inW IOT.Poll.M []))
+      (IOT.evs IOT.Poll.M [.p, .x, .p, .z]) σ) :=
+  ⟨IOT.Poll.early_removes, IOT.Poll.not_confluent, IOT.Poll.consistent, IOT.Poll.spec_run⟩
+
+/-- "Inconsistency can also come from the projected spec itself.  Consider a
+counter whose report carries the count at the moment the report fires.  After
+two arrivals, one execution has reported `1`, before the second arrival, and
+another has reported `2`.  Neither reply sequence is a prefix of the other, so
+the projected spec is inconsistent.  A counter that records the count when
+each request arrives, and later reports from that record, sends the reports
+`1,2,…,m` in order.  Its projected spec is consistent, and the counter itself
+is confluent."
+
+Lean: `IOT.Ctr.Race` (state: the count; a report `rep n` at count `n`) and
+`IOT.Ctr.Queue` (state `(n, m)`: arrivals and reports; it reports `m + 1`
+when `m < n`).  `IOT.Ctr.race_inconsistent`; `IOT.Ctr.queue_exec` (the reply
+sequence of every execution is `reps m`, the reports `1, …, m`);
+`IOT.Ctr.queue_consistent`; `IOT.Ctr.queue_confluent`. -/
+theorem «sec:operational-models/counters» :
+    ¬ (IOT.spec IOT.Ctr.Race).Consistent ∧
+    (∀ β s, IOA.Execution IOT.Ctr.Queue β s → IOT.replies IOT.Ctr.Queue β = IOT.Ctr.reps s.2) ∧
+    (IOT.spec IOT.Ctr.Queue).Consistent ∧ IOT.Confluent IOT.Ctr.Queue :=
+  ⟨IOT.Ctr.race_inconsistent, fun _ _ h => (IOT.Ctr.queue_exec h).2.1, IOT.Ctr.queue_consistent,
+    IOT.Ctr.queue_confluent⟩
+
+/-! "Testing and proof": "The projected spec and the system of an automaton
+are defined by every finite execution of the automaton.  There are infinitely
+many such executions, so both are semantic objects: we can reason about them,
+but not list them.  Two standard approaches make that reasoning practical."
+This frames the paragraph.  "The first is testing.  A simulator or model
+checker runs the automaton on bounded inputs; the pairs of receive and reply
+sequences it collects form a finite spec in our model, which can be checked for
+violations of Lifted Monotonicity.  This is routine engineering practice and
+has found serious bugs in production systems.  Testing suits refutation."
 These sentences describe tools and practice and are argued in prose only (see
 the README); the refutation claim is the next entry. -/
 
-/-- "If Lifted Monotonicity fails, finitely many executions show it:
-executions with inputs `h₁,…,hₖ`, and a common input extension `h` at which no
-execution's observation extends all of theirs."
+/-- "If the projected spec is inconsistent, two executions show it: they have
+the same receive sequence, and neither reply sequence is a prefix of the
+other.  A violation of the automaton's own confluence is shown by finitely
+many executions and a receive sequence at which they have no common
+reachable row, and confirming that they have none means exploring all of their
+continuations to that receive sequence."
 
-Lean (general machine `G`, either channel): `IOM.not_liftedMono_iff_witness`.
-Lifted Monotonicity of the induced specification fails iff there are a
-finite list of executions `βᵣ` and an execution `β` whose input extends each
-`input βᵣ`, such that every execution `β'` with `input β' = input β` ends in
-an observation that fails to extend some `βᵣ`'s.  The common input extension `h`
-is the input of `β`; it is an input that occurs, as every input of the
-induced specification is.  The library also gives finite certificates for
-the last clause (`IOM.not_liftedMono_of_fiber_list`,
-`IOM.not_liftedMono_of_machine_cert`); the first of these is the paper's next
-sentence, "A violation found in the finite spec is such a witness
-when the exploration covers every execution with input `h`, so that its fiber
-there is complete": a finite list containing every observation at `h`, each
-failing to refine some `βᵣ`'s, refutes Lifted Monotonicity.  The next sentence ("Testing cannot
-show that Lifted Monotonicity holds, since that is a claim about every
-input.") is `«sec:operational-models/testing-cannot-show»`. -/
-theorem «sec:operational-models/testing-witness» {C P Q O : Type} [PO O]
-    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) :
-    ¬ (IOM.spec (C := C) k G).LiftedMono ↔
-      ∃ fam : List (List (IOM.Act C P O) × (IOM.sys (C := C) k G).St),
-        (∀ r ∈ fam, IOA.Execution (IOM.sys k G) r.1 r.2) ∧
-        ∃ β s, IOA.Execution (IOM.sys k G) β s ∧ (∀ r ∈ fam, IOM.input r.1 ≼ IOM.input β) ∧
-          ∀ β' s', IOA.Execution (IOM.sys k G) β' s' → IOM.input β' = IOM.input β →
-            ∃ r ∈ fam, ¬ G.obs (r.2 .mach) ≼ G.obs (s' .mach) :=
-  IOM.not_liftedMono_iff_witness k G
+Lean: `IOT.not_consistent_iff`; the violation of confluence is the negation of
+Def. `def:confluent-automaton`, unfolded here.  That confirming it means
+exploring the continuations is argued in prose only (see the README). -/
+theorem «sec:operational-models/testing-witness» {A : Type} (M : IOA.Automaton A) :
+    (¬ (IOT.spec M).Consistent ↔
+      ∃ β s β' s', IOA.Execution M β s ∧ IOA.Execution M β' s' ∧ IOT.inW M β = IOT.inW M β' ∧
+        ¬ (IOT.outW M β ≼ IOT.outW M β' ∨ IOT.outW M β' ≼ IOT.outW M β)) ∧
+    (¬ IOT.Confluent M ↔
+      ∃ fam : List (List A × M.St), (∀ e ∈ fam, IOA.Execution M e.1 e.2) ∧
+        ∃ j : IOT.InS M, (∀ e ∈ fam, IOT.inW M e.1 ≼ j) ∧
+          ∀ u, ∃ e ∈ fam, ¬ IOT.Live M e.1 e.2 j u) := by
+  refine ⟨IOT.not_consistent_iff, ⟨fun h => ?_, fun ⟨fam, hx, j, hj, hu⟩ hc => ?_⟩⟩
+  · apply Classical.byContradiction
+    intro hn
+    apply h
+    intro fam hx j hj
+    apply Classical.byContradiction
+    intro hu
+    apply hn
+    refine ⟨fam, hx, j, hj, fun u => Classical.byContradiction fun he => hu ⟨u, fun e hm =>
+      Classical.byContradiction fun hl => he ⟨e, hm, hl⟩⟩⟩
+  · obtain ⟨u, hu'⟩ := hc fam hx j hj
+    obtain ⟨e, he, hne⟩ := hu u
+    exact hne (hu' e he)
 
 /-- "Testing cannot show that Lifted Monotonicity holds, since that is a claim
 about every input."
@@ -1190,85 +1336,76 @@ theorem «sec:operational-models/testing-cannot-show» (X : List Testing.Stage) 
   Testing.testing_cannot_show X
 
 /-- "The second approach is proof.  Verification work routinely proves that
-a machine refines a spec: every observation of every execution is allowed by
-the spec, up to refinement of outputs. … Our use adds one obligation.  A
-*declared* spec `D` gives, for each input, a set of outputs by a rule … it
-does not enumerate executions.  To check Lifted Monotonicity on `D` instead of
-on the induced spec, two things must be shown, and both are needed, because
-neither alone preserves Lifted Monotonicity: if `D` omits an output the
-machine can produce, it may hide an incompatibility, and if `D` adds an
-output the machine cannot produce, it may supply a common output extension
-that no execution reaches."  The description of verification work
-(invariants, forward simulations, refinement mappings, mechanized proofs) and
-the examples of rules ("the set of ballots received", "the largest timestamp
-seen") are argued in prose only (see the README).
+an automaton refines a spec: every trace of the automaton is allowed by the
+spec. … Our use adds one obligation.  A *declared* spec `D` gives, for each
+receive sequence, a set of reply sequences by a rule; it does not enumerate
+executions.  To check consistency on `D` instead of on the projected spec, two
+things must be shown, and both are needed: if `D` omits a reply sequence the
+automaton can produce, it may hide an incompatibility, and if `D` adds one the
+automaton cannot produce, it may create an incompatibility the automaton does
+not have."  The description of verification work (invariants, forward
+simulations, refinement mappings, mechanized proofs) is argued in prose only
+(see the README).
 
-Lean: the machine `IOM.fork` (receives keep the state; an internal step moves
-to `b`, observed as `l`, or to `c`, observed as `r`, from any state; `l` and
-`r` are incomparable, below `top`) is not Lifted Monotone.  `IOM.forkOmit`
-(only `l` at every input) omits the output `r` the machine produces: it
-satisfies Realizability and is Lifted Monotone.  `IOM.forkAdd` (only `top`)
-adds an output no execution reaches: it satisfies Domination and is Lifted
-Monotone.  So neither obligation alone carries Lifted Monotonicity from `D`
-to the machine (`IOM.fork_halves`). -/
-theorem «sec:operational-models/both-halves» {C P : Type} [DecidableEq C]
-    (k : IOM.ChanKind) :
-    letI := IOM.lvlPO
-    (∀ h o, (IOM.forkOmit C P k).P h o →
-      ∃ β s, IOA.Execution (IOM.sys k (IOM.fork C P)) β s ∧ IOM.input β = h.val ∧
-        (IOM.fork C P).obs (s .mach) = o) ∧
-    (IOM.forkOmit C P k).LiftedMono ∧
-    (∀ β s, ∀ hx : IOA.Execution (IOM.sys k (IOM.fork C P)) β s,
-      ∃ o, (IOM.forkAdd C P k).P (IOM.occOfExec k (IOM.fork C P) hx) o ∧
-        (IOM.fork C P).obs (s .mach) ≼ o) ∧
-    (IOM.forkAdd C P k).LiftedMono ∧
-    ¬ (IOM.spec (C := C) k (IOM.fork C P)).LiftedMono :=
-  IOM.fork_halves k
+Lean: `IOT.Ctr.realizability_alone`: allowing no replies (`IOT.Ctr.noReplies`)
+is realizable for the racing counter and consistent, while the racing
+counter's projected spec is inconsistent, so omitting reply sequences hides the
+incompatibility.  `IOT.Ctr.domination_alone`: allowing every reply sequence
+(`IOT.Ctr.allReplies`) dominates the recording counter and is inconsistent,
+while the recording counter's projected spec is consistent, so adding reply
+sequences creates an incompatibility. -/
+theorem «sec:operational-models/both-halves» :
+    ((∀ w t, (IOT.Ctr.noReplies IOT.Ctr.Race).P w t → (IOT.spec IOT.Ctr.Race).P w t) ∧
+      (IOT.Ctr.noReplies IOT.Ctr.Race).Consistent ∧ ¬ (IOT.spec IOT.Ctr.Race).Consistent) ∧
+    ((∀ w t, (IOT.spec IOT.Ctr.Queue).P w t →
+        ∃ u, (IOT.Ctr.allReplies IOT.Ctr.Queue).P w u ∧ t ≼ u) ∧
+      ¬ (IOT.Ctr.allReplies IOT.Ctr.Queue).Consistent ∧ (IOT.spec IOT.Ctr.Queue).Consistent) :=
+  ⟨IOT.Ctr.realizability_alone, IOT.Ctr.domination_alone⟩
+
+/-- "Domination is the counterpart, for receive and reply sequences, of the
+refinement obligation above.  Realizability is its converse, that `D` allows
+nothing the automaton cannot produce; it too is proved once for all inputs,
+typically by induction on the input.  `D` need not match the automaton
+exactly: it may leave out reply sequences that others extend.  For the
+recording counter, the rule "after `n` arrivals, the reports `1,…,n`"
+satisfies both obligations."
+
+Lean: `IOT.Ctr.queue_declared`: the rule `IOT.Ctr.allReported` (it leaves out
+every shorter reply sequence) satisfies Realizability and Domination
+(`CofinalAlong id`) and is consistent.  How realizability is typically
+proved, and the relation to the refinement obligation, are argued in prose
+only (see the README). -/
+theorem «sec:operational-models/recording-rule» :
+    CofinalAlong id IOT.Ctr.allReported (IOT.spec IOT.Ctr.Queue) ∧
+      IOT.Ctr.allReported.Consistent :=
+  IOT.Ctr.queue_declared
 
 /-- **Prop. `prop:declared-specification`** (Declared specifications).  "Let
-`D` be an I/O specification whose inputs correspond, by an order
-isomorphism, to the inputs that occur.  If `D` satisfies realizability and
-domination, then `D` satisfies Lifted Monotonicity exactly when the induced
-specification does, and so exactly when the machine's observations are
-confluent across its executions."  With the obligations: "*Realizability.*
-Every output that `D` allows at an input is the observation of some execution
-with that input.  *Domination.*  Every execution's final observation is
-extended by some output that `D` allows at its input."  The remark "`D` need
-not match the machine exactly: it may leave out observations that others
-refine, such as transient intermediate states" is illustrated by
-`IOM.dip_liftedMono_via_cofinal` (a declared specification that omits two
-transient observations).
+`D` be an I/O specification whose outputs are reply sequences and whose inputs
+correspond, by an order isomorphism, to receive sequences.  If `D` satisfies
+realizability and domination, then `D` is consistent exactly when the
+projected spec is."  With the obligations: "*Realizability.*  Every reply
+sequence that `D` allows at a receive sequence is the reply sequence of some
+execution with that receive sequence.  *Domination.*  Every execution's reply
+sequence is a prefix of one that `D` allows at its receive sequence."
 
-Lean (general machine `G`, either channel): `D : Spec J O` over an ordered
-input type `J`, and `φ : OccInp C P k G → J`.  `IOM.MachineCofinal k G φ D`
-bundles: `φ` is an order embedding (`emb`); Realizability over executions
-(`real`: every row `(j, o)` of `D` is `(φ (input β), obs)` for an execution
-`β`); Domination (`dom`: every execution's final observation is extended by
-a row of `D` at the image of its input).  The paper's order isomorphism is
-an order embedding that is onto; ontoness is not assumed, since Realizability
-and totality of `D` imply it.  The conclusion is
-`IOM.liftedMono_iff_of_machineCofinal`: `D.LiftedMono ↔ (spec k G).LiftedMono`,
-`D.LiftedMono ↔ ObsConfluent k G`, and also `D` consistent iff the induced
-specification is.  The proof follows the sketch: both directions go through
-the common-extension form (`commonExpansion_of_dominated`,
-`commonExpansion_of_realized` in `CompleteCALM/Cofinal.lean`).
-
-The surrounding sentences ("Domination is the refinement obligation above.
-Realizability is its converse, that `D` allows nothing the machine cannot
-produce; it too is proved once for all inputs, typically by induction on the
-input." and the closing "Together, the two obligations let `D` stand in for
-the machine: Lifted Monotonicity is checked on `D` exactly as everywhere else
-in this paper, and nothing about coordination needs to be proved about the
-machine itself.") relate the obligations to verification practice and to the
-statement above; how realizability is typically proved is argued in prose
-only (see the README). -/
-theorem «prop:declared-specification» {C P Q O J : Type} [PO O] [PO J]
-    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) (φ : IOM.OccInp C P k G → J)
-    (D : Spec J O) (H : IOM.MachineCofinal k G φ D) :
-    (D.LiftedMono ↔ (IOM.spec (C := C) k G).LiftedMono) ∧
-      (D.LiftedMono ↔ IOM.ObsConfluent (C := C) k G) ∧
-      (D.Consistent ↔ (IOM.spec (C := C) k G).Consistent) :=
-  IOM.liftedMono_iff_of_machineCofinal H
+Lean: `D : Spec J (OutS M)` and `φ : InS M → J`; `CofinalAlong φ D (spec M)`
+bundles that `φ` is an order embedding (`emb`), Realizability (`real`: every
+row `(j, t)` of `D` is `(φ w, t)` for a row `(w, t)` of the projected spec,
+i.e. of an execution), and Domination (`dom`).  The paper's order isomorphism
+is an order embedding that is onto; ontoness is not assumed, since
+Realizability and totality of `D` imply it.  `IOT.declared`, through
+`liftedMono_iff_of_cofinalAlong`, whose proof follows the sketch through the
+common-extension form.  The closing paragraph ("Together, the two obligations
+let `D` stand in for the projected spec: consistency is checked on `D` exactly
+as everywhere else in this paper.  Whether the automaton itself is confluent
+is a question about its executions (Proposition
+`prop:automaton-confluence`).") relates the statement to the rest of the
+subsection. -/
+theorem «prop:declared-specification» {A J : Type} [PO J] (M : IOA.Automaton A)
+    (φ : IOT.InS M → J) (D : Spec J (IOT.OutS M)) (H : CofinalAlong φ D (IOT.spec M)) :
+    D.Consistent ↔ (IOT.spec M).Consistent :=
+  IOT.declared φ D H
 
 end Paper
 end CC
