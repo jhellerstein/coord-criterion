@@ -1307,7 +1307,7 @@ Proposition~\ref{prop:functional-exposure-boundary}.\color{black}
 \color{black}\cxtag{distributed:1}{N/S}This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs
 (Corollary~\ref{cor:convergence}).  We then define systems, relate their runs to
-canonical runs, and show where \commitments conflict; Complete CAP follows.\color{black}
+canonical runs, and show when systems are confluent; Complete CAP follows.\color{black}
 % Subsections 1--2 of the distributed section (input from distributed.tex).
 
 \subsection{Distributed histories}
@@ -1733,7 +1733,7 @@ confluence directly, since its runs are canonical runs.  A system with
 \commitments of its own keeps at most the rows of its canonical runs, and its
 confluence depends on which rows those \commitments remove.\color{black}
 
-\subsection{Where \commitments conflict}
+\subsection{Confluence of systems}
 \label{sec:commitment-conflict}
 
 \color{black}\cxtag{distributed:24}{?/?}The registrar shows how a system's own \commitment can block a confluence the
@@ -1782,18 +1782,19 @@ reach it (Section~\ref{sec:distributed-consistency}).\color{black}
 with a late ballot, such as $(aba,a)$ and $(abb,b)$.  Its table then has no row
 at $aba$, so no family of runs that includes it is confluent at $aba$.\color{black}
 
-\color{black}\cxtag{distributed:29}{?/?}The continuations in Proposition~\ref{prop:system-confluence} need not be ones
-the system would choose: the last \commitment event in the proof is in general
-not in the system's basis.  Suppose that, from each final state, the system's
-strategy can accept $k$ and then emit any output whose row at $k$ remains in
-its table.  Then the test is also exact for the system's own continuations: it
-holds exactly when they can bring every run to input $k$ and emit one common
-output there, which \outrel everything the runs emitted.  Without that
-assumption, $\Delta$ understates what the system has given up.  Consider a
-server that either replies $x$ to the first request $p$ and never replies $z$,
-or waits for a second $p$ and then replies $x$ and then $z$.  A run that
-replied early made no \commitment, so its table keeps the row with input $pp$
-and output $xz$, but its strategy never emits $z$.\color{black}
+\color{black}\cxtag{distributed:29}{?/?}Proposition~\ref{prop:system-confluence} establishes confluence via
+continuations that the system itself might not take.  It asks whether a common
+state can be reached at all, not whether the system's strategy would reach it.
+The two agree when, from each final state, the system's strategy can accept
+$k$ and then emit any output whose row at $k$ remains in its table.  Without
+that condition, a strategy can refuse to emit an output whose row remains in
+its table.  Suppose the registrar, instead of applying the poll-closing
+\commitment when it emits $\bot$ at $ab\cdot$, employs a strategy that will
+never announce a winner after input $ab\cdot$, despite the spec allowing it.
+Its table still has the row $(aba,a)$ and its $\Delta$ is empty, so the test
+finds a row it shares with a canonical run that accepts $aba$ and emits $a$.
+The registrar's strategy never emits $a$, so its own continuations cannot reach
+that state.\color{black}
 
 \color{black}\cxtag{distributed:30}{?/?}Proposition~\ref{prop:system-confluence} has a simple special case: two runs,
 one of which removes a row by a \commitment while the other emits that row's

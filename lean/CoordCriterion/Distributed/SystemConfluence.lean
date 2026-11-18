@@ -26,8 +26,10 @@ other row.
 * `commitment_conflict_of_system_confluence` — Prop. `prop:commitment-conflict`
   as the two-run case.
 * `registrar_delta`     — the registrar's `Δ` is the rows with a late ballot.
-* `Server.*`            — the server that replies early: no commitment event,
-  so `Δ` is empty and the row `(pp, xz)` stays in its table.
+* `registrar_silent`    — the registrar with a strategy that never announces a
+  winner after `ab·`: no commitment event, so `Δ` is empty, the row `(aba, a)`
+  stays in its table, and the Survivor test passes with a canonical run that
+  accepts `aba` and emits `a`.
 -/
 
 namespace CC
@@ -574,61 +576,46 @@ theorem registrar_delta (B : CommitmentBasis CALM.elec) (hB : B Figures.closePol
   · have := ((Figures.Elec.panelD_rows _ _).1 h).1
     exact absurd this (by decide)
 
-namespace Server
-
-/-- Request counts and reply sequences `ε < x < xz`, both as `Fin 3` in
-their usual order: input `1` is `p`, `2` is `pp`; output `1` is `x`, `2` is
-`xz`. -/
-def C3 := Fin 3
-
-instance : PO C3 where
-  le a b := a.val ≤ b.val
-  refl a := Nat.le_refl a.val
-  trans h h' := Nat.le_trans h h'
-  antisymm h h' := Fin.ext (Nat.le_antisymm h h')
-
-/-- The server's spec: after `i` requests, any reply sequence of length at
-most `i`. -/
-def srv : Spec C3 C3 where
-  P i o := o.val ≤ i.val
-  total _ := ⟨(0 : Fin 3), Nat.zero_le _⟩
-
-/-- The state after `input j`. -/
-def inSt (σ : State srv) (j : C3) (u : C3) (hu : σ.R j u) : State srv where
-  cur := j
-  R := inputTable σ j
-  sub := fun k x h => σ.sub k x h.1
-  hasCur := ⟨u, hu, PO.refl j⟩
-  above := fun _ _ h => h.2
-
-/-- The server's run that replies early: `input(p)`, `output(x)`,
-`input(pp)`.  It has no commitment event, so `Δ` is empty, and its table keeps
-the row with input `pp` and output `xz`.  (That its strategy never emits `z`
-is the example's assumption about the strategy.) -/
-theorem early_reply :
-    ∃ ρ : State srv,
-      SysExec (fun _ => True) (canon srv (0 : Fin 3))
-        [.input (1 : Fin 3), .output (1 : Fin 3), .input (2 : Fin 3)] ρ ∧
-      ρ.cur = (2 : Fin 3) ∧ ρ.R (2 : Fin 3) (2 : Fin 3) ∧
-      ∀ k u, ¬ Removed (fun _ => True) (canon srv (0 : Fin 3))
-        [.input (1 : Fin 3), .output (1 : Fin 3), .input (2 : Fin 3)] k u := by
-  let σ0 := canon srv (0 : Fin 3)
-  have h10 : σ0.R (1 : Fin 3) (1 : Fin 3) := ⟨Nat.le_of_ble_eq_true rfl, Nat.le_of_ble_eq_true rfl⟩
-  let σ1 := inSt σ0 (1 : Fin 3) (1 : Fin 3) h10
-  have s1 : Step σ0 (.input (1 : Fin 3)) σ1 := Step.input σ0 σ1 _ ⟨_, h10⟩ rfl rfl
-  have h11 : σ1.R σ1.cur (1 : Fin 3) := ⟨h10, PO.refl _⟩
-  let σ2 := outState σ1 (1 : Fin 3) h11
-  have s2 : Step σ1 (.output (1 : Fin 3)) σ2 := step_output_outState h11
-  have h21 : σ2.R (2 : Fin 3) (1 : Fin 3) :=
-    ⟨⟨⟨Nat.le_of_ble_eq_true rfl, Nat.le_of_ble_eq_true rfl⟩, Nat.le_of_ble_eq_true rfl⟩, PO.refl _⟩
-  let σ3 := inSt σ2 (2 : Fin 3) (1 : Fin 3) h21
-  have s3 : Step σ2 (.input (2 : Fin 3)) σ3 := Step.input σ2 σ3 _ ⟨_, h21⟩ rfl rfl
-  refine ⟨σ3, .cons (.input s1) (.cons (.output s2 (Or.inr trivial)) (.cons (.input s3) (.nil _))),
-    rfl, ⟨⟨⟨⟨Nat.le_of_ble_eq_true rfl, Nat.le_of_ble_eq_true rfl⟩, Nat.le_of_ble_eq_true rfl⟩, Nat.le_of_ble_eq_true rfl⟩, PO.refl _⟩, fun k u h => ?_⟩
-  obtain ⟨γ, hγ⟩ := removed_mem h
-  simp at hγ
-
-end Server
+/-- The registrar with a silent strategy: from `σ_P(ab·)` it emits `⊥` and
+applies no commitment, so `Δ` is empty and its table keeps the row
+`(aba, a)`.  A canonical run from the same state accepts `aba` and emits `a`,
+and the two states pass the Survivor test at `aba`: a common state is
+reachable by continuations that may apply any commitments.  That the
+registrar's strategy never announces a winner after `ab·` is the example's
+description of the strategy, not a property of the run. -/
+theorem registrar_silent :
+    ∃ ρ τ : State CALM.elec,
+      SysExec (fun _ => True) (canon CALM.elec CALM.bab) [.output .bot] ρ ∧
+      (∀ k o, ¬ Removed (fun _ => True) (canon CALM.elec CALM.bab) [.output .bot] k o) ∧
+      ρ.R CALM.baba (.win .a) ∧
+      Exec (canon CALM.elec CALM.bab) [.input CALM.baba, .output (.win .a)] τ ∧
+      SysConfluentAt [ρ, τ] CALM.baba := by
+  let σ0 := canon CALM.elec CALM.bab
+  have h0 : σ0.R σ0.cur .bot := ⟨CALM.winner_bab.symm, PO.refl _⟩
+  have h1 : σ0.R CALM.baba (.win .a) := ⟨CALM.winner_baba.symm, CALM.bab_le_baba⟩
+  let ρ := outState σ0 .bot h0
+  let τ1 := CALM.inputState σ0 CALM.baba (.win .a) h1
+  have h2 : τ1.R τ1.cur (.win .a) := ⟨h1, PO.refl _⟩
+  let τ := CALM.outputState τ1 (.win .a) h2
+  have hρ : ρ.R CALM.baba (.win .a) := ⟨h1, Or.inl rfl⟩
+  have hτ : τ.R CALM.baba (.win .a) := ⟨⟨h1, PO.refl _⟩, PO.refl _⟩
+  refine ⟨ρ, τ, .cons (.output (step_output_outState h0) (Or.inr trivial)) (.nil _),
+    fun k o h => ?_, hρ,
+    .cons (CALM.step_inputState σ0 _ _ h1) (.cons (CALM.step_outputState τ1 _ h2) (.nil _)), ?_⟩
+  · obtain ⟨γ, hγ⟩ := removed_mem h
+    simp at hγ
+  · have hk : ∀ σ ∈ [ρ, τ], σ.cur ≼ CALM.baba := by
+      intro σ hσ
+      simp only [List.mem_cons, List.not_mem_nil, or_false] at hσ
+      rcases hσ with rfl | rfl
+      · exact CALM.bab_le_baba
+      · exact PO.refl _
+    refine (sysConfluentAt_iff [ρ, τ] CALM.baba hk).2 ⟨.win .a, CALM.winner_baba.symm, ?_⟩
+    intro σ hσ
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at hσ
+    rcases hσ with rfl | rfl
+    · exact hρ
+    · exact hτ
 
 end Dist
 end CC

@@ -325,7 +325,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:system-confluence/cut»` | theorem | §`sec:commitment-conflict`, after Prop. |
 | `«sec:commitment-conflict/registrar»` | theorem | §`sec:commitment-conflict`: |
 | `«sec:commitment-conflict/own»` | theorem | §`sec:commitment-conflict`, the system's own continuations: |
-| `«sec:commitment-conflict/server»` | theorem | §`sec:commitment-conflict`: |
+| `«sec:commitment-conflict/silent-registrar»` | theorem | §`sec:commitment-conflict`: |
 | `«prop:commitment-conflict/from-system-confluence»` | theorem | §`sec:commitment-conflict`, before Prop. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
 | `«prop:commitment-conflict/second-run»` | theorem | Supporting form of Prop. |

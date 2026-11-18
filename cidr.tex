@@ -1688,13 +1688,13 @@ invariant confluent.
 
 An I/O automaton~\cite{lynch1987io} projects onto a spec that pairs each
 execution's receive sequence with its reply sequence, ordered by prefix.
-Every execution is a run of this spec, but the projection drops which rows
-occur in the same execution: a registrar that may reply early and then
-ignore later ballots has a consistent projected spec, yet its executions
-cannot all be reconciled.  Modeling the automaton as a system, with its
-choices as \commitment events, recovers what is dropped:
-the automaton is confluent exactly when its \commitments never remove every
-row its canonical runs could still agree on.  Model checkers can refute
+Every automaton execution is matched by a run of this spec, but not
+necessarily vice versa.  For example, the automaton may choose not to produce
+an output $o$ for a given input $i$ in one execution, even though $(i,o)$ is
+within spec from another execution.  Modeling the automaton as a system, with
+its choices as \commitment events, captures the executions precisely: the
+automaton is confluent exactly when its \commitments never remove every row
+its canonical runs could still agree on.  Model checkers can refute
 consistency on bounded inputs~\cite{newcombe2015aws}, and mechanized
 proofs~\cite{hawblitzel2015ironfleet} can show, by the standard obligations of
 refinement~\cite{abadi1991refinement}, that a declared spec stands in for the

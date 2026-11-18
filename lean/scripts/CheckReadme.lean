@@ -158,7 +158,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:system-confluence/cut»
 #check @CC.Paper.«sec:commitment-conflict/registrar»
 #check @CC.Paper.«sec:commitment-conflict/own»
-#check @CC.Paper.«sec:commitment-conflict/server»
+#check @CC.Paper.«sec:commitment-conflict/silent-registrar»
 #check @CC.Paper.«prop:commitment-conflict/from-system-confluence»
 #check @CC.Paper.«prop:commitment-conflict»
 #check @CC.Paper.«prop:commitment-conflict/second-run»

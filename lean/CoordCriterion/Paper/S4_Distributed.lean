@@ -847,14 +847,12 @@ theorem «sec:commitment-conflict/registrar» (B : CommitmentBasis CALM.elec)
   obtain ⟨B', es', hx⟩ := hall _ hm
   exact h2 u (hx.sub _ u hu)
 
-/-- §`sec:commitment-conflict`, the system's own continuations: "The
-continuations in Proposition system-confluence need not be ones the system
-would choose: the last commitment event in the proof is in general not in the
-system's basis.  Suppose that, from each final state, the system's strategy
-can accept `k` and then emit any output whose row at `k` remains in its table.
-Then the test is also exact for the system's own continuations: it holds
-exactly when they can bring every run to input `k` and emit one common output
-there, which extends everything the runs emitted."
+/-- §`sec:commitment-conflict`, the system's own continuations: "Proposition
+system-confluence establishes confluence via continuations that the system
+itself might not take.  It asks whether a common state can be reached at all,
+not whether the system's strategy would reach it.  The two agree when, from
+each final state, the system's strategy can accept `k` and then emit any
+output whose row at `k` remains in its table."
 
 Lean: `Can σ u` says that the system can continue from `σ` to input `k` and
 emit `u` there; any such continuation is a run under some basis that ends with
@@ -873,25 +871,28 @@ theorem «sec:commitment-conflict/own» {sp : Spec I O} (fam : List (State sp)) 
         ∀ o ∈ outs (es.filterMap SEvent.erase), o ≼ u :=
   ⟨Dist.own_iff fam k Can hsound hcomplete, fun h _ hu => Dist.surviving_row_extends h hu⟩
 
-/-- §`sec:commitment-conflict`: "Without that assumption, `Δ` understates what
-the system has given up.  Consider a server that either replies `x` to the
-first request `p` and never replies `z`, or waits for a second `p` and then
-replies `x` and then `z`.  A run that replied early made no commitment, so its
-table keeps the row with input `pp` and output `xz`, but its strategy never
-emits `z`."
+/-- §`sec:commitment-conflict`: "Without that condition, a strategy can refuse
+to emit an output whose row remains in its table.  Suppose the registrar,
+instead of applying the poll-closing commitment when it emits `⊥` at `ab·`,
+employs a strategy that will never announce a winner after input `ab·`,
+despite the spec allowing it.  Its table still has the row `(aba,a)` and its
+`Δ` is empty, so the test finds a row it shares with a canonical run that
+accepts `aba` and emits `a`.  The registrar's strategy never emits `a`, so its
+own continuations cannot reach that state."
 
-Lean: request counts and reply sequences as `Fin 3` chains (`Dist.Server`);
-the run `input(p)`, `output(x)`, `input(pp)` has no commitment event, so it
-removes no row by commitment, and its table keeps `(pp, xz)`.  That the
-strategy never emits `z` is the example's description of the strategy. -/
-theorem «sec:commitment-conflict/server» :
-    ∃ ρ : State Dist.Server.srv,
-      SysExec (fun _ => True) (canon Dist.Server.srv (0 : Fin 3))
-        [.input (1 : Fin 3), .output (1 : Fin 3), .input (2 : Fin 3)] ρ ∧
-      ρ.cur = (2 : Fin 3) ∧ ρ.R (2 : Fin 3) (2 : Fin 3) ∧
-      ∀ k u, ¬ Dist.Removed (fun _ => True) (canon Dist.Server.srv (0 : Fin 3))
-        [.input (1 : Fin 3), .output (1 : Fin 3), .input (2 : Fin 3)] k u :=
-  Dist.Server.early_reply
+Lean: the registrar's run from `σ_P(ab·)` that emits `⊥` with no commitment
+event removes no row by commitment and keeps `(aba, a)`; a canonical run from
+the same state accepts `aba` and emits `a`, and the two pass the Survivor test
+at `aba`.  That the strategy never announces a winner after `ab·` is the
+example's description of the strategy (`Dist.registrar_silent`). -/
+theorem «sec:commitment-conflict/silent-registrar» :
+    ∃ ρ τ : State CALM.elec,
+      SysExec (fun _ => True) (canon CALM.elec CALM.bab) [.output .bot] ρ ∧
+      (∀ k o, ¬ Dist.Removed (fun _ => True) (canon CALM.elec CALM.bab) [.output .bot] k o) ∧
+      ρ.R CALM.baba (.win .a) ∧
+      Exec (canon CALM.elec CALM.bab) [.input CALM.baba, .output (.win .a)] τ ∧
+      Dist.SysConfluentAt [ρ, τ] CALM.baba :=
+  Dist.registrar_silent
 
 /-- §`sec:commitment-conflict`, before Prop. `prop:commitment-conflict`:
 "Proposition system-confluence has a simple special case: two runs, one of
