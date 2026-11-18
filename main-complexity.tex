@@ -2911,35 +2911,30 @@ provably correct implementations.\color{black}
 \section{Conclusion}
 \label{sec:conclusion}
 
-\color{black}\cxtag{conclusion:1}{?/?}A spec abstracts execution details into a possibility relation over
-ordered input and output domains.
-The results here reduce to one question: can a participant act on what it knows
-without excluding a possibility that another run may still need?  Mutexes,
-locks, atomic instructions, and agreement protocols prevent such contradictions
-by applying \commitments.
-Functional CALM answers the question for functions: a functional spec
-stays confluent as input arrives exactly when it is monotone; otherwise \commitment is required.  This generalizes the classic result from logical fact
-sets to arbitrary input and output orders.\color{black}
+\color{black!45}\cxtag{conclusion:1}{C}The simplicity of \spectype[s] provides a unified foundation for the
+literature on coordination. It also clarifies the intrinsic purpose of
+coordination: removing possibilities via \commitments. The question of
+coordination-free consistency becomes clear in this model: when must a system
+make a fateful decision---a \commitment---in order to emit an output? Functional CALM answers
+the question for functional specs:  runs stay confluent as input arrives exactly
+when specs are monotone; otherwise \commitment is required.  This generalizes CALM to any function between ordered domains.\color{black}
 
-\color{black}\cxtag{conclusion:2}{?/?}Complete CALM extends the answer to specs that offer several outputs
+\color{black!45}\cxtag{conclusion:2}{C}Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
-Monotonicity with the requirement that the spec has directed fibers.  When the test fails, some reachable output
+Monotonicity with directed fibers.  When the test fails, some reachable output
 requires a \commitment to rule out a possible input/output pair.
-Because the model makes \commitments explicit, Proper Coordination can also show where a composition coordinates (\S\ref{sec:composition}).  For example, a totally ordered log
+Because the model makes \commitments explicit, Proper Coordination can also show where a
+composition coordinates (\S\ref{sec:composition}).  For example, a totally ordered log
 and a key-value store are each non-monotone on their own, yet when the log
 guards the store, the log's \commitments are all the composition needs, and
 the store needs none.  Multi-Paxos is one way to distribute those
-\commitments.\color{black}
+\commitments.
+Complete CAP is the partition form of the same equivalence: a spec escapes
+the CAP tradeoff exactly when it satisfies Lifted Monotonicity for its explicit possibility relation.\color{black}
 
-\color{black}\cxtag{conclusion:3}{?/?}Complete CAP is the partition form of the same equivalence.  A system can keep
-the outputs selected by a spec's explicit relation available, and
-consistent, through partitions exactly when they have a common \outnoun at
-every common \indesc of their inputs; when the relation selects every output,
-this is Lifted Monotonicity.\color{black}
-
-\color{black!45}\cxtag{conclusion:4}{C}The generality of our specification model opens a range of new questions
-regarding the nondeterminism of specs and their \commitments. One direction
-extends the boolean criteria of this paper to metrics: a Determination
+\color{black!45}\cxtag{conclusion:3}{C}Our model of \spectype[s] and \commitments opens a range of new questions.
+One direction
+extends the boolean criterion of this paper to a quantity: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
 needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
