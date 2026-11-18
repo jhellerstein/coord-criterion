@@ -935,79 +935,70 @@ theorem «sec:iconfluence-instance/concurrency-decides» :
 
 /-! ## General operational specification models (`sec:operational-models`)
 
-The opening paragraph ("An I/O spec declaratively relates
-cumulative inputs to permitted outputs.  An I/O automaton instead defines
-operational states, input, output, and internal actions, and a transition
-relation.  Projecting its externally visible behavior can yield an I/O
-spec. … Thus our specification model does not replace an operational
-formalism; it is a semantic projection designed to make the intrinsic
-coordination question comparable across such formalisms.") positions the model;
-it states no claim of its own.
+The opening paragraph ("Many systems are specified as state machines.  This
+subsection shows how a state machine yields an I/O specification, so that
+Complete CALM applies to it. … Finally, we discuss how the projection is used
+in practice, by testing on bounded inputs and by proving that a declared spec
+can stand in for the machine.") outlines the subsection.  Its claim that "the
+projection is faithful: the machine's observations are confluent exactly when
+the induced spec satisfies Lifted Monotonicity" is
+Prop. `prop:induced-specification` (`IOM.confluent_iff_liftedMono`).
 
-"Compiling a state machine": "Automata are a traditional way to model
-operational behavior abstractly.  Our model keeps only the inputs and outputs
-of that behavior and drops the operational details.  The mapping is
-straightforward: for each input, record the outputs of the runs that consume it.
-Work that models systems as state machines therefore maps naturally into our
-model, where Complete CALM assesses its consistency directly.  We now make the
-mapping precise, and then explain how it is used in practice."  The mapping is
-Def. `def:induced-specification`, and "Complete CALM assesses its consistency
-directly" is `IOM.confluent_iff_liftedMono` (consistency iff Lifted
-Monotonicity for every induced specification; part (4) of
-Prop. `prop:induced-specification`).  How it is used in practice is the
-paragraph "Testing and proof" (entries after
-Prop. `prop:induced-specification`).
-
-We take the standard I/O-automaton model of a state machine, its clients,
-and the channel that carries their state-machine events.  The machine `M` has states `Q`,
-an initial state `q₀`, receive transitions for
-state-machine events that accept
-every payload in every state, output transitions that emit an output to a
-client and may change state, internal transitions, and an observation
-`obs : Q → O`.  There are finitely many clients.  Each may send a
-state-machine event with any payload at any time, and receives the machine's
-outputs.  A channel carries each state-machine event at most once to the
-machine's input queue, possibly reordering events on the way, and the machine
-consumes the queue in order.  In an execution of the composed
-automaton, *happens-before* is Lamport's order: the transitive closure of the
-local order at the machine and at each client and of the edge from sending a state-machine event to receiving it."
+"The machine model": "We take the standard I/O-automaton model of a state
+machine, its clients, and the channel that carries their state-machine
+events.  The machine `M` has states `Q`, an initial state `q₀`, receive
+transitions for state-machine events that accept every payload in every
+state, reply transitions that send a reply to a client and may change state,
+internal transitions, and an observation `obs : Q → O`.  Replies are messages
+to clients.  The observation is what our spec judges: the output of the
+induced spec at an input is the observation of the machine's state.  There
+are finitely many clients.  Each may send a state-machine event with any
+payload at any time, and receives the machine's replies.  A channel carries
+each state-machine event at most once to the machine's input queue, possibly
+reordering events on the way, and the machine consumes the queue in order.
+In an execution of the composed automaton, *happens-before* is Lamport's
+order: the transitive closure of the local order at the machine and at each
+client and of the edge from sending a state-machine event to receiving it."
 
 Lean: Lynch–Tuttle I/O automata and their composition are `CC.IOA`
 (`Foundations/IOAutomata.lean`).  The machine is a general machine automaton
 `G : IOM.Machine C P Q O` (payloads `P`; fields `q0`; receive transitions
-`recv` with `recv_enabled`; output transitions `out q c o q'`, emitting `o` to
-client `c` and moving to `q'`; internal transitions `tau`; `obs`), as the
-I/O automaton `IOM.machA G` (inputs `recv e`, outputs `out c o`, internal
-action `tau`).  A state machine `M : SM.Machine Q P O` is the special case
+`recv` with `recv_enabled`; reply transitions `out q c o q'`, sending reply
+`o` to client `c` and moving to `q'`; internal transitions `tau`; `obs`), as
+the I/O automaton `IOM.machA G` (inputs `recv e`, outputs `out c o`, internal
+action `tau`).  The library calls replies `out` actions; they are the
+automaton's output actions, not outputs of the induced spec, which are
+observations.  A state machine `M : SM.Machine Q P O` is the special case
 `IOM.ofSM M`.  `IOM.sys k G` composes `IOM.machA G`, the clients `IOM.cliA c`
 (outputs `send e` with any payload at any time, inputs `out c o`), and the
 channel `IOM.chanA k`, which neither loses nor duplicates.  The machine's
 input queue is folded into the channel: the machine's `recv e` is the
 channel's delivery of `e`, i.e. the machine consuming `e` from its queue.  A
-channel that may reorder is the bag, `k = .bag` (any state-machine event in transit is
-consumed next); the case in which state-machine events arrive in the order sent (part (2)
-of Prop. `prop:induced-specification`) is the FIFO queue, `k = .fifo`.
-Events `IOM.Ev C P` carry a client, a sequence number, and a payload.
-`IOM.HB β` is happens-before on positions of the schedule `β`.  The client
-type `C` is arbitrary; finiteness is not needed.  A sent state-machine event may stay in
-transit in a finite execution. -/
+channel that may reorder is the bag, `k = .bag` (any state-machine event in
+transit is consumed next); the case in which state-machine events arrive in
+the order sent (the remark after Prop. `prop:induced-specification`) is the
+FIFO queue, `k = .fifo`.  Events `IOM.Ev C P` carry a client, a sequence
+number, and a payload.  `IOM.HB β` is happens-before on positions of the
+schedule `β`.  The client type `C` is arbitrary; finiteness is not needed.  A
+sent state-machine event may stay in transit in a finite execution.
 
-/-- "An output of the machine is an input of the client that receives it, so
-a client's later sends happen after everything the machine had received when
-it emitted that output."  From the remark after
-Proposition `prop:induced-specification`: "A client that sends after
-observing an output is ordered after everything that output reflected, and the
-input records that dependence."
+"The induced spec": "Each finite execution of the automaton determines an
+input and an output in our sense."  These are Defs. `def:execution-input` and
+`def:induced-specification` below. -/
+
+/-- "The input orders state-machine events by their sends, not their
+arrivals: arrival order is what differs between executions.  Clients may
+react to replies.  If a client sends an event after receiving a reply, that
+send happens after every event the machine had received when it replied, so
+the input records what the client's choice could depend on."
 
 Lean (general machine `G`): in an execution `β`, if the machine received `e`
-(position `r`) before emitting `out c o` (position `m`), and client `c` sends
-`e'` at a later position `j`, then the send of `e` happens before the send of
-`e'`, every delivery of `e'` in `β` comes after position `r`, and if `e'` is
-received the input of `β` orders `e` before `e'`.  The delivery claim is read
-within the execution in which the client observed the output.  The rest of
-the remark ("what the client saw is recorded by the run's output events,
-which keep only rows that refine it") applies Def. `def:output-event` to the
-induced specification. -/
+(position `r`) before sending reply `out c o` (position `m`), and client `c`
+sends `e'` at a later position `j`, then the send of `e` happens before the
+send of `e'`, every delivery of `e'` in `β` comes after position `r`, and if
+`e'` is received the input of `β` orders `e` before `e'`.  That the input
+orders events by their sends is Def. `def:execution-input`
+(`IOM.input`). -/
 theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
     (k : IOM.ChanKind) (G : IOM.Machine C P Q O) {β : List (IOM.Act C P O)}
     {s : (IOM.sys (C := C) k G).St} (hx : IOA.Execution (IOM.sys k G) β s)
@@ -1019,22 +1010,23 @@ theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
   IOM.send_after_out ⟨s, hx, rfl⟩ hm hrv hrm hj hmj hc
 
 /-- **Def. `def:induced-specification`** (Induced specification).  "The
-specification *induced* by `M` and its environment pairs each input
-(Definition `def:execution-input`) that occurs with the machine's observation
-at the end of every execution with that input."
+specification *induced* by `M` and its environment is the I/O specification
+whose inputs are the inputs of the automaton's finite executions
+(Definition `def:execution-input`), and whose fiber at an input `h` contains
+the observation of the machine's final state in every execution with input
+`h`."
 
-Lean: the table `IOM.spec k G` on `IOM.OccInp C P k G`; for a general
-machine `G`, this theorem gives the unfolded conditions for input
-membership, order, and fiber membership together.
+Lean: the table `IOM.spec k G` on `IOM.OccInp C P k G` (the inputs that occur,
+i.e. inputs of finite executions); this theorem gives the unfolded conditions
+for input membership, order, and fiber membership together.
 
-The remarks that follow ("This is not a
-distributed execution in the sense of Section `sec:distributed-execution`.
-… Happens-before here only records which state-machine events each
-client sent after which outputs, so the input remembers what the
-environment's choices depended on.") explain the model and state no claim of
-their own.  The sentence "Distributing the machine is then direct: … among
-participants Section `sec:distributed-execution` applies, using the induced
-spec." is `«sec:operational-models/distributing»`. -/
+The remark that follows ("The machine is a single participant.  The clients
+and the channel are its environment, and, as in Section
+`sec:election-story`, the environment may react to what it sees when choosing
+later input.") explains the model and states no claim of its own.  The
+sentence "Distributing the machine is then direct: … among participants
+Section `sec:distributed-execution` applies, using the induced spec." is
+`«sec:operational-models/distributing»`. -/
 theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
     (G : IOM.Machine C P Q O) :
     (∀ (β : List (IOM.Act C P O)) e, (IOM.input β).mem e ↔ .recv e ∈ β) ∧
@@ -1047,8 +1039,9 @@ theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
   ⟨fun _ _ => Iff.rfl, fun _ _ _ => Iff.rfl, fun _ _ => Iff.rfl, fun _ _ => Iff.rfl⟩
 
 /-- **Def. `def:execution-input`** (Input of an execution).  "The *input* of
-a finite execution is the set of state-machine events the machine has
-received, ordered by happens-before between their sends; `h ⊑ h'` when
+a finite execution of the automaton is the input, in our sense, that records
+the state-machine events the machine has received, ordered by happens-before
+between their sends.  One such input extends another, `h ⊑ h'`, when
 `h ⊆ h'` and the two orders agree on `h`."
 
 Lean: `IOM.input β` (membership: `recv e ∈ β`; order: happens-before between
@@ -1081,92 +1074,64 @@ theorem «sec:operational-models/distributing» {C P Q O : Type} [PO O]
    (IOM.confluent_iff_liftedMono k G).1.symm,
    CAP.complete_cap _ D⟩
 
-/-- **Prop. `prop:induced-specification`** (Induced specifications).
-"(1) The induced specification is an I/O specification, and the input of
-an execution only extends as the execution continues.  (2) When there is one
-client and its state-machine events arrive in the order it sent them, every input is a
-chain, inputs correspond to state-machine event sequences ordered by prefix, and the fiber
-at a sequence collects the observations of the machine's runs that receive it
-in order, interleaved with output and internal steps.  If output and internal
-steps leave the state unchanged and receiving is deterministic, the
-specification is functional and consistent exactly when `obs(q) ⪯ obs(q')`
-for every receive transition `q → q'` from a reachable state.  (3) Every
-observation in the fiber at `h` is reached by a run of the machine that
-receives each state-machine event of `h` once, interleaved with output and internal steps.
-If the channel may reorder and clients observe no outputs, every such run is
-reached, whatever the order of its receives.  (4) The machine's observations
-are confluent across its executions exactly when the induced specification
-satisfies Lifted Monotonicity.  Here confluence means that for executions with
-inputs `h₁,…,hₖ` and any input `h` that occurs and extends each `hᵣ`, some
-execution with input `h` ends in an observation that extends each of
-theirs."
+/-- "The machine's observations are *confluent across its executions* when,
+for executions with inputs `h₁,…,hₖ` and any input `h` of an execution that
+extends each `hᵣ`, some execution with input `h` ends in an observation that
+extends each of theirs."  With **Prop. `prop:induced-specification`**
+(Induced specifications): "The induced specification is an I/O
+specification, and the input of an execution only grows as the execution
+continues.  The machine's observations are confluent across its executions
+exactly when the induced specification satisfies Lifted Monotonicity."
 
-Lean, part by part, for a general machine `G`; a run of the machine is an
-execution `γ` of the machine automaton `IOM.machA G` (its receives
-`IOM.recvs γ`, interleaved with `out` and `tau` steps):
-(1) every input that occurs has a row (`IOM.spec` is a `Spec`), and
-`IOM.input_mono`;
-(2) one client is `C = Unit`, and arrival in the order sent is the channel
-`.fifo`; `IOM.fifo_single_run`: every input is a chain, `IOM.word` (payloads
-in sequence order) is an order isomorphism onto `SM.Seq P` under the prefix
-order, and it carries each fiber to the fiber of `IOM.runSpec G` (the
-observations at the end of runs of the machine whose receives carry the
-sequence in order).  The special case: `IOM.Stationary G` (output and
-internal steps leave the state unchanged) and `SM.Deterministic (IOM.recvSM G)`
-(receiving is deterministic); `IOM.fifo_single_stationary` gives
-functionality and consistency iff `SM.TransMono (IOM.recvSM G)` (observations
-grow along every receive transition from a state reachable by receives,
-which for a stationary machine are all its reachable states).  It goes
-through `IOM.runSpec_stationary` (the prefix table `SM.induced`) and
-`SM.induced_prefix` (monotonicity along transitions and Functional CALM).
-State machines are stationary (`IOM.stationary_ofSM`, and `IOM.fifo_single`
-for `IOM.ofSM M`);
-(3) `IOM.fiber_sub_run` (any channel; with a FIFO channel the receive order is
-moreover a linear extension of the input order) and `IOM.bag_fiber_of_run`:
-for the input of an execution over a bag with no `out` actions
-(`IOM.OutFree`, clients observe no outputs), the observation at the end of
-every run of the machine that receives each of its state-machine events once, in any
-order, is in the fiber (`IOM.bag_arrival_run` gives the execution);
-(4) `IOM.ObsConfluent k G` is the confluence condition on observations at the
-end of executions, and `IOM.confluent_iff_liftedMono`.  The proof follows the
-paper's sketch; (4) unfolds the fiber in the common-extension condition
+Lean, for a general machine `G` and either channel: every input that occurs
+has a row (`IOM.spec` is a `Spec`), and `IOM.input_mono`; `IOM.ObsConfluent k G`
+is the confluence condition, and `IOM.confluent_iff_liftedMono`.  The proof
+follows the sketch: it unfolds the fiber in the common-extension condition
 (`IOM.obsConfluent_iff_commonExpansion`) and applies
-`liftedMono_iff_commonExpansion`.  The library also proves the version for
-emitted outputs (`IOM.emitConfluent_iff_liftedMono_of`). -/
+`liftedMono_iff_commonExpansion`.  The library also proves that every
+observation in a fiber is reached by a run of the machine automaton receiving
+the input's events once (`IOM.fiber_sub_run`, `IOM.bag_fiber_of_run`), and the
+version for replies that report observations
+(`IOM.emitConfluent_iff_liftedMono_of`). -/
 theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
-    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) (G₁ : IOM.Machine Unit P Q O) :
-    -- (1)
+    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) :
     ((∀ h : IOM.OccInp C P k G, ∃ o, (IOM.spec k G).P h o) ∧
       ∀ (β γ : List (IOM.Act C P O)) (s : (IOM.sys (C := C) k G).St),
         IOA.Execution (IOM.sys k G) (β ++ γ) s → IOM.input β ≼ IOM.input (β ++ γ)) ∧
-    -- (2)
-    ((∀ h : IOM.OccInp Unit P .fifo G₁, ∀ a b, h.val.mem a → h.val.mem b → a ≠ b →
+    (IOM.ObsConfluent (C := C) k G ↔ (IOM.spec (C := C) k G).LiftedMono) :=
+  ⟨⟨(IOM.spec k G).total, fun _ _ s hx => IOM.input_mono ⟨s, hx, rfl⟩⟩,
+    (IOM.confluent_iff_liftedMono k G).1⟩
+
+/-- "With one client whose events arrive in the order it sent them, every
+input is a sequence of payloads, ordered by prefix.  If, in addition, reply
+and internal transitions leave the state unchanged and receiving is
+deterministic, the induced spec is functional, and it is consistent exactly
+when `obs(q) ⪯ obs(q')` for every receive transition `q → q'` from a
+reachable state."
+
+Lean: one client is `C = Unit`, and arrival in the order sent is the channel
+`.fifo`; `IOM.fifo_single_run`: every input is a chain, `IOM.word` (payloads in
+sequence order) is an order isomorphism onto `SM.Seq P` under the prefix order,
+and it carries each fiber to the fiber of `IOM.runSpec G` (the observations at
+the end of runs of the machine whose receives carry the sequence in order).
+`IOM.Stationary G` (reply and internal steps leave the state unchanged) and
+`SM.Deterministic (IOM.recvSM G)` (receiving is deterministic);
+`IOM.fifo_single_stationary` gives functionality and consistency iff
+`SM.TransMono (IOM.recvSM G)` (observations grow along every receive
+transition from a state reachable by receives, which for a stationary machine
+are all its reachable states). -/
+theorem «sec:operational-models/single-client» {P Q O : Type} [PO O]
+    (G₁ : IOM.Machine Unit P Q O) :
+    (∀ h : IOM.OccInp Unit P .fifo G₁, ∀ a b, h.val.mem a → h.val.mem b → a ≠ b →
         h.val.lt a b ∨ h.val.lt b a) ∧
       (∀ h h' : IOM.OccInp Unit P .fifo G₁, h ≼ h' ↔ IOM.word h ≼ IOM.word h') ∧
       (∀ w : SM.Seq P, ∃ h : IOM.OccInp Unit P .fifo G₁, IOM.word h = w) ∧
       (∀ h o, (IOM.spec .fifo G₁).P h o ↔ (IOM.runSpec G₁).P (IOM.word h) o) ∧
       (IOM.Stationary G₁ → SM.Deterministic (IOM.recvSM G₁) →
         (IOM.spec (C := Unit) .fifo G₁).Functional ∧
-          ((IOM.spec (C := Unit) .fifo G₁).Consistent ↔ SM.TransMono (IOM.recvSM G₁)))) ∧
-    -- (3)
-    ((∀ (h : IOM.OccInp C P k G) o, (IOM.spec k G).P h o →
-        ∃ γ : List (IOM.Act C P O), ∃ q, IOA.Execution (IOM.machA G) γ q ∧ G.obs q = o ∧
-          (IOM.recvs γ).Nodup ∧ (∀ e, e ∈ IOM.recvs γ ↔ h.val.mem e) ∧
-          (k = .fifo → (IOM.recvs γ).Pairwise fun a b => ¬ h.val.lt b a)) ∧
-      ∀ (β : List (IOM.Act C P O)) (s : (IOM.sys (C := C) .bag G).St),
-        IOA.Execution (IOM.sys .bag G) β s → IOM.OutFree β →
-        ∀ h : IOM.OccInp C P .bag G, h.val = IOM.input β →
-        ∀ (γ : List (IOM.Act C P O)) q, IOA.Execution (IOM.machA G) γ q →
-        (IOM.recvs γ).Nodup → (∀ e, e ∈ IOM.recvs γ ↔ h.val.mem e) →
-        (IOM.spec .bag G).P h (G.obs q)) ∧
-    -- (4)
-    (IOM.ObsConfluent (C := C) k G ↔ (IOM.spec (C := C) k G).LiftedMono) :=
+          ((IOM.spec (C := Unit) .fifo G₁).Consistent ↔ SM.TransMono (IOM.recvSM G₁))) :=
   have h2 := IOM.fifo_single_run G₁
-  ⟨⟨(IOM.spec k G).total, fun _ _ s hx => IOM.input_mono ⟨s, hx, rfl⟩⟩,
-    ⟨h2.1, h2.2.1, h2.2.2.1, h2.2.2.2.1, IOM.fifo_single_stationary⟩,
-    ⟨IOM.fiber_sub_run, fun _ _ hx hout h hh _ _ hγ hw hmem =>
-      IOM.bag_fiber_of_run hx hout h hh hγ hw hmem⟩,
-    (IOM.confluent_iff_liftedMono k G).1⟩
+  ⟨h2.1, h2.2.1, h2.2.2.1, h2.2.2.2.1, IOM.fifo_single_stationary⟩
 
 /-! "Testing and proof": "The induced spec is defined by every
 finite execution of the machine and its environment.  There are infinitely
@@ -1224,17 +1189,19 @@ theorem «sec:operational-models/testing-cannot-show» (X : List Testing.Stage) 
       Testing.base.LiftedMono ∧ ¬ (Testing.spoil X).LiftedMono :=
   Testing.testing_cannot_show X
 
-/-- "The second is proof.  Instead of computing the induced spec,
-a designer writes one down.  A *declared* spec `D` gives, for
-each input, a set of outputs by a rule … it does not enumerate executions.
-The proof then shows that `D` describes the machine well enough that Lifted
-Monotonicity can be checked on `D` instead.  Two things must be shown, and
-both are needed, because neither half alone preserves Lifted Monotonicity:
-if `D` omits an output the machine can produce, it may hide an
-incompatibility, and if `D` adds an output the machine cannot produce, it may
-supply a common output extension that no execution reaches."  The examples of rules
-("the set of ballots received", "the largest timestamp seen") are
-illustrations, argued in prose only (see the README).
+/-- "The second approach is proof.  Verification work routinely proves that
+a machine refines a spec: every observation of every execution is allowed by
+the spec, up to refinement of outputs. … Our use adds one obligation.  A
+*declared* spec `D` gives, for each input, a set of outputs by a rule … it
+does not enumerate executions.  To check Lifted Monotonicity on `D` instead of
+on the induced spec, two things must be shown, and both are needed, because
+neither alone preserves Lifted Monotonicity: if `D` omits an output the
+machine can produce, it may hide an incompatibility, and if `D` adds an
+output the machine cannot produce, it may supply a common output extension
+that no execution reaches."  The description of verification work
+(invariants, forward simulations, refinement mappings, mechanized proofs) and
+the examples of rules ("the set of ballots received", "the largest timestamp
+seen") are argued in prose only (see the README).
 
 Lean: the machine `IOM.fork` (receives keep the state; an internal step moves
 to `b`, observed as `l`, or to `c`, observed as `r`, from any state; `l` and
@@ -1286,13 +1253,15 @@ specification is.  The proof follows the sketch: both directions go through
 the common-extension form (`commonExpansion_of_dominated`,
 `commonExpansion_of_realized` in `CompleteCALM/Cofinal.lean`).
 
-The closing paragraph ("Both obligations are standard in the verification
-literature. … nothing about coordination is proved about the machine
-itself.") relates the obligations to invariants, forward simulations,
-refinement mappings, and mechanized proofs, and says how realizability is
-typically proved; these are argued in prose only (see the README).  "The
-proposition asks for nothing beyond these two facts" is the shape of the
-statement above. -/
+The surrounding sentences ("Domination is the refinement obligation above.
+Realizability is its converse, that `D` allows nothing the machine cannot
+produce; it too is proved once for all inputs, typically by induction on the
+input." and the closing "Together, the two obligations let `D` stand in for
+the machine: Lifted Monotonicity is checked on `D` exactly as everywhere else
+in this paper, and nothing about coordination needs to be proved about the
+machine itself.") relate the obligations to verification practice and to the
+statement above; how realizability is typically proved is argued in prose
+only (see the README). -/
 theorem «prop:declared-specification» {C P Q O J : Type} [PO O] [PO J]
     (k : IOM.ChanKind) (G : IOM.Machine C P Q O) (φ : IOM.OccInp C P k G → J)
     (D : Spec J O) (H : IOM.MachineCofinal k G φ D) :

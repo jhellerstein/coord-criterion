@@ -113,7 +113,7 @@ first and supporting claims and examples follow.
 | `Instances/BaccaertKetsman.lean` | `CC.BK`, `CC.CAP` | §6.1 | Baccaert and Ketsman's setting as an anonymous cluster: anonymized strategies, histories side by side, causal histories, placement (participants are nodes, inputs only held, node-closed facts), consistency on placed histories, realized rows; their Prop. 11 (necessity: realized rows are node monotone) |
 | `Instances/BKTransducers.lean` | `CC.BK` | §6.1 | Baccaert and Ketsman's operational model (node programs under Id+Ord, networks, broadcast log, fair runs, quiescent output, computes/characterizes) and its translation into an anonymous cluster: computing implies consistency on placed histories (`placedConsistent_of_computes`), characterized rows are covered by placed histories (`covers_of_characterizes`), and their Prop. 11 on finite networks through our necessity theorem (`nodeMono_of_characterizes`) |
 | `Instances/BKSufficiency.lean` | `CC.BK` | §6.1 | Sufficiency (their Prop. 10): a node program under Id+Ord (`qProg`: gossip records, quorums confirmed by every member, the least node decides once, decisions extend all known ones) computes and characterizes every node monotone behavior whose outputs lie at network nodes (`computes_qProg`, `characterizes_qProg`); with Prop. 11, their Thm. 5 (`bk_characterized_iff`) and its computability form with their Lemma 4 (`bk_computable_iff`) |
-| `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by Prop. induced-specification (2)); arrival-order independence; the election as an induced specification |
+| `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by the single-client remark after Prop. induced-specification); arrival-order independence; the election as an induced specification |
 | `Instances/IOMachine.lean` | `CC.IOM` | §6 | A general machine automaton (receives, outputs and internal steps that may change state; state machines as the special case `ofSM`), clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; fibers are reached by machine executions on arrival orders, every one over a bag without observations; FIFO single client is the table of payload sequences under prefix (the prefix encoding for state machines); confluence across executions ⇔ Lifted Monotonicity, also for emitted outputs when outputs report observations; later sends after an output (Def./Prop. induced-specification) |
 | `Instances/IOMachineCofinal.lean` | `CC.IOM` | §6.5 | Prop. declared-specification (machine bridge): a declared spec over the occurring inputs (or along an order embedding of them) whose rows are produced by executions and dominate every execution's final observation is Lifted Monotone iff the induced spec is, iff observations are confluent; re-derives single-client FIFO stationary consistency ⇔ `TransMono` and Lifted Monotonicity of the transient dip (a machine whose internal step lowers the observation); finite witnesses of a violation of Lifted Monotonicity, certified by the machine's own runs or a finite list containing the fiber; the `fork` machine, showing neither obligation alone suffices |
 | `Instances/TestingLimits.lean` | `CC.Testing` | §6.5 | Testing cannot show Lifted Monotonicity: for every finite set of explored inputs, two specs agree on those fibers, one Lifted Monotone and one not |
@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-675 entries.
+676 entries.
 
 ### §2 Functional CALM
 
@@ -459,14 +459,15 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | Invariant confluence is consistency of `𝒮_𝓘`: |
 | `«sec:iconfluence-instance/uniqueness»` | theorem | The uniqueness example: |
 | `«sec:iconfluence-instance/concurrency-decides»` | theorem | "Concurrency, not the transactions alone, decides the outcome: |
-| `«sec:operational-models/later-sends»` | theorem | "An output of the machine is an input of the client that receives it, so a client's later sends happen after everything the machine had received when it emit… |
+| `«sec:operational-models/later-sends»` | theorem | "The input orders state-machine events by their sends, not their arrivals: |
 | `«def:induced-specification»` | theorem | **Def. |
 | `«def:execution-input»` | abbrev | **Def. |
 | `«sec:operational-models/distributing»` | theorem | "Distributing the machine is then direct: |
-| `«prop:induced-specification»` | theorem | **Prop. |
+| `«prop:induced-specification»` | theorem | "The machine's observations are *confluent across its executions* when, for executions with inputs `h₁,…,hₖ` and any input `h` of an execution that extends e… |
+| `«sec:operational-models/single-client»` | theorem | "With one client whose events arrive in the order it sent them, every input is a sequence of payloads, ordered by prefix. |
 | `«sec:operational-models/testing-witness»` | theorem | "If Lifted Monotonicity fails, finitely many executions show it: |
 | `«sec:operational-models/testing-cannot-show»` | theorem | "Testing cannot show that Lifted Monotonicity holds, since that is a claim about every input." Lean (`Testing.testing_cannot_show`): |
-| `«sec:operational-models/both-halves»` | theorem | "The second is proof. |
+| `«sec:operational-models/both-halves»` | theorem | "The second approach is proof. |
 | `«prop:declared-specification»` | theorem | **Prop. |
 
 ### Appendix A: Notation

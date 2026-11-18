@@ -372,124 +372,96 @@ preserves the declared invariants.
 
 \subsection{General operational specification models}
 \label{sec:operational-models}
-An I/O spec declaratively relates cumulative inputs to permitted
-outputs.  An I/O automaton instead defines operational states, input, output,
-and internal actions, and a transition relation~\cite{lynch1987io,lynch1996distributed}.
-Projecting its externally visible behavior can yield an I/O spec.
-Such operational models answer how a declared machine may execute and how one
-machine implements another.  Our goal is narrower: the possibility relation,
-its orders, and its remainder tables expose which observable alternatives
-remain, which removals preserve prior information, and which are binding
-\commitments.  Section~\ref{sec:distributed-execution} provides a projection
-from distributed histories, connecting our abstraction back to
-participant-local executions and message causality.  Thus our specification
-model does not replace an operational formalism; it is a semantic projection
-designed to make the intrinsic coordination question comparable across such
-formalisms.
+Many systems are specified as state machines.  This subsection shows how a
+state machine yields an \spectype, so that Complete CALM applies to it.  We
+first fix the machine model, I/O automata, and say which of its parts our spec
+keeps.  We then define the spec a machine induces and show that the projection
+is faithful: the machine's observations are confluent exactly when the induced
+spec satisfies Lifted Monotonicity.  Finally, we discuss how the projection is
+used in practice, by testing on bounded inputs and by proving that a declared
+spec can stand in for the machine.
 
-\paragraph{Compiling a state machine.}
-Automata are a traditional way to model operational behavior
-abstractly~\cite{lynch1987io,lynch1996distributed}.  Our model keeps only the
-inputs and outputs of that behavior and drops the operational details.  The
-mapping is straightforward: for each input, record the outputs of the runs that
-consume it.  Work that models systems as state machines therefore maps
-naturally into our model, where Complete CALM assesses its consistency
-directly.  We now make the mapping precise, and then explain how it is used in
-practice.
-
-We take the standard I/O-automaton model~\cite{lynch1987io} of a state
-machine, its clients, and the channel that carries their state-machine events.  The machine
-$M$ has states $Q$, an initial state $q_0$, receive transitions for
-state-machine events that accept every payload in every state, output transitions that
-emit an output to a client and may change state, internal transitions, and an
-observation $\mathrm{obs}:Q\to O$.  There are finitely many clients.  Each may send a state-machine event with
-any payload at any time, and receives the machine's outputs.  A channel
+\paragraph{The machine model.}
+We take the standard I/O-automaton model~\cite{lynch1987io,lynch1996distributed}
+of a state machine, its clients, and the channel that carries their
+state-machine events.  The machine $M$ has states $Q$, an initial state $q_0$,
+receive transitions for state-machine events that accept every payload in every
+state, reply transitions that send a reply to a client and may change state,
+internal transitions, and an \emph{observation} $\mathrm{obs}:Q\to O$.
+Replies are messages to clients.  The observation is what our spec judges: the
+output of the induced spec at an input is the observation of the machine's
+state.  There are finitely many clients.  Each may send a state-machine event
+with any payload at any time, and receives the machine's replies.  A channel
 carries each state-machine event at most once to the machine's input queue,
 possibly reordering events on the way, and the machine consumes the queue in
-order.  In an execution of the
-composed automaton, \emph{happens-before} is Lamport's
-order~\cite{lamport1978time}: the transitive closure of the local order at the
-machine and at each client and of the edge from sending a state-machine event to receiving
-it.  An output of the machine is an input of the client that receives it, so a
-client's later sends happen after everything the machine had received when it
-emitted that output.
+order.  In an execution of the composed automaton, \emph{happens-before} is
+Lamport's order~\cite{lamport1978time}: the transitive closure of the local
+order at the machine and at each client and of the edge from sending a
+state-machine event to receiving it.
+
+\paragraph{The induced spec.}
+Each finite execution of the automaton determines an input and an output in
+our sense.
 
 \begin{definition}[Input of an execution]
 \label{def:execution-input}
-The \emph{input} of a finite execution is the set of state-machine events the machine has
-received, ordered by happens-before between their sends; $h\InputOrd h'$ when
-$h\subseteq h'$ and the two orders agree on $h$.
+The \emph{input} of a finite execution of the automaton is the input, in our
+sense, that records the state-machine events the machine has received, ordered
+by happens-before between their sends.  One such input \inrel another,
+$h\InputOrd h'$, when $h\subseteq h'$ and the two orders agree on $h$.
 \end{definition}
+
+The input orders state-machine events by their sends, not their arrivals:
+arrival order is what differs between executions.  Clients may react to
+replies.  If a client sends an event after receiving a reply, that send happens
+after every event the machine had received when it replied, so the input
+records what the client's choice could depend on.
 
 \begin{definition}[Induced specification]
 \label{def:induced-specification}
-The specification \emph{induced} by $M$ and its environment pairs each input
-(Definition~\ref{def:execution-input}) that occurs with the machine's
-observation at the end of every execution with that input.
+The specification \emph{induced} by $M$ and its environment is the \spectype
+whose inputs are the inputs of the automaton's finite executions
+(Definition~\ref{def:execution-input}), and whose fiber at an input $h$
+contains the observation of the machine's final state in every execution with
+input $h$.
 \end{definition}
 
-This is not a distributed execution in the sense of
-Section~\ref{sec:distributed-execution}.  The machine is a single
-participant; the clients and the channel are its environment, and outputs
-flow to the environment as in Section~\ref{sec:election-story}, where the
-environment may use an output when choosing later input.  Happens-before here
-only records which state-machine events each client sent after which
-outputs, so the input remembers what the environment's choices depended on.
-Distributing the machine is then direct: the clients remain the environment,
-each client's state-machine events are sent to some participant, and among participants
-Section~\ref{sec:distributed-execution} applies, using the induced
-spec.
+The machine is a single participant.  The clients and the channel are its
+environment, and, as in Section~\ref{sec:election-story}, the environment may
+react to what it sees when choosing later input.  Distributing the machine is
+then direct: the clients remain the environment, each client's state-machine
+events are sent to some participant, and among participants
+Section~\ref{sec:distributed-execution} applies, using the induced spec.
+
+The machine's observations are \emph{confluent across its executions} when,
+for executions with inputs $h_1,\ldots,h_k$ and any input $h$ of an execution
+that \inrel each $h_r$, some execution with input $h$ ends in an observation
+that \outrel each of theirs.
 
 \begin{proposition}[Induced specifications]
 \label{prop:induced-specification}
-\leavevmode
-\begin{enumerate}
-  \item The induced specification is an \spectype, and the input
-        of an execution only extends as the execution continues.
-  \item When there is one client and its state-machine events arrive in the order it sent
-        them, every input is a chain, inputs correspond to state-machine event sequences
-        ordered by prefix, and the fiber at a sequence collects the
-        observations of the machine's runs that receive it in order,
-        interleaved with output and internal steps.  If output and internal
-        steps leave the state unchanged and receiving is deterministic, the
-        specification is functional and consistent exactly when
-        $\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every receive
-        transition $q\to q'$ from a reachable state.
-  \item Every observation in the fiber at $h$ is reached by a run of the
-        machine that receives each state-machine event of $h$ once, interleaved with output
-        and internal steps.  If the channel may reorder and clients observe no
-        outputs, every such run is reached, whatever the order of its
-        receives.
-  \item The machine's observations are confluent across its executions
-        exactly when the induced specification satisfies Lifted Monotonicity.
-        Here confluence means that for executions with inputs
-        $h_1,\ldots,h_k$ and any input $h$ that occurs and extends each $h_r$,
-        some execution with input $h$ ends in an observation that \outrel
-        each of theirs.
-\end{enumerate}
+The induced specification is an \spectype, and the input of an execution only
+\ingrows as the execution continues.  The machine's observations are confluent
+across its executions exactly when the induced specification satisfies Lifted
+Monotonicity.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-(1) Inclusion with agreeing orders is a partial order, every input that occurs
-has a row, and extending an execution adds received state-machine events without changing
-happens-before among earlier sends.  (2) A single client's sends are totally
-ordered, and they arrive in that order, so an input is determined by its
-sequence of payloads, and the machine's steps in an execution form a run of
-the machine automaton; in the special case, the claim is monotonicity along
-receive transitions, and Functional CALM.  (3) The machine's steps in an
-execution form such a run; without outputs to clients, happens-before orders
-only each client's own sends, so all sends can precede the machine's run.  (4) Unfold the fiber in the
-common-extension condition and apply Complete CALM
-(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:common-expansion-form}).
+Inclusion with agreeing orders is a partial order, and continuing an execution
+only adds received events.  For the second claim we use the common-extension
+form of Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  A
+row of the induced spec at $h_r$ is the final observation of an execution with
+input $h_r$, and a common \outnoun at $h$ is the observation of an execution
+with input $h$, so the common-extension condition says exactly that the
+observations are confluent.
 \end{proof}
 
-The input orders state-machine events by their sends, not by their arrivals: the machine
-receives state-machine events in one total order, but that order is what differs between
-executions.  Outputs are where the environment's reactions enter.  A client
-that sends after observing an output is ordered after everything that output
-reflected, and the input records that dependence; what the client saw is
-recorded by the run's output events, which keep only rows that \outrelbase
-it.
+With one client whose events arrive in the order it sent them, every input is
+a sequence of payloads, ordered by prefix.  If, in addition, reply and internal
+transitions leave the state unchanged and receiving is deterministic, the
+induced spec is functional, and it is consistent exactly when
+$\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every receive transition
+$q\to q'$ from a reachable state.
 
 \paragraph{Testing and proof.}
 The induced spec is defined by every finite execution of the machine
@@ -510,24 +482,33 @@ finite spec is such a witness when the exploration covers every
 execution with input $h$, so that its fiber there is complete.  Testing cannot show that
 Lifted Monotonicity holds, since that is a claim about every input.
 
-The second is proof.  Instead of computing the induced spec, a
-designer writes one down.  A \emph{declared} spec $D$ gives, for each
-input, a set of outputs by a rule, such as ``the set of ballots received'' or
-``the largest timestamp seen''; it does not enumerate executions.  The proof
-then shows that $D$ describes the machine well enough that Lifted Monotonicity
-can be checked on $D$ instead.  Two things must be shown, and both are needed,
-because neither half alone preserves Lifted Monotonicity: if $D$ omits an
-output the machine can produce, it may hide an incompatibility, and if $D$
-adds an output the machine cannot produce, it may supply a common \outnoun
-that no execution reaches.
+The second approach is proof.  Verification work routinely proves that a
+machine refines a spec: every observation of every execution is allowed by the
+spec, up to refinement of outputs.  Such proofs use invariants, properties of
+the machine's state that hold initially and are preserved by every step, so
+they are checked one step at a time and never by enumerating executions.  They
+appear as forward simulations~\cite{lynch1995forward} and refinement
+mappings~\cite{abadi1991refinement}, and are mechanized for practical
+distributed systems~\cite{hawblitzel2015ironfleet}.  Our use adds one
+obligation.  A \emph{declared} spec $D$ gives, for each input, a set of outputs
+by a rule, such as ``the set of ballots received'' or ``the largest timestamp
+seen''; it does not enumerate executions.  To check Lifted Monotonicity on $D$
+instead of on the induced spec, two things must be shown, and both are needed,
+because neither alone preserves Lifted Monotonicity: if $D$ omits an output the
+machine can produce, it may hide an incompatibility, and if $D$ adds an output
+the machine cannot produce, it may supply a common \outnoun that no execution
+reaches.
 \begin{itemize}
   \item \emph{Realizability.}  Every output that $D$ allows at an input is the
         observation of some execution with that input.
   \item \emph{Domination.}  Every execution's final observation is
         \outrelpast by some output that $D$ allows at its input.
 \end{itemize}
-$D$ need not match the machine exactly: it may leave out observations that
-others \outrelbase, such as transient intermediate states.
+Domination is the refinement obligation above.  Realizability is its converse,
+that $D$ allows nothing the machine cannot produce; it too is proved once for
+all inputs, typically by induction on the input.  $D$ need not match the
+machine exactly: it may leave out observations that others \outrelbase, such
+as transient intermediate states.
 
 \begin{proposition}[Declared specifications]
 \label{prop:declared-specification}
@@ -545,23 +526,9 @@ it.  Conversely, rows of $D$ are rows of the induced spec, and their
 common \outnoun there is dominated back into $D$.
 \end{proof}
 
-Both obligations are standard in the verification literature.  Domination
-says that the machine refines $D$: every observation of every execution is
-allowed by $D$, up to refinement of outputs.  It is proved with an
-\emph{invariant}, a property of the machine's state that holds initially, is
-preserved by every step, and implies that the observation is dominated; it is
-checked one step at a time, never by enumerating executions.  This is the core
-of refinement proofs for state machines, which Lynch and Vaandrager call a
-forward simulation~\cite{lynch1995forward} and Abadi and Lamport a refinement
-mapping~\cite{abadi1991refinement}; such proofs are routinely mechanized for
-practical distributed systems~\cite{hawblitzel2015ironfleet}.  Realizability
-is the converse inclusion, that $D$ allows nothing the machine cannot produce.
-It too is proved once for all inputs, typically by induction on the input,
-giving a uniform recipe that builds, for any declared row, an execution that
-produces it.  The proposition asks for nothing beyond these two facts.  It
-says that together they let $D$ stand in for the machine: Lifted Monotonicity
-is checked on $D$ exactly as everywhere else in this paper, and nothing about
-coordination is proved about the machine itself.
+Together, the two obligations let $D$ stand in for the machine: Lifted
+Monotonicity is checked on $D$ exactly as everywhere else in this paper, and
+nothing about coordination needs to be proved about the machine itself.
 
 \subsection{Scope}
 \label{sec:scope}

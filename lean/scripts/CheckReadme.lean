@@ -276,6 +276,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:execution-input»
 #check @CC.Paper.«sec:operational-models/distributing»
 #check @CC.Paper.«prop:induced-specification»
+#check @CC.Paper.«sec:operational-models/single-client»
 #check @CC.Paper.«sec:operational-models/testing-witness»
 #check @CC.Paper.«sec:operational-models/testing-cannot-show»
 #check @CC.Paper.«sec:operational-models/both-halves»

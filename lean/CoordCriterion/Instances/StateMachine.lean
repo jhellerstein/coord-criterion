@@ -4,9 +4,12 @@ import CoordCriterion.CALM.Examples
 /-!
 # Specifications induced by state machines (§6, `sec:operational-models`)
 
-Supports the paragraph "Compiling a state machine" of
-`sections/instances.tex`: Definition `def:induced-specification`,
-Proposition `prop:induced-specification`, and the remarks after it.
+Supports §6.5 (`sec:operational-models`) of `sections/instances.tex`:
+Definition `def:induced-specification`, Proposition
+`prop:induced-specification`, and the single-client remark after it.  The
+"parts" below number this file's own results (an earlier version of the
+proposition); part (2) feeds the single-client remark through
+`IOM.runSpec`.
 
 * `Machine` — states `Q`, initial state `q0`, environment events `E`, a
   transition relation `step` that accepts every event in every state, and
@@ -113,7 +116,7 @@ structure Abs (E I : Type) [PO I] where
   mono : ∀ w v, α w ≼ α (w ++ v)
 
 /-- The specification induced by `M` and `α`: rows `(α w, obs q)` with
-`q₀ →w q`.  Totality is part (1) of Proposition `prop:induced-specification`. -/
+`q₀ →w q`.  Totality is the first claim of Proposition `prop:induced-specification`. -/
 def induced {I : Type} [PO I] [PO O] (M : Machine Q E O) (A : Abs E I) : Spec I O where
   P i o := ∃ w q, A.α w = i ∧ Runs M M.q0 w q ∧ M.obs q = o
   total i := by
