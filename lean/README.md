@@ -36,7 +36,7 @@ proved in Lean, `«sec:query-instance/policy-aware-order»`,
 also that they were the first to extend CALM beyond deterministic queries,
 that leader election is their running example, how Ameloot et al. and they
 model placement, that an identifier and an order on identifiers is what their
-coordination-free transducers know, that their programs must treat data values only as interchangeable symbols (their characterization theorem itself is proved in Lean, both directions, `«sec:query-instance/characterization»`); and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node chooses); in §6.1, Li and Lee's CALM theorem for replicated objects and its reading as a counterpart of Functional CALM for set inputs under inclusion, with the existence of a coordination-free implementation in place of consistency; in §4 (`sec:systems`), that Ameloot et al. show a list of
+coordination-free transducers know, that their programs must treat data values only as interchangeable symbols (their characterization theorem itself is proved in Lean, both directions, `«sec:query-instance/characterization»`); and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node decides; that the necessary half of their characterization is the partition argument behind Complete CAP, run over placed histories (`«sec:query-instance/node-monotonicity»`), and that their quorum decisions are commitments (`«sec:query-instance/sufficient-half»`)); in §6.1, the closing sentence summarizing which choice of our model each refinement corresponds to; in §6.1, Li and Lee's CALM theorem for replicated objects and its reading as a counterpart of Functional CALM for set inputs under inclusion, with the existence of a coordination-free implementation in place of consistency; in §4 (`sec:systems`), that Ameloot et al. show a list of
 all participants enlarges what a system can compute; in
 Appendix B (`app:hat-taxonomy`), what the HAT papers' text says (their list of recency guarantees, the extended paper's descriptions of its algorithms, the wording, names and examples of Defs. 14, 24, 26, 28, 30, 32 and 34, and the legend of its dependency graphs, which swaps the labels of read- and anti-dependencies relative to its figures; the definitions as we read them, and the consequences of the literal readings of Defs. 26 and 34, are in Lean, `Paper/AppB_HATTaxonomy.lean`, `«sec:hat-instance/myr-as-written»`); in §6.3 (`sec:hat-instance`), the description of Kaki et al.'s program logic, its compositional proof rules and its inference procedure; in Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, the reading of an automaton as a server (arrival, handing a request to the computation, when a reply fires) and that a server built from several communicating automata is a distributed system; in its "Testing and proof" paragraph, that simulators and model checkers run the
 automaton on bounded inputs and that the pairs of receive and reply sequences they collect form a
@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-694 entries.
+695 entries.
 
 ### §2 Functional CALM
 
@@ -439,6 +439,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:query-instance/asks-for-more»` | theorem | Sec. |
 | `«sec:query-instance/matching»` | theorem | Sec. |
 | `«sec:query-instance/deterministic-behaviors»` | theorem | Sec. |
+| `«sec:query-instance/sufficient-half»` | theorem | Sec. |
 | `«sec:crdt-instance/state-function»` | theorem | Sec. |
 | `«sec:crdt-instance/state-monotone»` | theorem | Sec. |
 | `«sec:crdt-instance/query-calm»` | theorem | Sec. |

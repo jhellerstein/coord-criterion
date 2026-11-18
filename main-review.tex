@@ -2335,11 +2335,33 @@ Two sides of a partition cannot tell that they are disconnected, so each must
 emit to be available, and when the partition heals, their outputs must have a
 common \outnoun at any input that extends what both sides have received. Complete CAP requires this condition across every partition. Baccaert and
 Ketsman's \emph{node monotonicity} is the same condition, restricted to sides
-whose inputs come from disjoint sets of participants. Their characterization
-also holds in our formalism: a behavior can be computed without the list of
-all nodes exactly when it contains a node monotone behavior. Our version does
-not need their requirement that programs treat data values only as
-interchangeable symbols.
+that have heard from disjoint sets of participants. Under their placement, a
+participant's input events contain only the facts that name it, and other facts
+reach it only in messages. No message crosses a partition, so the inputs of
+the two sides never share a fact. In our model, an input event at any
+participant may contain any fact, so input events on both sides may contain
+the same fact, and for nondeterministic behaviors node monotonicity is strictly
+weaker than Lifted Monotonicity.
+
+Unconstrained matching shows the gap. Each item is a fact that names one
+participant, and any set of disjoint pairs of items is a permitted output. Under their placement, the inputs of the two sides contain disjoint sets of
+items, so their pairings always combine. In our model, input events on both
+sides of a partition can contain the same item $i$. One side can pair $i$ with
+$j$ and the other with $k$, and no matching contains both pairs. For
+deterministic behaviors the two conditions coincide: a function's output on
+each side's input must lie below its one output on the union, and node
+monotonicity already requires this, since the union extends each side's input
+by participants that side has not heard from.
+
+Baccaert and Ketsman show that a behavior can be computed without the list of
+all nodes exactly when it contains a node monotone behavior, and this
+characterization holds in our formalism. Its necessary half is the partition
+argument above, applied to histories that respect their placement. The
+sufficient half does not follow from Complete CAP: participants on the same
+side can hear from overlapping sets of participants, and their construction,
+in which a group's smallest node decides for the group, makes \commitments that
+keep such outputs compatible. Our version does not need their requirement that
+programs treat data values only as interchangeable symbols.
 
 Their aims differ from ours. They ask which behaviors become computable when
 nodes share some piece of system knowledge, such as identifiers, an order on
@@ -2349,17 +2371,11 @@ the final output of a run, and the input is fixed when the run starts. We ask
 instead when a spec requires a \commitment, judge consistency at every point of
 a run, and let input arrive over time. A behavior can therefore be
 coordination-free in their sense while still needing a \commitment in ours,
-made locally by one participant, as in their constructions, where a group's smallest
-node chooses for the group.
-
-Under Baccaert and Ketsman's placement, the inputs of two sides never overlap;
-in our model, the environment may give the same fact to both sides. Unconstrained matching shows the difference: any set of disjoint pairs of
-items is a permitted output. Under their placement, each side pairs only its
-own items, and the two sides' pairings always combine, so matching is node
-monotone. In our model, an item $i$ can reach both sides and be paired with
-$j$ on one side and with $k$ on the other; no matching contains both pairs, so
-matching does not satisfy Lifted Monotonicity. For deterministic behaviors the
-two conditions coincide.
+made locally by one participant. Each refinement of CALM in this subsection
+thus corresponds to a choice our model makes explicit: the input order, for the
+placements of Ameloot et al.; sets ordered by inclusion as inputs, for Li and
+Lee; and the facts that an input event at each participant may contain,
+together with nondeterministic outputs, for Baccaert and Ketsman.
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}

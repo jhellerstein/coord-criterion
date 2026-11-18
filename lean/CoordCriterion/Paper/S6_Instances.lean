@@ -204,10 +204,11 @@ theorem «sec:query-instance/mapping» {F Msg St Out : Type} {loc : F → Nat}
   ⟨BK.sysOf_anonymous Pg, BK.placedConsistent_of_computes,
     fun hCh _ _ hf hn hK => BK.covers_of_characterizes hCh hf hn hK⟩
 
-/-- Sec. `sec:query-instance`: "Their characterization also holds in our
-formalism: a behavior can be computed without the list of all nodes exactly
-when it contains a node monotone behavior.  Our version does not need their
-requirement that programs treat data values only as interchangeable symbols."
+/-- Sec. `sec:query-instance`: "Baccaert and Ketsman show that a behavior can
+be computed without the list of all nodes exactly when it contains a node
+monotone behavior, and this characterization holds in our formalism. … Our
+version does not need their requirement that programs treat data values only as
+interchangeable symbols."
 
 Lean: "computable without the list of all nodes" is `BK.Computes` by a node
 program under Id+Ord (`BK.Prog`, their Def. 6 reading of coordination-free);
@@ -235,15 +236,23 @@ nodes.  Correctness is judged by the final output of a run, and the input is
 fixed when the run starts.  We ask instead when a spec requires a commitment,
 judge consistency at every point of a run, and let input arrive over time.  A
 behavior can therefore be coordination-free in their sense while still needing
-a commitment in ours, made locally by one participant, as in their constructions, where
-a group's smallest node chooses for the group."
+a commitment in ours, made locally by one participant.  Each refinement of CALM
+in this subsection thus corresponds to a choice our model makes explicit: the
+input order, for the placements of Ameloot et al.; sets ordered by inclusion as
+inputs, for Li and Lee; and the facts that an input event at each participant
+may contain, together with nondeterministic outputs, for Baccaert and
+Ketsman."
 
-Lean: the last sentence's example is the matching problem below: it is node
+Lean: the coordination-free-but-commitment sentence's example is the matching
+problem below: it is node
 monotone (`QRef.matching_nodeMono`; coordination-free in their sense by their
 characterization theorem, cited) and fails Lifted Monotonicity, so by Complete
 CALM some reachable output needs a commitment.  The descriptions of their aims,
-notion of coordination, correctness, inputs and constructions are cited prose
-(Prop. 10's quorum construction). -/
+notion of coordination, correctness and inputs are cited prose.  The closing
+sentence summarizes the subsection's mappings: the input orders are
+`«sec:query-instance/placement-calm»`, the set inputs of Li and Lee are cited
+prose, and the placement of input facts is `BK.Placed`
+(`«sec:query-instance/mapping»`). -/
 theorem «sec:query-instance/aims» :
     QRef.NodeMono (id : Nat → Nat) (QRef.matching (id : Nat → Nat)) ∧
       ¬ (QRef.matching (id : Nat → Nat)).LiftedMono :=
@@ -255,8 +264,9 @@ theorem «sec:query-instance/aims» :
 are disconnected, so each must emit to be available, and when the partition
 heals, their outputs must have a common output extension at any input that
 extends what both sides have received. … Baccaert and Ketsman's node
-monotonicity is the same condition, restricted to sides whose inputs come from
-disjoint sets of participants."
+monotonicity is the same condition, restricted to sides that have heard from
+disjoint sets of participants." and "Its necessary half is the partition
+argument above, applied to histories that respect their placement."
 
 Lean, first conjunct: node monotonicity (`QRef.NodeMono`, their Def. 7) is
 the common-extension condition for two rows at disjoint networks and any
@@ -266,9 +276,11 @@ realizes rows (`BK.realized`, the rows it emits) that have a common output
 extension at the union of disjoint networks; the two witness histories are
 placed side by side, since no strategy can tell.  Third conjunct: through the
 translation, a behavior characterizing a transducer is node monotone on finite
-networks (their Prop. 11).  Their characterization theorem (Thm. 5 with
-Lemma 4), stated in the paragraph's next sentence, is proved in both
-directions in `«sec:query-instance/characterization»`. -/
+networks (their Prop. 11).  The second and third conjuncts are the necessary
+half; that this is "the partition argument above" (the argument behind
+Theorem `thm:complete-cap`'s necessity, run over placed histories) is a
+prose reading.  Their characterization theorem (Thm. 5 with Lemma 4) is proved
+in both directions in `«sec:query-instance/characterization»`. -/
 theorem «sec:query-instance/node-monotonicity» :
     (∀ {F N G : Type} (loc : F → N) (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)),
       QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
@@ -282,9 +294,13 @@ theorem «sec:query-instance/node-monotonicity» :
     fun _ _ hCh => BK.nodeMono_of_characterizes hCh⟩
 
 /-- Sec. `sec:query-instance`: "Complete CAP requires this condition across
-every partition." and "Under Baccaert and Ketsman's placement, the inputs of
-two sides never overlap; in our model, the environment may give the same fact
-to both sides."  Lean: the common-extension condition (equivalently Lifted
+every partition." and "Under their placement, a participant's input events
+contain only the facts that name it, and other facts reach it only in messages.
+No message crosses a partition, so the inputs of the two sides never share a
+fact.  In our model, an input event at any participant may contain any fact, so
+input events on both sides may contain the same fact, and for nondeterministic
+behaviors node monotonicity is strictly weaker than Lifted Monotonicity."
+Lean (strictness: `«sec:query-instance/matching»`): the common-extension condition (equivalently Lifted
 Monotonicity, the condition of Theorem `thm:complete-cap` with `E = P`), which
 also covers sides with overlapping inputs, implies node monotonicity, which
 asks it only for inputs at disjoint networks.  That their placement gives
@@ -294,13 +310,13 @@ theorem «sec:query-instance/asks-for-more» {F N G : Type} (loc : F → N)
     B.CommonExpansion → QRef.NodeMono loc B :=
   fun h => QRef.nodeMono_of_consistent loc ((complete_calm_commonExpansion B).2 h)
 
-/-- Sec. `sec:query-instance`: "Unconstrained matching shows the difference:
-any set of disjoint pairs of items is a permitted output.  Under their
-placement, each side pairs only its own items, and the two sides' pairings
-always combine, so matching is node monotone.  In our model, an item `i` can
-reach both sides and be paired with `j` on one side and with `k` on the other;
-no matching contains both pairs, so matching does not satisfy Lifted
-Monotonicity."
+/-- Sec. `sec:query-instance`: "Unconstrained matching shows the gap.  Each
+item is a fact that names one participant, and any set of disjoint pairs of
+items is a permitted output.  Under their placement, the inputs of the two
+sides contain disjoint sets of items, so their pairings always combine.  In our
+model, input events on both sides of a partition can contain the same item `i`.
+One side can pair `i` with `j` and the other with `k`, and no matching contains
+both pairs."
 
 Lean: `QRef.matching loc` (items located by `loc`, outputs symmetric
 matchings of the input's items under inclusion, every matching permitted).
@@ -322,12 +338,35 @@ theorem «sec:query-instance/matching» :
   ⟨fun loc => QRef.matching_nodeMono loc, QRef.matching_not_consistentOn⟩
 
 /-- Sec. `sec:query-instance`: "For deterministic behaviors the two conditions
-coincide."  Lean: for the graph of `b`, node monotonicity is monotonicity
+coincide: a function's output on each side's input must lie below its one
+output on the union, and node monotonicity already requires this, since the
+union extends each side's input by participants that side has not heard from."
+Lean: for the graph of `b`, node monotonicity is monotonicity
 under network input extension, which by Functional CALM is consistency. -/
 theorem «sec:query-instance/deterministic-behaviors» {F N G : Type} (loc : F → N)
     (b : QRef.ExtInp (QRef.netAdm loc) → CALM.PSet G) :
     (QRef.NodeMono loc (graph b) ↔ Monotone b) ∧ ((graph b).Consistent ↔ Monotone b) :=
   QRef.nodeMono_graph_iff loc b
+
+/-- Sec. `sec:query-instance`: "The sufficient half does not follow from
+Complete CAP: participants on the same side can hear from overlapping sets of
+participants, and their construction, in which a group's smallest node decides
+for the group, makes commitments that keep such outputs compatible."
+
+Lean: a spanning-tree behavior (`QRef.tree`, a concrete instance of their
+`Top_span`, Example 8) is node monotone, yet no total explicit relation inside
+it satisfies the common-extension condition: the pairwise-overlapping networks
+`{0,1}`, `{1,2}`, `{0,2}` would need a tree on `{0,1,2}` with all three edges.
+So by Theorem `thm:complete-cap` no system for it has Availability for such a
+relation and Partition Consistency, although it is node monotone.  Their
+construction is `BK.qProg`; that its quorum decisions keep decided records
+nested or disjoint is `BK.dec_lam`.  Reading those decisions as commitments is
+prose. -/
+theorem «sec:query-instance/sufficient-half» :
+    QRef.NodeMono id QRef.tree ∧
+      ∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
+        (∀ H, ∃ K, A H K) → (∀ H K, A H K → QRef.tree.P H K) → ¬ CAP.ConsistentOn QRef.tree A :=
+  ⟨QRef.tree_nodeMono, fun A hA hsub => QRef.tree_no_consistentOn A hA hsub⟩
 
 /-! ## CRDTs: monotone queries over convergent state (`sec:crdt-instance`)
 

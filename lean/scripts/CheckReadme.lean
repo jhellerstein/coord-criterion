@@ -251,6 +251,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:query-instance/asks-for-more»
 #check @CC.Paper.«sec:query-instance/matching»
 #check @CC.Paper.«sec:query-instance/deterministic-behaviors»
+#check @CC.Paper.«sec:query-instance/sufficient-half»
 #check @CC.Paper.«sec:crdt-instance/state-function»
 #check @CC.Paper.«sec:crdt-instance/state-monotone»
 #check @CC.Paper.«sec:crdt-instance/query-calm»
