@@ -244,7 +244,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:query-instance/policy-aware-order»
 #check @CC.Paper.«sec:query-instance/domain-guided-order»
 #check @CC.Paper.«sec:query-instance/placement-calm»
-#check @CC.Paper.«sec:query-instance/one-fact-version»
 #check @CC.Paper.«sec:query-instance/mapping»
 #check @CC.Paper.«sec:query-instance/characterization»
 #check @CC.Paper.«sec:query-instance/aims»

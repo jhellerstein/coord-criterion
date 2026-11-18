@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-695 entries.
+694 entries.
 
 ### §2 Functional CALM
 
@@ -432,7 +432,6 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:query-instance/policy-aware-order»` | theorem | Sec. |
 | `«sec:query-instance/domain-guided-order»` | theorem | Sec. |
 | `«sec:query-instance/placement-calm»` | theorem | Sec. |
-| `«sec:query-instance/one-fact-version»` | theorem | Sec. |
 | `«sec:query-instance/mapping»` | theorem | Sec. |
 | `«sec:query-instance/characterization»` | theorem | Sec. |
 | `«sec:query-instance/aims»` | theorem | Sec. |

@@ -1599,10 +1599,10 @@ under inclusion, among other results~\cite{li2025coordinationfree}.  Earlier
 refinements of the theorem change only the input order.  When transducers know
 how data is placed, more queries become coordination-free; Ameloot et al.\
 characterized these classes by domain-distinct and domain-disjoint
-monotonicity~\cite{ameloot2015weaker,zinn2012weak,zinn2012winmove}.  Each is
-Functional CALM under a sparser input order: a node's input $I$ is extended by
-new facts $J$ only when the placement policy leaves the node unable to rule out
-$J$.\cxbar{152}{0.4 0.4 1}{e}
+monotonicity~\cite{ameloot2015weaker,zinn2012winmove}.  We model each data
+placement by an input order in which $I\cup J$ \inrelbase $I$ only when $J$ is
+domain-distinct (or domain-disjoint) from $I$; under these orders each form is
+functional monotonicity, so Functional CALM gives their characterizations.\cxbar{152}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{153}{N/M}\cxbar{153}{0.4 0.4 1}{s}Baccaert and Ketsman were the first to consider nondeterministic specs in a
 CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}.
@@ -1645,13 +1645,14 @@ common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monot
 items are partially replicated; a client sends each operation to some replica
 of its item; a transaction's writes carry a unique client timestamp, last
 writer wins; the system never aborts on its own; and a replica answers a read
-with the highest-timestamped committed write of the item it has received.\cxbar{156}{0.4 0.4 1}{e}
+with the highest-timestamped committed write of the item it has received, the
+store's \emph{read rule}.\cxbar{156}{0.4 0.4 1}{e}
 
 \color{black}\begin{definition}[HAT specification]
 \label{def:hat-spec}
 \cxtag{157}{N/M}\cxbar{157}{0.4 0.4 1}{s}An input is a history: a set of events, partially ordered by happens-before,
 of three kinds.  A read is tagged with its replica; a commit carries its
-timestamp and write set; a delivery brings a committed write to a replica.  One
+timestamp and write set; an arrival brings a committed write to a replica.  One
 input \inrel another when it adds events, none of which happens before an event
 already present.  An output is a set of read answers, ordered by inclusion.  An
 isolation level $L$ is defined by the phenomena it
@@ -1659,7 +1660,7 @@ proscribes~\cite{adya1999weakconsistency}.  A history is \emph{complete} when it
 timestamp.  The table $P_L$ of $\Spec_L$ contains an output at an input when
 the input extends to a complete history that includes the output and exhibits
 none of the phenomena that $L$ proscribes.  The explicit relation $E$
-contains, at each input, the output that the read rule above gives.\cxbar{157}{0.4 0.4 1}{e}
+contains, at each input, the output that the read rule gives.\cxbar{157}{0.4 0.4 1}{e}
 \end{definition}
 
 \color{black}\begin{theorem}[HAT levels]

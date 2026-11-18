@@ -71,12 +71,13 @@ justifies, and the resulting weaker CALM variants, are checked at the level of
 a node's view (`Instances/Placement.lean`); the transducer runs of those
 papers are cited, not formalized. -/
 
-/-- Sec. `sec:query-instance`: "A query is domain-distinct-monotone when
-`Q(I) ⊆ Q(I ∪ J)` for every `J` whose facts each contain a value that does
-not occur in `I`.  It is domain-disjoint-monotone when this holds for every
-`J` whose facts use only such values.  Each is Functional CALM under a
-different input order. … When the order lets `I ∪ J` extend `I` only for such
-`J`, each condition is functional monotonicity."  Lean: facts carry values
+/-- Sec. `sec:query-instance`: "Ameloot et al. characterized these queries by
+weaker forms of monotonicity, which require `Q(I) ⊆ Q(I ∪ J)` only when each
+new fact in `J` contains a value not in `I` (domain-distinct-monotone), or uses
+only such values (domain-disjoint-monotone). … Under these orders, functional
+monotonicity is exactly domain-distinct- and domain-disjoint-monotonicity, so
+Functional CALM gives their characterizations."  (Ameloot et al., PODS 2014
+version of the cited TODS paper, Definition 1.)  Lean: facts carry values
 `vals : F → V → Prop`; `ExtInp (distinctAdm vals)` and
 `ExtInp (disjointAdm vals)` order instances by domain-distinct and
 domain-disjoint input extension (nullary facts are never domain disjoint, as in
@@ -95,10 +96,12 @@ theorem «sec:query-instance/weaker-monotonicity» {F V A : Type} (vals : F → 
     (QRef.RMono (QRef.allAdm F) Q ↔ ∀ J J' : CALM.PSet F, J ≼ J' → Q J ≼ Q J') :=
   ⟨QRef.distinctMono_iff vals Q, QRef.disjointMono_iff vals Q, QRef.allAdm_rmono_iff Q⟩
 
-/-- Sec. `sec:query-instance`: "Under policy-aware placement, a node can learn
-which facts over its known values are absent, so the input it cannot yet rule
-out is a domain-distinct `J`."  Lean (Zinn's model `N1`, CoRR 1202.0242
-§2.2): a policy `P` assigns each fact to a non-empty set of nodes, and a node
+/-- Sec. `sec:query-instance`: "We model each data placement by an input order.
+For the placement that Ameloot et al. call “policy-aware”, `I ∪ J` extends `I`
+only when `J` is domain-distinct from `I`".  This sentence declares the
+modeling choice; the entry checks that the order matches their placement model.
+Lean (Zinn et al.'s first model, Ameloot et al.'s policy-aware distribution
+policies, PODS 2014 §4.1.1): a policy `P` assigns each fact to a non-empty set of nodes, and a node
 can ask the policy about the facts it can construct from its known values.
 Node `x` has received the complete local inputs of the nodes in `C`
 (`Place.known P H C`); its view is those local inputs and the policy answers
@@ -117,8 +120,9 @@ theorem «sec:query-instance/policy-aware-order» {F V N : Type} (vals : F → V
     (∀ P' H', Place.SameView vals P H P' H' C → Place.Complete vals P' H' C) :=
   ⟨Place.policyAware_unruled vals hP hy hc, fun _ _ hs => Place.complete_of_sameView hs hc⟩
 
-/-- Sec. `sec:query-instance`: "Under domain-guided placement it is a
-domain-disjoint `J`."  Lean (Zinn's model `N2`): admissible policies place
+/-- Sec. `sec:query-instance`: "for “domain-guided” placement, only when `J` is
+domain-disjoint from `I`."  Lean (Ameloot et al.'s domain-guided policies,
+PODS 2014 §4.1.1, Zinn et al.'s second model): admissible policies place
 each non-nullary fact at `⋃_{v ∈ f} α(v)` for some `α` assigning each value a
 non-empty node set (`Place.DomainGuided`); views and completeness as for
 policy-aware placement.  At a complete view, with some node not yet heard
@@ -138,9 +142,9 @@ theorem «sec:query-instance/domain-guided-order» {F V N : Type} (vals : F → 
   ⟨fun hP hc => Place.domainGuided_unruled vals hd hP hy hc,
     fun hP => Place.oblivious_unruled hP hy⟩
 
-/-- Sec. `sec:query-instance`: "When the order lets `I ∪ J` extend `I` only for
-such `J`, each condition is functional monotonicity.  Functional CALM takes
-the order as given."  Lean: their weaker CALM variants derived from Functional
+/-- Sec. `sec:query-instance`: "Under these orders, functional monotonicity is
+exactly domain-distinct- and domain-disjoint-monotonicity, so Functional CALM
+gives their characterizations."  Lean: their weaker CALM variants derived from Functional
 CALM through the orders above.  `Place.CFComputes M x Q out` reads
 coordination-free computation at the level of views: node `x`'s output is a
 function of its view, never outside `Q(H)`, all of `Q(H)` once `x` has heard
@@ -160,18 +164,6 @@ theorem «sec:query-instance/placement-calm» {F V N A : Type} (vals : F → V �
       ∀ J J' : CALM.PSet F, J ≼ J' → Q J ≼ Q J') :=
   ⟨Place.policyAware_cf_iff vals hxy Q, Place.domainGuided_cf_iff vals hd hxy Q,
     Place.oblivious_cf_iff hxy Q⟩
-
-/-- Sec. `sec:query-instance`: "Ameloot et al. characterized the new classes
-by weaker forms of monotonicity, correcting an earlier one-fact version."
-Lean: the one-fact domain-distinct test is strictly weaker.  The query "the
-edge relation has no 2-cycle" passes it, but adding the domain-disjoint
-instance `{e(0,1), e(1,0)}` to `∅` falsifies the query, so it is neither
-domain-disjoint- nor domain-distinct-monotone. -/
-theorem «sec:query-instance/one-fact-version» :
-    QRef.OneFactDistinctMono QRef.edgeVals QRef.noCycle2 ∧
-      ¬ QRef.DisjointMono QRef.edgeVals QRef.noCycle2 ∧
-      ¬ QRef.DistinctMono QRef.edgeVals QRef.noCycle2 :=
-  ⟨QRef.noCycle2_oneFact, QRef.noCycle2_not_disjointMono, QRef.noCycle2_not_distinctMono⟩
 
 /-- Sec. `sec:query-instance`: "Their model maps directly to ours.  A
 behavior is an I/O specification whose outputs are ordered by inclusion.  Each
@@ -343,7 +335,8 @@ theorem «sec:query-instance/deterministic-behaviors» {F N G : Type} (loc : F �
 /-! ## CRDTs: monotone queries over convergent state (`sec:crdt-instance`)
 
 The opening paragraph ("A CRDT uses join semilattices to guarantee that
-replicas that have received the same updates converge to equivalent states …
+replicas that have received the same updates converge to equivalent states,
+whatever the order of delivery and merge [Shapiro et al.] …
 That guarantee, Strong Eventual Consistency, says nothing about what a client
 observes when it queries a replica that has not yet received every update.
 Such a query risks Lamport's "anomalous behavior" (§`sec:functional-events`).
@@ -515,7 +508,7 @@ theorem «def:hat-spec/read-rule» :
 specification `𝒮_st` has the inputs and outputs of Definition `def:hat-spec`.
 At each input, it permits any subset of the answers that the read rule
 gives."  And after it: "The store spec says only that answers follow the read
-rule; it makes no promise about isolation.  On its own it satisfies Lifted
+rule; it says nothing about isolation.  On its own it satisfies Lifted
 Monotonicity: a read's answer under the read rule depends only on the writes
 its replica received before the read, so later input never changes it.  The
 store's rows that answer every read are exactly the rows of `E`.  Holding the

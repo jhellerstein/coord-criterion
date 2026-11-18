@@ -4,23 +4,30 @@ import CoordCriterion.Instances.QueryRefinements
 # Placement models and the input orders they justify (Section 6.1)
 
 Supports the sentences of `sec:query-instance` (`sections/instances.tex`)
-"Under policy-aware placement, a node can learn which facts over its known
-values are absent, so the input it cannot yet rule out is a domain-distinct
-`J`.  Under domain-guided placement it is a domain-disjoint `J`.  When the
-order lets `I ∪ J` extend `I` only for such `J`, each condition is functional
-monotonicity.  Functional CALM takes the order as given."
+"We model each data placement by an input order.  For the placement that
+Ameloot et al. call “policy-aware”, `I ∪ J` extends `I` only when `J` is
+domain-distinct from `I`; for “domain-guided” placement, only when `J` is
+domain-disjoint from `I`.  Under these orders, functional monotonicity is
+exactly domain-distinct- and domain-disjoint-monotonicity, so Functional CALM
+gives their characterizations."  The first sentence is a modeling declaration;
+this file checks that each order matches the placement model it stands for.
 
-Source.  The TODS paper the text cites (Ameloot, Ketsman, Neven, Zinn,
-"Weaker forms of monotonicity for declarative networking", 2015) is not among
-the local references; the definitions follow its precursor, Zinn, "Weak Forms
-of Monotonicity and Coordination-Freeness" (CoRR 1202.0242, 2012), §2.2,
-whose models `N1` and `N2` are TODS's policy-aware and domain-guided models:
+Source.  The text cites the TODS paper of Ameloot, Ketsman, Neven and Zinn,
+"Weaker forms of monotonicity for declarative networking" (2015).  Its PODS
+2014 version is local (`references-papers/ameloot-weaker.pdf`).  Its §4.1.1
+defines a distribution policy `P` (a total function from facts to non-empty
+node sets) and a domain-guided policy (`P(R(a₁,…,aₖ)) = ⋃ᵢ α(aᵢ)` for a domain
+assignment `α`), and its policy-aware transducers can query the policy for
+facts over their known values (`MyAdom`, `policy_R`).  Its Definition 1 gives
+the two weaker forms of monotonicity.  These are Zinn, Green and Ludäscher's
+models (ICDT 2012, `references-papers/zinn.pdf`), there called `N1` and `N2`;
+the definitions below follow them:
 
 * `N0` (the original model): input is placed arbitrarily, no node knows how.
 * `N1` (policy-aware): a partitioning policy `P` assigns every fact to a
   non-empty set of nodes, the input is placed by `P`, and "node `nⱼ` can answer
-  the boolean query 'Is `nⱼ ∈ P(f)`?' for facts `f` that `nⱼ` can construct",
-  i.e. whose constants are all known to it.
+  the boolean query 'Is `nⱼ ∈ P(f)`?' for facts `f` that `nⱼ` can construct"
+  (Zinn, CoRR 1202.0242, §2.2), i.e. whose constants are all known to it.
 * `N2` (domain-guided): as `N1`, for policies compatible with some
   `F : dom → 2^N \ {∅}`: `P(R(c₁,…,cₙ)) = ⋃ᵢ F(cᵢ)` for non-nullary `R`.
 

@@ -2284,22 +2284,20 @@ data placement and execution~\cite{ameloot2013relational,ameloot2015weaker}. \te
 compared with specs outside Datalog; it does not replace the operational details
 of that theorem.}
 
-Subsequent extensions to the original CALM Theorem become changes to the input
-domain and its order, or to the notion of coordination. Zinn et al.\ gave transducers partial knowledge of how data is
-placed, and more queries became coordination-free, among them the
-non-monotone win-move query~\cite{zinn2012winmove}. Ameloot et al.\
-characterized the new classes by weaker forms of
-monotonicity~\cite{ameloot2015weaker}, correcting an earlier one-fact
-version~\cite{zinn2012weak}. A query is \emph{domain-distinct-monotone} when
-$Q(I)\subseteq Q(I\cup J)$ for every $J$ whose facts each contain a value
-that does not occur in $I$. It is \emph{domain-disjoint-monotone} when this
-holds for every $J$ whose facts use only such values. Each is Functional
-CALM under a different input order. Under policy-aware placement, a node can
-learn which facts over its known values are absent, so the input it cannot
-yet rule out is a domain-distinct $J$. Under domain-guided placement it is a
-domain-disjoint $J$. When the order lets $I\cup J$ \inrelbase $I$ only for
-such $J$, each condition is functional monotonicity. Functional CALM takes
-the order as given.
+Subsequent extensions to the original CALM Theorem map into our framework as
+changes to the input domain and its order, or to the notion of coordination. Zinn et al.\ gave nodes partial knowledge of how data is placed, which makes
+more queries coordination-free, among them the non-monotone win-move
+query~\cite{zinn2012winmove}. Ameloot et al.\ characterized these queries by
+weaker forms of monotonicity~\cite{ameloot2015weaker}, which require
+$Q(I)\subseteq Q(I\cup J)$ only when each new fact in $J$ contains a value not
+in $I$ (\emph{domain-distinct-monotone}), or uses only such values
+(\emph{domain-disjoint-monotone}). We model each data placement by an input
+order. For the placement that Ameloot et al.\ call ``policy-aware'', $I\cup J$
+\inrelbase $I$ only when $J$ is domain-distinct from $I$; for ``domain-guided''
+placement, only when $J$ is domain-disjoint from $I$. Under these orders,
+functional monotonicity is exactly domain-distinct- and
+domain-disjoint-monotonicity, so Functional CALM gives their
+characterizations.
 
 Li and Lee model replicated objects with write, merge, and query operations,
 show that strong eventual consistency holds exactly when merge is associative,
@@ -2378,7 +2376,7 @@ pairs. For deterministic behaviors the two conditions coincide.
 
 A CRDT uses join semilattices to guarantee that replicas that have received the
 same updates converge to equivalent states, whatever the order of delivery and
-merge. That guarantee, Strong Eventual Consistency, is the convergence of
+merge~\cite{shapiro2011crdt}. That guarantee, Strong Eventual Consistency, is the convergence of
 Corollary~\ref{cor:convergence}, which every consistent functional spec has,
 so a semilattice merge suffices for it but is not needed. It says nothing
 about what a
@@ -2386,7 +2384,7 @@ client observes when it queries a replica that has not yet received every
 update. Such a query risks Lamport's ``anomalous
 behavior''~\cite{lamport1978time} (\S\ref{sec:functional-events}). \textcolor{reviewed}{Laddad et al.\
 proposed monotonicity as the right test for safe observation from CRDT
-state~\cite{laddad2022keep}.} Their example is a two-phase set, whose state
+state~\cite{laddad2022keep}.} Their example of an unsafe query uses a two-phase set, whose state
 $(\mathit{Add},\mathit{Del})$ merges by componentwise union. The query
 $\mathit{Add}\setminus\mathit{Del}$ can expose added items that are subsequently
 deleted. We make the proposed test precise with Functional CALM.
@@ -2449,8 +2447,8 @@ of Definition~\ref{def:hat-spec}. At each input, it permits any subset of the
 answers that the read rule gives.
 \end{definition}
 
-The store spec says only that answers follow the read rule; it makes no
-promise about isolation. On its own it satisfies Lifted Monotonicity: a read's
+The store spec says only that answers follow the read rule; it says nothing
+about isolation. On its own it satisfies Lifted Monotonicity: a read's
 answer under the read rule depends only on the writes its replica received
 before the read, so later input never changes it. The store's rows that answer
 every read are exactly the rows of $E$. Holding the store to an isolation
@@ -2532,20 +2530,21 @@ with each client assigned to its own replica. The definition's own example
 uses a single item, and in that form read your writes is sticky available, as
 Bailis et al.\ state.
 
-Mahajan et al.\ showed that no consistency semantics stronger than real-time
-causal consistency can be enforced in an always-available, one-way convergent
-system~\cite{mahajan2011consistency}. Their availability, that every
-request is eventually answered, is a response obligation in our terms
-(Appendix~\ref{app:cap-response}). Their result is a maximality claim:
-real-time causal consistency is achievable, and no stronger semantics is. With real-time precedence recorded in the input, we recover both halves
-(Appendix~\ref{app:rtc}). The spec is the real-time causal product
-interface, in which each replica answers its own reads. Its implementation
-uses no coordination mechanism, and no strict strengthening shares that
-property, provided that the strengthening, like their implementations, does not
-consult real time. One-way convergence, which requires that a node able to
-receive from another eventually reflect the updates the other knows, needs no
-separate assumption, since the input records which writes each replica has
-received.
+Mahajan et al.\ showed that real-time causal consistency can be enforced in a
+system that is always available and one-way convergent, and that no stronger
+consistency semantics can~\cite{mahajan2011consistency}. We recover both parts
+of their result in our framework, with real-time precedence recorded in the
+input (Appendix~\ref{app:rtc}). Their availability, that every request is
+eventually answered, is a response obligation in our terms
+(Appendix~\ref{app:cap-response}). Their one-way convergence, that a node able
+to receive from another eventually reflects the updates the other knows, needs
+no separate assumption, because our input records which writes each replica has
+received. The first part follows from Theorem~\ref{thm:product-frontier} and
+the second from Proposition~\ref{prop:rtc-maximal}: the spec in which each
+replica answers its own reads under real-time causal consistency can be
+implemented without a coordination mechanism, and no strict strengthening of it
+can, provided the strengthening, like Mahajan et al.'s implementations, does not
+consult real time.
 
 \paragraph{Application-aware isolation level selection.}
 In addition to being coordination-free, weak isolation levels can provide
