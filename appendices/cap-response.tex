@@ -65,17 +65,17 @@ current inputs, some $u\in\fiber{j}$ \outrel every output emitted in the
 history.
 \end{definition}
 
-This is the part of Partition Consistency that the converse of
-Theorem~\ref{thm:complete-cap} and Corollary~\ref{cor:complete-cap-any-system}
-use, so both also hold with Response
-Partition Consistency in place of Partition Consistency.  Confluence at $j$
-implies a common \outnoun at $j$ (Corollary~\ref{cor:reconciliation-any-basis}).
-The two coincide for a system with basis $\mathcal B_P$ and no \commitment
-events, whose participant runs are therefore canonical runs, by
-Lemma~\ref{lem:reconciliation} applied to those runs
-(\S\ref{sec:distributed-consistency}).  With other \commitments the
-converse can fail: participants may prune their states so that they cannot
-be reconciled while their emitted outputs still have a common \outnoun.
+Response Partition Consistency is the part of Partition Consistency that the
+converse of Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system} use.  So both also hold with
+Response Partition Consistency in place of Partition Consistency.  Confluence
+at $j$ implies a common \outnoun at $j$
+(Corollary~\ref{cor:reconciliation-any-basis}).  The two coincide for a system
+with basis $\mathcal B_P$ and no \commitment events.  Its participant runs are
+then canonical runs, and Lemma~\ref{lem:reconciliation} applies to them
+(\S\ref{sec:distributed-consistency}).  With other \commitments the converse
+can fail.  Participants may prune their states so that they cannot be
+reconciled, while their emitted outputs still have a common \outnoun.
 
 A system is \emph{replicated} (SPMD) when its obligation is uniform and every
 participant runs the same strategy, which depends only on the participant's
@@ -118,11 +118,11 @@ common-extension condition of Proposition~\ref{prop:common-expansion-form}, and
 by Lemma~\ref{lem:reconciliation} it is confluence of the canonical runs whose
 emitted rows lie in $T$.
 
-A response interface is an explicit relation that a system can always
-serve.  Consider the canonical system for $T$ (Section~\ref{sec:complete-cap}),
-which emits by the canonical output event any output of $T$ in the
-current fiber.  Each participant's emitted outputs form a chain
-$o_1\OutputOrd\cdots\OutputOrd o_m$, so by Lemma~\ref{lem:run-residual} its
+A response interface is an explicit relation that a system can always serve.
+Consider the canonical system for $T$ (Section~\ref{sec:complete-cap}).  It
+emits, by the canonical output event, any output of $T$ in the current fiber.
+Each participant's emitted outputs form a chain
+$o_1\OutputOrd\cdots\OutputOrd o_m$.  So by Lemma~\ref{lem:run-residual} its
 table is $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$, or
 $P[\mathrm{in}\InputGe i]$ before any emission.  Self-continuation applied to
 the row of $o_m$, or totality of $T$, gives some $u\in T(i)$ in that table.
@@ -153,52 +153,55 @@ a history are rows of $T$ at inputs that every common \indesc $j$ of the
 current inputs \inrel, so Lifted Monotonicity for $T$ gives Response Partition
 Consistency.
 
-(1$\Rightarrow$2.)  We call an emission \emph{isolated} when its participant has
-received no message before it, and let $T$ be the set of rows $(i,o)$ with
-$o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
-system; such a history and participant are a \emph{witness} for $(i,o)$.
-Then $T\subseteq Q$.  When a participant is alone on its side, every
+(1$\Rightarrow$2.)  We build $T$ from the outputs that participants emit
+before receiving any message.  We call such an emission \emph{isolated}.  Let
+$T$ be the set of
+rows $(i,o)$ with $o\in Q(i)$ emitted in an isolated emission in some
+partitioned history of the system.  Such a history and participant are a
+\emph{witness} for $(i,o)$.  Then $T\subseteq Q$.  Two facts about witnesses
+are used below.  First, consider a participant alone on its side.  Every
 continuation that Response Availability supplies adds only its own history
-events and, since the history is partitioned, no receive, so the emission it
-yields is isolated.  By
-Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
-replayed by a participant alone on its side, with an idle participant
-forming a second side.
-\emph{Totality:} for each $i$, Answering in the empty history, for a participant
-with initial input $i$ alone on its side, gives a row of $T$ at $i$.
-\emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, we replay the
-witness, record $\mathsf{input}(j)$ by Input acceptance (truncating just after
-it), and answer by Answering with some $u\in Q(j)$.  By
-Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual} the table
+events.  Since the history is partitioned, these include no receive, so the
+emission they yield is isolated.  Second, by Lemma~\ref{lem:locality}, a
+witness's local history up to the emission can be replayed by a participant
+alone on its side, with an idle participant forming a second side.
+
+\emph{Totality:} for each $i$, Answering in the empty history, for a
+participant with initial input $i$ alone on its side, gives a row of $T$ at
+$i$.  \emph{Self-continuation:} let $(i,o)\in T$ and $j\InputGe i$.  We replay
+the witness and record $\mathsf{input}(j)$ by Input acceptance, truncating
+just after it.  Answering then gives an emission of some $u\in Q(j)$.  By
+Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual}, the table
 before that emission is contained in $P[\mathrm{in}\InputGe j,\
-\mathrm{out}\OutputGe o]$, so $o\OutputOrd u$ and $(j,u)\in T$.
-\emph{Lifted Monotonicity for $T$:} given rows $(i_r,o_r)$ of $T$ with common \indesc
-$j$, we replay each witness on its own participant, truncated after the
-emission, and add a participant with initial input $j$.  By
-Lemma~\ref{lem:locality} this is a partitioned history of the system, and
-Response Partition Consistency, applied to that history, gives $u\in\fiber{j}$
-\outrelpart every $o_r$.  If there are no rows, totality of $P$ gives some
-$u\in\fiber{j}$.
+\mathrm{out}\OutputGe o]$.  So $o\OutputOrd u$ and $(j,u)\in T$.
+\emph{Lifted Monotonicity for $T$:} let rows $(i_r,o_r)$ of $T$ have a common
+\indesc $j$.  We replay each witness on its own participant, truncated after
+the emission, and add a participant with initial input $j$.  By
+Lemma~\ref{lem:locality} this is a partitioned history of the system.
+Response Partition Consistency, applied to that history, gives
+$u\in\fiber{j}$ \outrelpart every $o_r$.  If there are no rows, totality of
+$P$ gives some $u\in\fiber{j}$.
 \end{proof}
 
 \begin{remark}[Without replication]
-For a system that is not replicated, fix the participant set.  The same proof,
-with $T_p$ the rows $p$ emits in histories where it is alone on its side, gives one response interface
-$T_p\subseteq Q_p$ per participant.  Each strategy sees only its own participant's initial input, and each
-participant is replayed once, so consistency is required only for families
-that draw on each $T_p$ at most once.
+For a system that is not replicated, fix the participant set.  Let $T_p$ be
+the rows $p$ emits in histories where it is alone on its side.  The same proof
+gives one response interface $T_p\subseteq Q_p$ per participant.  Each
+strategy sees only its own participant's initial input, and each participant
+is replayed once.  So consistency is required only for families that draw on
+each $T_p$ at most once.
 \end{remark}
 
 \subsection{Choosing versus requiring every output}
 
 Theorem~\ref{thm:complete-cap} with $E=P$ requires every permitted output to
-stay available; Theorem~\ref{thm:complete-cap-response} lets the system choose
-which outputs to serve.  Lifted Monotonicity implies the conditions of the
-latter theorem for every uniform obligation, with $T=Q$.  To see that $Q$ is
-self-continuing, let $(i,o)\in Q$ and $i\InputOrd j$.  Relational Monotonicity
-gives $u\in\fiber{j}$ with $o\OutputOrd u$, and totality gives some $q\in
-Q(j)$.  Because the spec has directed fibers, some $w\in\fiber{j}$
-\outrelpart $u$ and $q$, and upward closure puts $w$ in $Q(j)$.  The
+stay available.  Theorem~\ref{thm:complete-cap-response} lets the system
+choose which outputs to serve.  Lifted Monotonicity implies the conditions of
+the latter theorem for every uniform obligation, with $T=Q$.  To see that $Q$
+is self-continuing, let $(i,o)\in Q$ and $i\InputOrd j$.  Relational
+Monotonicity gives $u\in\fiber{j}$ with $o\OutputOrd u$, and totality gives
+some $q\in Q(j)$.  Because the spec has directed fibers, some $w\in\fiber{j}$
+\outrelpart $u$ and $q$.  Upward closure puts $w$ in $Q(j)$.  The
 common-extension condition gives Lifted Monotonicity for $Q$.
 
 The converse fails.  Let $I=\{0,1\}$ with $0\InputOrd 1$, $\bot\OutputOrd a$ and
@@ -213,20 +216,22 @@ monotonicity.
 
 If a total $T\subseteq Q$ satisfies Lifted Monotonicity as a spec in its own
 right, then $T$ is a response interface for which $\Spec$ satisfies Lifted
-Monotonicity.  The converse fails: in the following example a response
+Monotonicity.  The converse fails.  In the following example a response
 interface works, but no sub-specification of $Q$ satisfies Lifted
 Monotonicity.  Let $I=\{i_1,i_2,j,k_1,k_2\}$ with $i_1,i_2\InputOrd j\InputOrd
 k_1,k_2$ and no other relations, so $k_1$ and $k_2$ have no common \indesc.
 Let $\fiber{i_1}=\{a\}$, $\fiber{i_2}=\{b\}$, $\fiber{j}=\{c_1,c_2,d_1,d_2\}$,
 $\fiber{k_1}=\{e_1\}$, $\fiber{k_2}=\{e_2\}$, and $Q=P$, where $\OutputOrd$ is
 the least order with $a\OutputOrd c_1$, $b\OutputOrd c_2$, $c_1,c_2\OutputOrd
-d_1,d_2$, $c_1,c_2,d_1\OutputOrd e_1$, and $c_1,c_2,d_2\OutputOrd e_2$.  Then
-$T=\{(i_1,a),(i_2,b),(j,c_1),(j,c_2),(k_1,e_1),(k_2,e_2)\}$ is a response
-interface for which $\Spec$ satisfies Lifted Monotonicity: $d_1$ reconciles families at $j$, and
-$e_1$ or $e_2$ those at $k_1$ or $k_2$.  A sub-specification with Lifted
-Monotonicity must contain $(i_1,a)$ and $(i_2,b)$, hence $d_1$ or $d_2$ at $j$,
-which has no \outnoun at $k_2$ or $k_1$ respectively.  Reconciling outputs
-need not lie in $T$: a participant that emits $d_1$ or $d_2$ rules out $k_2$ or $k_1$.
+d_1,d_2$, $c_1,c_2,d_1\OutputOrd e_1$, and $c_1,c_2,d_2\OutputOrd e_2$.
+
+Then $T=\{(i_1,a),(i_2,b),(j,c_1),(j,c_2),(k_1,e_1),(k_2,e_2)\}$ is a response
+interface for which $\Spec$ satisfies Lifted Monotonicity.  The output $d_1$
+reconciles families at $j$, and $e_1$ or $e_2$ those at $k_1$ or $k_2$.  A
+sub-specification with Lifted Monotonicity must contain $(i_1,a)$ and
+$(i_2,b)$, hence $d_1$ or $d_2$ at $j$.  But $d_1$ has no \outnoun at $k_2$,
+and $d_2$ has none at $k_1$.  Reconciling outputs need not lie in $T$: a
+participant that emits $d_1$ or $d_2$ rules out $k_2$ or $k_1$.
 
 \subsection{Gilbert--Lynch with real-time precedence}
 
@@ -258,29 +263,29 @@ An input is a finite operation history: a set of read and write invocations at
 replicas with a strict partial order of real-time precedence.  One history
 \inrel another when it contains all of its operations and precedence edges.
 An output is a response map assigning values to reads and acknowledgments to
-writes, ordered by extension.  The fiber $\fiber{h}$ contains the maps
-explained by some linearization of $h$, a total order of its operations
-extending precedence~\cite{herlihy1990linearizability} in which each answered
-read returns the last preceding write, or the initial value $v_0$.  The
-obligation $Q_p(h)$ consists of the maps in $\fiber{h}$ that answer every read
-and acknowledge every write invoked at $p$.  Every finite history has a
-linearization, so $Q_p$ is total, and it is upward closed within fibers.
-Real-time precedence belongs to the input: the environment invokes $b$ after
-seeing $a$'s response, so the edge from $a$ to $b$ is information it supplies
-(\S\ref{sec:election-story}).
+writes, ordered by extension.  A linearization of $h$ is a total order of its
+operations extending precedence~\cite{herlihy1990linearizability} in which
+each answered read returns the last preceding write, or the initial value
+$v_0$.  The fiber $\fiber{h}$ contains the maps explained by some
+linearization of $h$.  The obligation $Q_p(h)$ consists of the maps in
+$\fiber{h}$ that answer every read and acknowledge every write invoked at $p$.
+Every finite history has a linearization, so $Q_p$ is total, and it is upward
+closed within fibers.  Real-time precedence belongs to the input.  The
+environment invokes $b$ after seeing $a$'s response, so the edge from $a$ to
+$b$ is information it supplies (\S\ref{sec:election-story}).
 
-Real time is the order of history events in an execution: an \emph{interleaving}
-$\lambda$ of a distributed history is a linear order of its history events consistent
-with happens-before, and no strategy observes it.  The \emph{invocation} of an
-operation is the first input event at its replica whose input contains it,
-and its \emph{response} is the first output event at that replica whose map
-answers it.  For a prefix $C$ of $\lambda$ (a consistent cut), the
-\emph{realized history} $h_C$ contains the operations invoked in $C$, with an
-edge from $a$ to $b$ when $a$'s response precedes $b$'s invocation in
-$\lambda$.  If $C'\subseteq C$ is also a prefix, $h_C$ \inrel $h_{C'}$.  The
-realized history need not be a common \indesc of the participants' current
-inputs: an input event may introduce two operations with an edge between them
-before either responds.
+Real time is the order of history events in an execution.  An
+\emph{interleaving} $\lambda$ of a distributed history is a linear order of
+its history events consistent with happens-before.  No strategy observes it.
+The \emph{invocation} of an operation is the first input event at its replica
+whose input contains it.  Its \emph{response} is the first output event at
+that replica whose map answers it.  For a prefix $C$ of $\lambda$ (a
+consistent cut), the \emph{realized history} $h_C$ contains the operations
+invoked in $C$, with an edge from $a$ to $b$ when $a$'s response precedes
+$b$'s invocation in $\lambda$.  If $C'\subseteq C$ is also a prefix, $h_C$
+\inrel $h_{C'}$.  The realized history need not be a common \indesc of the
+participants' current inputs: an input event may introduce two operations with
+an edge between them before either responds.
 
 A \emph{client history} has two participants with empty initial inputs, and
 each of its input events adds one operation, invoked at its participant after
@@ -299,14 +304,15 @@ the outputs emitted in $C$ have a common \outnoun in $\fiber{h_C}$.
 Let replicas $p$ and $q$ start with empty inputs on separate sides, and let
 the environment invoke a write of $\dog\neq v_0$ at $p$.  Answering gives a
 continuation in which $p$ acknowledges it.  The environment then invokes a read
-$r_q$ at $q$, after the acknowledgment in $\lambda$.  The history is a client history.  No message
-crosses the partition, so $q$'s current input is $i_q=\{r_q\}$, and $j=h_C$
-contains the write, $r_q$, and an edge from the write to $r_q$; it is a common
-\indesc of both current inputs.  Every map in $Q_q(i_q)$ answers $r_q$ with
-$v_0$, and every linearization of $j$ places the write first, so no output in
-$Q_q(i_q)$ has an \outnoun in $\fiber{j}$.  Lemma~\ref{lem:forced-answer}
-gives a continuation adding no input event, so the realized history stays
-$j$, whose emitted outputs have no common \outnoun in $\fiber{j}$.
+$r_q$ at $q$, after the acknowledgment in $\lambda$.  The history is a client
+history.  No message crosses the partition, so $q$'s current input is
+$i_q=\{r_q\}$.  The realized history $j=h_C$ contains the write, $r_q$, and an
+edge from the write to $r_q$, and it is a common \indesc of both current
+inputs.  Every map in $Q_q(i_q)$ answers $r_q$ with $v_0$, and every
+linearization of $j$ places the write first.  So no output in $Q_q(i_q)$ has
+an \outnoun in $\fiber{j}$.  Lemma~\ref{lem:forced-answer} gives a
+continuation adding no input event.  The realized history stays $j$, and the
+emitted outputs have no common \outnoun in $\fiber{j}$.
 \end{proof}
 
 A system with Response Availability, and with a common \outnoun at $h_C$ for
@@ -331,24 +337,24 @@ $p$ runs node $p$.  An invocation becomes the input event whose input is $p$'s
 view: the operations invoked at $p$, with no precedence.  A response becomes an
 output event emitting $p$'s response map, and $p$ may also re-emit its current
 map.  With every message lost, $p$'s history is node $p$'s run in the
-execution where it is alone, and atomicity of that execution puts the map in
-the fiber at the view, so the system can perform its output events under the
-canonical basis.  Availability, applied
-to each unanswered operation of the view, gives Answering.  An interleaving of
-a client history is an execution of the algorithm whose real-time order is the
-precedence of $h_C$, so atomicity gives a common \outnoun in $\fiber{h_C}$.
-The corollary excludes the algorithm.
+execution where it is alone.  Atomicity of that execution puts the map in the
+fiber at the view, so the system can perform its output events under the
+canonical basis.  Availability, applied to each unanswered operation of the
+view, gives Answering.  An interleaving of a client history is an execution of
+the algorithm whose real-time order is the precedence of $h_C$.  So atomicity
+gives a common \outnoun in $\fiber{h_C}$, and the corollary excludes the
+algorithm.
 \end{proof}
 
 Gilbert and Lynch require availability and atomicity in all fair executions,
 including those in which messages are lost, in Lynch's asynchronous network
 model~\cite[Theorem~1]{gilbert2002cap}\cite[Chapter~8]{lynch1996distributed}.
 Both imply the forms in the proposition.  In their model any message may be
-lost and client requests are inputs, so a finite execution extends to a fair
-execution with no new request in which every message is lost; their own
+lost and client requests are inputs.  So a finite execution extends to a fair
+execution with no new request in which every message is lost.  Their own
 proofs extend executions fairly in this way.  Availability answers the pending
 request at some finite point of that extension, and the prefix up to that
 response is the extension the proposition requires.  Atomicity of the fair
-extension gives atomicity of the finite execution, since atomicity is a safety
-property and so holds of every prefix of an atomic
+extension gives atomicity of the finite execution.  Atomicity is a safety
+property, so it holds of every prefix of an atomic
 execution~\cite[Chapter~13]{lynch1996distributed}.

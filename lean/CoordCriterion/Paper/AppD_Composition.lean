@@ -125,14 +125,14 @@ theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
 outputs of `𝒮₁`. … All of `m_r` and `m` lie in `D`, so the condition for `𝒮₂`
 on `D` gives `o ∈ P₂(m)` that extends every `o_r`, and `(j,o) ∈ P₂ ∘ P₁`.  No
 closure property of `D` is used.  (3) The table `P₂ ∘ P₁` of Equation
-`eq:spec-composition` mentions no order on `M`, and Lifted Monotonicity of the
+`eq:spec-composition` mentions no order on `M`.  Lifted Monotonicity of the
 composite uses only the orders on `I` and `O`.  So the composite under `≼_M` is
 the composite under the other order, which satisfies Lifted Monotonicity by
 (1).  The same holds after re-encoding the intermediate values.  A re-encoding
 is a map `e : M → M'` together with a decoding `e' : M' → M` that recovers
-every value, `e'(e(m)) = m`.  Replace `P₁` by `{(i,e(m)) : (i,m) ∈ P₁}` and
+every value, `e'(e(m)) = m`.  We replace `P₁` by `{(i,e(m)) : (i,m) ∈ P₁}` and
 `P₂` by `{(m',o) : (e'(m'),o) ∈ P₂}`.  A join through `e(m)` is a join through
-`e'(e(m)) = m`, so the composite table is unchanged, whatever the orders on `M`
+`e'(e(m)) = m`.  So the composite table is unchanged, whatever the orders on `M`
 and `M'`."  Lean: (1) `Comp.seq_liftedMono`, and a Lifted-Monotone `𝒮₂`
 satisfies it on all of `M` (`Joint.ceOn_of_ce`); (2)
 `Joint.seq_liftedMono_on` (any `D` containing the outputs) and
@@ -171,16 +171,16 @@ theorem «app:composition/joint-monotone» {I M O : Type} [PO I] [instM : PO M] 
 /-- "The reach of case (3).  Let `f : I → M` and `g : M → O` be functions with
 `g(f(·))` monotone.  One candidate order on `M` places `a` below `b`
 when `g(a) ≼ g(b)`.  This relation is reflexive and transitive.  It makes `g` monotone by construction,
-and `f` monotone because `g(f(·))` is.  It can place two distinct values each
-below the other, so it is an order only when no such pair exists, in
+and `f` monotone because `g(f(·))` is.  But it can place two distinct values
+each below the other.  So it is an order only when no such pair exists, in
 particular when `g` maps distinct values to distinct values.  Then case (3)
 applies.  In general case (3) need not apply.  Let `I` be the chain `x ⊑ y ⊑ z`,
 `M = {p,q}`, `f(x) = f(z) = p`, `f(y) = q`, and `g` constant.  The composite is
 constant, hence monotone.  Under any order on `M`, monotonicity of `f` gives
-`p ≼_M q ≼_M p`, so `p = q`, a contradiction.  The upstream therefore cannot
-emit under the empty basis at one of the canonical states of `x` and `y`: by
-the legal-output test for tables of functions, `f(i)` is a legal output at
-`σ(i)` exactly when `f(i) ≼_M f(k)` for every `k ⪰ i`.  The stages can be repaired only by merging
+`p ≼_M q ≼_M p`, so `p = q`, a contradiction.  Recall the legal-output test
+for tables of functions: `f(i)` is a legal output at `σ(i)` exactly when
+`f(i) ≼_M f(k)` for every `k ⪰ i`.  So the upstream cannot emit under the
+empty basis at one of the canonical states of `x` and `y`.  The stages can be repaired only by merging
 `p` and `q` into one intermediate value."  Lean: `Joint.preorder_factorization` (the
 reflexive, transitive relation, which exists exactly when `g ∘ f` is
 monotone); `Joint.injective_characterization` (for one-to-one `g`, stated for
@@ -255,9 +255,9 @@ with `x,y` incomparable, and let `𝒮₂` be the functional spec induced
 by a function `f` that maps both to
 one value.  The composite has one row, so it satisfies Lifted Monotonicity. …
 every run of `𝒮₁` under the empty basis stays at the canonical state and emits
-nothing.  Then `𝒮₂` receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒮₁`
-satisfy Lifted Monotonicity, since `hi` subsumes `lo`, and by case (3) the composite is
-unchanged."  Lean: `𝒮₁ = Dist.spU`; the second conjunct of
+nothing, and `𝒮₂` receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒮₁`
+satisfy Lifted Monotonicity, since `hi` subsumes `lo`.  By case (3) the
+composite is unchanged."  Lean: `𝒮₁ = Dist.spU`; the second conjunct of
 `Guard.composite_monotone_not_enough` says such runs emit nothing;
 `Guard.noCommitmentBasis_silent` is the run-level form; the renaming is
 `Joint.constant_store_reorder` (on `Comp.anyS`). -/
@@ -314,8 +314,8 @@ theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M
 
 /-- "The proofs below rest on three facts about a proper pipeline.  The first
 two concern a state `τ` that `𝒮₂|_{𝒮₁}` reaches without commitment.  First,
-every input `j ⪰_M τ.cur` has a row in `τ` … Second, every output at the
-current input of `τ` is a legal output.  The third fact concerns `𝒮₁`: if an
+every input `j ⪰_M τ.cur` has a row in `τ`. … Second, every output at the
+current input of `τ` is a legal output.  The third fact concerns `𝒮₁`.  If an
 output `m` at the current input of a state `σ` of `𝒮₁` is a legal output, then
 every `o ∈ P₂(m)` is a legal output at the image of `σ`. … Either way
 `(k,u)` is a row of the image that subsumes `(k,x)`."  Lean: the first two hold
@@ -342,7 +342,7 @@ theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp 
 `R_σ ⋈ T ⊆ R_ρ`, and every row `(k,m)` of `R_σ` has `m` above the current
 input of `𝒮₂|_{𝒮₁}`. … Each answer `o` has `(m,o) ∈ T`, so `(i,o) ∈ R_ρ`.  The
 composite's `output(o)` keeps `R_ρ[out ⪰ o]`, and `𝒮₂|_{𝒮₁}` keeps
-`T[out ⪰ o]`, so the join stays inside the composite's table."  Lean, for a
+`T[out ⪰ o]`.  So the join stays inside the composite's table."  Lean, for a
 downstream with the common-extension condition (here `𝒮₂|_{𝒮₁}`, whose inputs
 are typed as outputs of `𝒮₁`, `Guard.core_lockstep`): `Guard.Inv`; before the
 first output `Guard.merge_inputs`; afterwards `Guard.merge_lockstep`, with the
@@ -447,9 +447,9 @@ theorem «cor:pipelines» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q] {s1 : Spe
 /-- Proof of Corollary `cor:pipelines`: "By Corollary `cor:empty-store`, every
 run of the pipeline has one with the same outputs in which `𝒮₂|_{𝒮₁}` runs
 under the empty basis.  Theorem `thm:proper-coordination`(2), applied to it
-and a prefix of the run of `𝒮₁`, gives a run of `P₂ ∘ P₁` with these outputs,
-and the canonical basis supplies the canonical commitment of each output event
-that needs one (Definition `def:run-under-basis`), so it is a run under the
+and a prefix of the run of `𝒮₁`, gives a run of `P₂ ∘ P₁` with these outputs.
+The canonical basis supplies the canonical commitment of each output event
+that needs one (Definition `def:run-under-basis`), so this is a run under the
 canonical basis."  Lean: inside `Guard.proper_pipeline_step`, via `Guard.erase_simulates`,
 `Guard.emitted_prefix`, `Guard.proper_run`, `exec_canonExec` and
 `canonExec_sysExec`; the same step for a Lifted-Monotone downstream and any
@@ -461,19 +461,20 @@ theorem «app:composition/pipelines» {I M O : Type} [PO I] [PO M] [PO O] {sp : 
 
 /-- "Let `𝒮₁` be the log spec of Example
 `ex:committed-log-composition`, under its canonical basis with a strategy that
-allows every event, and `𝒮₂` the table of any monotone function `f` of the
+allows every event.  Let `𝒮₂` be the table of any monotone function `f` of the
 log.  Every log is an output of `𝒮₁`, so `𝒮₂|_{𝒮₁}` is `𝒮₂`.  For a set `Q`
 of logs, removing every row whose input is in `Q` is a commitment of `𝒮₂` at
-any state whose current input is not in `Q` and which has such a row.  It
-removes whole fibers, so it excludes. … Suppose that the store takes the lock
-only once its current log is nonempty.  Every log it can still receive then
-has the same first command, so the lock removes no row and is not a
+any state whose current input is not in `Q` and that has such a row.  Such a
+commitment removes whole fibers, so it empties them. … Suppose the store takes
+the lock only once its current log is nonempty.  Then every log it can still
+receive has the same first command, so the lock removes no row and is not a
 commitment.  Suppose instead that the store takes the lock at the empty log,
-ahead of the log.  Its output `f([])` was a legal output without the lock, and the
-lock excludes logs that `𝒮₁` can still offer.  At `σ_{𝒮₁}([b])`, `𝒮₁` can emit
-`[]` and then `[b]`.  The replacement emits `f([])`, receives `[b]`, and emits
-`f([b])`.  The locking store must take the lock at `[]`, which excludes `[b]`, so
-it cannot receive `[b]`."  Lean: `𝒮₁ = Inst.smrS1`; every log is an output
+ahead of the log.  Then the lock empties logs that `𝒮₁` can still offer,
+although the store's output `f([])` was a legal output without the lock.  At
+`σ_{𝒮₁}([b])`, for instance, `𝒮₁` can emit `[]` and then `[b]`.  The
+replacement emits `f([])`, receives `[b]`, and emits `f([b])`.  The locking
+store must take the lock at `[]`, which empties `[b]`, so it cannot receive
+`[b]`."  Lean: `𝒮₁ = Inst.smrS1`; every log is an output
 (`Guard.smr_img`); the lock is `Guard.excludeInput (Guard.bFirst b)` with store basis
 `Guard.mutexB b f`, applied in a commitment event; at a nonempty log the lock
 is undefined (`Guard.lock_after_log`), so the late-lock store
@@ -521,8 +522,8 @@ theorem «prop:invisible-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp 
   | commitment _ _ hs => exact Guard.invisible_commitment hf hs hleg hinv
 
 /-- The covering argument: "The proof shows that the commitments of `𝒮₁`
-cover those of the composite. … Let `γ` take `σ` to `σ_c`, at which `m` is a legal output,
-and let `ρ` be a composite state with `f(R_σ) ⊆ R_ρ`.  We show that no row `(k,f(m'))`
+cover those of the composite. … Let `γ` take `σ` to `σ_c`, at which `m` is a
+legal output.  Let `ρ` be a composite state with `f(R_σ) ⊆ R_ρ`.  We show that no row `(k,f(m'))`
 with `(k,m') ∈ R_{σ_c}` is in `Excluded_{f(m)}` at `ρ`. … So every row that
 the composite's `output(f(m))` removes by commitment has had every
 preimage in `R_σ` removed by `γ`."  Lean: `Guard.coverage` (stated for any
@@ -716,8 +717,9 @@ run of a produced history, together with an output `o` that the run emits such
 that `(i,o)` is a row of `P`, where `i` is the run's initial input.  A run that
 emits no such output induces no observation.  The system's messages, partitions, and commitments
 stay inside the component.  Restricted to one-participant histories, the
-induced component is a process, and a replicated system induces a cluster. … The
-maximally permissive component under `ℬ` admits every such run under `ℬ`."
+induced component is a process, and a replicated system induces a cluster.  The
+maximally permissive component under `ℬ` admits every run under `ℬ` that
+Definition `def:component` allows."
 Lean: `Components.Component.ofSystemOn Sys N` (participant runs of produced,
 well-formed histories with `N n` participants, translated by
 `Components.toSEvs` and certified by `Components.lrun_sysExec`);

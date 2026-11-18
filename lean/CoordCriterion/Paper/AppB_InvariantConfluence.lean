@@ -33,15 +33,15 @@ namespace Paper
 /-! ## The model -/
 
 /-- "A transaction history `h` … is a finite partial order of transaction
-events, each labeled by a transaction in `T`; `e' < e` means that `e` ran on a
-state that included the writes of `e'`.  A sub-history is closed when it
-contains every event that precedes one of its own, that is, when it is a
-downward-closed sub-order."  Lean: `IConf.Hist Tx`; a closed sub-history of
+events, each labeled by a transaction in `T`.  Here `e' < e` means that `e`
+ran on a state that included the writes of `e'`.  A sub-history is closed when
+it contains every event that precedes one of its own events, that is, when it
+is a downward-closed sub-order."  Lean: `IConf.Hist Tx`; a closed sub-history of
 `h` is a `c ≼ h`. -/
 abbrev «app:iconfluence/history» (Tx : Type) : Type := IConf.Hist Tx
 
-/-- "History `h'` extends `h` when `h` is a closed sub-history of `h'`, so
-the events `h'` adds precede no event of `h`, and each event of `h` keeps
+/-- "History `h'` extends `h` when `h` is a closed sub-history of `h'`.  Then
+the events that `h'` adds precede no event of `h`, and each event of `h` keeps
 exactly the predecessors it had."   Lean: `h ≼ h'` unfolds
 to: labels of `h` are labels of `h'`, and `h.lt x y ↔ h'.lt x y ∧ y ∈ h`. -/
 theorem «app:iconfluence/expansion-order» {Tx : Type} (h h' : IConf.Hist Tx) :
@@ -51,7 +51,7 @@ theorem «app:iconfluence/expansion-order» {Tx : Type} (h h' : IConf.Hist Tx) :
 
 /-- "The state of a history is computed event by event.  An event `e`,
 labeled by the transaction `t_e`, runs on `pre(e) = s₀ ∪ ⋃_{e'<e} post(e')`
-and produces `post(e) = t_e(pre(e))`, and the state of `h` is
+and produces `post(e) = t_e(pre(e))`.  The state of `h` is
 `eval(h) = s₀ ∪ ⋃_{e∈h} post(e)`."   Lean: `IConf.pre`, `IConf.post`
 (through `IConf.step`, which applies an event's label) and `IConf.eval`. -/
 theorem «app:iconfluence/eval» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Hist Tx) (e : Nat) :
@@ -60,8 +60,8 @@ theorem «app:iconfluence/eval» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf
       (IConf.eval M h = fun v => M.s0 v ∨ ∃ e, h.ev e ∧ IConf.post M h e v) :=
   ⟨rfl, IConf.post_eq M h e, rfl⟩
 
-/-- "A closed sub-history keeps each event's predecessors, and so its `pre`
-and `post`." -/
+/-- "A closed sub-history keeps each event's predecessors, so it also keeps
+each event's `pre` and `post`." -/
 theorem «app:iconfluence/sub-keeps-pre-post» {V Tx : Type} (M : IConf.Model V Tx)
     {c h : IConf.Hist Tx} (hc : c ≼ h) {e : Nat} (he : c.ev e) :
     IConf.pre M c e = IConf.pre M h e ∧ IConf.post M c e = IConf.post M h e :=
@@ -87,8 +87,8 @@ theorem «app:iconfluence/pre-post-as-eval» {V Tx : Type} (M : IConf.Model V Tx
   ⟨IConf.pre_eq_eval M h e, IConf.post_eq_eval M h e he⟩
 
 /-- "A history is locally valid when every `pre(e)` and `post(e)` satisfies
-`𝓘` … It is valid when the state of each of its closed sub-histories
-satisfies `𝓘`: `𝓘(eval(c))` for every closed sub-history `c`."  -/
+`𝓘` … A history is valid when the state of each of its closed sub-histories
+satisfies `𝓘`, that is, `𝓘(eval(c))` for every closed sub-history `c`."  -/
 theorem «app:iconfluence/valid-def» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Hist Tx) :
     (IConf.LocValid M h ↔ ∀ e, h.ev e → M.Inv (IConf.pre M h e) ∧ M.Inv (IConf.post M h e)) ∧
       (IConf.Valid M h ↔ ∀ c, c ≼ h → M.Inv (IConf.eval M c)) :=
@@ -135,8 +135,8 @@ theorem «app:iconfluence/proof-common-expansion-form» {V Tx : Type} (M : IConf
     M.IConfluent ↔ (IConf.SI M).CommonExpansion :=
   IConf.ic_iff_commonExpansion M
 
-/-- First step: "the state of a valid history `g` is reachable, by induction
-on `g`." -/
+/-- First step: "the state of every valid history `g` is reachable.  The
+proof is by induction on `g`." -/
 theorem «app:iconfluence/proof-valid-reachable» {V Tx : Type} (M : IConf.Model V Tx)
     {g : IConf.Hist Tx} (hg : IConf.Valid M g) : IConf.Reach M (IConf.eval M g) :=
   IConf.valid_reach M hg
@@ -166,9 +166,10 @@ theorem «app:iconfluence/proof-forward» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent → (IConf.SI M).CommonExpansion :=
   IConf.ic_commonExpansion M
 
-/-- (⇐): "Let `g₁` and `g₂` be valid histories, and let `j` be their disjoint
-union, with events renamed apart and no order between the two parts. … `j` is
-locally valid."  Lean: locally valid histories are closed under `dunion`, and
+/-- (⇐): "We first show that valid histories are closed under disjoint union.
+Let `g₁` and `g₂` be valid histories.  Let `j` be their disjoint union, with
+events renamed apart and no order between the two parts. … So `j` is locally
+valid."  Lean: locally valid histories are closed under `dunion`, and
 `eval (dunion g₁ g₂) = eval g₁ ∪ eval g₂`. -/
 theorem «app:iconfluence/proof-disjoint-union» {V Tx : Type} (M : IConf.Model V Tx)
     {g₁ g₂ : IConf.Hist Tx} :
@@ -194,11 +195,10 @@ theorem «app:iconfluence/proof-halves» {V Tx : Type} (M : IConf.Model V Tx)
       IConf.Hist.half c 0 ≼ g₁ ∧ IConf.Hist.half c 1 ≼ g₂ :=
   ⟨IConf.eval_half M hc, IConf.Hist.half_le hc (by decide), IConf.Hist.half_le hc (by decide)⟩
 
-/-- (⇐): "directedness of the fibers gives a valid sub-history `g` of `j` with
-`eval(g) ⊇ eval(g₁) ∪ eval(g₂) = eval(j) ⊇ eval(g)`, so
-`𝓘(eval(g₁) ∪ eval(g₂))`. … `j` is valid.  Valid histories are therefore
-closed under disjoint union, and under adding an event above all others when
-its transaction step is valid." -/
+/-- (⇐): "Because the spec has directed fibers, there is a valid sub-history
+`g` of `j` with `eval(g) ⊇ eval(g₁) ∪ eval(g₂) = eval(j) ⊇ eval(g)`.  So
+`𝓘(eval(g₁) ∪ eval(g₂))`. … `j` is valid.  Valid histories are also closed
+under adding an event above all others when its transaction step is valid." -/
 theorem «app:iconfluence/proof-pair» {V Tx : Type} (M : IConf.Model V Tx)
     (hlm : (IConf.SI M).LiftedMono) {g₁ g₂ g : IConf.Hist Tx} (v₁ : IConf.Valid M g₁)
     (v₂ : IConf.Valid M g₂) (vg : IConf.Valid M g) (t : Tx)
@@ -210,8 +210,8 @@ theorem «app:iconfluence/proof-pair» {V Tx : Type} (M : IConf.Model V Tx)
   ⟨IConf.pair_inv M hlm v₁ v₂, IConf.valid_dunion M hlm v₁ v₂, IConf.valid_addTop M vg t hi,
     IConf.eval_addTop M g t⟩
 
-/-- (⇐): "By induction on derivations, every reachable state is the state of
-a valid history." -/
+/-- (⇐): "By induction on derivations, every reachable state is therefore the
+state of a valid history." -/
 theorem «app:iconfluence/proof-reachable-valid» {V Tx : Type} (M : IConf.Model V Tx)
     (hlm : (IConf.SI M).LiftedMono) {s : IConf.St V} (hs : IConf.Reach M s) :
     ∃ g, IConf.Valid M g ∧ IConf.eval M g = s :=

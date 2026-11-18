@@ -198,9 +198,9 @@ theorem «def:response-partition-consistency» (Sys : System sp D) :
     (ResponsePC Sys ↔ CommonRefinementAtEnd Sys) :=
   ⟨Iff.rfl, responsePC_iff_commonRefinement Sys⟩
 
-/-- "This is the part of Partition Consistency that the converse of Theorem
-`thm:complete-cap` and Corollary `cor:complete-cap-any-system` use, so both
-also hold with Response Partition Consistency in place of Partition
+/-- "Response Partition Consistency is the part of Partition Consistency that
+the converse of Theorem `thm:complete-cap` and Corollary
+`cor:complete-cap-any-system` use.  So both also hold with Response Partition Consistency in place of Partition
 Consistency."  Lean: Partition Consistency implies it, and the existential
 form of Theorem `thm:complete-cap` with Corollary
 `cor:complete-cap-any-system` (some system has Availability for `A` and it
@@ -220,9 +220,9 @@ theorem «def:response-partition-consistency/of-confluent» {init : Fin n → I}
     RPCAt H c j :=
   rpc_of_confluent h
 
-/-- "The two coincide for a system with basis `ℬ_P` and no commitment events,
-whose participant runs are therefore canonical runs, by Lemma
-`lem:reconciliation` applied to those runs."
+/-- "The two coincide for a system with basis `ℬ_P` and no commitment events.
+Its participant runs are then canonical runs, and Lemma `lem:reconciliation`
+applies to them."
 Lean, at any cut, in particular the final one. -/
 theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     (hS : CanonicalSystem Sys) {init : Fin n → I} {H : History sp D n} (hwf : WF init H)
@@ -231,8 +231,8 @@ theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     RPCAt H c j ↔ ConfluentCut init H c j :=
   canonical_rpc_iff_confluent hS hwf hp hcut hj
 
-/-- "With other commitments the converse can fail: participants may prune
-their states so that they cannot be reconciled while their emitted outputs
+/-- "With other commitments the converse can fail.  Participants may prune
+their states so that they cannot be reconciled, while their emitted outputs
 still have a common output extension."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
 system `rnSys` whose basis is a commitment emptying the fiber at `hi`; in the history `rnH`
 the cut has RPC at `hi` but is not confluent there. -/
@@ -393,11 +393,11 @@ theorem «thm:complete-cap-response/proof-sufficiency» (Q : Obligation sp) (T :
 /-! ### Remark "Without replication" -/
 
 /-- **Remark "Without replication"**: "For a system that is not replicated,
-fix the participant set.  The same proof, with `T_p` the rows `p` emits in
-histories where it is alone on its side, gives one response interface `T_p ⊆ Q_p` per participant.
-Each strategy sees only its own participant's initial input, and each
-participant is replayed once, so consistency is required only for families
-that draw on each `T_p` at most once."
+fix the participant set.  Let `T_p` be the rows `p` emits in histories where it
+is alone on its side.  The same proof gives one response interface
+`T_p ⊆ Q_p` per participant.  Each strategy sees only its own participant's
+initial input, and each participant is replayed once.  So consistency is
+required only for families that draw on each `T_p` at most once."
 
 Lean: participant set `Fin n` with `n ≥ 2`; `Tp Sys Q n p` is the set of rows
 of `Q_p` emitted by `p` in isolated emissions.  First conjunct: each `T_p` is
@@ -422,7 +422,7 @@ theorem «app:cap-response/without-replication» (Sys : System sp D)
 /-! ## Choosing versus requiring every output -/
 
 /-- "Theorem `thm:complete-cap` with `E = P` requires every permitted output
-to stay available; Theorem `thm:complete-cap-response` lets the system choose
+to stay available.  Theorem `thm:complete-cap-response` lets the system choose
 which outputs to serve.  Lifted Monotonicity implies the conditions of the
 latter theorem for every uniform
 obligation, with `T = Q`." -/
@@ -472,7 +472,7 @@ theorem «app:cap-response/lm-subspec» (Q : Obligation sp) (T : Spec I O)
     ResponseInterface Q T.P ∧ ConsistentOn sp T.P :=
   subspec_lm_interface Q T hTQ h
 
-/-- "The converse fails: in the following example a response interface works,
+/-- "The converse fails.  In the following example a response interface works,
 but no sub-specification of `Q` satisfies Lifted Monotonicity."  The five-input
 example: `I = {i₁, i₂,
 j, k₁, k₂}` (`sp5`, `Q5 = P`), `T = {(i₁,a),(i₂,b),(j,c₁),(j,c₂),(k₁,e₁),
@@ -536,9 +536,10 @@ operations and edges.  An output `RMap` is a response map, ordered by
 extension.  "Real-time precedence belongs to the input …" is a modeling
 remark, reflected in `prec` being part of `Hist`. -/
 
-/-- "The fiber `P(h)` contains the maps explained by some linearization of
-`h`, a total order of its operations extending precedence in which each
-answered read returns the last preceding write, or the initial value `v₀`."
+/-- "A linearization of `h` is a total order of its operations extending
+precedence in which each answered read returns the last preceding write, or
+the initial value `v₀`.  The fiber `P(h)` contains the maps explained by some
+linearization of `h`."
 Lean: a linearization is a position function injective on `h`'s operations
 and increasing along `prec`. -/
 theorem «app:cap-response/register-fiber» (h : CC.GL.Hist) (ρ : CC.GL.RMap) :
@@ -563,9 +564,9 @@ theorem «app:cap-response/register-obligation» (p : Nat) :
 
 /-! ### Interleavings and realized histories -/
 
-/-- "Real time is the order of history events in an execution: an
+/-- "Real time is the order of history events in an execution.  An
 *interleaving* `λ` of a distributed history is a linear order of its history
-events consistent with happens-before".  Lean: an injective position function
+events consistent with happens-before.  Lean: an injective position function
 on events, increasing along each local order and along send→receive edges. -/
 theorem «app:cap-response/interleaving» (H : CC.GL.RHist D n) (pos : Fin n → Nat → Nat) :
     CC.GL.Interleaving H pos ↔
@@ -733,7 +734,7 @@ theorem «prop:gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.AsyncGL.Al
 /-- Proof sketch of Prop. `prop:gl-async`: "We translate the algorithm into a
 system with the canonical basis.  …  Availability, applied to each unanswered
 operation of the view, gives Answering.  …  atomicity gives a common
-output extension in `P(h_C)`.  The corollary excludes the algorithm."  Lean: the
+output extension in `P(h_C)`, and the corollary excludes the algorithm."  Lean: the
 translation `sysOf A` satisfies both client-form hypotheses. -/
 theorem «prop:gl-async/proof» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.AsyncGL.Alg N M) :
     (CC.AsyncGL.Atomic A → CC.AsyncGL.Available A →
@@ -769,10 +770,10 @@ theorem «prop:gl-async/non-vacuity» {N : Nat} {M : Type} :
 /-! ### Final paragraph (fair executions)
 
 "Gilbert and Lynch require availability and atomicity in all fair executions,
-… Both imply the forms in the proposition. … a finite execution extends to a
-fair execution with no new request in which every message is lost; …
-Atomicity of the fair extension gives atomicity of the finite execution, since
-atomicity is a safety property …"
+… Both imply the forms in the proposition. … So a finite execution extends to a
+fair execution with no new request in which every message is lost. …
+Atomicity of the fair extension gives atomicity of the finite execution.
+Atomicity is a safety property …"
 
 Lean (`CAP/AsyncGLFair.lean`): an infinite execution is a chain of finite
 executions with node states (`AsyncGL.IExec`); it is fair when each node, from

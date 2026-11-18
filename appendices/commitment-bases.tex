@@ -41,9 +41,10 @@ Sections~\ref{sec:ambiguity-story}--\ref{sec:systems} show only complete
 outputs without aborts or read results, as serial orders, at inputs in which
 every transaction has requested commit.
 
-We write an output as $(L,X,\rho)$: $X$ is the set of aborted transactions, $L$
-is the serial order, a total order on the set $\mathrm{dom}\,L$ of committed
-ones, and $\rho$ is the set of reported read results.  Then
+We write an output as $(L,X,\rho)$.  Here $X$ is the set of aborted
+transactions, $L$ is the serial order, a total order on the set
+$\mathrm{dom}\,L$ of committed ones, and $\rho$ is the set of reported read
+results.  Then
 \[
   \begin{aligned}
   (L,X,\rho)\OutputOrd(L',X',\rho')
@@ -55,12 +56,12 @@ Every input has a permitted row: the one that aborts every transaction and
 reports nothing.  Let $\{A,B\}$ be an input in which $A$ and $B$ have each
 requested commit.  The rows $(\{A,B\},([A,B],\varnothing,\varnothing))$ and
 $(\{A,B\},([B,A],\varnothing,\varnothing))$ of
-Figure~\ref{fig:ambiguity-frames}(f) have no common \outnoun, which would order
-$A$ both before and after $B$, so the spec is not monotone.  The
+Figure~\ref{fig:ambiguity-frames}(f) have no common \outnoun, since it would
+order $A$ both before and after $B$.  So the spec is not monotone.  The
 \emph{abort-free} spec permits a row when it can be completed with
-$X=\varnothing$, where a complete output instead commits exactly the transactions
-whose commit request is in the input and leaves the others undecided; the same
-two rows show that it is not monotone either.
+$X=\varnothing$.  For this spec, a complete output instead commits exactly the
+transactions whose commit request is in the input and leaves the others
+undecided.  The same two rows show that it is not monotone either.
 
 \paragraph{\Commitments.}
 Each \commitment is a condition on complete outputs.  Applied at a state
@@ -80,14 +81,14 @@ when it keeps some row at $i$ and removes some row.
   \item $\mathsf{read}(A,k,v)$, for $A\in i$ whose $k$-th operation in $i$ is a
         read: the output reports that this read returned the version $v$.
 \end{itemize}
-Each is a \commitment (Definition~\ref{def:commitment}).  If a kept row \outrel
-another row at the same input, the complete row that keeps it also
-\outrel the other, which is therefore kept; so no removed row is \outrelpast by
-a kept one, as Equation~\ref{eq:commitment-unsubsumed} requires.  The first four
-conditions concern only $L$ and $X$, and for them a complete row is kept
-exactly when it satisfies the condition, since two permitted complete outputs
-at one input, one \outrelpart the other, have the same serial order and abort
-set.
+Each is a \commitment (Definition~\ref{def:commitment}).  In particular, no
+removed row is \outrelpast by a kept one, as
+Equation~\ref{eq:commitment-unsubsumed} requires.  To see this, suppose a kept
+row \outrel another row at the same input.  The complete row that keeps the
+first also \outrel the second, so the second is kept too.  The first four
+conditions concern only $L$ and $X$.  For them a complete row is kept exactly
+when it satisfies the condition, since two permitted complete outputs at one
+input, one \outrelpart the other, have the same serial order and abort set.
 
 The bases are
 $\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{TxCommit},\mathsf{abort},\mathsf{read}\}$
@@ -116,93 +117,96 @@ result is then a legal output.
 \paragraph{2PL.}
 When an operation of $B$ arrives, 2PL requests a lock on its key, shared for a
 read and exclusive for a write.  If $A$ holds that lock in a conflicting mode,
-$B$ waits, and the scheduler applies $\mathsf{order}(A,B)$ in a \commitment
-event, reporting nothing.  When every remaining complete row that commits
-both already places $A$ before $B$, $\mathsf{order}(A,B)$ would remove
-nothing, so it is undefined and the scheduler applies nothing.  This happens when an earlier wait has applied
-$\mathsf{order}(A,B)$, or when a reported read result fixes the order, as when
-$A$ has read the initial version of the key that $B$ writes.  On complete
-rows without aborts,
+$B$ waits.  The scheduler then applies $\mathsf{order}(A,B)$ in a \commitment
+event and reports nothing.  Sometimes every remaining complete row that
+commits both already places $A$ before $B$.  Then $\mathsf{order}(A,B)$ would
+remove nothing, so it is undefined and the scheduler applies nothing.  This
+happens when an earlier wait has applied $\mathsf{order}(A,B)$, or when a
+reported read result fixes the order, as when $A$ has read the initial version
+of the key that $B$ writes.  On complete rows without aborts,
 $\mathsf{order}(A,B)$ keeps exactly those with $A$ before $B$
-(Figure~\ref{fig:cc-commitments}(h)).  At the canonical state of $\{A,B,C\}$ it
-removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$, so it is a \commitment, and it
-is not the canonical \commitment $x_o$ of any output $o$.  When a read is granted its lock,
-the scheduler applies $\mathsf{read}$ and reports the result.  When a commit
-request arrives, the scheduler applies $\mathsf{TxCommit}$ and releases the
-transaction's locks.
+(Figure~\ref{fig:cc-commitments}(h)).  At the canonical state of $\{A,B,C\}$
+it removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$.  So it is a
+\commitment, and it is not the canonical \commitment $x_o$ of any output $o$.
+When a read is granted its lock, the scheduler applies $\mathsf{read}$ and
+reports the result.  When a commit request arrives, the scheduler applies
+$\mathsf{TxCommit}$ and releases the transaction's locks.
 
 A deadlock between $A$ and $B$ arises when $B$ waits for a lock that $A$ holds
-and an operation of $A$ then waits for a lock that $B$ holds: the scheduler has
-applied $\mathsf{order}(A,B)$ and later $\mathsf{order}(B,A)$.  Then no
-remaining row, at any input, commits both $A$ and $B$, so every remaining
-complete row aborts one of them, and resolving the deadlock means aborting one.
-Once the scheduler applies $\mathsf{TxCommit}(A)$, every remaining complete row
-aborts $B$, and $\mathsf{TxCommit}(B)$ is never again defined.  Under the
-abort-free spec, once both orderings have been applied, no remaining
-row is at an input in which both $A$ and $B$ have requested commit.  The system
-never accepts both requests, so at least one of $A$ and $B$ waits forever.
-Whether a deadlock can be resolved thus depends on which of the two
+and an operation of $A$ then waits for a lock that $B$ holds.  The scheduler
+has then applied $\mathsf{order}(A,B)$ and later $\mathsf{order}(B,A)$.  No
+remaining row, at any input, commits both $A$ and $B$.  So every remaining
+complete row aborts one of them, and resolving the deadlock means aborting
+one.  Once the scheduler applies $\mathsf{TxCommit}(A)$, every remaining
+complete row aborts $B$, and $\mathsf{TxCommit}(B)$ is never again defined.
+Under the abort-free spec, once both orderings have been applied, no remaining
+row is at an input in which both $A$ and $B$ have requested commit.  The
+system never accepts both requests, so at least one of $A$ and $B$ waits
+forever.  Whether a deadlock can be resolved thus depends on which of the two
 specs the system implements.
 
 \paragraph{MVTO.}
 We follow Bernstein and Goodman~\cite{bernstein1981concurrency}.  When the
 first operation of a transaction $A$ arrives, $A$ receives a timestamp above
-all issued ones, and the scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
+all issued ones.  The scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
 transactions stamped before $A$, in a \commitment event.  On complete rows
 without aborts, $\mathsf{stamp}(B)$ with $Z=\varnothing$ keeps exactly those
-with $B$ first (Figure~\ref{fig:cc-commitments}(i)); at the canonical state of
-$\{A,B,C\}$ it is a \commitment, and it is not the canonical \commitment $x_o$ of any output.  When
-a read of $x$ by $A$ arrives, it returns $A$'s own write of $x$ if $A$ has
-written $x$, and otherwise the committed version of $x$ with the largest
-timestamp below $A$'s; the scheduler applies $\mathsf{read}$ and reports the
-result.  When a write of $x$ by $A$ arrives, it is rejected, and $A$ aborted,
-if a transaction stamped after $A$ has already read a version of $x$ stamped
-before $A$; the scheduler then applies $\mathsf{abort}(A)$ and reports the
-abort.  When the commit request of $A$ arrives, the scheduler applies
-$\mathsf{TxCommit}(A)$.
+with $B$ first (Figure~\ref{fig:cc-commitments}(i)).  At the canonical state
+of $\{A,B,C\}$ it is a \commitment, and it is not the canonical \commitment
+$x_o$ of any output.  When a read of $x$ by $A$ arrives, it returns $A$'s own
+write of $x$ if $A$ has written $x$.  Otherwise it returns the committed
+version of $x$ with the largest timestamp below $A$'s.  The scheduler applies
+$\mathsf{read}$ and reports the result.  When a write of $x$ by $A$ arrives,
+it is rejected, and $A$ aborted, if a transaction stamped after $A$ has
+already read a version of $x$ stamped before $A$.  The scheduler then applies
+$\mathsf{abort}(A)$ and reports the abort.  When the commit request of $A$
+arrives, the scheduler applies $\mathsf{TxCommit}(A)$.
 
 \emph{What reporting a read excludes.}  Suppose $B$ is stamped after $A$, and
 $B$'s read of $x$ returned the initial version or the write of $x$ by a
-transaction stamped before $A$.  At an input in which $A$ writes $x$, a
-complete row that satisfies both stamps and commits both $A$ and $B$ places $A$
-between that version and $B$.  In that row the read must return $A$'s write
-or a later one, so the row does not permit the reported read.  Hence, after the
-two stamps, no row that reports the read and is at an input in which $A$
-writes $x$ commits both $A$ and $B$.  Once $\mathsf{read}$ has been applied, no
-remaining row at such an input commits both, whether it reports the read or
-not.  Reporting the read therefore rules out one possibility: that $A$ writes
-$x$ and both $A$ and $B$ commit.  MVTO reports the read when it arrives,
-whether or not $A$'s write has arrived.  The condition on the version, that
-$B$ read a version older than $A$, is needed.  At an input of three
-transactions $A$, $W$, $B$, stamped in that order, each having requested
-commit, with $A$ and $W$ writing $x$ and $B$ only reading it, the complete row
-that commits all three in stamp order and reports that $B$ read $W$'s write is
-permitted and satisfies every stamp.  There $B$ read a version written after
-$A$, and all three commit.
+transaction stamped before $A$.  Consider an input in which $A$ writes $x$.
+There, a complete row that satisfies both stamps and commits both $A$ and $B$
+places $A$ between that version and $B$.  In that row the read must return
+$A$'s write or a later one, so the row does not permit the reported read.
+Hence, after the two stamps, no row that reports the read and is at an input
+in which $A$ writes $x$ commits both $A$ and $B$.  Once $\mathsf{read}$ has
+been applied, no remaining row at such an input commits both, whether it
+reports the read or not.  Reporting the read therefore rules out one
+possibility: that $A$ writes $x$ and both $A$ and $B$ commit.  MVTO reports
+the read when it arrives, whether or not $A$'s write has arrived.
+
+The condition on the version, that $B$ read a version older than $A$, is
+needed.  Consider an input of three transactions $A$, $W$, $B$, stamped in
+that order, each having requested commit, with $A$ and $W$ writing $x$ and $B$
+only reading it.  The complete row that commits all three in stamp order and
+reports that $B$ read $W$'s write is permitted and satisfies every stamp.
+There $B$ read a version written after $A$, and all three commit.
 
 \emph{When the abort is entailed.}  Which of $A$ and $B$ aborts depends on
 whether $B$ is decided.  Suppose $A$'s write of $x$ has arrived.  If every
 remaining complete row commits $B$, for instance after $\mathsf{TxCommit}(B)$,
 then every remaining complete row aborts $A$.  An output that reports the read
 and that every remaining row \outrel, with $A$'s abort added, is then a legal
-output, so the spec entails the abort.  While $B$ is undecided, the spec
-does not entail it.  Consider a run in which $A$'s first operation, a read of $x$,
-arrives, then $B$'s read of $x$, and then $A$'s write of $x$, with further
-transactions free to arrive.  The scheduler applies $\mathsf{stamp}(A)$ and
-$\mathsf{stamp}(B)$ in \commitment events and reports that $B$ read the initial
-version of $x$.  Reporting the read is not a legal output on its own: at an
-input in which $A$ writes $x$, the row that commits $A$ and then $B$ cannot be
-completed with it.  Once the scheduler applies $\mathsf{read}$ in a
-\commitment event, reporting the read is a legal output.  After $A$'s write
-arrives, two completions remain at the input in which both then request
-commit: one commits $B$ and aborts $A$, and the other commits $A$ and aborts
-$B$.  Emitting $A$'s abort is then not a legal output, and $\mathsf{abort}(A)$ and
-$\mathsf{abort}(B)$ are both defined and keep different completions.  MVTO's
-write rule aborts $A$ at once: the scheduler applies $\mathsf{abort}(A)$ in a
-\commitment event, after which reporting the abort is a legal output.  That abort is the scheduler's choice between two
-outcomes the spec still permits.  If the scheduler instead waits until
-$B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s abort
-becomes a legal output.
+output.  So the spec entails the abort.  While $B$ is undecided, the spec does
+not entail it.
+
+Consider a run in which $A$'s first operation, a read of $x$, arrives, then
+$B$'s read of $x$, and then $A$'s write of $x$, with further transactions free
+to arrive.  The scheduler applies $\mathsf{stamp}(A)$ and $\mathsf{stamp}(B)$
+in \commitment events and reports that $B$ read the initial version of $x$.
+Reporting the read is not a legal output on its own.  At an input in which $A$
+writes $x$, the row that commits $A$ and then $B$ cannot be completed with it.
+Once the scheduler applies $\mathsf{read}$ in a \commitment event, reporting
+the read is a legal output.  After $A$'s write arrives, two completions remain
+at the input in which both then request commit.  One commits $B$ and aborts
+$A$, and the other commits $A$ and aborts $B$.  Emitting $A$'s abort is then
+not a legal output, and $\mathsf{abort}(A)$ and $\mathsf{abort}(B)$ are both
+defined and keep different completions.  MVTO's write rule aborts $A$ at once:
+the scheduler applies $\mathsf{abort}(A)$ in a \commitment event, after which
+reporting the abort is a legal output.  That abort is the scheduler's choice
+between two outcomes the spec still permits.  If the scheduler instead waits
+until $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s
+abort becomes a legal output.
 
 \paragraph{Comparison.}
 As operations arrive, 2PL applies \commitments that fix the relative order of

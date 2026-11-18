@@ -42,11 +42,13 @@ theorem «proof:prop:distributed-consistency» (sp : Spec I O) (D : Type) :
 
 /-! ## Exchanging outputs (`app:exchanging-outputs`) -/
 
-/-- *Exchanging outputs* (table level).  "It can silently honor `o` by
-restricting its table to `R[out ⪰ o]` … Silent honoring cannot change
-confluence in either direction.  It cannot help, because it only removes rows
-… It cannot hurt, because a row that survives at a common input extension already
-extends every output emitted in the cut (Lemma run-residual), including `o`."
+/-- *Exchanging outputs* (table level).  "Second, it can silently honor `o`
+by restricting its table to `R[out ⪰ o]`. … Silent honoring never changes
+whether a cut is confluent.  It cannot make a cut confluent, because it only
+removes rows … It cannot make a cut non-confluent either.  A row that survives
+at a common input extension already extends every output emitted in the cut
+(Lemma run-residual).  That includes `o`, which was emitted earlier, so the
+restriction keeps the row."
 
 Lean: each family member is a state with the residual shape for its emitted
 outputs (the shape of every run, `IsRun.residual`) and a list of honored
@@ -109,14 +111,13 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 /-! ## Proof of Theorem `thm:complete-cap` -/
 
 /-- Proof of Theorem `thm:complete-cap`: "The canonical system for `E` has the
-canonical basis and no commitment events; its strategies emit, by the
-canonical output event `output(o)` …, any output `o` of `E` in the current
-fiber. … so the system has Availability for `E` whatever the spec.  Suppose
-`P` satisfies Lifted Monotonicity for `E`.  Every output the canonical system
-emits is the output of a row of `E` whose input lies below the current one …
-Since the system emits only canonical output events, Lemma
-`lem:reconciliation` makes this confluence at `j`, which gives Partition
-Consistency."   Lean: `respSystem E`, a canonical system; Availability for `E`
+canonical basis and no commitment events.  Its strategies emit any output `o`
+of `E` in the current fiber, by the canonical output event `output(o)` … So
+the system has Availability for `E` whatever the spec.  Now suppose `P`
+satisfies Lifted Monotonicity for `E`.  Every output the canonical system
+emits is the output of a row of `E` whose input lies below the current one. …
+The system emits only canonical output events, so Lemma `lem:reconciliation`
+makes this confluence at `j`.  This gives Partition Consistency."   Lean: `respSystem E`, a canonical system; Availability for `E`
 holds with no hypothesis on the spec. -/
 theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn sp E) :
     AvailabilityFor E (respSystem (sp := sp) (D := D) E) ∧
@@ -127,11 +128,11 @@ theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn
 /-- Proof of Theorem `thm:complete-cap`, converse: "suppose some system, such
 as the canonical system for `E`, has Availability for `E` and Partition
 Consistency. … take one participant `p_r` per row, starting at input `i_r`,
-each on its own side, and, if `k = 1`, a second participant for that row on
-another side, since a partitioned history has at least two sides … By
-Availability for `E`, each `p_r` can emit `o_r`.
-By Partition Consistency, they then reach one state `(j,R)`, which has some
-row `(j,u)` … so `u` extends every `o_r`."  Lean: only a common output
+each on its own side.  A partitioned history has at least two sides, so if
+`k = 1` we add a second participant for that row on another side. … By
+Availability for `E`, each `p_r` can emit `o_r`.  By Partition Consistency,
+the participants then reach one state `(j,R)`.  That state has some row
+`(j,u)` … So `u` extends every `o_r`."  Lean: only a common output
 extension of the emitted outputs is used (implied by Partition
 Consistency). -/
 theorem «thm:complete-cap/proof-necessity» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)

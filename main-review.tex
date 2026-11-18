@@ -3098,18 +3098,21 @@ distributed consistency gives consistency.
 \label{app:exchanging-outputs}
 Suppose participants share their \emph{outputs} in the data $d$ of messages
 (\S\ref{sec:distributed-consistency}). A participant that receives an
-output $o$ its sender has emitted has two
-options. If $o\in R(i)$ at its own current input $i$, it can emit $o$ itself;
-that is an ordinary output event, already covered by
-Definition~\ref{def:distributed-history}. Otherwise, or in addition, it can silently honor $o$ by restricting its table
-to $R[\mathrm{out}\OutputGe o]$. This restriction is a table, not a
-specification state: it may have no row at the participant's current input,
-so silent honoring is not a specification event and we reason about it at the level of
-tables. Silent honoring cannot change confluence in either direction. It cannot
-help, because it only removes rows, and confluence asks for a row that
-survives everywhere (Proposition~\ref{prop:confluence}). It cannot hurt,
-because a row that survives at a common \indesc already \outrel every output
-emitted in the cut (Lemma~\ref{lem:run-residual}), including $o$, which was previously emitted. The confluence of a cut therefore depends on which outputs were emitted,
+output $o$ its sender has emitted has two options, and may take both. First,
+if $o\in R(i)$ at its own current input $i$, it can emit $o$ itself. That is
+an ordinary output event, already covered by
+Definition~\ref{def:distributed-history}. Second, it can silently honor $o$
+by restricting its table to $R[\mathrm{out}\OutputGe o]$. The restricted
+table may have no row at the participant's current input, so it is a table
+but not always a specification state. Silent honoring is therefore not a
+specification event, and we reason about it on tables.
+
+Silent honoring never changes whether a cut is confluent. It cannot make a
+cut confluent, because it only removes rows, and confluence asks for a row
+that survives everywhere (Proposition~\ref{prop:confluence}). It cannot make
+a cut non-confluent either. A row that survives at a common \indesc already
+\outrel every output emitted in the cut (Lemma~\ref{lem:run-residual}). That
+includes $o$, which was emitted earlier, so the restriction keeps the row. The confluence of a cut therefore depends on which outputs were emitted,
 not on who has heard about them.
 
 \begin{proof}[Proof of Proposition~\ref{prop:commitment-conflict}]
@@ -3127,29 +3130,35 @@ not confluent at $k$.
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]
 The canonical system for $E$ has the canonical basis and no \commitment
-events; its strategies emit, by the canonical output event $\mathsf{output}(o)$
-of Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber. That event applies whatever \commitment $o$ requires, $x_o$ from the
-canonical basis (Definition~\ref{def:run-under-basis}), so the system has
-Availability for $E$ whatever the spec. Suppose $\Spec$ satisfies Lifted
-Monotonicity for $E$. Every output the canonical system emits is the output of a row of $E$ whose
-input lies below the current one, so at a common \indesc $j$ of the current
-inputs the emitted outputs have a common \outnoun in $\fiber{j}$. Since the
-system emits only canonical output events, Lemma~\ref{lem:reconciliation}
-makes this confluence at $j$, which gives Partition Consistency.
+events. Its strategies emit any output $o$ of $E$ in the current fiber, by
+the canonical output event $\mathsf{output}(o)$ of
+Section~\ref{sec:complete-calm}. That event applies whatever \commitment $o$
+requires, namely $x_o$ from the canonical basis
+(Definition~\ref{def:run-under-basis}). So the system has Availability for
+$E$ whatever the spec.
+
+Now suppose $\Spec$ satisfies Lifted Monotonicity for $E$. Every output the
+canonical system emits is the output of a row of $E$ whose input lies below
+the current one. So at a common \indesc $j$ of the current inputs, the
+emitted outputs have a common \outnoun in $\fiber{j}$. The system emits only
+canonical output events, so Lemma~\ref{lem:reconciliation} makes this
+confluence at $j$. This gives Partition Consistency.
 
 Conversely, suppose some system, such as the canonical system for $E$, has
-Availability for $E$ and Partition Consistency. Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
-\indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$. If $k=0$,
-$\Spec$ is total, so $j$ appears in some row $(j,u)$. Otherwise, take one
-participant $p_r$ per row, starting at input $i_r$, each on its own side,
-and, if $k=1$, a second participant for that row on another side, since a
-partitioned history has at least two sides. Each runs without messages. By Availability for $E$, each $p_r$ can emit $o_r$. By Partition Consistency,
-they then reach one state $(j,R)$, which has some row $(j,u)$
-(Definition~\ref{def:residual-state}); this $u$ is the one we seek. Rows are
-never added, so $(j,u)$ was already in each $p_r$'s table just after it
-emitted $o_r$. Emitting an output keeps only rows whose output \outrel it
-(Definition~\ref{def:lifted-output-event}), so $u$ \outrel every
-$o_r$.
+Availability for $E$ and Partition Consistency. Let
+$(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common \indesc $j$. We
+find some $u\in\fiber{j}$ that \outrel every $o_r$. If $k=0$, then $j$
+appears in some row $(j,u)$, since $\Spec$ is total. Otherwise, take one
+participant $p_r$ per row, starting at input $i_r$, each on its own side. A
+partitioned history has at least two sides, so if $k=1$ we add a second
+participant for that row on another side. Each participant runs without
+messages. By Availability for $E$, each $p_r$ can emit $o_r$. By Partition
+Consistency, the participants then reach one state $(j,R)$. That state has
+some row $(j,u)$ (Definition~\ref{def:residual-state}), and this $u$ is the
+one we seek. Rows are never added, so $(j,u)$ was already in each $p_r$'s
+table just after it emitted $o_r$. Emitting an output keeps only rows whose
+output \outrel it (Definition~\ref{def:lifted-output-event}). So $u$ \outrel
+every $o_r$.
 \end{proof}
 
 \begin{proof}[Proof of Corollary~\ref{cor:complete-cap-any-system}]
@@ -3163,28 +3172,30 @@ $\Spec$ escapes CAP for $E$.
 \label{app:iconfluence}
 
 The input records which transactions ran and whose writes each one ran on. A \emph{transaction history} $h$ (here simply \emph{history}) is a finite
-partial order of transaction events, each labeled by a transaction in $T$;
-$e'<e$ means that $e$ ran on a state that included the writes of $e'$. A
-sub-history is \emph{closed} when it contains every event that precedes one of
-its own, that is, when it is a downward-closed sub-order. History $h'$
-\inrel $h$ when $h$ is a closed sub-history of $h'$, so the events $h'$ adds
-precede no event of $h$, and each event of $h$ keeps exactly the predecessors
-it had. The state of a history is computed
-event by event. An event $e$, labeled by the transaction $t_e$, runs on
+partial order of transaction events, each labeled by a transaction in $T$. Here $e'<e$ means that $e$ ran on a state that included the writes of $e'$. A sub-history is \emph{closed} when it contains every event that precedes one
+of its own events, that is, when it is a downward-closed sub-order. History
+$h'$ \inrel $h$ when $h$ is a closed sub-history of $h'$. Then the events
+that $h'$ adds precede no event of $h$, and each event of $h$ keeps exactly
+the predecessors it had.
+
+The state of a history is computed event by event. An event $e$, labeled by
+the transaction $t_e$, runs on
 $\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
-$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and the state of $h$ is
+$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$. The state of $h$ is
 $\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$. Because $h$ is a
 partial order and transactions are inflationary ($t(s)\supseteq s$),
 $\mathrm{pre}(e)$ is the state of the sub-history strictly below $e$, and
 $\mathrm{post}(e)$ is the state of the sub-history at or below $e$. A
-closed sub-history keeps each event's predecessors, and so its
-$\mathrm{pre}$ and $\mathrm{post}$; hence the state of a union of
-closed sub-histories is the union of their states. A history is
-\emph{locally valid} when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$
-satisfies $\mathcal I$, as when replicas abort transactions that would violate
-the invariant on their own state. It is \emph{valid} when the
-state of each of its closed sub-histories satisfies $\mathcal I$:
-$\mathcal I(\mathrm{eval}(c))$ for every closed sub-history $c$.
+closed sub-history keeps each event's predecessors, so it also keeps each
+event's $\mathrm{pre}$ and $\mathrm{post}$. Hence the state of a union of
+closed sub-histories is the union of their states.
+
+A history is \emph{locally valid} when every $\mathrm{pre}(e)$ and
+$\mathrm{post}(e)$ satisfies $\mathcal I$. This is the case when replicas
+abort transactions that would violate the invariant on their own state. A
+history is \emph{valid} when the state of each of its closed sub-histories
+satisfies $\mathcal I$, that is, $\mathcal I(\mathrm{eval}(c))$ for every
+closed sub-history $c$.
 
 The spec $\Spec_{\mathcal I}$ has the locally valid histories as inputs;
 a closed sub-history of a locally valid history is locally valid, so the
@@ -3201,38 +3212,40 @@ $s_0$, so the spec is total.
 
 \begin{proof}[Proof of Proposition~\ref{prop:iconfluence-lm}]
 We use the common-extension form of Lifted Monotonicity
-(Proposition~\ref{prop:common-expansion-form}). First, the
-state of a valid history $g$ is reachable, by induction on $g$: if $e$ is
-maximal in $g$, then $g\setminus\{e\}$ and the sub-history strictly below $e$
-are closed, hence valid, and their states $\mathrm{eval}(g\setminus\{e\})$
-and $\mathrm{pre}(e)$ are reachable by induction; $\mathrm{post}(e)$ is a valid
-transaction step from $\mathrm{pre}(e)$, and
-$\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
+(Proposition~\ref{prop:common-expansion-form}). First, the state of every
+valid history $g$ is reachable. The proof is by induction on $g$. Let $e$ be
+maximal in $g$. Then $g\setminus\{e\}$ and the sub-history strictly below $e$
+are closed, hence valid. By induction their states
+$\mathrm{eval}(g\setminus\{e\})$ and $\mathrm{pre}(e)$ are reachable. The
+state $\mathrm{post}(e)$ is a valid transaction step from $\mathrm{pre}(e)$,
+and $\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
 valid merge.
 
 ($\Rightarrow$) Let rows $(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a
-common \indesc $j$, so each $g_r$ is a closed sub-history of $j$. Let
-$g=g_1\cup\cdots\cup g_k$. Every closed sub-history $c$ of $g$ is the
-union of the pieces $c\cap g_r$, each a closed sub-history of the valid
-$g_r$, so by the first step $\mathrm{eval}(c)$ is a union of reachable states. Invariant
-confluence makes each successive union valid, and a valid merge of reachable
-states is reachable, so $\mathcal I(\mathrm{eval}(c))$. Thus $g$ is valid, and
-$\mathrm{eval}(g)\in P_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$. For $k=0$, take $g$ empty.
+common \indesc $j$. Then each $g_r$ is a closed sub-history of $j$. Let
+$g=g_1\cup\cdots\cup g_k$; we show that $g$ is valid. Every closed
+sub-history $c$ of $g$ is the union of the pieces $c\cap g_r$. Each piece is
+a closed sub-history of the valid $g_r$, so its state is reachable by the
+first step. Thus $\mathrm{eval}(c)$ is a union of reachable states. Invariant confluence makes each successive union valid, and a valid merge of
+reachable states is reachable, so $\mathcal I(\mathrm{eval}(c))$. Hence $g$
+is valid, and $\mathrm{eval}(g)\in P_{\mathcal I}(j)$ \outrel every
+$\mathrm{eval}(g_r)$. For $k=0$, take $g$ empty.
 
-($\Leftarrow$) Only the property of having directed fibers is needed. Let $g_1$ and $g_2$ be valid
-histories, and let $j$ be their disjoint union, with events renamed apart and
-no order between the two parts. Each event keeps its predecessors, and its
-$\mathrm{pre}$ and $\mathrm{post}$ are states of closed sub-histories
-of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$. Because the spec has directed fibers, there is a valid sub-history $g$ of $j$ with
-$\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$,
-so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$. Every
-closed $c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap
-g_2$, both valid, so the same argument gives $\mathcal I(\mathrm{eval}(c))$ and
-$j$ is valid. Valid histories
-are therefore closed under disjoint union, and under adding an event above all
+($\Leftarrow$) Only the property of having directed fibers is needed. We
+first show that valid histories are closed under disjoint union. Let $g_1$
+and $g_2$ be valid histories. Let $j$ be their disjoint union, with events
+renamed apart and no order between the two parts. Each event keeps its
+predecessors, so its $\mathrm{pre}$ and $\mathrm{post}$ are states of closed
+sub-histories of a valid $g_r$. So $j$ is locally valid, and
+$\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$. Because the
+spec has directed fibers, there is a valid sub-history $g$ of $j$ with
+$\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$. So $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$. Every closed
+$c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap g_2$, both
+valid. The same argument gives $\mathcal I(\mathrm{eval}(c))$, so $j$ is
+valid. Valid histories are also closed under adding an event above all
 others when its transaction step is valid. By induction on derivations, every
-reachable state is the state of a valid history, and the pairwise argument
-gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
+reachable state is therefore the state of a valid history. The pairwise
+argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
 \end{proof}
 
 \subsection{The HAT taxonomy (\S\ref{sec:hat-instance})}
@@ -3744,14 +3757,14 @@ lie in $D$, so the condition for $\Spec_2$ on $D$ gives $o\in P_2(m)$ that
 is used.
 
 (3) The table $P_2\circ P_1$ of Equation~\ref{eq:spec-composition} mentions
-no order on $M$, and Lifted Monotonicity of the composite uses only the orders
+no order on $M$. Lifted Monotonicity of the composite uses only the orders
 on $I$ and $O$. So the composite under $\preceq_M$ is the composite under the
 other order, which satisfies Lifted Monotonicity by (1). The same holds after
 re-encoding the intermediate values. A re-encoding is a map $e:M\to M'$
 together with a decoding $e':M'\to M$ that recovers every value,
-$e'(e(m))=m$. Replace $P_1$ by $\{(i,e(m)):(i,m)\in P_1\}$ and $P_2$ by
+$e'(e(m))=m$. We replace $P_1$ by $\{(i,e(m)):(i,m)\in P_1\}$ and $P_2$ by
 $\{(m',o):(e'(m'),o)\in P_2\}$. A join through $e(m)$ is a join through
-$e'(e(m))=m$, so the composite table is unchanged, whatever the orders on $M$
+$e'(e(m))=m$. So the composite table is unchanged, whatever the orders on $M$
 and $M'$.
 \end{proof}
 
@@ -3760,17 +3773,19 @@ Let $f:I\to M$ and $g:M\to O$ be
 functions with $g(f(\cdot))$ monotone. One candidate order on $M$
 places $a$ below $b$ when $g(a)\OutputOrd g(b)$. This relation is reflexive
 and transitive. It makes $g$ monotone by construction, and $f$ monotone
-because $g(f(\cdot))$ is. It can place two distinct values each below the
-other, so it is an order only when no such pair exists, in particular when $g$
-maps distinct values to distinct values. Then case (3) applies. In general case (3) need not apply. Let $I$ be the chain $x\InputOrd
+because $g(f(\cdot))$ is. But it can place two distinct values each below
+the other. So it is an order only when no such pair exists, in particular
+when $g$ maps distinct values to distinct values. Then case (3) applies.
+
+In general case (3) need not apply. Let $I$ be the chain $x\InputOrd
 y\InputOrd z$, $M=\{p,q\}$, $f(x)=f(z)=p$, $f(y)=q$, and $g$ constant. The
 composite is constant, hence monotone. Under any order on $M$, monotonicity
-of $f$ gives $p\preceq_M q\preceq_M p$, so $p=q$, a contradiction. The
-upstream therefore cannot emit under the empty basis at one of the canonical
-states of $x$ and $y$: by the legal-output test for tables of functions,
-$f(i)$ is a legal output at $\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for
-every $k\InputGe i$. The stages can be repaired only by merging $p$ and $q$
-into one intermediate value.
+of $f$ gives $p\preceq_M q\preceq_M p$, so $p=q$, a contradiction. Recall the
+legal-output test for tables of functions: $f(i)$ is a legal output at
+$\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every $k\InputGe i$. So the
+upstream cannot emit under the empty basis at one of the canonical states of
+$x$ and $y$. The stages can be repaired only by merging $p$ and $q$ into one
+intermediate value.
 
 For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
 be the functional spec induced by $c(n)=\min(n,9)$ on
@@ -3798,13 +3813,14 @@ functional spec induced by a function $f$ that maps
 both to one value. The composite has one row, so it satisfies Lifted
 Monotonicity. At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
 a legal output. Under the empty basis an output event emits only a legal
-output (Definition~\ref{def:run-under-basis}), and no \commitment event is
-possible, since such an event applies a nonempty sequence of \commitments from
-the basis. Input events only remove rows at other inputs, and there are none. So every run of $\mathcal S_1$ under the empty basis stays at the canonical
-state and emits nothing. Then $\mathcal S_2$ receives nothing. Renaming $x,y$ to
-$\mathit{lo}\preceq\mathit{hi}$ makes $\mathcal S_1$ satisfy Lifted Monotonicity, since
-$\mathit{hi}$ subsumes $\mathit{lo}$, and by case (3) the composite is
-unchanged.
+output (Definition~\ref{def:run-under-basis}). No \commitment event is
+possible either, since such an event applies a nonempty sequence of
+\commitments from the basis. Input events only remove rows at other inputs,
+and there are none. So every run of $\mathcal S_1$ under the empty basis
+stays at the canonical state and emits nothing, and $\mathcal S_2$ receives
+nothing. Renaming $x,y$ to $\mathit{lo}\preceq\mathit{hi}$ makes
+$\mathcal S_1$ satisfy Lifted Monotonicity, since $\mathit{hi}$ subsumes
+$\mathit{lo}$. By case (3) the composite is unchanged.
 
 \subsection{Proper Coordination}
 
@@ -3826,14 +3842,14 @@ number of outputs, possibly none. The environment observes $\mathsf{input}(j)$
 and the outputs of $\Spec_2|_{\Spec_1}$.
 
 The proofs below rest on three facts about a proper pipeline. The first two
-concern a state $\tau$ that $\Spec_2|_{\Spec_1}$ reaches without \commitment. First, every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$: the
+concern a state $\tau$ that $\Spec_2|_{\Spec_1}$ reaches without \commitment. First, every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$. The
 common-extension condition gives $u\in P_2(j)$ that \outrel an output $v$ at
-the current input, and $(j,u)$ survives, since every output emitted so far is
-\outrelpast by $v$. Second, every output at the current input of $\tau$ is a
-legal output. The third fact concerns $\Spec_1$: if an output $m$ at the
-current input of a state $\sigma$ of $\Spec_1$ is a legal output, then every
-$o\in P_2(m)$ is a legal output at the image of $\sigma$. To see this, let
-$(k,x)$ be a row of the image not \outrelpast by $o$, coming from
+the current input. The row $(j,u)$ survives, since every output emitted so
+far is \outrelpast by $v$. Second, every output at the current input of
+$\tau$ is a legal output. The third fact concerns $\Spec_1$. If an output
+$m$ at the current input of a state $\sigma$ of $\Spec_1$ is a legal output,
+then every $o\in P_2(m)$ is a legal output at the image of $\sigma$. To see
+this, let $(k,x)$ be a row of the image not \outrelpast by $o$. It comes from
 $(k,m')\in R_\sigma$ and $(m',x)\in P_2$. If $m\preceq_M m'$, the
 common-extension condition on the outputs of $\Spec_1$, for the rows $(m,o)$ and
 $(m',x)$ at $m'$, gives $u\in P_2(m')$ with $o,x\OutputOrd u$. Otherwise
@@ -3855,43 +3871,46 @@ $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain. $\Spec_2|_
 \commitment. By the first two facts it can receive each $m_{r+1}$ and answer
 it by a legal output, so it follows the run under the empty basis.
 
-Consider any run of the pipeline in which $\Spec_2|_{\Spec_1}$ runs under the
-empty basis, and replace each output $m_r$ of $\Spec_1$ by the answers to it. Let $\sigma$ be the state of $\Spec_1$, $T$ the table of
-$\Spec_2|_{\Spec_1}$, and $\rho$ the composite's state. Before the first
-output of $\Spec_1$ we maintain $\rho.\mathrm{cur}=\sigma.\mathrm{cur}$ and
-$R_\sigma\Join P_2\subseteq R_\rho$. Afterwards we maintain $R_\sigma\Join
-T\subseteq R_\rho$, and every row $(k,m)$ of $R_\sigma$ has $m$ above the
-current input of $\Spec_2|_{\Spec_1}$. Both hold at the start, where the
-image of $\sigma_{\Spec_1}(i)$ is $\sigma_{P_2\circ P_1}(i)$. For
-$\mathsf{input}(j)$ of $\Spec_1$, a row $(j,m)$ of $R_\sigma$ and, by the first
-fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal, and
-both events keep the rows at \indescs of $j$. A \commitment event of
-$\Spec_1$ keeps the current input and only removes rows of $R_\sigma$, so both
-invariants survive it. For $\mathsf{output}(m)$ at input $i$, output
-containment gives $(i,m)\in R_\sigma$ and the resulting table
-$R_\sigma[\mathrm{out}\succeq_M m]$. $\Spec_2|_{\Spec_1}$ receives $m$
-and keeps $T[\mathrm{in}\succeq_M m]$. Each answer $o$ has $(m,o)\in T$, so
-$(i,o)\in R_\rho$. The composite's $\mathsf{output}(o)$ keeps
-$R_\rho[\mathrm{out}\OutputGe o]$, and $\Spec_2|_{\Spec_1}$ keeps
-$T[\mathrm{out}\OutputGe o]$, so the join stays inside the composite's table.
+Next, consider any run of the pipeline in which $\Spec_2|_{\Spec_1}$ runs
+under the empty basis. We replace each output $m_r$ of $\Spec_1$ by the
+answers to it, and track the composite's state along the result. Let $\sigma$
+be the state of $\Spec_1$, $T$ the table of $\Spec_2|_{\Spec_1}$, and $\rho$
+the composite's state. Before the first output of $\Spec_1$ we maintain
+$\rho.\mathrm{cur}=\sigma.\mathrm{cur}$ and $R_\sigma\Join P_2\subseteq
+R_\rho$. Afterwards we maintain $R_\sigma\Join T\subseteq R_\rho$, and every
+row $(k,m)$ of $R_\sigma$ has $m$ above the current input of
+$\Spec_2|_{\Spec_1}$. Both hold at the start, where the image of
+$\sigma_{\Spec_1}(i)$ is $\sigma_{P_2\circ P_1}(i)$.
 
-For confluence, let the runs of $\Spec_1$ end at
-$\sigma_1,\ldots,\sigma_n$, the runs of $\Spec_2|_{\Spec_1}$ at
-$\tau_1,\ldots,\tau_n$, and the composite runs at $\rho_1,\ldots,\rho_n$, and
-let each $\sigma_r$ continue under some basis to a common state with a row
-$(j,m)$. Events never add rows, so $(j,m)\in R_{\sigma_r}$, and $m$ is above
-the current input of each $\tau_r$. Let $v_r$ be an output at the current
-input of $\tau_r$. The common-extension condition gives $u\in P_2(m)$ that
-\outrel every $v_r$, and $(m,u)$ survives in every $\tau_r$. So $(j,u)\in
-R_{\rho_r}$ for every $r$, and the composite runs are confluent at $j$
-(Proposition~\ref{prop:confluence}).
+We check each event of $\Spec_1$. For $\mathsf{input}(j)$, a row $(j,m)$ of
+$R_\sigma$ and, by the first fact, a row $(m,x)$ of $T$ give $(j,x)\in
+R_\rho$. So the input is legal, and both events keep the rows at \indescs of
+$j$. A \commitment event of $\Spec_1$ keeps the current input and only removes
+rows of $R_\sigma$, so both invariants survive it. For $\mathsf{output}(m)$ at
+input $i$, output containment gives $(i,m)\in R_\sigma$, and the resulting
+table is $R_\sigma[\mathrm{out}\succeq_M m]$. $\Spec_2|_{\Spec_1}$ receives
+$m$ and keeps $T[\mathrm{in}\succeq_M m]$. Each answer $o$ has $(m,o)\in T$,
+so $(i,o)\in R_\rho$. The composite's $\mathsf{output}(o)$ keeps
+$R_\rho[\mathrm{out}\OutputGe o]$, and $\Spec_2|_{\Spec_1}$ keeps
+$T[\mathrm{out}\OutputGe o]$. So the join stays inside the composite's
+table.
+
+For confluence, consider $n$ runs of the pipeline. Let the runs of
+$\Spec_1$ end at $\sigma_1,\ldots,\sigma_n$, the runs of $\Spec_2|_{\Spec_1}$
+at $\tau_1,\ldots,\tau_n$, and the composite runs at $\rho_1,\ldots,\rho_n$. Suppose each $\sigma_r$ continues under some basis to a common state with a
+row $(j,m)$. Events never add rows, so $(j,m)\in R_{\sigma_r}$. By the
+invariant above, $m$ is above the current input of each $\tau_r$. Let $v_r$ be an
+output at the current input of $\tau_r$. The common-extension condition gives
+$u\in P_2(m)$ that \outrel every $v_r$, and $(m,u)$ survives in every
+$\tau_r$. So $(j,u)\in R_{\rho_r}$ for every $r$, and the composite runs are
+confluent at $j$ (Proposition~\ref{prop:confluence}).
 
 (3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
-common-extension condition from legality at canonical states alone. If
+common-extension condition from legality at canonical states alone. So if
 Lifted Monotonicity fails for $P_2\circ P_1$, some $o$ with $(i,m)\in P_1$ and
-$o\in P_2(m)$ is therefore not a legal output at $\sigma_{P_2\circ P_1}(i)$, the
-image of $\sigma_{\Spec_1}(i)$. By the third fact, no $m'\in P_1(i)$ with
-$o\in P_2(m')$ is a legal output at $\sigma_{\Spec_1}(i)$.
+$o\in P_2(m)$ is not a legal output at $\sigma_{P_2\circ P_1}(i)$. That state
+is the image of $\sigma_{\Spec_1}(i)$. By the third fact, no $m'\in P_1(i)$
+with $o\in P_2(m')$ is a legal output at $\sigma_{\Spec_1}(i)$.
 \end{proof}
 
 Properness is needed in (3). With $\Spec_1$ the identity on the booleans and
@@ -3932,33 +3951,33 @@ with $P_2\circ P_1$ in place of $\Spec_1$.
 \begin{proof}
 By Corollary~\ref{cor:empty-store}, every run of the pipeline has one with the
 same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis. Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
-run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs, and the
+run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs. The
 canonical basis supplies the canonical \commitment of each output event that
-needs one (Definition~\ref{def:run-under-basis}), so it is a run under the
+needs one (Definition~\ref{def:run-under-basis}), so this is a run under the
 canonical basis. By induction the same holds along a pipeline
 $\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix properly guards the next
 stage. Composition is associative, so the bracketing does not matter.
 \end{proof}
 
-Consider locks in the store behind the log. Let $\Spec_1$ be the log
-spec of Example~\ref{ex:committed-log-composition}, under its
-canonical basis with a strategy that allows every event, and $\Spec_2$ the
-table of any monotone function $f$ of the log. Every log is an output of
-$\Spec_1$, so $\Spec_2|_{\Spec_1}$ is $\Spec_2$. For a set $Q$ of logs,
-removing every row whose input is in $Q$ is a \commitment of $\Spec_2$ at any
-state whose current input is not in $Q$ and that has such a row. Such a
-\commitment removes whole fibers, so it empties them. Consider two writes $a$
-and $b$ to one key, and a lock granted to $a$, which empties the fibers of the
-logs that start with $b$. If the store takes the lock only once its current
-log is nonempty, every log it can still receive has the same first command, so
-the lock removes no row and is not a \commitment. If instead the store takes
-the lock at the empty log, ahead of the log, the lock empties logs that
-$\Spec_1$ can still offer, although the store's output $f([\,])$ was a legal
-output without the lock. At
-$\sigma_{\Spec_1}([b])$, $\Spec_1$ can emit $[\,]$ and then $[b]$. The
-replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$. The locking
-store must take the lock at $[\,]$, which empties $[b]$, so it cannot receive
-$[b]$.
+Consider locks in the store behind the log. Let $\Spec_1$ be the log spec
+of Example~\ref{ex:committed-log-composition}, under its canonical basis with
+a strategy that allows every event. Let $\Spec_2$ be the table of any
+monotone function $f$ of the log. Every log is an output of $\Spec_1$, so
+$\Spec_2|_{\Spec_1}$ is $\Spec_2$. For a set $Q$ of logs, removing every row
+whose input is in $Q$ is a \commitment of $\Spec_2$ at any state whose current
+input is not in $Q$ and that has such a row. Such a \commitment removes whole
+fibers, so it empties them.
+
+Now consider two writes $a$ and $b$ to one key, and a lock granted to $a$. The lock empties the fibers of the logs that start with $b$. Suppose the
+store takes the lock only once its current log is nonempty. Then every log it
+can still receive has the same first command, so the lock removes no row and
+is not a \commitment. Suppose instead that the store takes the lock at the
+empty log, ahead of the log. Then the lock empties logs that $\Spec_1$ can
+still offer, although the store's output $f([\,])$ was a legal output without
+the lock. At $\sigma_{\Spec_1}([b])$, for instance, $\Spec_1$ can emit $[\,]$
+and then $[b]$. The replacement emits $f([\,])$, receives $[b]$, and emits
+$f([b])$. The locking store must take the lock at $[\,]$, which empties
+$[b]$, so it cannot receive $[b]$.
 
 For a function store, some \commitments of $\Spec_1$ are invisible to the
 composite. Let $\Spec_2$ be the functional spec induced by a
@@ -3975,12 +3994,14 @@ $f(\sigma)$.
 \end{proposition}
 
 The proof shows that the \commitments of $\Spec_1$ cover those of the
-composite. For a table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$. Let
-$\gamma$ take $\sigma$ to $\sigma_c$, at which $m$ is a legal output, and let
-$\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$. We show that no row
-$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Excluded_{f(m)}$ at
-$\rho$. If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$. Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
-$m'\preceq_M u$, and $(k,f(u))\in R_\rho$ subsumes $(k,f(m'))$. So every row
+composite. For a table $R$ of $\Spec_1$ we write
+$f(R)=\{(k,f(m)):(k,m)\in R\}$. Let $\gamma$ take $\sigma$ to $\sigma_c$, at
+which $m$ is a legal output. Let $\rho$ be a composite state with
+$f(R_\sigma)\subseteq R_\rho$. We show that no row $(k,f(m'))$ with
+$(k,m')\in R_{\sigma_c}$ is in $\Excluded_{f(m)}$ at $\rho$. If $m\preceq_M
+m'$, then $f(m)\OutputOrd f(m')$. Otherwise legality gives $(k,u)\in
+R_{\sigma_c}$ with $m\preceq_M u$ and $m'\preceq_M u$. Then $(k,f(u))\in
+R_\rho$ subsumes $(k,f(m'))$. So every row
 that the composite's $\mathsf{output}(f(m))$ removes by \commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
@@ -4110,16 +4131,20 @@ A system for $\Spec$ (Definition~\ref{def:system}) induces a component once
 we choose its boundary observations. An admitted boundary run is a
 participant run of a produced history, together with an output $o$ that the
 run emits such that $(i,o)$ is a row of $P$, where $i$ is the run's initial
-input. A run that emits no such output induces no observation. The system's messages,
-partitions, and \commitments stay inside the component. Restricted to
-one-participant histories, the induced component is a process, and a
-replicated system induces a cluster. The two-phase commit decision discussed
-after Proposition~\ref{prop:commitment-conflict} can take either form. Run by the coordinator alone, it is a process, so no conflicting
-choice is placed at another participant. Replicated, it is a cluster, and a
-conflicting choice can be placed at another participant. In both cases the
-timeout has the same semantic effect: it applies a \commitment that conflicts
-with a canonical run. The \emph{maximally permissive} component under $\mathcal B$
-admits every such run under $\mathcal B$.
+input. A run that emits no such output induces no observation. The system's
+messages, partitions, and \commitments stay inside the component. Restricted
+to one-participant histories, the induced component is a process, and a
+replicated system induces a cluster. The \emph{maximally permissive}
+component under $\mathcal B$ admits every run under $\mathcal B$ that
+Definition~\ref{def:component} allows.
+
+The two-phase commit decision discussed after
+Proposition~\ref{prop:commitment-conflict} can take either form. Run by the
+coordinator alone, it is a process, so no conflicting choice is placed at
+another participant. Replicated, it is a cluster, and a conflicting choice
+can be placed at another participant. In both cases the timeout has the same
+semantic effect: it applies a \commitment that conflicts with a canonical
+run.
 
 Let $C_1$ be a component for $\Spec_1$ and $C_2$ a component for $\Spec_2$.
 
@@ -4311,27 +4336,30 @@ Monotonicity for $E$ suffices for the uniform deployment $E_p=E$, and Lifted
 Monotonicity suffices for every deployment.
 
 The converse can fail, because a deployment can keep conflicting rows at one
-participant. Rows authorized only to $p$ can be emitted only by $p$'s run, and
-the outputs that run emits form a chain, since each output event keeps only
+participant. Rows authorized only to $p$ can be emitted only by $p$'s run. The outputs that run emits form a chain, since each output event keeps only
 rows whose outputs extend it. So a family whose emitted rows are all
 authorized only to $p$ is separable only when it emits a single row. For
 example, let $\mathcal N=\{p,q\}$, let every fiber be $\{a,b\}$ ordered by
 equality, and let $E_p=P$ and $E_q=\varnothing$, so that $p$ alone names a
 leader. A run of $p$ emits at most one distinct output, and $q$ never emits. Every separable family therefore consists of one row $(i,a)$ or $(i,b)$ beside
-a silent $q$, and that output lies in $\fiber{j}$ for every \indesc $j$ of $i$. So $\Spec$ is monotone across partitions, yet $(i,a)$ and $(i,b)$ have no
-common \outnoun, and Lifted Monotonicity fails. The same happens whenever two
-conditions hold: each authorized row has an \outnoun at every \indesc of its
-input, and every set of authorized rows that lacks a common \outnoun at some
-common \indesc is authorized only to a single participant. The causal register
-of Appendix~\ref{app:registers} is a further example of monotonicity across
-partitions without Lifted Monotonicity, with no single authority. It need not
-satisfy these conditions, since a set of rows lacking a common \outnoun may also
-contain rows of other participants. The converse does hold when every
-participant may emit every row. If $|\mathcal N|\ge2$ and $E_p=P$ for every
-$p$, every pair of rows can be split across a partition, and every single row
-can be paired with a silent participant at the common \indesc. Pairs of rows
-suffice for the common-extension condition (Appendix~\ref{app:pairs-suffice}),
-so monotonicity across partitions is then Lifted Monotonicity.
+a silent $q$. That output lies in $\fiber{j}$ for every \indesc $j$ of $i$. So $\Spec$ is monotone across partitions. Yet $(i,a)$ and $(i,b)$ have no
+common \outnoun, and Lifted Monotonicity fails.
+
+The same happens whenever two conditions hold. First, each authorized row has
+an \outnoun at every \indesc of its input. Second, every set of authorized
+rows that lacks a common \outnoun at some common \indesc is authorized only to
+a single participant. The causal register of Appendix~\ref{app:registers} is
+a further example of monotonicity across partitions without Lifted
+Monotonicity, with no single authority. It need not satisfy these conditions,
+since a set of rows lacking a common \outnoun may also contain rows of other
+participants.
+
+The converse does hold when every participant may emit every row. Suppose
+$|\mathcal N|\ge2$ and $E_p=P$ for every $p$. Then every pair of rows can be
+split across a partition, and every single row can be paired with a silent
+participant at the common \indesc. Pairs of rows suffice for the
+common-extension condition (Appendix~\ref{app:pairs-suffice}), so
+monotonicity across partitions is then Lifted Monotonicity.
 
 \begin{definition}[Deployment Availability]
 \label{def:deployment-availability}
@@ -4346,22 +4374,25 @@ deployment $E_p=E$ it is Availability for $E$ on histories over $\mathcal N$, an
 $E_p=P$ it is Availability.
 
 A deployment is \emph{single-authority} when $E_q=\varnothing$ for every
-participant $q$ but one, as in the leader example above. Every separable family
-is then one row emitted by the single authority beside a silent participant, and
-monotonicity across partitions says only that each such row has an \outnoun at
-every \indesc of its input. Placement-sensitive models such as
-relational-transducer CALM~\cite{ameloot2013relational,ameloot2015weaker} also
-cover this case. The deployment keeps the conflicting choice from being made
-at another participant, but it does not change the semantic conflict: a
-canonical run still conflicts with the authority's \commitment
+participant $q$ but one, as in the leader example above. Every separable
+family is then one row emitted by the single authority beside a silent
+participant. Monotonicity across partitions then says only that each such row
+has an \outnoun at every \indesc of its input. Placement-sensitive models
+such as relational-transducer CALM~\cite{ameloot2013relational,ameloot2015weaker}
+also cover this case.
+
+The deployment keeps the conflicting choice from being made at another
+participant. It does not change the semantic conflict: a canonical run still
+conflicts with the authority's \commitment
 (Proposition~\ref{prop:commitment-conflict}). For example, another canonical
 run of the spec conflicts with a lock manager's choice even when only the
-manager is authorized to emit the result. A deployment therefore says whether
-conflicting choices can occur at different participants; it does not remove
-the conflict or the \commitment. Comparing \commitments with fewer canonical
-runs is appropriate only when the restriction is part of the declared
-contract. A deployment also does not restrict which inputs a participant
-receives: the environment may deliver any input to any participant.
+manager is authorized to emit the result. So a deployment says whether
+conflicting choices can occur at different participants, but it does not
+remove the conflict or the \commitment. Comparing \commitments with fewer
+canonical runs is appropriate only when the restriction is part of the
+declared contract. A deployment also does not restrict which inputs a
+participant receives: the environment may deliver any input to any
+participant.
 
 \begin{proposition}[Partition compatibility under a deployment]
 \label{thm:complete-cap-deployment}
@@ -4384,14 +4415,17 @@ conditions thus agree family by family.
 \end{proof}
 
 The proposition concerns canonical runs and does not use Deployment
-Availability. It also applies to the runs of a system: by
+Availability. It also applies to the runs of a system. By
 Lemma~\ref{lem:canonical-equivalent}, each such run is observably equivalent to
-a canonical run with the same emitted rows, which therefore lie in $E_p$. So if
-$\Spec$ is monotone across partitions, the outputs that a separable family of
-system runs emits in a partitioned history, as Deployment Availability
-permits, have a common \outnoun $u\in\fiber{j}$ at every common \indesc $j$. It does not follow that the deployment authorizes any participant to emit $u$. Confluence through authorized output events would also require that authority,
-a condition we do not impose. With $|\mathcal N|\ge2$ and $E_p=P$ for every
-$p$, item~(2) is Lifted Monotonicity. The proposition is then the step behind
+a canonical run with the same emitted rows, which therefore lie in $E_p$. Suppose $\Spec$ is monotone across partitions, and consider a separable family
+of system runs in a partitioned history, emitting as Deployment Availability
+permits. Their emitted outputs have a common \outnoun $u\in\fiber{j}$ at every
+common \indesc $j$. It does not follow that the deployment authorizes any
+participant to emit $u$. Confluence through authorized output events would
+also require that authority, a condition we do not impose.
+
+With $|\mathcal N|\ge2$ and $E_p=P$ for every $p$, item~(2) is Lifted
+Monotonicity. The proposition is then the step behind
 Theorem~\ref{thm:complete-cap} with $E=P$: separable families are confluent at
 every common \indesc exactly when Lifted Monotonicity holds.
 
@@ -4411,10 +4445,11 @@ partitions if and only if, for every participant run family and every common
 \begin{proof}[Proof sketch]
 The condition is stronger, so only one direction needs an argument. If
 participants $p$ and $q$ both emit, a partition with $p$ on one side and $q$ on
-the other makes the family separable, and the separable case applies. Otherwise one participant $p$ emits. Its outputs form a chain, so the last of
-them \outrel the rest. Its last row, beside any other participant placed on
-another side and kept silent, is a separable family at the same $j$, and the
-common \outnoun for that row \outrel every output of $p$.
+the other makes the family separable, and the separable case applies. If no
+participant emits, any $u\in\fiber{j}$ will do. Otherwise exactly one
+participant $p$ emits. Its outputs form a chain, so the last of them \outrel
+the rest. Consider $p$'s last row beside one other participant, placed on
+another side and kept silent. This is a separable family at the same $j$. The common \outnoun for that row \outrel every output of $p$.
 \end{proof}
 
 The \emph{canonical system} of a deployment is the system whose participants
@@ -4433,18 +4468,18 @@ canonical system is such a system.
 Suppose $\Spec$ is monotone across partitions. The canonical system has
 Deployment Availability, since each participant can emit any authorized output
 that its state allows. Its participants' runs in a partitioned history form a
-participant run family, so by Lemma~\ref{lem:deployment-compatible} their
+participant run family. So by Lemma~\ref{lem:deployment-compatible} their
 emitted outputs have a common \outnoun in $\fiber{j}$. By
 Lemma~\ref{lem:reconciliation} the runs are then confluent at $j$, which is
-Partition Consistency. Conversely, suppose some system has both properties,
-and take a participant run family and a common \indesc $j$. Each
-participant's emitted outputs form a chain, so it suffices to reach each
-participant's last emitted row. We start each participant alone on its own
-side, at the input of that row. Deployment Availability lets it emit the
-row's output, and Partition Consistency gives the emitted outputs a common
-\outnoun in $\fiber{j}$. So $\Spec$ is monotone across partitions.
-\end{proof}
+Partition Consistency.
 
+Conversely, suppose some system has both properties. Consider a participant
+run family and a common \indesc $j$. Each participant's emitted outputs form
+a chain, so it suffices to reach each participant's last emitted row. We
+start each participant alone on its own side, at the input of that row. Deployment Availability lets it emit the row's output. Partition Consistency
+then gives the emitted outputs a common \outnoun in $\fiber{j}$. So $\Spec$
+is monotone across partitions.
+\end{proof}
 \subsection{Registers}
 \label{app:registers}
 
@@ -4453,40 +4488,37 @@ replica that is cut off from a completed write and must still answer a read. The
 partition.
 
 \paragraph{The causal register.}
-This register records causal precedence rather than real-time precedence, and
-its outputs record the write that supplies each read rather than the value
-returned; it is otherwise the register of Appendix~\ref{app:cap-response}. An
-input is a finite operation history $h$: a set of reads and writes of one
+This register records causal precedence rather than real-time precedence. Its outputs record the write that supplies each read rather than the value
+returned. Otherwise it is the register of Appendix~\ref{app:cap-response}. An input is a finite operation history $h$: a set of reads and writes of one
 register $x$ at replicas, with a strict partial order $\to$ of causal
-precedence (program order at each replica, and from each write to the
-operations a replica invokes after receiving it, closed transitively). A set
-of operations of $h'$ is \emph{causally closed} when it contains every
-operation that causally precedes one of its members. We set $h\InputOrd h'$
-when the operations of $h$ form a causally closed subset of $h'$ and $\to$
-restricted to them is the order of $h$. Thus an \indesc never adds an
-operation to the causal past of an existing one.
+precedence. Causal precedence is program order at each replica, plus an edge
+from each write to the operations a replica invokes after receiving it,
+closed transitively. A set of operations of $h'$ is \emph{causally closed}
+when it contains every operation that causally precedes one of its members. We set $h\InputOrd h'$ when the operations of $h$ form a causally closed
+subset of $h'$ and $\to$ restricted to them is the order of $h$. Thus an
+\indesc never adds an operation to the causal past of an existing one.
 
 An output is a \emph{source map} $\rho$: a partial map assigning to some reads
 of $h$ a write of $h$ or the initial value $v_0$, ordered by extension. A
 \emph{serialization} for replica $p$ is a total order of $p$'s operations and
-all writes of $h$ that extends $\to$; it explains a read of $p$ with source
+all writes of $h$ that extends $\to$. It explains a read of $p$ with source
 $w$ when $w$ is the last write before the read, or $v_0$ if there is none. Under causal consistency~\cite{lamport1978time,ahamad1995causal},
 $\rho\in\fiber{h}$ when each replica has a serialization explaining every read
 of that replica in the domain of $\rho$. Under linearizability, a single
 total order of all operations of $h$ extending $\to$ must explain every read
-in the domain~\cite{herlihy1990linearizability}; real-time edges beyond $\to$
+in the domain~\cite{herlihy1990linearizability}. Real-time edges beyond $\to$
 play no role in the example below.
 
 Two replicas start empty. Participant $p$ completes $w_p(x,\dog)$ while $q$
-concurrently completes $w_q(x,\catv)$; the replicas exchange both writes, a
-partition separates them, and each serves a local read, $r_p$ at $p$ and $r_q$
-at $q$. Both writes causally precede both reads, and the writes are
+concurrently completes $w_q(x,\catv)$. The replicas exchange both writes. Then a partition separates them, and each serves a local read, $r_p$ at $p$
+and $r_q$ at $q$. Both writes causally precede both reads, and the writes are
 concurrent.
 
 Under linearizability, a source map that sends $r_p$ to $w_q(x,\catv)$ needs a
-linearization with $w_p(x,\dog)$ before $w_q(x,\catv)$, and one that sends
-$r_q$ to $w_p(x,\dog)$ needs the opposite order. No source map \outrel both, so the register is not monotone across the
-partition $\{\{p\},\{q\}\}$ under any deployment authorizing these two reads.
+linearization with $w_p(x,\dog)$ before $w_q(x,\catv)$. One that sends $r_q$
+to $w_p(x,\dog)$ needs the opposite order. No source map \outrel both, so the
+register is not monotone across the partition $\{\{p\},\{q\}\}$ under any
+deployment authorizing these two reads.
 
 Under causal consistency the two replicas may serialize the concurrent writes
 differently, so one source map sends $r_p$ to $w_q(x,\catv)$ and $r_q$ to
@@ -4494,16 +4526,15 @@ $w_p(x,\dog)$. More generally, consider the deployment in which each replica
 answers only its own reads ($E_p$ holds the rows whose source map is defined
 only on reads of $p$). Under it the causal register is monotone across
 partitions, for every history. For each participant $p$ whose run emits, let
-$\rho_p$ be the last source map it emits, at input $i_p$; $\rho_p$ \outrel every
-output $p$ emitted. Let $j$ be a common \indesc. We take a serialization
-$L_p$ of $i_p$ explaining $\rho_p$, and extend it to $j$ by appending the new
-operations of $p$ and the new writes in any order extending $\to$. Since no
-new operation causally precedes an old one, the result extends $\to$ and
-explains the same reads. With these serializations for the replicas that
-emitted and arbitrary ones for the others, the union of the $\rho_p$ lies in
-$\fiber{j}$ and \outrel every emitted output. Separability is
-not used. Two answers to the same read remain incompatible, but only the
-reading replica may emit either.
+$\rho_p$ be the last source map it emits, at input $i_p$. Then $\rho_p$
+\outrel every output $p$ emitted. Let $j$ be a common \indesc. We take a
+serialization $L_p$ of $i_p$ explaining $\rho_p$. We extend it to $j$ by
+appending the new operations of $p$ and the new writes in any order extending
+$\to$. No new operation causally precedes an old one, so the result extends
+$\to$ and explains the same reads. We use these serializations for the
+replicas that emitted and arbitrary ones for the others. With them, the union
+of the $\rho_p$ lies in $\fiber{j}$ and \outrel every emitted output. Separability is not used. Two answers to the same read remain incompatible,
+but only the reading replica may emit either.
 
 \subsection{Real-time causal consistency}
 \label{app:rtc}
@@ -4563,10 +4594,9 @@ $y=z$ by the antichain property, a contradiction.
 \paragraph{Real-time causal views.}
 Consider the histories of Appendix~\ref{app:registers} with a second strict
 partial order $\prec$: $a\prec b$ when $a$ ended before $b$ began. We assume
-that $a\to b$ implies $a\prec b$, so replicas propagate only completed writes,
-and that $\to$ totally orders the operations of each replica. One input
-\inrel another when it does so as a history and $\prec$ agrees on the old
-operations. A write $w$ is \emph{visible} to a read $r$ when $w\to r$. A
+that $a\to b$ implies $a\prec b$, so replicas propagate only completed writes. We also assume that $\to$ totally orders the operations of each replica. One
+input \inrel another when it does so as a history and $\prec$ agrees on the
+old operations. A write $w$ is \emph{visible} to a read $r$ when $w\to r$. A
 \emph{real-time causal view} of replica $p$ assigns to every read $r$ of $p$ a
 source $s(r)$ such that
 \begin{enumerate}
@@ -4578,24 +4608,24 @@ $s(r)\not\prec w$ for every write $w$ visible to $r$;
 if $r'\to r$ is a read of $p$ to which $s(r)$ is visible, then
         $s(r')=s(r)$.
 \end{enumerate}
-Intuitively, these are Mahajan et al.'s checks for the order that $p$'s reads expose, in
-which each visible write precedes the read and each overwritten write
-precedes the source. Item~(1) says a replica returns only writes it has
-received, (2) is their real-time check ``time doesn't travel backward'', and
-(3) keeps one replica's overwrites consistent. Their reads return all
-concurrent latest writes; ours return one, so a view matches their check when
-that write is the only latest one.
+Intuitively, these items are Mahajan et al.'s checks for the order that $p$'s
+reads expose. In that order each visible write precedes the read, and each
+overwritten write precedes the source. Item~(1) says a replica returns only
+writes it has received. Item~(2) is their real-time check ``time doesn't
+travel backward.''  Item~(3) keeps one replica's overwrites consistent. Their
+reads return all concurrent latest writes, while ours return one. So a view
+matches their check when that write is the only latest one.
 
-Views exist: as each read's source we can take the visible write that comes
+Views exist. As each read's source we can take the visible write that comes
 latest in a linear extension of $\prec$. Views also continue. An \indesc
-changes neither a read's causal past nor $\prec$ on it, so an old read keeps its
-source. A new read takes as source its latest visible write in a linear
+changes neither a read's causal past nor $\prec$ on it, so an old read keeps
+its source. A new read takes as source its latest visible write in a linear
 extension of $\prec$ together with the edges $x\prec s(r)$, one for each old
 read $r$ and each write $x\ne s(r)$ visible to $r$. All views of $p$ at an
-input are defined on the same reads, so no view extends a different one, and
-they form an antichain. By Theorem~\ref{thm:product-frontier}(1), the real-time causal
-product interface, in which each replica answers its own reads, is monotone
-across partitions under the owner deployment.
+input are defined on the same reads. So no view extends a different one, and
+the views form an antichain. In the real-time causal product interface, each
+replica answers its own reads. By Theorem~\ref{thm:product-frontier}(1), this
+interface is monotone across partitions under the owner deployment.
 
 \paragraph{Maximality.}
 A strengthening is \emph{real-time blind} when a tuple it selects at an input
@@ -4611,16 +4641,19 @@ interface is monotone across partitions under its owner deployment.
 
 \begin{proof}
 By Theorem~\ref{thm:product-frontier}(2) it suffices to show local
-conservativity. Let $v$ be a view of $p$ at $(h,\prec)$. Let $a\prec_v b$
-when $a\prec b$, or when $a=x$ or $a\prec x$, and $s(r)=b$ or $s(r)\prec b$, for a
-read $r$ of $p$ and a write $x\ne s(r)$ visible to $r$. Items~(2) and~(3) and program order
-make $\prec_v$ a strict partial order, and it contains $\to$. At $(h,\prec_v)$,
-$v$ is $p$'s only view: by~(1) a source is a visible write, and a visible
-$x\ne s(r)$ has $x\prec_v s(r)$, which~(2) forbids. Every input has a row of the
-strengthening, and rows are restrictions of selected tuples, so it selects
-some tuple at $(h,\prec_v)$, and that tuple's $p$-coordinate is $v$. Real-time edges
-only exclude views, so its views are real-time causal at $(h,\prec)$, and
-blindness selects it there.
+conservativity. Let $v$ be a view of $p$ at $(h,\prec)$. We add real-time
+edges that leave $v$ as $p$'s only view: for each read $r$ of $p$ and each
+write $x\ne s(r)$ visible to $r$, we place $x$ before $s(r)$. Formally, let
+$a\prec_v b$ when $a\prec b$, or when $a=x$ or $a\prec x$, and $s(r)=b$ or
+$s(r)\prec b$, for such $r$ and $x$. Items~(2) and~(3) and program order make
+$\prec_v$ a strict partial order, and it contains $\to$. At $(h,\prec_v)$,
+$v$ is $p$'s only view. By~(1) a source is a visible write, and a visible
+$x\ne s(r)$ has $x\prec_v s(r)$, which~(2) forbids. Every input has a row of
+the strengthening, and rows are restrictions of selected tuples. So the
+strengthening selects some tuple at $(h,\prec_v)$, and that tuple's
+$p$-coordinate is $v$. Real-time edges only exclude views, so the tuple's
+views are real-time causal at $(h,\prec)$. Blindness then selects the tuple
+there.
 \end{proof}
 
 Each hypothesis has a counterpart in Mahajan et al.'s theorem. Their always
@@ -4703,16 +4736,17 @@ current inputs, some $u\in\fiber{j}$ \outrel every output emitted in the
 history.
 \end{definition}
 
-This is the part of Partition Consistency that the converse of
-Theorem~\ref{thm:complete-cap} and Corollary~\ref{cor:complete-cap-any-system}
-use, so both also hold with Response
-Partition Consistency in place of Partition Consistency. Confluence at $j$
-implies a common \outnoun at $j$ (Corollary~\ref{cor:reconciliation-any-basis}). The two coincide for a system with basis $\mathcal B_P$ and no \commitment
-events, whose participant runs are therefore canonical runs, by
-Lemma~\ref{lem:reconciliation} applied to those runs
-(\S\ref{sec:distributed-consistency}). With other \commitments the
-converse can fail: participants may prune their states so that they cannot
-be reconciled while their emitted outputs still have a common \outnoun.
+Response Partition Consistency is the part of Partition Consistency that the
+converse of Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system} use. So both also hold with
+Response Partition Consistency in place of Partition Consistency. Confluence
+at $j$ implies a common \outnoun at $j$
+(Corollary~\ref{cor:reconciliation-any-basis}). The two coincide for a system
+with basis $\mathcal B_P$ and no \commitment events. Its participant runs are
+then canonical runs, and Lemma~\ref{lem:reconciliation} applies to them
+(\S\ref{sec:distributed-consistency}). With other \commitments the converse
+can fail. Participants may prune their states so that they cannot be
+reconciled, while their emitted outputs still have a common \outnoun.
 
 A system is \emph{replicated} (SPMD) when its obligation is uniform and every
 participant runs the same strategy, which depends only on the participant's
@@ -4753,11 +4787,9 @@ common-extension condition of Proposition~\ref{prop:common-expansion-form}, and
 by Lemma~\ref{lem:reconciliation} it is confluence of the canonical runs whose
 emitted rows lie in $T$.
 
-A response interface is an explicit relation that a system can always
-serve. Consider the canonical system for $T$ (Section~\ref{sec:complete-cap}),
-which emits by the canonical output event any output of $T$ in the
-current fiber. Each participant's emitted outputs form a chain
-$o_1\OutputOrd\cdots\OutputOrd o_m$, so by Lemma~\ref{lem:run-residual} its
+A response interface is an explicit relation that a system can always serve. Consider the canonical system for $T$ (Section~\ref{sec:complete-cap}). It
+emits, by the canonical output event, any output of $T$ in the current fiber. Each participant's emitted outputs form a chain
+$o_1\OutputOrd\cdots\OutputOrd o_m$. So by Lemma~\ref{lem:run-residual} its
 table is $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$, or
 $P[\mathrm{in}\InputGe i]$ before any emission. Self-continuation applied to
 the row of $o_m$, or totality of $T$, gives some $u\in T(i)$ in that table. So every participant's fiber intersects $T$, and Availability for $T$ gives
@@ -4790,48 +4822,53 @@ a history are rows of $T$ at inputs that every common \indesc $j$ of the
 current inputs \inrel, so Lifted Monotonicity for $T$ gives Response Partition
 Consistency.
 
-(1$\Rightarrow$2.)  We call an emission \emph{isolated} when its participant has
-received no message before it, and let $T$ be the set of rows $(i,o)$ with
-$o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
-system; such a history and participant are a \emph{witness} for $(i,o)$. Then $T\subseteq Q$. When a participant is alone on its side, every
+(1$\Rightarrow$2.)  We build $T$ from the outputs that participants emit
+before receiving any message. We call such an emission \emph{isolated}. Let
+$T$ be the set of
+rows $(i,o)$ with $o\in Q(i)$ emitted in an isolated emission in some
+partitioned history of the system. Such a history and participant are a
+\emph{witness} for $(i,o)$. Then $T\subseteq Q$. Two facts about witnesses
+are used below. First, consider a participant alone on its side. Every
 continuation that Response Availability supplies adds only its own history
-events and, since the history is partitioned, no receive, so the emission it
-yields is isolated. By
-Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
-replayed by a participant alone on its side, with an idle participant
-forming a second side. \emph{Totality:} for each $i$, Answering in the empty history, for a participant
-with initial input $i$ alone on its side, gives a row of $T$ at $i$. \emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, we replay the
-witness, record $\mathsf{input}(j)$ by Input acceptance (truncating just after
-it), and answer by Answering with some $u\in Q(j)$. By
-Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual} the table
+events. Since the history is partitioned, these include no receive, so the
+emission they yield is isolated. Second, by Lemma~\ref{lem:locality}, a
+witness's local history up to the emission can be replayed by a participant
+alone on its side, with an idle participant forming a second side.
+
+\emph{Totality:} for each $i$, Answering in the empty history, for a
+participant with initial input $i$ alone on its side, gives a row of $T$ at
+$i$. \emph{Self-continuation:} let $(i,o)\in T$ and $j\InputGe i$. We replay
+the witness and record $\mathsf{input}(j)$ by Input acceptance, truncating
+just after it. Answering then gives an emission of some $u\in Q(j)$. By
+Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual}, the table
 before that emission is contained in $P[\mathrm{in}\InputGe j,\
-\mathrm{out}\OutputGe o]$, so $o\OutputOrd u$ and $(j,u)\in T$. \emph{Lifted Monotonicity for $T$:} given rows $(i_r,o_r)$ of $T$ with common \indesc
-$j$, we replay each witness on its own participant, truncated after the
-emission, and add a participant with initial input $j$. By
-Lemma~\ref{lem:locality} this is a partitioned history of the system, and
-Response Partition Consistency, applied to that history, gives $u\in\fiber{j}$
-\outrelpart every $o_r$. If there are no rows, totality of $P$ gives some
-$u\in\fiber{j}$.
+\mathrm{out}\OutputGe o]$. So $o\OutputOrd u$ and $(j,u)\in T$. \emph{Lifted Monotonicity for $T$:} let rows $(i_r,o_r)$ of $T$ have a common
+\indesc $j$. We replay each witness on its own participant, truncated after
+the emission, and add a participant with initial input $j$. By
+Lemma~\ref{lem:locality} this is a partitioned history of the system. Response Partition Consistency, applied to that history, gives
+$u\in\fiber{j}$ \outrelpart every $o_r$. If there are no rows, totality of
+$P$ gives some $u\in\fiber{j}$.
 \end{proof}
 
 \begin{remark}[Without replication]
-For a system that is not replicated, fix the participant set. The same proof,
-with $T_p$ the rows $p$ emits in histories where it is alone on its side, gives one response interface
-$T_p\subseteq Q_p$ per participant. Each strategy sees only its own participant's initial input, and each
-participant is replayed once, so consistency is required only for families
-that draw on each $T_p$ at most once.
+For a system that is not replicated, fix the participant set. Let $T_p$ be
+the rows $p$ emits in histories where it is alone on its side. The same proof
+gives one response interface $T_p\subseteq Q_p$ per participant. Each
+strategy sees only its own participant's initial input, and each participant
+is replayed once. So consistency is required only for families that draw on
+each $T_p$ at most once.
 \end{remark}
 
 \subsection{Choosing versus requiring every output}
 
 Theorem~\ref{thm:complete-cap} with $E=P$ requires every permitted output to
-stay available; Theorem~\ref{thm:complete-cap-response} lets the system choose
-which outputs to serve. Lifted Monotonicity implies the conditions of the
-latter theorem for every uniform obligation, with $T=Q$. To see that $Q$ is
-self-continuing, let $(i,o)\in Q$ and $i\InputOrd j$. Relational Monotonicity
-gives $u\in\fiber{j}$ with $o\OutputOrd u$, and totality gives some $q\in
-Q(j)$. Because the spec has directed fibers, some $w\in\fiber{j}$
-\outrelpart $u$ and $q$, and upward closure puts $w$ in $Q(j)$. The
+stay available. Theorem~\ref{thm:complete-cap-response} lets the system
+choose which outputs to serve. Lifted Monotonicity implies the conditions of
+the latter theorem for every uniform obligation, with $T=Q$. To see that $Q$
+is self-continuing, let $(i,o)\in Q$ and $i\InputOrd j$. Relational
+Monotonicity gives $u\in\fiber{j}$ with $o\OutputOrd u$, and totality gives
+some $q\in Q(j)$. Because the spec has directed fibers, some $w\in\fiber{j}$
+\outrelpart $u$ and $q$. Upward closure puts $w$ in $Q(j)$. The
 common-extension condition gives Lifted Monotonicity for $Q$.
 
 The converse fails. Let $I=\{0,1\}$ with $0\InputOrd 1$, $\bot\OutputOrd a$ and
@@ -4846,19 +4883,21 @@ monotonicity.
 
 If a total $T\subseteq Q$ satisfies Lifted Monotonicity as a spec in its own
 right, then $T$ is a response interface for which $\Spec$ satisfies Lifted
-Monotonicity. The converse fails: in the following example a response
+Monotonicity. The converse fails. In the following example a response
 interface works, but no sub-specification of $Q$ satisfies Lifted
 Monotonicity. Let $I=\{i_1,i_2,j,k_1,k_2\}$ with $i_1,i_2\InputOrd j\InputOrd
 k_1,k_2$ and no other relations, so $k_1$ and $k_2$ have no common \indesc. Let $\fiber{i_1}=\{a\}$, $\fiber{i_2}=\{b\}$, $\fiber{j}=\{c_1,c_2,d_1,d_2\}$,
 $\fiber{k_1}=\{e_1\}$, $\fiber{k_2}=\{e_2\}$, and $Q=P$, where $\OutputOrd$ is
 the least order with $a\OutputOrd c_1$, $b\OutputOrd c_2$, $c_1,c_2\OutputOrd
-d_1,d_2$, $c_1,c_2,d_1\OutputOrd e_1$, and $c_1,c_2,d_2\OutputOrd e_2$. Then
-$T=\{(i_1,a),(i_2,b),(j,c_1),(j,c_2),(k_1,e_1),(k_2,e_2)\}$ is a response
-interface for which $\Spec$ satisfies Lifted Monotonicity: $d_1$ reconciles families at $j$, and
-$e_1$ or $e_2$ those at $k_1$ or $k_2$. A sub-specification with Lifted
-Monotonicity must contain $(i_1,a)$ and $(i_2,b)$, hence $d_1$ or $d_2$ at $j$,
-which has no \outnoun at $k_2$ or $k_1$ respectively. Reconciling outputs
-need not lie in $T$: a participant that emits $d_1$ or $d_2$ rules out $k_2$ or $k_1$.
+d_1,d_2$, $c_1,c_2,d_1\OutputOrd e_1$, and $c_1,c_2,d_2\OutputOrd e_2$.
+
+Then $T=\{(i_1,a),(i_2,b),(j,c_1),(j,c_2),(k_1,e_1),(k_2,e_2)\}$ is a response
+interface for which $\Spec$ satisfies Lifted Monotonicity. The output $d_1$
+reconciles families at $j$, and $e_1$ or $e_2$ those at $k_1$ or $k_2$. A
+sub-specification with Lifted Monotonicity must contain $(i_1,a)$ and
+$(i_2,b)$, hence $d_1$ or $d_2$ at $j$. But $d_1$ has no \outnoun at $k_2$,
+and $d_2$ has none at $k_1$. Reconciling outputs need not lie in $T$: a
+participant that emits $d_1$ or $d_2$ rules out $k_2$ or $k_1$.
 
 \subsection{Gilbert--Lynch with real-time precedence}
 
@@ -4888,28 +4927,27 @@ $\fiber{j}$ \outrel $o$.
 An input is a finite operation history: a set of read and write invocations at
 replicas with a strict partial order of real-time precedence. One history
 \inrel another when it contains all of its operations and precedence edges. An output is a response map assigning values to reads and acknowledgments to
-writes, ordered by extension. The fiber $\fiber{h}$ contains the maps
-explained by some linearization of $h$, a total order of its operations
-extending precedence~\cite{herlihy1990linearizability} in which each answered
-read returns the last preceding write, or the initial value $v_0$. The
-obligation $Q_p(h)$ consists of the maps in $\fiber{h}$ that answer every read
-and acknowledge every write invoked at $p$. Every finite history has a
-linearization, so $Q_p$ is total, and it is upward closed within fibers. Real-time precedence belongs to the input: the environment invokes $b$ after
-seeing $a$'s response, so the edge from $a$ to $b$ is information it supplies
-(\S\ref{sec:election-story}).
+writes, ordered by extension. A linearization of $h$ is a total order of its
+operations extending precedence~\cite{herlihy1990linearizability} in which
+each answered read returns the last preceding write, or the initial value
+$v_0$. The fiber $\fiber{h}$ contains the maps explained by some
+linearization of $h$. The obligation $Q_p(h)$ consists of the maps in
+$\fiber{h}$ that answer every read and acknowledge every write invoked at $p$. Every finite history has a linearization, so $Q_p$ is total, and it is upward
+closed within fibers. Real-time precedence belongs to the input. The
+environment invokes $b$ after seeing $a$'s response, so the edge from $a$ to
+$b$ is information it supplies (\S\ref{sec:election-story}).
 
-Real time is the order of history events in an execution: an \emph{interleaving}
-$\lambda$ of a distributed history is a linear order of its history events consistent
-with happens-before, and no strategy observes it. The \emph{invocation} of an
-operation is the first input event at its replica whose input contains it,
-and its \emph{response} is the first output event at that replica whose map
-answers it. For a prefix $C$ of $\lambda$ (a consistent cut), the
-\emph{realized history} $h_C$ contains the operations invoked in $C$, with an
-edge from $a$ to $b$ when $a$'s response precedes $b$'s invocation in
-$\lambda$. If $C'\subseteq C$ is also a prefix, $h_C$ \inrel $h_{C'}$. The
-realized history need not be a common \indesc of the participants' current
-inputs: an input event may introduce two operations with an edge between them
-before either responds.
+Real time is the order of history events in an execution. An
+\emph{interleaving} $\lambda$ of a distributed history is a linear order of
+its history events consistent with happens-before. No strategy observes it. The \emph{invocation} of an operation is the first input event at its replica
+whose input contains it. Its \emph{response} is the first output event at
+that replica whose map answers it. For a prefix $C$ of $\lambda$ (a
+consistent cut), the \emph{realized history} $h_C$ contains the operations
+invoked in $C$, with an edge from $a$ to $b$ when $a$'s response precedes
+$b$'s invocation in $\lambda$. If $C'\subseteq C$ is also a prefix, $h_C$
+\inrel $h_{C'}$. The realized history need not be a common \indesc of the
+participants' current inputs: an input event may introduce two operations with
+an edge between them before either responds.
 
 A \emph{client history} has two participants with empty initial inputs, and
 each of its input events adds one operation, invoked at its participant after
@@ -4928,14 +4966,15 @@ the outputs emitted in $C$ have a common \outnoun in $\fiber{h_C}$.
 Let replicas $p$ and $q$ start with empty inputs on separate sides, and let
 the environment invoke a write of $\dog\neq v_0$ at $p$. Answering gives a
 continuation in which $p$ acknowledges it. The environment then invokes a read
-$r_q$ at $q$, after the acknowledgment in $\lambda$. The history is a client history. No message
-crosses the partition, so $q$'s current input is $i_q=\{r_q\}$, and $j=h_C$
-contains the write, $r_q$, and an edge from the write to $r_q$; it is a common
-\indesc of both current inputs. Every map in $Q_q(i_q)$ answers $r_q$ with
-$v_0$, and every linearization of $j$ places the write first, so no output in
-$Q_q(i_q)$ has an \outnoun in $\fiber{j}$. Lemma~\ref{lem:forced-answer}
-gives a continuation adding no input event, so the realized history stays
-$j$, whose emitted outputs have no common \outnoun in $\fiber{j}$.
+$r_q$ at $q$, after the acknowledgment in $\lambda$. The history is a client
+history. No message crosses the partition, so $q$'s current input is
+$i_q=\{r_q\}$. The realized history $j=h_C$ contains the write, $r_q$, and an
+edge from the write to $r_q$, and it is a common \indesc of both current
+inputs. Every map in $Q_q(i_q)$ answers $r_q$ with $v_0$, and every
+linearization of $j$ places the write first. So no output in $Q_q(i_q)$ has
+an \outnoun in $\fiber{j}$. Lemma~\ref{lem:forced-answer} gives a
+continuation adding no input event. The realized history stays $j$, and the
+emitted outputs have no common \outnoun in $\fiber{j}$.
 \end{proof}
 
 A system with Response Availability, and with a common \outnoun at $h_C$ for
@@ -4960,24 +4999,25 @@ $p$ runs node $p$. An invocation becomes the input event whose input is $p$'s
 view: the operations invoked at $p$, with no precedence. A response becomes an
 output event emitting $p$'s response map, and $p$ may also re-emit its current
 map. With every message lost, $p$'s history is node $p$'s run in the
-execution where it is alone, and atomicity of that execution puts the map in
-the fiber at the view, so the system can perform its output events under the
-canonical basis. Availability, applied
-to each unanswered operation of the view, gives Answering. An interleaving of
-a client history is an execution of the algorithm whose real-time order is the
-precedence of $h_C$, so atomicity gives a common \outnoun in $\fiber{h_C}$. The corollary excludes the algorithm.
+execution where it is alone. Atomicity of that execution puts the map in the
+fiber at the view, so the system can perform its output events under the
+canonical basis. Availability, applied to each unanswered operation of the
+view, gives Answering. An interleaving of a client history is an execution of
+the algorithm whose real-time order is the precedence of $h_C$. So atomicity
+gives a common \outnoun in $\fiber{h_C}$, and the corollary excludes the
+algorithm.
 \end{proof}
 
 Gilbert and Lynch require availability and atomicity in all fair executions,
 including those in which messages are lost, in Lynch's asynchronous network
 model~\cite[Theorem~1]{gilbert2002cap}\cite[Chapter~8]{lynch1996distributed}. Both imply the forms in the proposition. In their model any message may be
-lost and client requests are inputs, so a finite execution extends to a fair
-execution with no new request in which every message is lost; their own
+lost and client requests are inputs. So a finite execution extends to a fair
+execution with no new request in which every message is lost. Their own
 proofs extend executions fairly in this way. Availability answers the pending
 request at some finite point of that extension, and the prefix up to that
 response is the extension the proposition requires. Atomicity of the fair
-extension gives atomicity of the finite execution, since atomicity is a safety
-property and so holds of every prefix of an atomic
+extension gives atomicity of the finite execution. Atomicity is a safety
+property, so it holds of every prefix of an atomic
 execution~\cite[Chapter~13]{lynch1996distributed}.
 
 \section{\Commitment Bases for Two-Phase Locking and Multiversion Timestamp Ordering}
@@ -5023,9 +5063,10 @@ Sections~\ref{sec:ambiguity-story}--\ref{sec:systems} show only complete
 outputs without aborts or read results, as serial orders, at inputs in which
 every transaction has requested commit.
 
-We write an output as $(L,X,\rho)$: $X$ is the set of aborted transactions, $L$
-is the serial order, a total order on the set $\mathrm{dom}\,L$ of committed
-ones, and $\rho$ is the set of reported read results. Then
+We write an output as $(L,X,\rho)$. Here $X$ is the set of aborted
+transactions, $L$ is the serial order, a total order on the set
+$\mathrm{dom}\,L$ of committed ones, and $\rho$ is the set of reported read
+results. Then
 \[
   \begin{aligned}
   (L,X,\rho)\OutputOrd(L',X',\rho')
@@ -5037,12 +5078,12 @@ Every input has a permitted row: the one that aborts every transaction and
 reports nothing. Let $\{A,B\}$ be an input in which $A$ and $B$ have each
 requested commit. The rows $(\{A,B\},([A,B],\varnothing,\varnothing))$ and
 $(\{A,B\},([B,A],\varnothing,\varnothing))$ of
-Figure~\ref{fig:ambiguity-frames}(f) have no common \outnoun, which would order
-$A$ both before and after $B$, so the spec is not monotone. The
+Figure~\ref{fig:ambiguity-frames}(f) have no common \outnoun, since it would
+order $A$ both before and after $B$. So the spec is not monotone. The
 \emph{abort-free} spec permits a row when it can be completed with
-$X=\varnothing$, where a complete output instead commits exactly the transactions
-whose commit request is in the input and leaves the others undecided; the same
-two rows show that it is not monotone either.
+$X=\varnothing$. For this spec, a complete output instead commits exactly the
+transactions whose commit request is in the input and leaves the others
+undecided. The same two rows show that it is not monotone either.
 
 \paragraph{\Commitments.}
 Each \commitment is a condition on complete outputs. Applied at a state
@@ -5066,14 +5107,14 @@ $\mathsf{stamp}(A)$, for $A\in i\setminus Z$, given the set $Z\subseteq
 $\mathsf{read}(A,k,v)$, for $A\in i$ whose $k$-th operation in $i$ is a
         read: the output reports that this read returned the version $v$.
 \end{itemize}
-Each is a \commitment (Definition~\ref{def:commitment}). If a kept row \outrel
-another row at the same input, the complete row that keeps it also
-\outrel the other, which is therefore kept; so no removed row is \outrelpast by
-a kept one, as Equation~\ref{eq:commitment-unsubsumed} requires. The first four
-conditions concern only $L$ and $X$, and for them a complete row is kept
-exactly when it satisfies the condition, since two permitted complete outputs
-at one input, one \outrelpart the other, have the same serial order and abort
-set.
+Each is a \commitment (Definition~\ref{def:commitment}). In particular, no
+removed row is \outrelpast by a kept one, as
+Equation~\ref{eq:commitment-unsubsumed} requires. To see this, suppose a kept
+row \outrel another row at the same input. The complete row that keeps the
+first also \outrel the second, so the second is kept too. The first four
+conditions concern only $L$ and $X$. For them a complete row is kept exactly
+when it satisfies the condition, since two permitted complete outputs at one
+input, one \outrelpart the other, have the same serial order and abort set.
 
 The bases are
 $\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{TxCommit},\mathsf{abort},\mathsf{read}\}$
@@ -5102,91 +5143,89 @@ result is then a legal output.
 \paragraph{2PL.}
 When an operation of $B$ arrives, 2PL requests a lock on its key, shared for a
 read and exclusive for a write. If $A$ holds that lock in a conflicting mode,
-$B$ waits, and the scheduler applies $\mathsf{order}(A,B)$ in a \commitment
-event, reporting nothing. When every remaining complete row that commits
-both already places $A$ before $B$, $\mathsf{order}(A,B)$ would remove
-nothing, so it is undefined and the scheduler applies nothing. This happens when an earlier wait has applied
-$\mathsf{order}(A,B)$, or when a reported read result fixes the order, as when
-$A$ has read the initial version of the key that $B$ writes. On complete
-rows without aborts,
+$B$ waits. The scheduler then applies $\mathsf{order}(A,B)$ in a \commitment
+event and reports nothing. Sometimes every remaining complete row that
+commits both already places $A$ before $B$. Then $\mathsf{order}(A,B)$ would
+remove nothing, so it is undefined and the scheduler applies nothing. This
+happens when an earlier wait has applied $\mathsf{order}(A,B)$, or when a
+reported read result fixes the order, as when $A$ has read the initial version
+of the key that $B$ writes. On complete rows without aborts,
 $\mathsf{order}(A,B)$ keeps exactly those with $A$ before $B$
-(Figure~\ref{fig:cc-commitments}(h)). At the canonical state of $\{A,B,C\}$ it
-removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$, so it is a \commitment, and it
-is not the canonical \commitment $x_o$ of any output $o$. When a read is granted its lock,
-the scheduler applies $\mathsf{read}$ and reports the result. When a commit
-request arrives, the scheduler applies $\mathsf{TxCommit}$ and releases the
-transaction's locks.
+(Figure~\ref{fig:cc-commitments}(h)). At the canonical state of $\{A,B,C\}$
+it removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$. So it is a
+\commitment, and it is not the canonical \commitment $x_o$ of any output $o$. When a read is granted its lock, the scheduler applies $\mathsf{read}$ and
+reports the result. When a commit request arrives, the scheduler applies
+$\mathsf{TxCommit}$ and releases the transaction's locks.
 
 A deadlock between $A$ and $B$ arises when $B$ waits for a lock that $A$ holds
-and an operation of $A$ then waits for a lock that $B$ holds: the scheduler has
-applied $\mathsf{order}(A,B)$ and later $\mathsf{order}(B,A)$. Then no
-remaining row, at any input, commits both $A$ and $B$, so every remaining
-complete row aborts one of them, and resolving the deadlock means aborting one. Once the scheduler applies $\mathsf{TxCommit}(A)$, every remaining complete row
-aborts $B$, and $\mathsf{TxCommit}(B)$ is never again defined. Under the
-abort-free spec, once both orderings have been applied, no remaining
-row is at an input in which both $A$ and $B$ have requested commit. The system
-never accepts both requests, so at least one of $A$ and $B$ waits forever. Whether a deadlock can be resolved thus depends on which of the two
+and an operation of $A$ then waits for a lock that $B$ holds. The scheduler
+has then applied $\mathsf{order}(A,B)$ and later $\mathsf{order}(B,A)$. No
+remaining row, at any input, commits both $A$ and $B$. So every remaining
+complete row aborts one of them, and resolving the deadlock means aborting
+one. Once the scheduler applies $\mathsf{TxCommit}(A)$, every remaining
+complete row aborts $B$, and $\mathsf{TxCommit}(B)$ is never again defined. Under the abort-free spec, once both orderings have been applied, no remaining
+row is at an input in which both $A$ and $B$ have requested commit. The
+system never accepts both requests, so at least one of $A$ and $B$ waits
+forever. Whether a deadlock can be resolved thus depends on which of the two
 specs the system implements.
 
 \paragraph{MVTO.}
 We follow Bernstein and Goodman~\cite{bernstein1981concurrency}. When the
 first operation of a transaction $A$ arrives, $A$ receives a timestamp above
-all issued ones, and the scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
+all issued ones. The scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
 transactions stamped before $A$, in a \commitment event. On complete rows
 without aborts, $\mathsf{stamp}(B)$ with $Z=\varnothing$ keeps exactly those
-with $B$ first (Figure~\ref{fig:cc-commitments}(i)); at the canonical state of
-$\{A,B,C\}$ it is a \commitment, and it is not the canonical \commitment $x_o$ of any output. When
-a read of $x$ by $A$ arrives, it returns $A$'s own write of $x$ if $A$ has
-written $x$, and otherwise the committed version of $x$ with the largest
-timestamp below $A$'s; the scheduler applies $\mathsf{read}$ and reports the
-result. When a write of $x$ by $A$ arrives, it is rejected, and $A$ aborted,
-if a transaction stamped after $A$ has already read a version of $x$ stamped
-before $A$; the scheduler then applies $\mathsf{abort}(A)$ and reports the
-abort. When the commit request of $A$ arrives, the scheduler applies
-$\mathsf{TxCommit}(A)$.
+with $B$ first (Figure~\ref{fig:cc-commitments}(i)). At the canonical state
+of $\{A,B,C\}$ it is a \commitment, and it is not the canonical \commitment
+$x_o$ of any output. When a read of $x$ by $A$ arrives, it returns $A$'s own
+write of $x$ if $A$ has written $x$. Otherwise it returns the committed
+version of $x$ with the largest timestamp below $A$'s. The scheduler applies
+$\mathsf{read}$ and reports the result. When a write of $x$ by $A$ arrives,
+it is rejected, and $A$ aborted, if a transaction stamped after $A$ has
+already read a version of $x$ stamped before $A$. The scheduler then applies
+$\mathsf{abort}(A)$ and reports the abort. When the commit request of $A$
+arrives, the scheduler applies $\mathsf{TxCommit}(A)$.
 
 \emph{What reporting a read excludes.}  Suppose $B$ is stamped after $A$, and
 $B$'s read of $x$ returned the initial version or the write of $x$ by a
-transaction stamped before $A$. At an input in which $A$ writes $x$, a
-complete row that satisfies both stamps and commits both $A$ and $B$ places $A$
-between that version and $B$. In that row the read must return $A$'s write
-or a later one, so the row does not permit the reported read. Hence, after the
-two stamps, no row that reports the read and is at an input in which $A$
-writes $x$ commits both $A$ and $B$. Once $\mathsf{read}$ has been applied, no
-remaining row at such an input commits both, whether it reports the read or
-not. Reporting the read therefore rules out one possibility: that $A$ writes
-$x$ and both $A$ and $B$ commit. MVTO reports the read when it arrives,
-whether or not $A$'s write has arrived. The condition on the version, that
-$B$ read a version older than $A$, is needed. At an input of three
-transactions $A$, $W$, $B$, stamped in that order, each having requested
-commit, with $A$ and $W$ writing $x$ and $B$ only reading it, the complete row
-that commits all three in stamp order and reports that $B$ read $W$'s write is
-permitted and satisfies every stamp. There $B$ read a version written after
-$A$, and all three commit.
+transaction stamped before $A$. Consider an input in which $A$ writes $x$. There, a complete row that satisfies both stamps and commits both $A$ and $B$
+places $A$ between that version and $B$. In that row the read must return
+$A$'s write or a later one, so the row does not permit the reported read. Hence, after the two stamps, no row that reports the read and is at an input
+in which $A$ writes $x$ commits both $A$ and $B$. Once $\mathsf{read}$ has
+been applied, no remaining row at such an input commits both, whether it
+reports the read or not. Reporting the read therefore rules out one
+possibility: that $A$ writes $x$ and both $A$ and $B$ commit. MVTO reports
+the read when it arrives, whether or not $A$'s write has arrived.
+
+The condition on the version, that $B$ read a version older than $A$, is
+needed. Consider an input of three transactions $A$, $W$, $B$, stamped in
+that order, each having requested commit, with $A$ and $W$ writing $x$ and $B$
+only reading it. The complete row that commits all three in stamp order and
+reports that $B$ read $W$'s write is permitted and satisfies every stamp. There $B$ read a version written after $A$, and all three commit.
 
 \emph{When the abort is entailed.}  Which of $A$ and $B$ aborts depends on
 whether $B$ is decided. Suppose $A$'s write of $x$ has arrived. If every
 remaining complete row commits $B$, for instance after $\mathsf{TxCommit}(B)$,
 then every remaining complete row aborts $A$. An output that reports the read
 and that every remaining row \outrel, with $A$'s abort added, is then a legal
-output, so the spec entails the abort. While $B$ is undecided, the spec
-does not entail it. Consider a run in which $A$'s first operation, a read of $x$,
-arrives, then $B$'s read of $x$, and then $A$'s write of $x$, with further
-transactions free to arrive. The scheduler applies $\mathsf{stamp}(A)$ and
-$\mathsf{stamp}(B)$ in \commitment events and reports that $B$ read the initial
-version of $x$. Reporting the read is not a legal output on its own: at an
-input in which $A$ writes $x$, the row that commits $A$ and then $B$ cannot be
-completed with it. Once the scheduler applies $\mathsf{read}$ in a
-\commitment event, reporting the read is a legal output. After $A$'s write
-arrives, two completions remain at the input in which both then request
-commit: one commits $B$ and aborts $A$, and the other commits $A$ and aborts
-$B$. Emitting $A$'s abort is then not a legal output, and $\mathsf{abort}(A)$ and
-$\mathsf{abort}(B)$ are both defined and keep different completions. MVTO's
-write rule aborts $A$ at once: the scheduler applies $\mathsf{abort}(A)$ in a
-\commitment event, after which reporting the abort is a legal output. That abort is the scheduler's choice between two
-outcomes the spec still permits. If the scheduler instead waits until
-$B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s abort
-becomes a legal output.
+output. So the spec entails the abort. While $B$ is undecided, the spec does
+not entail it.
+
+Consider a run in which $A$'s first operation, a read of $x$, arrives, then
+$B$'s read of $x$, and then $A$'s write of $x$, with further transactions free
+to arrive. The scheduler applies $\mathsf{stamp}(A)$ and $\mathsf{stamp}(B)$
+in \commitment events and reports that $B$ read the initial version of $x$. Reporting the read is not a legal output on its own. At an input in which $A$
+writes $x$, the row that commits $A$ and then $B$ cannot be completed with it. Once the scheduler applies $\mathsf{read}$ in a \commitment event, reporting
+the read is a legal output. After $A$'s write arrives, two completions remain
+at the input in which both then request commit. One commits $B$ and aborts
+$A$, and the other commits $A$ and aborts $B$. Emitting $A$'s abort is then
+not a legal output, and $\mathsf{abort}(A)$ and $\mathsf{abort}(B)$ are both
+defined and keep different completions. MVTO's write rule aborts $A$ at once:
+the scheduler applies $\mathsf{abort}(A)$ in a \commitment event, after which
+reporting the abort is a legal output. That abort is the scheduler's choice
+between two outcomes the spec still permits. If the scheduler instead waits
+until $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s
+abort becomes a legal output.
 
 \paragraph{Comparison.}
 As operations arrive, 2PL applies \commitments that fix the relative order of
@@ -5235,18 +5274,17 @@ well.
 Fix $k\geq1$, distinct participants $p_1,\ldots,p_{k+1}$ in the participant set $\mathcal N$
 (possibly among others), and distinct values $v_1,\ldots,v_{k+1}$ in a value
 set $\mathit{Val}$. An input is a finite set of proposals $(p,v)$, at most one
-per participant, ordered by inclusion; the \emph{proposal input} of $p_r$ is
+per participant, ordered by inclusion. The \emph{proposal input} of $p_r$ is
 $\{(p_r,v_r)\}$. Outputs are partial decision maps
-$m:\mathcal N\rightharpoonup\mathit{Val}$ ordered by extension. At input $I$, $m$ is
-permitted when it decides only participants that propose in $I$, every value
-in its range is proposed in $I$ (validity), and its range has at most $k$
-values. At $p_r$'s proposal input, $\{p_r\mapsto v_r\}$ is permitted, and the
-union of the proposal inputs is a common \indesc. Any $k$ of these $k+1$
-rows have a common \outnoun there; all $k+1$ do not, since it would have
-$k+1$ values. So the common-extension condition fails and the spec
-is not monotone (Proposition~\ref{prop:common-expansion-form}); a partition
-separating the $p_r$ gives the negative side of Complete CAP. Consensus is
-$k=1$. Classical impossibility results additionally depend on the
+$m:\mathcal N\rightharpoonup\mathit{Val}$ ordered by extension. At input $I$,
+$m$ is permitted when three conditions hold: it decides only participants that
+propose in $I$, every value in its range is proposed in $I$ (validity), and
+its range has at most $k$ values. At $p_r$'s proposal input,
+$\{p_r\mapsto v_r\}$ is permitted, and the union of the proposal inputs is a
+common \indesc. Any $k$ of these $k+1$ rows have a common \outnoun there. All $k+1$ do not, since such an output would have $k+1$ values. So the
+common-extension condition fails, and the spec is not monotone
+(Proposition~\ref{prop:common-expansion-form}). A partition separating the
+$p_r$ gives the negative side of Complete CAP. Consensus is $k=1$. Classical impossibility results additionally depend on the
 computation, failure, and progress model~\cite{saks2000set}.
 
 \subsection{Tight renaming}

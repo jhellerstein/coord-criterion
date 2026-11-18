@@ -135,8 +135,8 @@ theorem «app:cc-bases/total» {T K : Type} (k : Inp T K) :
 
 /-- "Let `{A,B}` be an input in which `A` and `B` have each requested commit.
 The rows `({A,B},([A,B],∅,∅))` and `({A,B},([B,A],∅,∅))` of Figure
-ambiguity-frames(f) have no common output extension, which would order `A` both before
-and after `B`, so the spec is not monotone."  Not monotone: no
+ambiguity-frames(f) have no common output extension, since it would order `A` both
+before and after `B`.  So the spec is not monotone."  Not monotone: no
 directed fibers, no Lifted Monotonicity.  (Such an input exists for any two
 transactions: `pairDone`.) -/
 theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} {A B : T} (h : A ≠ B) {k : Inp T K}
@@ -150,14 +150,15 @@ theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} {A B : T} (h : A ≠ B)
     spec_not_liftedMono false h hk hf⟩
 
 /-- "The *abort-free* specification permits a row when it can be completed with
-`X = ∅`, where a complete output instead commits exactly the transactions whose
-commit request is in the input and leaves the others undecided …" -/
+`X = ∅`.  For this spec, a complete output instead commits exactly the
+transactions whose commit request is in the input and leaves the others
+undecided." -/
 theorem «app:cc-bases/abort-free-spec» {T K : Type} (k : Inp T K) (u : Partial.ROut T K) :
     (spec true).P k u ↔ ∃ c, Complete true k c ∧ u ≼ c ∧
       ∀ t, ¬ c.o.X t ∧ (c.o.dom t ↔ k.fin t) :=
   ⟨fun ⟨c, hc, h⟩ => ⟨c, hc, h, hc.1⟩, fun ⟨c, hc, h, _⟩ => ⟨c, hc, h⟩⟩
 
-/-- "… the same two rows show that it is not monotone either." -/
+/-- "The same two rows show that it is not monotone either." -/
 theorem «app:cc-bases/abort-free-not-monotone» {T K : Type} {A B : T} (h : A ≠ B) {k : Inp T K}
     (hk : ∀ t, k.mem t ↔ t = A ∨ t = B) (hf : ∀ t, k.mem t → k.fin t) :
     ¬ (spec (T := T) (K := K) true).DirectedOutputs ∧
@@ -207,10 +208,11 @@ noncomputable abbrev «app:cc-bases/stamp» {T K : Type} {af : Bool} (A : T) (Z 
 noncomputable abbrev «app:cc-bases/read» {T K : Type} {af : Bool} (A : T) (n : Nat)
     (v : Option T) : Commitment (spec (T := T) (K := K) af) := read A n v
 
-/-- "Each is a commitment (Definition `def:commitment`).  If a kept row extends
-another row at the same input, the complete row that keeps it also extends the
-other, which is therefore kept; so no removed row is extended by a kept one, as
-Equation `eq:commitment-unsubsumed` requires."  Every closure commitment, for
+/-- "Each is a commitment (Definition `def:commitment`).  In particular, no
+removed row is extended by a kept one, as Equation `eq:commitment-unsubsumed`
+requires.  To see this, suppose a kept row extends another row at the same
+input.  The complete row that keeps the first also extends the second, so the
+second is kept too."  Every closure commitment, for
 every guard and condition, is a `Commitment` (`closeC`); this states
 Eq. `commitment-unsubsumed` for it. -/
 theorem «app:cc-bases/each-is-commitment» {T K : Type} {af : Bool}
@@ -219,7 +221,7 @@ theorem «app:cc-bases/each-is-commitment» {T K : Type} {af : Bool}
     ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) :=
   (closeC G Q).unsubsumed σ τ h
 
-/-- "… for them a complete row is kept exactly when it satisfies the condition,
+/-- "… For them a complete row is kept exactly when it satisfies the condition,
 since two permitted complete outputs at one input, one extending the other, have
 the same serial order and abort set."  (In both specifications.) -/
 theorem «app:cc-bases/complete-kept-iff» {T K : Type} {af : Bool}
@@ -279,8 +281,8 @@ theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v
 
 /-! ## 2PL -/
 
-/-- "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler
-applies `order(A,B)` in a commitment event, reporting nothing. … On complete
+/-- "If `A` holds that lock in a conflicting mode, `B` waits.  The scheduler
+then applies `order(A,B)` in a commitment event and reports nothing. … On complete
 rows without aborts, `order(A,B)` keeps exactly those with `A` before `B`
 (Figure `fig:cc-commitments`(h))."  The omitted sentences, on when
 `order(A,B)` would remove nothing and is therefore not applied, are
@@ -292,8 +294,8 @@ theorem «app:cc-bases/fig-h» {T K : Type} {A B : T}
     τ.R k c ↔ σ.R k c ∧ c.o.lt A B :=
   fig_h h hp hX hA hB
 
-/-- "When every remaining complete row that commits both already places `A`
-before `B`, `order(A,B)` would remove nothing, so it is undefined and the
+/-- "Sometimes every remaining complete row that commits both already places `A`
+before `B`.  Then `order(A,B)` would remove nothing, so it is undefined and the
 scheduler applies nothing.  This happens when an earlier wait has applied
 `order(A,B)`, or when a reported read result fixes the order, as when `A` has
 read the initial version of the key that `B` writes."
@@ -320,7 +322,7 @@ theorem «app:cc-bases/order-nothing» {T K : Type} {af : Bool} {A B : T} :
    fun h hx hown hB hne => read_initial_ordered h hx hown hB hne⟩
 
 /-- "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps
-`[A,B,C]` and `[C,A,B]`, so it is a commitment, and it is not the commitment `x_o` of
+`[A,B,C]` and `[C,A,B]`.  So it is a commitment, and it is not the commitment `x_o` of
 any output `o`." -/
 theorem «app:cc-bases/order-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h : Tri k A B C) :
     ∃ τ, (order A B).app (σ3 k) = some τ ∧
@@ -332,9 +334,9 @@ theorem «app:cc-bases/order-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h 
   ⟨τ, hτ, h1, h2, h3, (neither_is_canonical_commitment h).1 τ hτ⟩
 
 /-- "A deadlock between `A` and `B` arises when `B` waits for a lock that `A`
-holds and an operation of `A` then waits for a lock that `B` holds: the
-scheduler has applied `order(A,B)` and later `order(B,A)`.  Then no remaining
-row, at any input, commits both `A` and `B`, so every remaining complete row
+holds and an operation of `A` then waits for a lock that `B` holds.  The
+scheduler has then applied `order(A,B)` and later `order(B,A)`.  No remaining
+row, at any input, commits both `A` and `B`.  So every remaining complete row
 aborts one of them, and resolving the deadlock means aborting one."
 "Remaining" is: in any table contained in the one after `order(B,A)`. -/
 theorem «app:cc-bases/deadlock» {T K : Type} {A B : T}
@@ -384,7 +386,7 @@ theorem «app:cc-bases/fig-i» {T K : Type} {B : T}
     τ.R k c ↔ σ.R k c ∧ ∀ D, k.mem D → D ≠ B → c.o.lt B D :=
   fig_i h hp hX hB
 
-/-- "… at the canonical state of `{A,B,C}` it is a commitment, and it is not the
+/-- "At the canonical state of `{A,B,C}` it is a commitment, and it is not the
 commitment `x_o` of any output": it keeps `[B,A,C]` and `[B,C,A]` and removes
 `[A,B,C]` and `[C,B,A]`. -/
 theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h : Tri k A B C) :
@@ -397,9 +399,9 @@ theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h 
   let ⟨τ, hτ, h1, h2, h3, h4⟩ := stamp_at h
   ⟨τ, hτ, h1, h2, h3, h4, (neither_is_canonical_commitment h).2 τ hτ⟩
 
-/-- *What a read is a commitment to*, the row argument: "At an input in which
-`A` writes `x`, a complete row that satisfies both stamps and commits both `A`
-and `B` places `A` between that version and `B`.  In that row the read must
+/-- *What a read is a commitment to*, the row argument: "Consider an input in
+which `A` writes `x`.  There, a complete row that satisfies both stamps and
+commits both `A` and `B` places `A` between that version and `B`.  In that row the read must
 return `A`'s write or a later one, so the row does not permit the reported
 read."   `Z_B ∋ A` is "`B` stamped after `A`"; the read is the `n`-th operation
 of `B`; the version is the initial one or written by `W ∈ Z_A`, `W ≠ A`. -/
@@ -433,9 +435,9 @@ theorem «app:cc-bases/read-commits» {T K : Type} {af : Bool} {A B : T} {ZA ZB 
    fun _ _ hs3 h _ hR _ _ hwA hop hw => H.read_no_both hv hs3 h hR hwA hop hw⟩
 
 /-- "The condition on the version, that `B` read a version older than `A`, is
-needed.  At an input of three
-transactions `A`, `W`, `B`, stamped in that order, each having requested
-commit, with `A` and `W` writing `x` and `B` only reading it, the complete row
+needed.  Consider an input of three transactions `A`, `W`, `B`, stamped in
+that order, each having requested commit, with `A` and `W` writing `x` and `B`
+only reading it.  The complete row
 that commits all three in stamp order and reports that `B` read `W`'s write is
 permitted and satisfies every stamp.  There `B` read a version written after
 `A`, and all three commit."  ("Only reading it": the read is not
@@ -453,7 +455,7 @@ theorem «app:cc-bases/writer-before-A» {T K : Type} {A W B : T} {k : Inp T K}
 every remaining complete row commits `B`, for instance after `TxCommit(B)`,
 then every remaining complete row aborts `A`.  An output that reports the read
 and that every remaining row extends, with `A`'s abort added, is then a legal
-output, so the spec entails the abort."   (Lean also shows that no
+output.  So the spec entails the abort."   (Lean also shows that no
 remaining row commits `A`.)  Stated at any state `τ` with the two properties of
 `«app:cc-bases/run-states»` whose table is contained in the one after the two
 stamps, at an input in which `A` writes `x`. -/
@@ -473,12 +475,12 @@ theorem «app:cc-bases/abort-entailed» {T K : Type} {A B : T} {ZA ZB : T → Pr
 operation, a read of `x`, arrives, then `B`'s read of `x`, and then `A`'s write
 of `x`, with further transactions free to arrive.  The scheduler applies
 `stamp(A)` and `stamp(B)` in commitment events and reports that `B` read the
-initial version of `x`.  Reporting the read is not a legal output on its own:
-at an input in which `A` writes `x`, the row that commits `A` and then `B`
+initial version of `x`.  Reporting the read is not a legal output on its own.
+At an input in which `A` writes `x`, the row that commits `A` and then `B`
 cannot be completed with it.  Once the scheduler applies `read` in a
 commitment event, reporting the read is a legal output.  After `A`'s write
 arrives, two completions remain at the input in which both then request
-commit: one commits `B` and aborts `A`, and the other commits `A` and aborts
+commit.  One commits `B` and aborts `A`, and the other commits `A` and aborts
 `B`.  Emitting `A`'s abort is then not a legal output, and `abort(A)` and `abort(B)` are both defined
 and keep different completions.  MVTO's write rule aborts `A` at once: the
 scheduler applies `abort(A)` in a commitment event, after which reporting the

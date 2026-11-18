@@ -137,7 +137,7 @@ theorem «app:deployment/lm-implies-mono-across» (hlm : sp.LiftedMono)
     (Dp : Deployment sp n) : MonoAcrossPartitions Dp :=
   monoAcrossPartitions_of_liftedMono hlm Dp
 
-/-- "Rows authorized only to `p` can be emitted only by `p`'s run, and the
+/-- "Rows authorized only to `p` can be emitted only by `p`'s run.  The
 outputs that run emits form a chain, since each output event keeps only rows
 whose outputs extend it."  The chain is in emission order; its last row extends every emitted
 output. -/
@@ -194,9 +194,9 @@ theorem «app:deployment/leader-example» (I : Type) [PO I] (i : I) :
 section Deployment2
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-- "The same happens whenever two conditions hold: each authorized row has an
-output extension at every input extension of its input, and every set of
-authorized rows that lacks a common output extension at some common input
+/-- "The same happens whenever two conditions hold.  First, each authorized
+row has an output extension at every input extension of its input.  Second,
+every set of authorized rows that lacks a common output extension at some common input
 extension is authorized only to a single participant."  Finite sets of rows are lists. -/
 theorem «app:deployment/sufficient-condition» (Dp : Deployment sp n)
     (h1 : ∀ p i o, Dp.A p i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u)
@@ -234,7 +234,7 @@ theorem «app:deployment/further-examples/condition-fails» {I : Type} [PO I] (i
 section Deployment3
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-- "If `|𝒩| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split
+/-- "Suppose `|𝒩| ≥ 2` and `E_p = P` for every `p`.  Then every pair of rows can be split
 across a partition, and every single row can be paired with a silent
 participant at the common input extension.  Pairs of rows suffice for the
 common-extension condition (Appendix `app:pairs-suffice`), so monotonicity
@@ -311,7 +311,7 @@ theorem «app:deployment/single-authority/shape» (Dp : Deployment sp n) (p₀ :
       ∃ q, Silent F q ∧ comp q ≠ comp p₀ :=
   single_authority_shape Dp p₀ hSA F hA comp hs
 
-/-- "… so monotonicity across partitions says only that each such row has an
+/-- "Monotonicity across partitions then says only that each such row has an
 output extension at every input extension of its input."  (With `|𝒩| ≥ 2`, so that some
 partition exists.) -/
 theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n) (p₀ : Fin n)
@@ -328,7 +328,7 @@ theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CA
     RowRemovalsNotDistributed Sys :=
   sole_emitter_rowRemovals Sys hsole
 
-/-- "… but it does not change the semantic conflict: a canonical run still
+/-- "… It does not change the semantic conflict: a canonical run still
 conflicts with the authority's commitment.  For example, another canonical run
 of the spec conflicts with a lock manager's choice even when only the manager
 is authorized to emit the result."  Lean: the owner system's row-removing event is
@@ -372,7 +372,7 @@ theorem «thm:complete-cap-deployment/proof» (Dp : Deployment sp n) :
   ⟨fun F _ hj => survivor_iff_compatible F hj, partition_compatibility Dp⟩
 
 /-- "The proposition concerns canonical runs and does not use Deployment
-Availability.  It also applies to the runs of a system: by Lemma
+Availability.  It also applies to the runs of a system.  By Lemma
 `lem:canonical-equivalent`, each such run is observably equivalent to a
 canonical run with the same emitted rows, which therefore lie in `E_p`."
 
@@ -425,11 +425,12 @@ family, separable or not.")
 
 Proof sketch: "If participants `p` and `q` both emit, a partition with `p` on
 one side and `q` on the other makes the family separable, and the separable
-case applies.  Otherwise one participant `p` emits.  Its outputs form a chain,
-so the last of them extends the rest.  Its last row, beside any other
-participant placed on another side and kept silent, is a separable family at
-the same `j`, and the common output extension for that row extends every output
-of `p`."  Lean: `Deploy.monoAcrossPartitions_iff_compatible` (the hard
+case applies.  If no participant emits, any `u ∈ P(j)` will do.  Otherwise
+exactly one participant `p` emits.  Its outputs form a chain, so the last of
+them extends the rest.  Consider `p`'s last row beside one other participant,
+placed on another side and kept silent.  This is a separable family at the
+same `j`.  The common output extension for that row extends every output of
+`p`."  Lean: `Deploy.monoAcrossPartitions_iff_compatible` (the hard
 direction is `Deploy.compatible_of_monoAcrossPartitions`). -/
 theorem «lem:deployment-compatible» (hn : 2 ≤ n) (Dp : Deployment sp n) :
     MonoAcrossPartitions Dp ↔
@@ -464,7 +465,7 @@ theorem «prop:deployment-complete-cap» (D : Type) (hn : 2 ≤ n) (Dp : Deploym
 /-- Proof of Prop. `prop:deployment-complete-cap`, sufficiency: "The canonical
 system has Deployment Availability, since each participant can emit any
 authorized output that its state allows.  Its participants' runs in a
-partitioned history form a participant run family, so by Lemma
+partitioned history form a participant run family.  So by Lemma
 `lem:deployment-compatible` their emitted outputs have a common output
 extension in `P(j)`.  By Lemma `lem:reconciliation` the runs are then confluent
 at `j`, which is Partition Consistency."  Lean:
@@ -480,7 +481,7 @@ theorem «prop:deployment-complete-cap/proof-sufficiency» (D : Type) (hn : 2 �
 participant's emitted outputs form a chain, so it suffices to reach each
 participant's last emitted row.  We start each participant alone on its own
 side, at the input of that row.  Deployment Availability lets it emit the row's
-output, and Partition Consistency gives the emitted outputs a common output
+output.  Partition Consistency then gives the emitted outputs a common output
 extension in `P(j)`."  Lean: `Deploy.authorized_reconciled` (each participant
 `p` starts at `init p` and emits an authorized `o p`, or nothing), then
 `Deploy.compatible_of_system` for families. -/
@@ -558,7 +559,7 @@ theorem «app:registers/source-map» (G : OpSig α n) (h : Hist α) (ρ ρ' : SM
   ⟨Iff.rfl, Iff.rfl⟩
 
 /-- "A *serialization* for replica `p` is a total order of `p`'s operations and
-all writes of `h` that extends `→`; it explains a read of `p` with source `w`
+all writes of `h` that extends `→`.  It explains a read of `p` with source `w`
 when `w` is the last write before the read, or `v₀` if there is none." -/
 theorem «app:registers/serialization» (G : OpSig α n) (h : Hist α) (p : Fin n)
     (lt : α → α → Prop) (r w : α) :
@@ -594,7 +595,7 @@ theorem «app:registers/two-write-history» :
   h2_shape
 
 /-- "Under linearizability, a source map that sends `r_p` to `w_q(x,cat)` needs
-a linearization with `w_p(x,dog)` before `w_q(x,cat)`, and one that sends `r_q`
+a linearization with `w_p(x,dog)` before `w_q(x,cat)`.  One that sends `r_q`
 to `w_p(x,dog)` needs the opposite order.  No source map extends
 both, so the register is not monotone across the partition `{{p},{q}}` under
 any deployment authorizing these two reads."
@@ -734,8 +735,8 @@ theorem «thm:product-frontier» {I : Type} [PO I] {W : Fin n → Type} [∀ p, 
 
 /-- "Consider the histories of Appendix `app:registers` with a second strict
 partial order `≺`: `a ≺ b` when `a` ended before `b` began.  We assume that
-`a → b` implies `a ≺ b`, so replicas propagate only completed writes, and that
-`→` totally orders the operations of each replica.  One input extends another
+`a → b` implies `a ≺ b`, so replicas propagate only completed writes.  We also
+assume that `→` totally orders the operations of each replica.  One input extends another
 when it does so as a history and `≺` agrees on the old operations."
 
 Lean: `RHist G` (fields `rt`, `hb_rt`, `po`) and its order. -/
@@ -756,11 +757,11 @@ theorem «app:rtc/views» (G : OpSig α n) (p : Fin n) (i : RHist G) (v : SMap �
       (∀ r s, v.f r = some s → RSrc G i r s) ∧ RMono G i p v :=
   Iff.rfl
 
-/-- "Intuitively, these are Mahajan et al.'s checks for the order that `p`'s
-reads expose, in which each visible write precedes the read and each
-overwritten write precedes the source.  Item (1) says a replica returns only
-writes it has received, (2) is their real-time check 'time doesn't travel
-backward', and (3) keeps one replica's overwrites consistent."
+/-- "Intuitively, these items are Mahajan et al.'s checks for the order that
+`p`'s reads expose.  In that order each visible write precedes the read, and
+each overwritten write precedes the source.  Item (1) says a replica returns
+only writes it has received.  Item (2) is their real-time check 'time doesn't
+travel backward.'  Item (3) keeps one replica's overwrites consistent."
 
 Lean (`Appendix/MahajanRTC.lean`): `HBCheck i p v HB` is Mahajan et al.'s RTC
 check (TR-11-22, §2.1) for `p`'s reads: `HB` is a strict partial order with
@@ -777,8 +778,8 @@ theorem «app:rtc/mahajan-checks» (G : OpSig α n) (p : Fin n) (i : RHist G) (v
     (RView G p i v → HBCheck i p v (Kv G (hbRt i) v)) :=
   ⟨rview_iff_check G p i v, rview_check⟩
 
-/-- "Their reads return all concurrent latest writes; ours return one, so a
-view matches their check when that write is the only latest one."
+/-- "Their reads return all concurrent latest writes, while ours return one.
+So a view matches their check when that write is the only latest one."
 
 Lean: the match is with a singleton writeList (`«app:rtc/mahajan-checks»`),
 not with one element of theirs.  At the
@@ -793,11 +794,11 @@ theorem «app:rtc/one-source» :
     ¬ RView Tie.G 0 Tie.i1 Tie.va :=
   wl_member_not_rview
 
-/-- "Views exist … Views also continue. … All views of `p` at an input are
-defined on the same reads, so no view extends a different one, and they form
-an antichain.  By Theorem `thm:product-frontier`(1), the real-time causal product
-interface, in which each replica answers its own reads, is monotone across
-partitions under the owner deployment." -/
+/-- "Views exist. … Views also continue. … All views of `p` at an input are
+defined on the same reads.  So no view extends a different one, and the views
+form an antichain.  In the real-time causal product interface, each replica
+answers its own reads.  By Theorem `thm:product-frontier`(1), this interface is
+monotone across partitions under the owner deployment." -/
 theorem «app:rtc/monotone-across» (G : OpSig α n) :
     (∀ p i, ∃ v, RView G p i v) ∧ Continue (W := fun _ => SMap α) (RView G) ∧
     Antichain (W := fun _ => SMap α) (RView G) ∧

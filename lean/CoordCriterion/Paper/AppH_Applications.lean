@@ -96,8 +96,8 @@ abbrev «app:additional-applications/kset-input» (P Val : Type) := KInput P Val
 theorem «app:additional-applications/pmap-order» {P Val : Type} (m m' : PMap P Val) :
     m ≼ m' ↔ ∀ p a, m.f p = some a → m'.f p = some a := Iff.rfl
 
-/-- "At input `I`, `m` is permitted when it decides only participants that
-propose in `I`, every value in its range is proposed in `I` (validity), and its
+/-- "At input `I`, `m` is permitted when three conditions hold: it decides only
+participants that propose in `I`, every value in its range is proposed in `I` (validity), and its
 range has at most `k` values."  (The range is covered by a list of length
 `≤ k`.) -/
 theorem «app:additional-applications/kset-permitted» {P Val : Type} (k : Nat)
@@ -132,15 +132,15 @@ theorem «app:additional-applications/kset-any-k» {P Val : Type} [DecidableEq P
     ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u :=
   kset_any_k hp r0
 
-/-- "… all `k+1` do not, since it would have `k+1` values." -/
+/-- "All `k+1` do not, since such an output would have `k+1` values." -/
 theorem «app:additional-applications/kset-all-fail» {P Val : Type} [DecidableEq P] {k : Nat}
     {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
     (hv : ∀ r r', v r = v r' → r = r') :
     ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u :=
   kset_all_fail hp hv
 
-/-- "So the common-extension condition fails and the spec is not
-monotone (Proposition `prop:common-expansion-form`); a partition separating the
+/-- "So the common-extension condition fails, and the spec is not
+monotone (Proposition `prop:common-expansion-form`).  A partition separating the
 `p_r` gives the negative side of Complete CAP." -/
 theorem «app:additional-applications/kset-not-monotone» {P Val : Type} [DecidableEq P]
     {k : Nat} {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
