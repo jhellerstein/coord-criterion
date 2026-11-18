@@ -86,6 +86,7 @@ first and supporting claims and examples follow.
 | `Distributed/Histories.lean` | `CC.Dist` | §4.1–4.2 | Histories, cuts, Prop. distributed consistency, Cor. convergence, exchanging outputs |
 | `Distributed/Exclusions.lean` | `CC` | §4.3–4.4, App. C | Exclusions, the canonical exclusion for an output, system output events `output(o)` (the lifted output event, whose canonical exclusion must be in the basis when `o` is not legal) and exclusion events `Exclude(γ)` (a nonempty sequence of basis exclusions applied without emitting; erased to nothing), output containment, coordination (a run that is not a run under the empty basis), canonical-equivalent (the canonical run skips exclusion events), conflicting outputs |
 | `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings of output and exclusion events agree |
+| `Distributed/SystemConfluence.lean` | `CC.Dist` | §4.3, App. B | Prop. system-confluence: a system's table is its canonical run's table minus the rows its commitment events removed; confluence under any bases is the Survivor test on those tables, for runs and for consistent cuts; the system's own continuations; Prop. commitment-conflict as the two-run case; the registrar and server examples |
 | `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: exclusions, histories (local events: inputs, output events `out o`, exclusion events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.4 | Thm. Complete CAP; deterministic strategies do not suffice |
 | `CAP/FullKnowledge.lean` | `CC.CAP` | §4 | Strategies that see the participant set and all initial inputs (`KSystem`); every system is one; the necessity half of Complete CAP for an explicit relation holds for them |
@@ -148,7 +149,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-676 entries.
+687 entries.
 
 ### §2 Functional CALM
 
@@ -318,6 +319,15 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/run-under-basis»` | abbrev | After Def. |
 | `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
+| `«sec:systems/at-most-the-rows»` | theorem | §`sec:systems`, end of *Observable equivalence*: |
+| `«sec:commitment-conflict/delta»` | def | §`sec:commitment-conflict`, before Prop. |
+| `«prop:system-confluence»` | theorem | **Proposition `prop:system-confluence`** (System confluence). |
+| `«prop:system-confluence/survivor»` | theorem | Prop. |
+| `«prop:system-confluence/cut»` | theorem | §`sec:commitment-conflict`, after Prop. |
+| `«sec:commitment-conflict/registrar»` | theorem | §`sec:commitment-conflict`: |
+| `«sec:commitment-conflict/own»` | theorem | §`sec:commitment-conflict`, the system's own continuations: |
+| `«sec:commitment-conflict/server»` | theorem | §`sec:commitment-conflict`: |
+| `«prop:commitment-conflict/from-system-confluence»` | theorem | §`sec:commitment-conflict`, before Prop. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
 | `«prop:commitment-conflict/second-run»` | theorem | Supporting form of Prop. |
 | `«prop:commitment-conflict/canonical-run»` | theorem | Supporting form: |
@@ -534,6 +544,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/run-under-basis»` | abbrev | *commitment basis; run under a basis* — a set `ℬ` of commitments; input, output, and commitment events whose commitments, including each non-legal output's `… |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
+| `«app:notation/delta»` | def | *`Δ(ρ)`* — rows of the final table of `ρ`'s canonical run that a commitment event of `ρ` removed; `ρ` keeps the rest (Prop. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, no message crosses sides (Def. |
 | `«app:notation/side»` | abbrev | *side* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs participants actually emit (Def. |
@@ -581,6 +592,7 @@ File `Paper/AppB_ProofsDistributed.lean`; paper source `appendices/proof-machine
 | `«app:exchanging-outputs»` | theorem | *Exchanging outputs* (table level). |
 | `«app:exchanging-outputs/cut»` | theorem | *Exchanging outputs* (history level). |
 | `«app:exchanging-outputs/honored-table-not-state»` | theorem | *Exchanging outputs.* "This restriction is a table, not a specification state: |
+| `«proof:prop:system-confluence»` | theorem | Proof of Prop. |
 | `«proof:prop:commitment-conflict»` | theorem | Proof of Prop. |
 | `«thm:complete-cap/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap`: |
 | `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, converse: |

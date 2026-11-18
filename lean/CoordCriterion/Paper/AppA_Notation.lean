@@ -1,5 +1,6 @@
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Distributed.Systems
+import CoordCriterion.Distributed.SystemConfluence
 import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Coordination
@@ -350,6 +351,14 @@ equivalent when their images under `filterMap SEvent.erase` (which drops
 commitment events) agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
+
+/-- *`Δ(ρ)`* — rows of the final table of `ρ`'s canonical run that a
+commitment event of `ρ` removed; `ρ` keeps the rest
+(Prop. `prop:system-confluence`).  Lean: `Dist.Removed B σ es k u`, restricted
+to the canonical final table `ρh`; `Dist.table_decomp` is "`ρ` keeps the rest". -/
+def «app:notation/delta» {sp : Spec I O} (B : CommitmentBasis sp) (σ : State sp)
+    (es : List (SEvent sp)) (ρh : State sp) : I → O → Prop :=
+  fun k u => ρh.R k u ∧ Dist.Removed B σ es k u
 
 /-- Supporting notation for a canonical run that contradicts a commitment in
 Proposition `prop:canonical-commitment-witness`: it accepts an input whose fiber

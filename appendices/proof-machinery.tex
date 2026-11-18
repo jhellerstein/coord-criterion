@@ -172,6 +172,38 @@ includes $o$, which was emitted earlier, so the restriction keeps the row.
 The confluence of a cut therefore depends on which outputs were emitted,
 not on who has heard about them.
 
+\begin{proof}[Proof of Proposition~\ref{prop:system-confluence}]
+(1) By Lemma~\ref{lem:canonical-equivalent}, $R_r\subseteq\widehat R_r$.
+Rows are never added, so a row that a \commitment event of $\rho_r$ removed is
+not in $R_r$; hence $R_r\subseteq\widehat R_r\setminus\Delta(\rho_r)$.
+Conversely, let $(k,u)\in\widehat R_r\setminus\Delta(\rho_r)$.  Both runs
+start at the same canonical state, which contains $(k,u)$.  Consider an event of
+$\rho_r$ at a state containing $(k,u)$.  If it is $\mathsf{input}(j)$, the
+canonical run also takes $\mathsf{input}(j)$ and keeps $(k,u)$, so
+$j\InputOrd k$ and the event keeps $(k,u)$.  If it is $\mathsf{output}(o)$,
+then likewise $o\OutputOrd u$ and the event keeps $(k,u)$.  If it is a
+\commitment event, it keeps $(k,u)$ because $(k,u)\notin\Delta(\rho_r)$.  By
+induction on the events, $(k,u)\in R_r$.
+
+(2) Suppose continuations bring every run to a common state $(k,R)$.  That
+state has a row $(k,u)$, and events never add rows, so $(k,u)\in R_r$ for every
+$r$.  Conversely, suppose $(k,u)\in R_r$ for every $r$.  Since
+$i_r\InputOrd k$, the event $\mathsf{input}(k)$ is legal at $(i_r,R_r)$ and
+keeps $(k,u)$, so $\mathsf{output}(u)$ is then enabled.  It ends at
+$(k,R'_r)$ with $R'_r=R_r[\mathrm{in}\InputGe k,\ \mathrm{out}\OutputGe u]$.
+If $R'_r$ has rows other than $(k,u)$, consider the partial function that maps
+each state with current input $k$ whose table contains $(k,u)$ and some other
+row, and whose rows at $k$ all \outrelbase $u$, to $(k,\{(k,u)\})$.  It keeps
+the current input and removes a nonempty set of rows.  A removed row at $k$ is some $(k,x)$ with
+$u\OutputOrd x$ and $x\neq u$, so $x\not\OutputOrd u$; a removed row at
+another input has no remaining row at its input.  So the function is a
+\commitment (Definition~\ref{def:commitment}), and a \commitment event that
+applies it ends at $(k,\{(k,u)\})$.  If $R'_r$ has no other row, the run is
+already there.  Every run therefore reaches $(k,\{(k,u)\})$.  By~(1),
+$(k,u)\in R_r$ exactly when $(k,u)\in\widehat R_r$ and
+$(k,u)\notin\Delta(\rho_r)$.
+\end{proof}
+
 \begin{proof}[Proof of Proposition~\ref{prop:commitment-conflict}]
 Events only remove rows, so $(k,x)$ is present at $\sigma_P(i)$.  Thus $k$
 \inrel $i$ and $x\in\fiber{k}$, so $\mathsf{input}(k)$ and then
@@ -181,8 +213,8 @@ run exists.  Under any basis, after $\mathsf{output}(x)$ every row at $k$
 \commitment leaves no such row at $k$
 (Equation~\ref{eq:commitment-unsubsumed}); if it removed every row at $k$,
 there is none at all.  Later events only remove rows, so no row at $k$
-survives in both runs, and by Proposition~\ref{prop:confluence} the runs are
-not confluent at $k$.
+survives in both runs, and by Proposition~\ref{prop:system-confluence} the
+runs are not confluent at $k$.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]

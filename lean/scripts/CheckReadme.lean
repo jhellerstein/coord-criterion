@@ -151,6 +151,15 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/run-under-basis»
 #check @CC.Paper.«sec:systems/canonical-equivalent»
 #check @CC.Paper.«sec:systems/canonical-example»
+#check @CC.Paper.«sec:systems/at-most-the-rows»
+#check @CC.Paper.«sec:commitment-conflict/delta»
+#check @CC.Paper.«prop:system-confluence»
+#check @CC.Paper.«prop:system-confluence/survivor»
+#check @CC.Paper.«prop:system-confluence/cut»
+#check @CC.Paper.«sec:commitment-conflict/registrar»
+#check @CC.Paper.«sec:commitment-conflict/own»
+#check @CC.Paper.«sec:commitment-conflict/server»
+#check @CC.Paper.«prop:commitment-conflict/from-system-confluence»
 #check @CC.Paper.«prop:commitment-conflict»
 #check @CC.Paper.«prop:commitment-conflict/second-run»
 #check @CC.Paper.«prop:commitment-conflict/canonical-run»
@@ -339,6 +348,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/run-under-basis»
 #check @CC.Paper.«app:notation/canonical-run»
 #check @CC.Paper.«app:notation/observably-equivalent»
+#check @CC.Paper.«app:notation/delta»
 #check @CC.Paper.«app:notation/partitioned-history»
 #check @CC.Paper.«app:notation/side»
 #check @CC.Paper.«app:notation/explicit-relation»
@@ -372,6 +382,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:exchanging-outputs»
 #check @CC.Paper.«app:exchanging-outputs/cut»
 #check @CC.Paper.«app:exchanging-outputs/honored-table-not-state»
+#check @CC.Paper.«proof:prop:system-confluence»
 #check @CC.Paper.«proof:prop:commitment-conflict»
 #check @CC.Paper.«thm:complete-cap/proof-sufficiency»
 #check @CC.Paper.«thm:complete-cap/proof-necessity»

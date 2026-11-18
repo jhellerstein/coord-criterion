@@ -1,4 +1,5 @@
 import CoordCriterion.Distributed.Systems
+import CoordCriterion.Distributed.SystemConfluence
 import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Necessity
@@ -88,6 +89,31 @@ theorem «app:exchanging-outputs/honored-table-not-state» :
     Dist.honor (canon Dist.spV3 (Dist.v 0)).R [Dist.v 1] (Dist.v 2) (Dist.v 2) ∧
     (canon Dist.spV3 (Dist.v 1)).R (Dist.v 2) (Dist.v 2) :=
   Dist.honor_counterexample
+
+/-- Proof of Prop. `prop:system-confluence`, part (1): "By Lemma
+canonical-equivalent, `R_r ⊆ R̂_r`.  Rows are never added, so a row that a
+commitment event of `ρ_r` removed is not in `R_r`; hence `R_r ⊆ R̂_r \ Δ(ρ_r)`.
+Conversely, let `(k,u) ∈ R̂_r \ Δ(ρ_r)`. … By induction on the events,
+`(k,u) ∈ R_r`."  Part (2): "Suppose continuations bring every run to a common
+state `(k,R)`. … If `R'_r` has rows other than `(k,u)`, consider the partial
+function that maps each state with current input `k` whose table contains
+`(k,u)` and some other row, and whose rows at `k` all extend `u`, to
+`(k,{(k,u)})`. … So the function is a commitment (Definition commitment), and a
+commitment event that applies it ends at `(k,{(k,u)})`. … Every run therefore
+reaches `(k,{(k,u)})`."
+
+Lean: (1) is `Dist.table_decomp` (by induction on the run, via
+`Dist.table_decomp_gen`); (2) uses `Dist.keepOnly`, whose domain is slightly
+larger (rows at `k` other than `u` need only not lie below `u`), and
+`Dist.reach_single`, which reaches `Dist.single k u` from any state at an input
+below `k` that contains `(k,u)`, under the full basis. -/
+theorem «proof:prop:system-confluence» {sp : Spec I O} :
+    (∀ {B : CommitmentBasis sp} {σ ρ ρh : State sp} {es : List (SEvent sp)},
+      SysExec B σ es ρ → Exec σ (es.filterMap SEvent.erase) ρh →
+        ∀ k u, ρ.R k u ↔ ρh.R k u ∧ ¬ Dist.Removed B σ es k u) ∧
+    (∀ {σ : State sp} {k : I} {u : O} (hu : sp.P k u), σ.cur ≼ k → σ.R k u →
+      ∃ es : List (SEvent sp), SysExec (fun _ => True) σ es (Dist.single k u hu)) :=
+  ⟨fun h hc => Dist.table_decomp h hc, fun hu hk hku => Dist.reach_single hu hk hku⟩
 
 /-- Proof of Prop. `prop:commitment-conflict`.  The two
 clauses of `CommitmentContradictsAt` are the proof's two cases: an accepted

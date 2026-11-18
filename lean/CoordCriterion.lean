@@ -13,6 +13,7 @@ import CoordCriterion.CALM.TransientConflict
 import CoordCriterion.Distributed.Histories
 import CoordCriterion.Distributed.Commitments
 import CoordCriterion.Distributed.Systems
+import CoordCriterion.Distributed.SystemConfluence
 -- §4.5 Complete CAP; Appendix F (response availability, Gilbert–Lynch)
 import CoordCriterion.CAP.Model
 import CoordCriterion.CAP.CompleteCAP

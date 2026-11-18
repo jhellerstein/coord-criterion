@@ -1,4 +1,5 @@
 import CoordCriterion.Distributed.Systems
+import CoordCriterion.Distributed.SystemConfluence
 import CoordCriterion.CALM.TransientConflict
 import CoordCriterion.Figures
 import CoordCriterion.CAP.Coordination
@@ -713,11 +714,207 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
   Txn.Partial.CommitEx.example_commitment_event_ABC h
 
 
-/-- **Proposition `prop:commitment-conflict`** (Commitment conflict).  Before
-it: "The registrar shows how a system's own commitment can block a confluence
-the spec allows: once it closes the polls at `ab·`, it can never reach a common
-state with a canonical run that accepts `aba` and emits `a`.  This is one case
-of a general fact."  The proposition: "Let a run under some commitment basis
+/-- §`sec:systems`, end of *Observable equivalence*: "The CALM and CAP
+criteria are about specs and their canonical runs.  A system with no
+commitment events inherits their confluence directly, since its runs are
+canonical runs.  A system with commitments of its own keeps at most the rows of
+its canonical runs, and its confluence depends on which rows those commitments
+remove."
+
+Lean: "keeps at most the rows" is the table containment of Lemma
+`lem:canonical-equivalent`; how the confluence depends on the removed rows is
+Prop. `prop:system-confluence`. -/
+theorem «sec:systems/at-most-the-rows» {sp : Spec I O} {B : CommitmentBasis sp} {i : I}
+    {es : List (SEvent sp)} {ρ ρh : State sp} (h : SysExec B (canon sp i) es ρ)
+    (hc : Exec (canon sp i) (es.filterMap SEvent.erase) ρh) :
+    ∀ k u, ρ.R k u → ρh.R k u :=
+  fun k u hu => ((Dist.table_decomp h hc k u).1 hu).1
+
+/-- §`sec:commitment-conflict`, before Prop. `prop:system-confluence`: "The
+registrar shows how a system's own commitment can block a confluence the spec
+allows: once it closes the polls at `ab·`, it can never reach a common state
+with a canonical run that accepts `aba` and emits `a`.  To see exactly which
+rows a system gives up, we compare a run with its canonical run (Lemma
+canonical-equivalent).  An input or output event tests each row the same way in
+both runs, so only the system's commitment events remove more.  For a run `ρ`
+under a basis whose canonical run ends at `(i, R̂)`, let `Δ(ρ)` be the rows of
+`R̂` that a commitment event of `ρ` removed."
+
+Lean: `Dist.Removed B σ es k u` says that a commitment event of the run `es`
+from `σ` under `B` removed `(k,u)`; `Δ(ρ)` is the rows of the canonical final
+table `ρh` for which it holds. -/
+def «sec:commitment-conflict/delta» {sp : Spec I O} (B : CommitmentBasis sp) (σ : State sp)
+    (es : List (SEvent sp)) (ρh : State sp) : I → O → Prop :=
+  fun k u => ρh.R k u ∧ Dist.Removed B σ es k u
+
+/-- **Proposition `prop:system-confluence`** (System confluence).  "Let
+`ρ_1,…,ρ_n` be runs under any commitment bases, where `ρ_r` ends at
+`(i_r,R_r)` and its canonical run ends at `(i_r,R̂_r)`.  (1) `R_r = R̂_r \ Δ(ρ_r)`.
+(2) Let `k` be a common input extension of `i_1,…,i_n`.  The runs are
+confluent at `k`, by continuations whose output and commitment events may apply
+any commitments, if and only if some row at `k` lies in every `R̂_r` and in no
+`Δ(ρ_r)`."
+
+Lean: the family is indexed by `Fin m`; run `r` is under basis `B r` from
+`σ_P(i r)` with events `es r`, and its canonical run is the erasure, ending at
+`ρh r`.  The first conjunct says the canonical run ends at the same current
+input; the second is (1); the third is (2), with continuations under any
+bases `B'`. -/
+theorem «prop:system-confluence» {sp : Spec I O} {m : Nat} (B : Fin m → CommitmentBasis sp)
+    (i : Fin m → I) (es : Fin m → List (SEvent sp)) (ρ ρh : Fin m → State sp)
+    (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
+    (hcan : ∀ r, Exec (canon sp (i r)) ((es r).filterMap SEvent.erase) (ρh r)) :
+    (∀ r, (ρh r).cur = (ρ r).cur) ∧
+    (∀ r k u, (ρ r).R k u ↔ (ρh r).R k u ∧ ¬ Dist.Removed (B r) (canon sp (i r)) (es r) k u) ∧
+    ∀ k, (∀ r, (ρ r).cur ≼ k) →
+      ((∃ τ : State sp, τ.cur = k ∧ ∀ r, ∃ (B' : CommitmentBasis sp) (es' : List (SEvent sp)),
+          SysExec B' (ρ r) es' τ) ↔
+        ∃ u, sp.P k u ∧ ∀ r, (ρh r).R k u ∧ ¬ Dist.Removed (B r) (canon sp (i r)) (es r) k u) :=
+  Dist.system_confluence B i es ρ ρh hrun hcan
+
+/-- Prop. `prop:system-confluence`, proof sketch: "(1) A row of `R̂_r` passes
+every input and output event of `ρ_r`, so it can leave `R_r` only through a
+commitment event.  (2) As in the Survivor test (Proposition confluence), a
+common state at `k` has a row at `k`, and since rows are never added, that row
+lies in every `R_r`.  Conversely, if `(k,u)` lies in every `R_r`, each run
+reaches the state whose only row is `(k,u)` by `input(k)`, then `output(u)`,
+then a commitment event that removes every other row.  After `output(u)`, every
+other row at `k` extends `u` and differs from it, so none of them is extended
+by `(k,u)` and the removal is a commitment.  Part (1) turns the condition on
+the `R_r` into the one stated."
+
+Lean: the Survivor test for states reached under any bases (no assumption that
+they are runs): states whose current inputs lie below `k` reach a common state
+at `k`, by events under any bases, iff some row at `k` survives in all of them.
+The common state is `Dist.single k u`, reached with the commitment
+`Dist.keepOnly k u` (`Dist.reach_single`). -/
+theorem «prop:system-confluence/survivor» {sp : Spec I O} (fam : List (State sp)) (k : I)
+    (hk : ∀ σ ∈ fam, σ.cur ≼ k) :
+    Dist.SysConfluentAt fam k ↔ ∃ u, sp.P k u ∧ ∀ σ ∈ fam, σ.R k u :=
+  Dist.sysConfluentAt_iff fam k hk
+
+/-- §`sec:commitment-conflict`, after Prop. `prop:system-confluence`: "The
+same test applies to a consistent cut of a history, with one run per
+participant.  A continuation that adds events at each participant separately,
+with no messages, brings the cut to a common state exactly when those runs
+reach it (Section distributed-consistency)."
+
+Lean: in the history model of `CC.CAP` (where a continuation's events may
+apply any commitments, as in Partition Consistency), a consistent cut of a
+well-formed history whose current inputs lie below `k` is confluent at `k`
+(`CAP.ConfluentCut`) iff some row at `k` lies in every participant's canonical
+table and was removed by no commitment event of that participant's run
+(each participant run read as a run under the full basis, `Deploy.toS`).  The
+continuation built adds receive-free events at each participant. -/
+theorem «prop:system-confluence/cut» {sp : Spec I O} {D : Type} {n : Nat}
+    {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
+    (hwf : CAP.WF init H) (hcut : CAP.IsCut H c) {k : I}
+    (hk : ∀ p σ, CAP.LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ k)
+    (ρh : Fin n → State sp)
+    (hcan : ∀ p, Exec (canon sp (init p))
+      ((Deploy.toS ((H p).take (c p))).filterMap SEvent.erase) (ρh p)) :
+    (CAP.ConfluentCut init H c k ↔
+      ∃ u, sp.P k u ∧ ∀ p σ, CAP.LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.R k u) ∧
+    (CAP.ConfluentCut init H c k ↔
+      ∃ u, sp.P k u ∧ ∀ p, (ρh p).R k u ∧
+        ¬ Dist.Removed (fun _ => True) (canon sp (init p)) (Deploy.toS ((H p).take (c p))) k u) :=
+  ⟨Dist.confluentCut_iff hwf hcut hk, Dist.cut_confluence hwf hcut hk ρh hcan⟩
+
+/-- §`sec:commitment-conflict`: "For the registrar, closing the polls at `ab·`
+puts in `Δ` every row with a late ballot, such as `(aba,a)` and `(abb,b)`.  Its
+table then has no row at `aba`, so no family of runs that includes it is
+confluent at `aba`."
+
+Lean: the registrar's run from `σ_P(ab·)` (`apply([closePolls])`, then
+`output(⊥)`); its canonical run is `output(⊥)`.  The rows of the canonical
+table removed by the commitment event are exactly `(aba, a)` and `(abb, b)`,
+the rows with a late ballot; its own table, panel (d), has no row at `aba`; and
+by Prop. `prop:system-confluence` no family containing it is confluent at
+`aba`. -/
+theorem «sec:commitment-conflict/registrar» (B : CommitmentBasis CALM.elec)
+    (hB : B Figures.closePolls) (ρh : State CALM.elec)
+    (hρh : Exec (canon CALM.elec CALM.bab) [.output .bot] ρh) :
+    (∀ k o, (ρh.R k o ∧ Dist.Removed B (canon CALM.elec CALM.bab)
+        [.commitment [Figures.closePolls], .output .bot] k o) ↔
+      ((k = CALM.baba ∧ o = .win .a) ∨ (k = Figures.Elec.babb ∧ o = .win .b))) ∧
+    (∀ o, ¬ Figures.Elec.panelD.R CALM.baba o) ∧
+    ∀ fam : List (State CALM.elec), Figures.Elec.panelD ∈ fam →
+      ¬ Dist.SysConfluentAt fam CALM.baba := by
+  obtain ⟨h1, h2⟩ := Dist.registrar_delta B hB ρh hρh
+  refine ⟨h1, h2, fun fam hm ⟨τ, hτ, hall⟩ => ?_⟩
+  obtain ⟨u, hu⟩ := τ.hasCur
+  rw [hτ] at hu
+  obtain ⟨B', es', hx⟩ := hall _ hm
+  exact h2 u (hx.sub _ u hu)
+
+/-- §`sec:commitment-conflict`, the system's own continuations: "The
+continuations in Proposition system-confluence need not be ones the system
+would choose: the last commitment event in the proof is in general not in the
+system's basis.  Suppose that, from each final state, the system's strategy
+can accept `k` and then emit any output whose row at `k` remains in its table.
+Then the test is also exact for the system's own continuations: it holds
+exactly when they can bring every run to input `k` and emit one common output
+there, which extends everything the runs emitted."
+
+Lean: `Can σ u` says that the system can continue from `σ` to input `k` and
+emit `u` there; any such continuation is a run under some basis that ends with
+`output(u)` at `k` (`hsound`).  Under the stated assumption (`hcomplete`), a
+common such `u` exists iff some row at `k` survives in every table (first
+conjunct).  A surviving row extends every output the run emitted (second
+conjunct, for a run under any basis from `σ_P(i)`). -/
+theorem «sec:commitment-conflict/own» {sp : Spec I O} (fam : List (State sp)) (k : I)
+    (Can : State sp → O → Prop)
+    (hsound : ∀ σ u, Can σ u → ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)) (τ : State sp),
+      SysExec B σ (es ++ [.output u]) τ ∧ τ.cur = k)
+    (hcomplete : ∀ σ ∈ fam, ∀ u, σ.R k u → Can σ u) :
+    ((∃ u, ∀ σ ∈ fam, Can σ u) ↔ ∃ u, ∀ σ ∈ fam, σ.R k u) ∧
+    ∀ {B : CommitmentBasis sp} {i : I} {es : List (SEvent sp)} {ρ : State sp},
+      SysExec B (canon sp i) es ρ → ∀ {u : O}, ρ.R k u →
+        ∀ o ∈ outs (es.filterMap SEvent.erase), o ≼ u :=
+  ⟨Dist.own_iff fam k Can hsound hcomplete, fun h _ hu => Dist.surviving_row_extends h hu⟩
+
+/-- §`sec:commitment-conflict`: "Without that assumption, `Δ` understates what
+the system has given up.  Consider a server that either replies `x` to the
+first request `p` and never replies `z`, or waits for a second `p` and then
+replies `x` and then `z`.  A run that replied early made no commitment, so its
+table keeps the row with input `pp` and output `xz`, but its strategy never
+emits `z`."
+
+Lean: request counts and reply sequences as `Fin 3` chains (`Dist.Server`);
+the run `input(p)`, `output(x)`, `input(pp)` has no commitment event, so it
+removes no row by commitment, and its table keeps `(pp, xz)`.  That the
+strategy never emits `z` is the example's description of the strategy. -/
+theorem «sec:commitment-conflict/server» :
+    ∃ ρ : State Dist.Server.srv,
+      SysExec (fun _ => True) (canon Dist.Server.srv (0 : Fin 3))
+        [.input (1 : Fin 3), .output (1 : Fin 3), .input (2 : Fin 3)] ρ ∧
+      ρ.cur = (2 : Fin 3) ∧ ρ.R (2 : Fin 3) (2 : Fin 3) ∧
+      ∀ k u, ¬ Dist.Removed (fun _ => True) (canon Dist.Server.srv (0 : Fin 3))
+        [.input (1 : Fin 3), .output (1 : Fin 3), .input (2 : Fin 3)] k u :=
+  Dist.Server.early_reply
+
+/-- §`sec:commitment-conflict`, before Prop. `prop:commitment-conflict`:
+"Proposition system-confluence has a simple special case: two runs, one of
+which removes a row by a commitment while the other emits that row's output."
+The proof sketch of Prop. `prop:commitment-conflict`: "After `output(x)`, every
+row at `k` in the second run extends `x`.  The commitment removed `(k,x)` and
+left no row at `k` that extends `x` (Definition commitment), so no such row
+remains in the first run's table.  No row at `k` survives in both runs, and by
+Proposition system-confluence they are not confluent at `k`."
+
+Lean: derived from the Survivor test for states under any bases
+(Prop. `prop:system-confluence`, (2)), with continuations that may apply any
+commitments. -/
+theorem «prop:commitment-conflict/from-system-confluence» {sp : Spec I O}
+    {c : Commitment sp} {σ σc σ' τ0 τ : State sp} {k : I} {x : O} {B' : CommitmentBasis sp}
+    (happ : c.app σ = some σc) (hx : σ.R k x) (hnx : ¬ σc.R k x)
+    (hsub : ∀ k w, σ'.R k w → σc.R k w) (hk : σ'.cur ≼ k)
+    (h2 : SysExec B' τ0 [.input k, .output x] τ) :
+    ¬ Dist.SysConfluentAt [σ', τ] k :=
+  Dist.commitment_conflict_of_system_confluence happ hx hnx hsub hk h2
+
+/-- **Proposition `prop:commitment-conflict`** (Commitment conflict).  The
+proposition: "Let a run under some commitment basis
 from `σ_P(i)` apply a commitment that removes the row `(k,x)`, and let a run
 under any commitment basis from `σ_P(i)` issue `input(k)` followed by
 `output(x)`.  These two runs *conflict*: they are not confluent at `k`."  Proof
