@@ -2324,9 +2324,9 @@ sees only its own facts and the contents of the messages it receives, and
 broadcasts its messages. Since its own facts include its name, a participant
 knows its own name and the order on names, which is what their coordination-free
 transducers know. It does not know the list of all participants. Under their
-placement, the environment gives each participant only its own facts, at the
-start, so the facts in a participant's input that name other participants
-arrived in messages, and a participant passes on only facts it holds. A
+placement, a participant's input events contain only the facts that name it, at
+the start; other facts reach it only in messages, and a participant passes on
+only facts it holds. A
 transducer that computes a behavior translates into our framework as a system
 whose runs stay confluent. Every output that some fair run of the transducer can produce is
 emitted by some run of that system.
@@ -2335,9 +2335,8 @@ Two sides of a partition cannot tell that they are disconnected, so each must
 emit to be available, and when the partition heals, their outputs must have a
 common \outnoun at any input that extends what both sides have received. Complete CAP requires this condition across every partition. Baccaert and
 Ketsman's \emph{node monotonicity} is the same condition, restricted to sides
-that have heard from disjoint sets of participants. Under their placement, a
-participant's input events contain only the facts that name it, and other facts
-reach it only in messages. No message crosses a partition, so the inputs of
+that have heard from disjoint sets of participants. Since other facts reach a
+participant only in messages and no message crosses a partition, the inputs of
 the two sides never share a fact. In our model, an input event at any
 participant may contain any fact, so input events on both sides may contain
 the same fact, and for nondeterministic behaviors node monotonicity is strictly
@@ -2370,8 +2369,10 @@ it cannot be computed without the list of all nodes. Correctness is judged by
 the final output of a run, and the input is fixed when the run starts. We ask
 instead when a spec requires a \commitment, judge consistency at every point of
 a run, and let input arrive over time. A behavior can therefore be
-coordination-free in their sense while still needing a \commitment in ours,
-made locally by one participant. Each refinement of CALM in this subsection
+coordination-free in their sense while still needing a \commitment in ours. For them, coordination means needing the list of all nodes, so a \commitment
+that one participant makes locally, as when a group's smallest node decides
+for the group, does not count. Our criterion identifies such local
+\commitments as well. Each refinement of CALM in this subsection
 thus corresponds to a choice our model makes explicit: the input order, for the
 placements of Ameloot et al.; sets ordered by inclusion as inputs, for Li and
 Lee; and the facts that an input event at each participant may contain,

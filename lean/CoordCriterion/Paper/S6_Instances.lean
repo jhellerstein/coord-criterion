@@ -172,9 +172,9 @@ the facts of participants not yet heard from, never by adding facts of a
 participant already heard from.  A network of transducers is a system in which
 every participant runs the same strategy, sees only its own facts and the
 contents of the messages it receives, and broadcasts its messages. … Under
-their placement, the environment gives each participant only its own facts, at
-the start, so the facts in a participant's input that name other participants
-arrived in messages, and a participant passes on only facts it holds.  A
+their placement, a participant's input events contain only the facts that name
+it, at the start; other facts reach it only in messages, and a participant
+passes on only facts it holds.  A
 transducer that computes a behavior translates into our framework as a system
 whose runs stay confluent.  Every output that some fair run of the transducer can produce is
 emitted by some run of that system."
@@ -236,7 +236,10 @@ nodes.  Correctness is judged by the final output of a run, and the input is
 fixed when the run starts.  We ask instead when a spec requires a commitment,
 judge consistency at every point of a run, and let input arrive over time.  A
 behavior can therefore be coordination-free in their sense while still needing
-a commitment in ours, made locally by one participant.  Each refinement of CALM
+a commitment in ours.  For them, coordination means needing the list of all
+nodes, so a commitment that one participant makes locally, as when a group's
+smallest node decides for the group, does not count.  Our criterion identifies
+such local commitments as well.  Each refinement of CALM
 in this subsection thus corresponds to a choice our model makes explicit: the
 input order, for the placements of Ameloot et al.; sets ordered by inclusion as
 inputs, for Li and Lee; and the facts that an input event at each participant
@@ -247,8 +250,14 @@ Lean: the coordination-free-but-commitment sentence's example is the matching
 problem below: it is node
 monotone (`QRef.matching_nodeMono`; coordination-free in their sense by their
 characterization theorem, cited) and fails Lifted Monotonicity, so by Complete
-CALM some reachable output needs a commitment.  The descriptions of their aims,
-notion of coordination, correctness and inputs are cited prose.  The closing
+CALM some reachable output needs a commitment.  "Our criterion identifies such
+local commitments as well": the spanning-tree instance `QRef.tree` is node
+monotone yet no total sub-behavior is consistent on it
+(`«sec:query-instance/sufficient-half»`), so a system for it needs a
+commitment, which their quorum construction makes at a group's smallest node
+(`BK.qProg`, `BK.dec_lam`); reading that decision as a local commitment is
+prose.  The descriptions of their aims, notion of coordination ("needing the
+list of all nodes"), correctness and inputs are cited prose.  The closing
 sentence summarizes the subsection's mappings: the input orders are
 `«sec:query-instance/placement-calm»`, the set inputs of Li and Lee are cited
 prose, and the placement of input facts is `BK.Placed`
@@ -294,9 +303,8 @@ theorem «sec:query-instance/node-monotonicity» :
     fun _ _ hCh => BK.nodeMono_of_characterizes hCh⟩
 
 /-- Sec. `sec:query-instance`: "Complete CAP requires this condition across
-every partition." and "Under their placement, a participant's input events
-contain only the facts that name it, and other facts reach it only in messages.
-No message crosses a partition, so the inputs of the two sides never share a
+every partition." and "Since other facts reach a participant only in messages
+and no message crosses a partition, the inputs of the two sides never share a
 fact.  In our model, an input event at any participant may contain any fact, so
 input events on both sides may contain the same fact, and for nondeterministic
 behaviors node monotonicity is strictly weaker than Lifted Monotonicity."
