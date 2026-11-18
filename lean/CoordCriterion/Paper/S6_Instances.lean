@@ -898,8 +898,9 @@ theorem «sec:iconfluence-instance/iconfluence-is-consistency» {V Tx : Type} (M
     M.IConfluent ↔ (IConf.SI M).Consistent :=
   (IConf.ic_iff_liftedMono M).trans (complete_calm _).symm
 
-/-- The uniqueness example: "The uniqueness constraint of Bailis et al.'s
-payroll example shows the failure directly.  Two replicas each create an
+/-- The uniqueness example: "The uniqueness constraint in Bailis et al.'s
+payroll example is not invariant confluent, and `𝒮_𝓘` shows where Lifted
+Monotonicity fails.  Two replicas each create an
 employee and assign ID 7, each running on a state in which ID 7 is unused.
 The history in which neither creation ran on a state that included the
 other's writes is locally valid and extends both
@@ -920,16 +921,22 @@ theorem «sec:iconfluence-instance/uniqueness» :
       ¬ (IConf.SI Inst.uModel).LiftedMono ∧ ¬ Inst.uModel.IConfluent :=
   Inst.uniqueness_example
 
-/-- "Concurrency, not the transactions alone, decides the outcome: a
-transaction that is harmless after another can, when it runs on a state
-without the other's writes, produce a state whose merge with the other's is invalid."  Lean:
-`alloc 2` after `alloc 1` is valid, `alloc 2` alone is valid, but the merge of
-`alloc 1` and `alloc 2` run concurrently from `s₀` is invalid. -/
+/-- "Concurrency, not the transactions alone, decides the outcome: each
+creation preserves the invariant on the state it ran on, and only the merge of
+the two states violates it."  Lean: `alloc 1` and `alloc 2`, each run from
+`s₀`, give states satisfying the invariant, but the merge of the two states is
+invalid. -/
 theorem «sec:iconfluence-instance/concurrency-decides» :
-    Inst.uModel.Inv (Inst.uModel.app 2 (Inst.uModel.app 1 Inst.uModel.s0)) ∧
+    Inst.uModel.Inv (Inst.uModel.app 1 Inst.uModel.s0) ∧
       Inst.uModel.Inv (Inst.uModel.app 2 Inst.uModel.s0) ∧
       ¬ Inst.uModel.Inv ((Inst.uModel.app 1 Inst.uModel.s0).union (Inst.uModel.app 2 Inst.uModel.s0)) :=
-  Inst.uniqueness_concurrency
+  ⟨fun a b ha hb => by
+      rcases ha with ha | ⟨rfl, _⟩
+      · exact ha.elim
+      rcases hb with hb | ⟨rfl, _⟩
+      · exact hb.elim
+      rfl,
+    Inst.uniqueness_concurrency.2.1, Inst.uniqueness_concurrency.2.2⟩
 
 /-! ## General operational specification models (`sec:operational-models`)
 

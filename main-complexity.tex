@@ -2666,10 +2666,20 @@ receive from another eventually reflect the updates the other knows, needs no
 separate assumption, since the input records which writes each replica has
 received.\color{black}
 
+\paragraph{Application-aware isolation level selection.}
+\color{black}\cxtag{instances:27}{N/M}\cxbar{instances-27}{0.4 0.4 1}{s}In addition to being coordination-free, weak isolation levels can provide
+sufficient isolation for certain mixes of transactional applications.  Kaki et
+al.~\cite{kaki2018alone} give a program logic for transactions under weak
+isolation, with compositional proof rules for showing that a program maintains
+its invariants.  Their inference procedure automatically finds, for each
+transaction, the weakest isolation level under which its invariants are still
+maintained, using an encoding of database computations that off-the-shelf SMT
+solvers can check.\cxbar{instances-27}{0.4 0.4 1}{e}\color{black}
+
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
-\color{black}\cxtag{instances:27}{N/L}\cxbar{instances-27}{0.9 0.45 0}{s}An invariant is a predicate that every state must satisfy.  We follow the model
+\color{black}\cxtag{instances:28}{N/L}\cxbar{instances-28}{0.9 0.45 0}{s}An invariant is a predicate that every state must satisfy.  We follow the model
 of Bailis et al.~\cite{bailis2014coordination}.  A database state is a set of
 versions, and replicas merge states by union.  Each transaction $t\in T$ runs
 on the state of the replica that executes it and adds the versions it writes,
@@ -2678,9 +2688,9 @@ $\mathcal I$.  A state is \emph{reachable} when it can be derived from $s_0$ by
 applying transactions and merging states, with every state along the way
 satisfying $\mathcal I$.  Every reachable state descends from $s_0$, so $T$ is
 \emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
-reachable $s_1$ and $s_2$.\cxbar{instances-27}{0.9 0.45 0}{e}\color{black}
+reachable $s_1$ and $s_2$.\cxbar{instances-28}{0.9 0.45 0}{e}\color{black}
 
-\color{black!45}\cxtag{instances:28}{C}From an instance $(s_0,T,\mathcal I)$ of their model we construct a
+\color{black!45}\cxtag{instances:29}{C}From an instance $(s_0,T,\mathcal I)$ of their model we construct a
 spec $\Spec_{\mathcal I}$ in ours as follows (Appendix~\ref{app:iconfluence}).
 Inputs are \emph{transaction histories}: partial orders of events, each
 labeled by a transaction in $T$, where one event precedes another when the
@@ -2699,29 +2709,23 @@ includes must be closed and valid.\color{black}
 
 \color{black!45}\begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
-\cxtag{instances:29}{C}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
+\cxtag{instances:30}{C}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
 Monotonicity.\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}
-\cxtag{instances:30}{N/M}\cxbar{instances-30}{0.4 0.4 1}{s}See Appendix~\ref{app:iconfluence}.\cxbar{instances-30}{0.4 0.4 1}{e}\color{black}
+\cxtag{instances:31}{N/M}\cxbar{instances-31}{0.4 0.4 1}{s}See Appendix~\ref{app:iconfluence}.\cxbar{instances-31}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:31}{N/L}\cxbar{instances-31}{0.9 0.45 0}{s}The uniqueness constraint of Bailis et al.'s payroll example shows the failure
-directly.  Two replicas each create an employee and assign ID~7, each running
+\color{black}\cxtag{instances:32}{N/L}\cxbar{instances-32}{0.9 0.45 0}{s}The uniqueness constraint in Bailis et al.'s payroll example is not invariant
+confluent, and $\Spec_{\mathcal I}$ shows where Lifted Monotonicity fails.  Two replicas each create an employee and assign ID~7, each running
 on a state in which ID~7 is unused.  The history in which neither creation ran
 on a state that included the other's writes is locally valid and \inrel both one-creation histories, but its state has two
 employees with ID~7, so no state it permits \outrel both.  The system must
 reserve IDs, reject one creation, or weaken the invariant.  Concurrency,
-not the transactions alone, decides the outcome: a transaction that is harmless
-after another can, when it runs on a state without the other's writes, produce a state whose merge
-with the other's is invalid.\cxbar{instances-31}{0.9 0.45 0}{e}\color{black}
-
-\color{black}\cxtag{instances:32}{N/L}\cxbar{instances-32}{0.9 0.45 0}{s}Invariant preservation and isolation are expressed by different specs: $\Spec_{\mathcal I}$ constrains exposed database states, while an
-isolation level constrains exposed read and commit facts.  Kaki et
-al.~\cite{kaki2018alone} relate the two for a given program: they infer the
-weakest isolation level a store offers under which each transaction still
-preserves the declared invariants.\cxbar{instances-32}{0.9 0.45 0}{e}\color{black}
+not the transactions alone, decides the outcome: each creation preserves the
+invariant on the state it ran on, and only the merge of the two states violates
+it.\cxbar{instances-32}{0.9 0.45 0}{e}\color{black}
 
 \subsection{General operational specification models}
 \label{sec:operational-models}

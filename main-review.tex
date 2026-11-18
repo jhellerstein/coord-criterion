@@ -2562,6 +2562,16 @@ receive from another eventually reflect the updates the other knows, needs no
 separate assumption, since the input records which writes each replica has
 received.
 
+\paragraph{Application-aware isolation level selection.}
+In addition to being coordination-free, weak isolation levels can provide
+sufficient isolation for certain mixes of transactional applications. Kaki et
+al.~\cite{kaki2018alone} give a program logic for transactions under weak
+isolation, with compositional proof rules for showing that a program maintains
+its invariants. Their inference procedure automatically finds, for each
+transaction, the weakest isolation level under which its invariants are still
+maintained, using an encoding of database computations that off-the-shelf SMT
+solvers can check.
+
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
@@ -2601,21 +2611,15 @@ Monotonicity.}
 See Appendix~\ref{app:iconfluence}.
 \end{proof}
 
-The uniqueness constraint of Bailis et al.'s payroll example shows the failure
-directly. Two replicas each create an employee and assign ID~7, each running
+The uniqueness constraint in Bailis et al.'s payroll example is not invariant
+confluent, and $\Spec_{\mathcal I}$ shows where Lifted Monotonicity fails. Two replicas each create an employee and assign ID~7, each running
 on a state in which ID~7 is unused. The history in which neither creation ran
 on a state that included the other's writes is locally valid and \inrel both one-creation histories, but its state has two
 employees with ID~7, so no state it permits \outrel both. The system must
 reserve IDs, reject one creation, or weaken the invariant. Concurrency,
-not the transactions alone, decides the outcome: a transaction that is harmless
-after another can, when it runs on a state without the other's writes, produce a state whose merge
-with the other's is invalid.
-
-Invariant preservation and isolation are expressed by different specs: $\Spec_{\mathcal I}$ constrains exposed database states, while an
-isolation level constrains exposed read and commit facts. Kaki et
-al.~\cite{kaki2018alone} relate the two for a given program: they infer the
-weakest isolation level a store offers under which each transaction still
-preserves the declared invariants.
+not the transactions alone, decides the outcome: each creation preserves the
+invariant on the state it ran on, and only the merge of the two states violates
+it.
 
 \subsection{General operational specification models}
 \label{sec:operational-models}
