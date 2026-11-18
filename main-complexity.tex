@@ -2387,14 +2387,11 @@ functional monotonicity is exactly domain-distinct- and
 domain-disjoint-monotonicity, so Functional CALM gives their
 characterizations.\cxbar{instances-3}{0.9 0.45 0}{e}\color{black}
 
-\color{black}\cxtag{instances:4}{N/M}\cxbar{instances-4}{0.4 0.4 1}{s}Li and Lee model replicated objects with write, merge, and query operations,
-show that strong eventual consistency holds exactly when merge is associative,
-commutative, and idempotent and a write equals merging in its input, and prove
-CALM in that model: a problem has an implementation that is confluent and
-consistent under partition exactly when it is monotone~\cite{li2025coordinationfree}.
-Their problems are functions from sets of inputs, ordered by inclusion, to a
-partially ordered set of outputs whose order they read as consistency, that is,
-the functional specs whose inputs are sets under inclusion.\cxbar{instances-4}{0.4 0.4 1}{e}\color{black}
+\color{black}\cxtag{instances:4}{N/S}Li and Lee prove CALM for replicated objects with write, merge, and query
+operations~\cite{li2025coordinationfree}.  In our terms, they prove a
+counterpart of Functional CALM for input domains of sets ordered by inclusion
+and arbitrary partially ordered output domains, with the existence of a
+coordination-free implementation in place of consistency.\color{black}
 
 \color{blue!75!black}\cxtag{instances:5}{B/L}\cxbar{instances-5}{0.9 0.45 0}{s}Baccaert and Ketsman were the first to extend CALM beyond deterministic
 queries~\cite{baccaert2023dcbq,baccaert2026spectrum}.  Their running example
@@ -2412,21 +2409,28 @@ input extends another by adding the facts of participants not yet heard from,
 never by adding facts of a participant already heard from.  A network of
 transducers is a system in which every participant runs the same strategy,
 sees only its own facts and the contents of the messages it receives, and
-broadcasts its messages.  Since its own facts name it, a participant knows its
-own name and the order on names, which is what their coordination-free
+broadcasts its messages.  Since its own facts include its name, a participant
+knows its own name and the order on names, which is what their coordination-free
 transducers know.  It does not know the list of all participants.  Under their
 placement, the environment gives each participant only its own facts, at the
 start, so the facts in a participant's input that name other participants
 arrived in messages, and a participant passes on only facts it holds.  A
-transducer that computes a behavior translates into a system whose runs stay
-confluent.  Every output that some fair run of the transducer can produce is
-emitted by some run of that system.
-Their characterization can be recovered directly in our formalism, which
-drops their requirement that programs treat data values only as
-interchangeable symbols: a behavior is computable without the list of all
-nodes exactly when it contains a node monotone behavior.\cxbar{instances-6}{0.4 0.4 1}{e}\color{black}
+transducer that computes a behavior translates into our framework as a system
+whose runs stay confluent.  Every output that some fair run of the transducer can produce is
+emitted by some run of that system.\cxbar{instances-6}{0.4 0.4 1}{e}\color{black}
 
-\color{blue!75!black}\cxtag{instances:7}{B/L}\cxbar{instances-7}{0.9 0.45 0}{s}Their aims differ from ours.  They ask which behaviors become computable when
+\color{black}\cxtag{instances:7}{N/M}\cxbar{instances-7}{0.4 0.4 1}{s}Two sides of a partition cannot tell that they are disconnected, so each must
+emit to be available, and when the partition heals, their outputs must have a
+common \outnoun at any input that extends what both sides have received.
+Complete CAP requires this condition across every partition.  Baccaert and
+Ketsman's \emph{node monotonicity} is the same condition, restricted to sides
+whose inputs come from disjoint sets of participants.  Their characterization
+also holds in our formalism: a behavior can be computed without the list of
+all nodes exactly when it contains a node monotone behavior.  Our version does
+not need their requirement that programs treat data values only as
+interchangeable symbols.\cxbar{instances-7}{0.4 0.4 1}{e}\color{black}
+
+\color{blue!75!black}\cxtag{instances:8}{B/L}\cxbar{instances-8}{0.9 0.45 0}{s}Their aims differ from ours.  They ask which behaviors become computable when
 nodes share some piece of system knowledge, such as identifiers, an order on
 them, or the list of all nodes.  For them, a behavior needs coordination when
 it cannot be computed without the list of all nodes.  Correctness is judged by
@@ -2434,38 +2438,23 @@ the final output of a run, and the input is fixed when the run starts.  We ask
 instead when a spec requires a \commitment, judge consistency at every point of
 a run, and let input arrive over time.  A behavior can therefore be
 coordination-free in their sense while still needing a \commitment in ours,
-made by one participant, as in their constructions, where a group's smallest
-node chooses for the group.\cxbar{instances-7}{0.9 0.45 0}{e}\color{black}
+made locally by one participant, as in their constructions, where a group's smallest
+node chooses for the group.\cxbar{instances-8}{0.9 0.45 0}{e}\color{black}
 
-\color{black}\cxtag{instances:8}{N/S}Two sides of a partition cannot know that they are disconnected, so neither can
-tell whether it is the whole network, and each must emit.  When the partition
-heals, the outputs of both sides must have a common \outnoun at any input that
-extends what both sides have received.  This is what Baccaert and Ketsman call
-\emph{node monotonicity}: the common-extension condition for outputs of
-participants that have heard from disjoint sets of participants.  They show
-that a behavior is coordination-free exactly when it contains a node monotone
-behavior.\color{black}
-
-\color{black}\cxtag{instances:9}{N/M}\cxbar{instances-9}{0.4 0.4 1}{s}Complete CAP asks for more, because the environment is not constrained from
-back-channel sharing of facts across sides.  It requires the common-extension
-condition even when participants on different sides receive overlapping input.
-Under Baccaert and Ketsman's placement there is no back channel.\cxbar{instances-9}{0.4 0.4 1}{e}\color{black}
-
-\color{black}\cxtag{instances:10}{N/M}\cxbar{instances-10}{0.4 0.4 1}{s}We now show how the back-channel sharing that Complete CAP allows goes beyond
-node monotonicity.  Consider an unconstrained matching problem over data items
-partitioned across participants: any set of disjoint pairs of items is a
-permitted output.  Under a network partition with Baccaert and Ketsman's
-placement, each side can pair its items arbitrarily.  Two sides can always
-combine their pairings, because no item can be found on both sides.  This
-changes in our model, where the environment can provide an item to
-participants on both sides of the partition.  An item $i$ may then be paired
-with $j$ on one side and with $k$ on the other, and no matching contains both
-pairs.  For deterministic behaviors the two conditions coincide.\cxbar{instances-10}{0.4 0.4 1}{e}\color{black}
+\color{black}\cxtag{instances:9}{N/M}\cxbar{instances-9}{0.4 0.4 1}{s}Under Baccaert and Ketsman's placement, the inputs of two sides never overlap;
+in our model, the environment may give the same fact to both sides.
+Unconstrained matching shows the difference: any set of disjoint pairs of
+items is a permitted output.  Under their placement, each side pairs only its
+own items, and the two sides' pairings always combine, so matching is node
+monotone.  In our model, an item $i$ can reach both sides and be paired with
+$j$ on one side and with $k$ on the other; no matching contains both pairs, so
+matching does not satisfy Lifted Monotonicity.  For deterministic behaviors the
+two conditions coincide.\cxbar{instances-9}{0.4 0.4 1}{e}\color{black}
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
 
-\color{black}\cxtag{instances:11}{N/L}\cxbar{instances-11}{0.9 0.45 0}{s}A CRDT uses join semilattices to guarantee that replicas that have received the
+\color{black}\cxtag{instances:10}{N/L}\cxbar{instances-10}{0.9 0.45 0}{s}A CRDT uses join semilattices to guarantee that replicas that have received the
 same updates converge to equivalent states, whatever the order of delivery and
 merge~\cite{shapiro2011crdt}.  That guarantee, Strong Eventual Consistency, is the convergence of
 Corollary~\ref{cor:convergence}, which every consistent functional spec has,
@@ -2478,9 +2467,9 @@ proposed monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Their example of an unsafe query uses a two-phase set, whose state
 $(\mathit{Add},\mathit{Del})$ merges by componentwise union.  The query
 $\mathit{Add}\setminus\mathit{Del}$ can expose added items that are subsequently
-deleted.  We make the proposed test precise with Functional CALM.\cxbar{instances-11}{0.9 0.45 0}{e}\color{black}
+deleted.  We make the proposed test precise with Functional CALM.\cxbar{instances-10}{0.9 0.45 0}{e}\color{black}
 
-\color{black}\cxtag{instances:12}{N/S}Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice.  The input is the
+\color{black}\cxtag{instances:11}{N/S}Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice.  The input is the
 finite set $U$ of immutable payloads received so far, ordered by inclusion, and
 the replica's state is $s(U)=s_0\sqcup\bigsqcup U$.  Then $U\subseteq V$
 implies $s(U)\sqsubseteq s(V)$, and $s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$ is the
@@ -2493,14 +2482,14 @@ Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.\color{black}
 
-\color{black}\cxtag{instances:13}{N/M}\cxbar{instances-13}{0.4 0.4 1}{s}CRDT states form a join-semilattice, but $q$ needs less:
+\color{black}\cxtag{instances:12}{N/M}\cxbar{instances-12}{0.4 0.4 1}{s}CRDT states form a join-semilattice, but $q$ needs less:
 Complete CALM requires only \emph{some} common \outnoun of query outputs
-(\S\ref{sec:lifted-monotonicity}), not a least one.\cxbar{instances-13}{0.4 0.4 1}{e}\color{black}
+(\S\ref{sec:lifted-monotonicity}), not a least one.\cxbar{instances-12}{0.4 0.4 1}{e}\color{black}
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-\color{black}\cxtag{instances:14}{N/L}\cxbar{instances-14}{0.9 0.45 0}{s}Bailis et al.\ define isolation levels by Adya's phenomena, adding sessions and
+\color{black}\cxtag{instances:13}{N/L}\cxbar{instances-13}{0.9 0.45 0}{s}Bailis et al.\ define isolation levels by Adya's phenomena, adding sessions and
 per-item dependencies, and give highly available algorithms for the weaker
 levels~\cite{bailis2013hat,adya1999weakconsistency}.  We take their
 assumptions as given.  Items are partially replicated, and a client sends each
@@ -2508,18 +2497,18 @@ operation to some replica of its item.  A transaction's writes carry a unique
 client timestamp, and versions are ordered by timestamp, last writer wins.
 The system never aborts a transaction on its own.  A replica answers a read
 with the highest-timestamped committed write of the item that it has received;
-we call this the store's \emph{read rule}.\cxbar{instances-14}{0.9 0.45 0}{e}\color{black}
+we call this the store's \emph{read rule}.\cxbar{instances-13}{0.9 0.45 0}{e}\color{black}
 
-\color{black}\cxtag{instances:15}{N/L}\cxbar{instances-15}{0.9 0.45 0}{s}The HAT results illustrate the intersection reasoning of
+\color{black}\cxtag{instances:14}{N/L}\cxbar{instances-14}{0.9 0.45 0}{s}The HAT results illustrate the intersection reasoning of
 Section~\ref{sec:intersection}.  An isolation level and a store are separate
 specs on the same histories: the level constrains which read answers may
 appear together, and the store answers each read by its read rule.  The store
 held to a level is their intersection, and we ask which intersections satisfy
-Lifted Monotonicity.\cxbar{instances-15}{0.9 0.45 0}{e}\color{black}
+Lifted Monotonicity.\cxbar{instances-14}{0.9 0.45 0}{e}\color{black}
 
 \color{black}\begin{definition}[HAT specification]
 \label{def:hat-spec}
-\cxtag{instances:16}{?/?}An input is a history ordered by happens-before: reads, each tagged with its
+\cxtag{instances:15}{?/?}An input is a history ordered by happens-before: reads, each tagged with its
 replica; commits, each with its client timestamp and write set; and arrivals
 of committed writes at replicas.  The history preserves
 each client's program order and each replica's arrival order, and a
@@ -2536,12 +2525,12 @@ contains, at each input, the output that the read rule above gives.\color{black}
 
 \color{black}\begin{definition}[Store specification]
 \label{def:store-spec}
-\cxtag{instances:17}{N/S}The \emph{store specification} $\Spec_{\mathrm{st}}$ has the inputs and outputs
+\cxtag{instances:16}{N/S}The \emph{store specification} $\Spec_{\mathrm{st}}$ has the inputs and outputs
 of Definition~\ref{def:hat-spec}.  At each input, it permits any subset of the
 answers that the read rule gives.\color{black}
 \end{definition}
 
-\color{blue!75!black}\cxtag{instances:18}{B/L}\cxbar{instances-18}{0.9 0.45 0}{s}The store spec says only that answers follow the read rule; it says nothing
+\color{blue!75!black}\cxtag{instances:17}{B/L}\cxbar{instances-17}{0.9 0.45 0}{s}The store spec says only that answers follow the read rule; it says nothing
 about isolation.  On its own it satisfies Lifted Monotonicity: a read's
 answer under the read rule depends only on the writes its replica received
 before the read, so later input never changes it.  The store's rows that answer
@@ -2550,11 +2539,11 @@ level $L$ means taking the intersection $\Spec_{\mathrm{st}}\cap\Spec_L$
 (Definition~\ref{def:intersection}), which is total, since both specs permit
 answering no reads.  By Proposition~\ref{prop:intersection-bound}, the
 intersection keeps Lifted Monotonicity when $\Spec_L$ permits the read rule's
-answers.\cxbar{instances-18}{0.9 0.45 0}{e}\color{black}
+answers.\cxbar{instances-17}{0.9 0.45 0}{e}\color{black}
 
 \color{black}\begin{theorem}[HAT levels]
 \label{thm:hat-levels}
-\cxtag{instances:19}{N/M}\cxbar{instances-19}{0.4 0.4 1}{s}Suppose each transaction's timestamp exceeds that of every version it reads.
+\cxtag{instances:18}{N/M}\cxbar{instances-18}{0.4 0.4 1}{s}Suppose each transaction's timestamp exceeds that of every version it reads.
 For read uncommitted and read committed, $E\subseteq P_L$ and
 $\Spec_{\mathrm{st}}\cap\Spec_L$ satisfies Lifted Monotonicity, so $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
@@ -2563,11 +2552,11 @@ Lost Update, including snapshot isolation, repeatable read, and
 serializability, $\Spec_{\mathrm{st}}\cap\Spec_L$ does not satisfy Lifted
 Monotonicity, and $\Spec_L$ does not satisfy Lifted Monotonicity for any
 explicit relation $E$ that answers every read; hence no system for $\Spec_L$
-has Availability for such an $E$ and Partition Consistency.\cxbar{instances-19}{0.4 0.4 1}{e}\color{black}
+has Availability for such an $E$ and Partition Consistency.\cxbar{instances-18}{0.4 0.4 1}{e}\color{black}
 \end{theorem}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:20}{N/L}\cxbar{instances-20}{0.9 0.45 0}{s}For read uncommitted and read committed, the timestamp condition rules out the
+\cxtag{instances:19}{N/L}\cxbar{instances-19}{0.9 0.45 0}{s}For read uncommitted and read committed, the timestamp condition rules out the
 dependency cycles of G0 and G1c, so $\Spec_L$ permits the read rule's answers.
 Proposition~\ref{prop:intersection-bound}, with the read rule as the bound,
 gives Lifted Monotonicity of $\Spec_{\mathrm{st}}\cap\Spec_L$, whose rows
@@ -2578,10 +2567,10 @@ two answers contain a cycle on $x$ with an anti-dependency, which is Lost
 Update.  So the store's answer at one replica has no extension in
 $\Spec_{\mathrm{st}}\cap\Spec_L$ once both transactions are in the input.
 The store needs no \commitment on its own, so this need comes from the
-intersection with $\Spec_L$.\cxbar{instances-20}{0.9 0.45 0}{e}\color{black}
+intersection with $\Spec_L$.\cxbar{instances-19}{0.9 0.45 0}{e}\color{black}
 \end{proof}
 
-\color{black!45}\cxtag{instances:21}{C}The timestamp condition in the theorem is required, correcting an error in the
+\color{black!45}\cxtag{instances:20}{C}The timestamp condition in the theorem is required, correcting an error in the
 extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
@@ -2592,7 +2581,7 @@ up, since the read rule's output at such an input is not in $P_{\mathrm{RC}}$.
 Taking each timestamp at commit, above every version read, repairs the
 algorithm.\color{black}
 
-\color{black}\cxtag{instances:22}{N/S}The extended paper's algorithm for monotonic atomic view has the same
+\color{black}\cxtag{instances:21}{N/S}The extended paper's algorithm for monotonic atomic view has the same
 error~\cite[App.~B]{bailis2013hatextended}.  Its clients run the read committed
 algorithm and also fix each timestamp when the transaction begins.  When a
 transaction reads a version with a higher timestamp than its own and then
@@ -2601,7 +2590,7 @@ the algorithm does not guarantee read committed, and therefore not monotonic
 atomic view either.  With timestamps taken at commit, above every version
 read, it provides monotonic atomic view (Appendix~\ref{app:hat-taxonomy}).\color{black}
 
-\color{black}\cxtag{instances:23}{N/M}\cxbar{instances-23}{0.4 0.4 1}{s}Bailis et al.\ also classify session guarantees and recency alongside further
+\color{black}\cxtag{instances:22}{N/M}\cxbar{instances-22}{0.4 0.4 1}{s}Bailis et al.\ also classify session guarantees and recency alongside further
 isolation levels, calling them all \emph{guarantees}.  Each guarantee $G$
 becomes a spec $\Spec_G$: a store that returns only versions the reading
 replica has received, held to $G$.  Their high availability becomes
@@ -2614,9 +2603,9 @@ deployment that assigns clients to replicas
 (Proposition~\ref{prop:deployment-complete-cap}).  Their algorithms supply the
 explicit relations.  Our mapping recovers their classification of every
 guarantee, each as an instance of Complete CAP or its deployment form
-(Theorem~\ref{thm:hat-taxonomy}, Appendix~\ref{app:hat-taxonomy}).\cxbar{instances-23}{0.4 0.4 1}{e}\color{black}
+(Theorem~\ref{thm:hat-taxonomy}, Appendix~\ref{app:hat-taxonomy}).\cxbar{instances-22}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:24}{N/M}\cxbar{instances-24}{0.4 0.4 1}{s}Stating the classification precisely also exposed a mismatch in the extended
+\color{black}\cxtag{instances:23}{N/M}\cxbar{instances-23}{0.4 0.4 1}{s}Stating the classification precisely also exposed a mismatch in the extended
 paper.  Its formal definition of the anomaly that read your writes rules out
 lets the forbidden cycle pass through other clients' transactions on other
 items~\cite[Def.~34]{bailis2013hatextended}.  Under that definition, read your
@@ -2629,9 +2618,9 @@ version of the item it lacks.  Together these answers form the forbidden
 cycle, so no system can keep both clients available and stay consistent, even
 with each client assigned to its own replica.  The definition's own example
 uses a single item, and in that form read your writes is sticky available, as
-Bailis et al.\ state.\cxbar{instances-24}{0.4 0.4 1}{e}\color{black}
+Bailis et al.\ state.\cxbar{instances-23}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:25}{?/?}Mahajan et al.\ showed that real-time causal consistency can be enforced in a
+\color{black}\cxtag{instances:24}{?/?}Mahajan et al.\ showed that real-time causal consistency can be enforced in a
 system that is always available and one-way convergent, and that no stronger
 consistency semantics can~\cite{mahajan2011consistency}.  We recover both parts
 of their result in our framework, with real-time precedence recorded in the
@@ -2648,19 +2637,19 @@ can, provided the strengthening, like Mahajan et al.'s implementations, does not
 consult real time.\color{black}
 
 \paragraph{Application-aware isolation level selection.}
-\color{black}\cxtag{instances:26}{N/M}\cxbar{instances-26}{0.4 0.4 1}{s}In addition to being coordination-free, weak isolation levels can provide
+\color{black}\cxtag{instances:25}{N/M}\cxbar{instances-25}{0.4 0.4 1}{s}In addition to being coordination-free, weak isolation levels can provide
 sufficient isolation for certain mixes of transactional applications.  Kaki et
 al.~\cite{kaki2018alone} give a program logic for transactions under weak
 isolation, with compositional proof rules for showing that a program maintains
 its invariants.  Their inference procedure automatically finds, for each
 transaction, the weakest isolation level under which its invariants are still
 maintained, using an encoding of database computations that off-the-shelf SMT
-solvers can check.\cxbar{instances-26}{0.4 0.4 1}{e}\color{black}
+solvers can check.\cxbar{instances-25}{0.4 0.4 1}{e}\color{black}
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
-\color{black}\cxtag{instances:27}{N/L}\cxbar{instances-27}{0.9 0.45 0}{s}An invariant is a predicate that every state must satisfy.  We follow the model
+\color{black}\cxtag{instances:26}{N/L}\cxbar{instances-26}{0.9 0.45 0}{s}An invariant is a predicate that every state must satisfy.  We follow the model
 of Bailis et al.~\cite{bailis2014coordination}.  A database state is a set of
 versions, and replicas merge states by union.  Each transaction $t\in T$ runs
 on the state of the replica that executes it and adds the versions it writes,
@@ -2669,9 +2658,9 @@ $\mathcal I$.  A state is \emph{reachable} when it can be derived from $s_0$ by
 applying transactions and merging states, with every state along the way
 satisfying $\mathcal I$.  Every reachable state descends from $s_0$, so $T$ is
 \emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
-reachable $s_1$ and $s_2$.\cxbar{instances-27}{0.9 0.45 0}{e}\color{black}
+reachable $s_1$ and $s_2$.\cxbar{instances-26}{0.9 0.45 0}{e}\color{black}
 
-\color{black!45}\cxtag{instances:28}{C}From an instance $(s_0,T,\mathcal I)$ of their model we construct a
+\color{black!45}\cxtag{instances:27}{C}From an instance $(s_0,T,\mathcal I)$ of their model we construct a
 spec $\Spec_{\mathcal I}$ in ours as follows (Appendix~\ref{app:iconfluence}).
 Inputs are \emph{transaction histories}: partial orders of events, each
 labeled by a transaction in $T$, where one event precedes another when the
@@ -2690,15 +2679,15 @@ includes must be closed and valid.\color{black}
 
 \color{black!45}\begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
-\cxtag{instances:29}{C}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
+\cxtag{instances:28}{C}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
 Monotonicity.\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}
-\cxtag{instances:30}{N/M}\cxbar{instances-30}{0.4 0.4 1}{s}See Appendix~\ref{app:iconfluence}.\cxbar{instances-30}{0.4 0.4 1}{e}\color{black}
+\cxtag{instances:29}{N/M}\cxbar{instances-29}{0.4 0.4 1}{s}See Appendix~\ref{app:iconfluence}.\cxbar{instances-29}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:31}{N/L}\cxbar{instances-31}{0.9 0.45 0}{s}The uniqueness constraint in Bailis et al.'s payroll example is not invariant
+\color{black}\cxtag{instances:30}{N/L}\cxbar{instances-30}{0.9 0.45 0}{s}The uniqueness constraint in Bailis et al.'s payroll example is not invariant
 confluent, and $\Spec_{\mathcal I}$ shows where Lifted Monotonicity fails.  Two replicas each create an employee and assign ID~7, each running
 on a state in which ID~7 is unused.  The history in which neither creation ran
 on a state that included the other's writes is locally valid and \inrel both one-creation histories, but its state has two
@@ -2706,11 +2695,11 @@ employees with ID~7, so no state it permits \outrel both.  The system must
 reserve IDs, reject one creation, or weaken the invariant.  Concurrency,
 not the transactions alone, decides the outcome: each creation preserves the
 invariant on the state it ran on, and only the merge of the two states violates
-it.\cxbar{instances-31}{0.9 0.45 0}{e}\color{black}
+it.\cxbar{instances-30}{0.9 0.45 0}{e}\color{black}
 
 \subsection{General operational specification models}
 \label{sec:operational-models}
-\color{black}\cxtag{instances:32}{N/L}\cxbar{instances-32}{0.9 0.45 0}{s}Many systems are specified as state machines.  This subsection shows how to
+\color{black}\cxtag{instances:31}{N/L}\cxbar{instances-31}{0.9 0.45 0}{s}Many systems are specified as state machines.  This subsection shows how to
 project a state machine written as an I/O automaton~\cite{lynch1987io} onto a
 spec, and how to analyze the automaton with our results.  Each row of the
 projected spec is a pair the automaton can be observed in: the requests it has
@@ -2726,10 +2715,10 @@ events.  Complete CALM tells whether the projected spec is consistent.
 Comparing the automaton's runs with the spec's canonical runs tells whether the
 automaton itself is: it is confluent exactly when its \commitments never remove
 every row its canonical runs could still agree on.  We close with two ways to
-check these properties in practice: testing on bounded inputs, and proof.\cxbar{instances-32}{0.9 0.45 0}{e}\color{black}
+check these properties in practice: testing on bounded inputs, and proof.\cxbar{instances-31}{0.9 0.45 0}{e}\color{black}
 
 \paragraph{The automaton model.}
-\color{black}\cxtag{instances:33}{N/M}\cxbar{instances-33}{0.4 0.4 1}{s}We use the standard I/O-automaton
+\color{black}\cxtag{instances:32}{N/M}\cxbar{instances-32}{0.4 0.4 1}{s}We use the standard I/O-automaton
 model~\cite{lynch1987io,lynch1996distributed}.  An automaton has input, output,
 and internal actions, a set of states with a nonempty set of start states, and
 a transition relation in which every input action is enabled in every state.
@@ -2743,61 +2732,61 @@ execution lists its input actions in order, and its \emph{reply sequence} lists
 its output actions in order.  We order both kinds of sequence by prefix.  This
 subsection treats a single automaton.  A server built from several
 communicating automata is a distributed system in the sense of
-Section~\ref{sec:distributed-execution}.\cxbar{instances-33}{0.4 0.4 1}{e}\color{black}
+Section~\ref{sec:distributed-execution}.\cxbar{instances-32}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{definition}[Projection of an automaton]
 \label{def:projection}
-\cxtag{instances:34}{N/M}\cxbar{instances-34}{0.4 0.4 1}{s}The \emph{projection} of an automaton $M$ is the \spectype $P_M$ whose inputs
+\cxtag{instances:33}{N/M}\cxbar{instances-33}{0.4 0.4 1}{s}The \emph{projection} of an automaton $M$ is the \spectype $P_M$ whose inputs
 are receive sequences and whose outputs are reply sequences, and whose rows
 are the pairs $(w,t)$ for which some finite execution of $M$ has receive
 sequence $w$ and reply sequence $t$.  We call $P_M$ the \emph{projected spec}
-of $M$.\cxbar{instances-34}{0.4 0.4 1}{e}\color{black}
+of $M$.\cxbar{instances-33}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
-\color{black}\cxtag{instances:35}{N/M}\cxbar{instances-35}{0.4 0.4 1}{s}Followed step by step, an execution is a run of $P_M$.  An arrival is an input
+\color{black}\cxtag{instances:34}{N/M}\cxbar{instances-34}{0.4 0.4 1}{s}Followed step by step, an execution is a run of $P_M$.  An arrival is an input
 event carrying the receive sequence so far, a reply is an output event carrying
 the reply sequence so far, and an internal step is no event.  What grows along
 the execution is the reply sequence, whatever the replies say: a counter's
 reports may go up, down, and up again, and its reply sequence still only
-grows.\cxbar{instances-35}{0.4 0.4 1}{e}\color{black}
+grows.\cxbar{instances-34}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Projection]
 \label{prop:projection}
-\cxtag{instances:36}{N/L}\cxbar{instances-36}{0.9 0.45 0}{s}Let $M$ be an automaton.
+\cxtag{instances:35}{N/L}\cxbar{instances-35}{0.9 0.45 0}{s}Let $M$ be an automaton.
 \begin{enumerate}
   \item $P_M$ is an \spectype, and every finite execution of $M$ is a run of
         $P_M$ from the canonical state at the empty receive sequence, with
         one input event per arrival and one output event per reply.
   \item $P_M$ satisfies Relational Monotonicity.  It is consistent exactly
         when, at each receive sequence, any two reply sequences in its fiber
-        are one a prefix of the other.\cxbar{instances-36}{0.9 0.45 0}{e}\color{black}
+        are one a prefix of the other.\cxbar{instances-35}{0.9 0.45 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:37}{N/M}\cxbar{instances-37}{0.4 0.4 1}{s}(1) Every receive sequence has a row, since every input action is always
+\cxtag{instances:36}{N/M}\cxbar{instances-36}{0.4 0.4 1}{s}(1) Every receive sequence has a row, since every input action is always
 enabled.  Each event of the run is legal because the execution itself reaches
 the row the event needs.  (2) An execution can receive any further requests
 before it replies again, which gives Relational Monotonicity.  Finitely many
 reply sequences have a common extension exactly when any two of them are one
 a prefix of the other, and then the longest of them is one.  Complete CALM
-(Theorem~\ref{thm:complete-calm}) then gives the stated condition.\cxbar{instances-37}{0.4 0.4 1}{e}\color{black}
+(Theorem~\ref{thm:complete-calm}) then gives the stated condition.\cxbar{instances-36}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:38}{N/S}Since $P_M$ is an \spectype, the results of
+\color{black}\cxtag{instances:37}{N/S}Since $P_M$ is an \spectype, the results of
 Section~\ref{sec:distributed-execution} apply to it as to any other spec.\color{black}
 
-\color{black}\cxtag{instances:39}{N/M}\cxbar{instances-39}{0.4 0.4 1}{s}The converse of item~(1) fails.  Consider a registrar that receives ballots
+\color{black}\cxtag{instances:38}{N/M}\cxbar{instances-38}{0.4 0.4 1}{s}The converse of item~(1) fails.  Consider a registrar that receives ballots
 $p$.  After the first ballot it may reply $x$ at once and ignore later
 ballots, which closes the polls.  Or it may wait for a second ballot, reply
 $x$, and later reply $z$.  Its projected spec has a run that receives $p$,
 replies $x$, receives a second $p$, and replies $z$: each row the run passes
 through occurs in some execution.  No execution has that trace, because a
 registrar that replied early never replies $z$.  Every reply sequence of the
-registrar is empty, $x$, or $xz$, so its projected spec is consistent.\cxbar{instances-39}{0.4 0.4 1}{e}\color{black}
+registrar is empty, $x$, or $xz$, so its projected spec is consistent.\cxbar{instances-38}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{The automaton as a system.}
-\color{black}\cxtag{instances:40}{N/L}\cxbar{instances-40}{0.9 0.45 0}{s}To recover what the projection drops, we map the automaton into our system
+\color{black}\cxtag{instances:39}{N/L}\cxbar{instances-39}{0.9 0.45 0}{s}To recover what the projection drops, we map the automaton into our system
 model (Definition~\ref{def:system}) with a single participant.  The rows of
 $P_M$ that a finite execution can still reach, by continuing from its final
 state, are its \emph{reachable rows}.  Removing every other row from a table
@@ -2805,11 +2794,11 @@ that contains them is a \commitment whenever it removes a row.  Suppose the
 execution can reach $(k,w)$, and $u$ is a prefix of $w$ that extends the
 execution's reply sequence.  The execution can stop replying once it has
 replied $u$ and then receive the rest of $k$, so it also reaches $(k,u)$.  No
-removed row is therefore \outrelpast by a kept row at the same input.\cxbar{instances-40}{0.9 0.45 0}{e}\color{black}
+removed row is therefore \outrelpast by a kept row at the same input.\cxbar{instances-39}{0.9 0.45 0}{e}\color{black}
 
 \color{black}\begin{definition}[System of an automaton]
 \label{def:automaton-system}
-\cxtag{instances:41}{N/L}\cxbar{instances-41}{0.9 0.45 0}{s}An execution of $M$ \emph{matches} a local history $\lambda$ when the input
+\cxtag{instances:40}{N/L}\cxbar{instances-40}{0.9 0.45 0}{s}An execution of $M$ \emph{matches} a local history $\lambda$ when the input
 and output events of $\lambda$ carry the execution's arrivals and replies in
 order, and the table after $\lambda$ keeps all of the execution's reachable
 rows.  An input event may carry several consecutive arrivals, or none.  The
@@ -2819,12 +2808,12 @@ contains the canonical \commitments and, for each finite execution, the
 history $\lambda$, its strategy allows the events that some execution matching
 $\lambda$ allows next: the output event that adds a reply the execution's
 final state can send, and the \commitment event that keeps only the
-execution's reachable rows.\cxbar{instances-41}{0.9 0.45 0}{e}\color{black}
+execution's reachable rows.\cxbar{instances-40}{0.9 0.45 0}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{proposition}[System of an automaton]
 \label{prop:automaton-system}
-\cxtag{instances:42}{N/L}\cxbar{instances-42}{0.9 0.45 0}{s}Let $M$ be an automaton.
+\cxtag{instances:41}{N/L}\cxbar{instances-41}{0.9 0.45 0}{s}Let $M$ be an automaton.
 \begin{enumerate}
   \item Every history of the system of $M$ is matched by some execution of
         $M$.
@@ -2834,47 +2823,47 @@ execution's reachable rows.\cxbar{instances-41}{0.9 0.45 0}{e}\color{black}
         reachable rows.
   \item After any history, one \commitment event brings the table down to
         exactly the reachable rows of a matching execution, unless the table
-        is already there.\cxbar{instances-42}{0.9 0.45 0}{e}\color{black}
+        is already there.\cxbar{instances-41}{0.9 0.45 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:43}{N/M}\cxbar{instances-43}{0.4 0.4 1}{s}(1) By induction on the history.  An input event extends the current receive
+\cxtag{instances:42}{N/M}\cxbar{instances-42}{0.4 0.4 1}{s}(1) By induction on the history.  An input event extends the current receive
 sequence, and the matching execution receives the added requests.  An output
 or \commitment event is chosen by the strategy for some matching execution,
 which then takes the corresponding step.  (2) By induction on the execution.
 After each step, internal steps included, the history adds the step's event,
 if any, and then, if the step lost reachable rows, the \commitment event
 of~(3).  (3) The \commitment of the basis for the matching execution applies
-by the argument above.\cxbar{instances-43}{0.4 0.4 1}{e}\color{black}
+by the argument above.\cxbar{instances-42}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:44}{N/M}\cxbar{instances-44}{0.4 0.4 1}{s}Item~(3) reflects the one difference between the two models.  In the
+\color{black}\cxtag{instances:43}{N/M}\cxbar{instances-43}{0.4 0.4 1}{s}Item~(3) reflects the one difference between the two models.  In the
 automaton, a reply and the loss of reachable rows it causes happen in one
 step.  In the system, the loss is a separate \commitment event, so an input
-may arrive in between, and the \commitment then applies after that input.\cxbar{instances-44}{0.4 0.4 1}{e}\color{black}
+may arrive in between, and the \commitment then applies after that input.\cxbar{instances-43}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:45}{N/M}\cxbar{instances-45}{0.4 0.4 1}{s}The \commitment events record choices that traces do not show.  Consider an
+\color{black}\cxtag{instances:44}{N/M}\cxbar{instances-44}{0.4 0.4 1}{s}The \commitment events record choices that traces do not show.  Consider an
 automaton that, after the first request, takes an internal step to one of two
 states.  Both reply $x$, but only the second can then reply $z$.  A second
 automaton has only the second state.  The two automata have the same traces,
 and therefore the same projected spec.  In the first, the internal step to the
 first state loses reachable rows, so its system removes the rows with reply
 sequence $xz$ in a \commitment event.  The system of the second automaton never
-does.\cxbar{instances-45}{0.4 0.4 1}{e}\color{black}
+does.\cxbar{instances-44}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{When the automaton itself is confluent.}
 \color{black}\begin{definition}[Confluent automaton]
 \label{def:confluent-automaton}
-\cxtag{instances:46}{N/M}\cxbar{instances-46}{0.4 0.4 1}{s}An automaton is \emph{confluent} when, for any finitely many finite executions
+\cxtag{instances:45}{N/M}\cxbar{instances-45}{0.4 0.4 1}{s}An automaton is \emph{confluent} when, for any finitely many finite executions
 and any receive sequence $j$ that \inrel the receive sequence of each, there
 is a reply sequence $u$ such that each of the executions can continue to an
-execution with receive sequence $j$ and reply sequence $u$.\cxbar{instances-46}{0.4 0.4 1}{e}\color{black}
+execution with receive sequence $j$ and reply sequence $u$.\cxbar{instances-45}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{proposition}[Confluent automata]
 \label{prop:automaton-confluence}
-\cxtag{instances:47}{N/XL}\cxbar{instances-47}{0.8 0 0}{s}Let $M$ be an automaton.
+\cxtag{instances:46}{N/XL}\cxbar{instances-46}{0.8 0 0}{s}Let $M$ be an automaton.
 \begin{enumerate}
   \item Every finite family of histories of the system of $M$ is confluent at
         every common \indesc of their current inputs, by continuations that
@@ -2887,12 +2876,12 @@ execution with receive sequence $j$ and reply sequence $u$.\cxbar{instances-46}{
         finitely many executions and any common \indesc $j$ of their receive
         sequences, some row at $j$ lies in the canonical table of each and in
         none of the sets of removed rows.
-  \item If $M$ is confluent, $P_M$ is consistent.  The converse fails.\cxbar{instances-47}{0.8 0 0}{e}\color{black}
+  \item If $M$ is confluent, $P_M$ is consistent.  The converse fails.\cxbar{instances-46}{0.8 0 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:48}{N/L}\cxbar{instances-48}{0.9 0.45 0}{s}(1) By Proposition~\ref{prop:automaton-system}, each history's table keeps the
+\cxtag{instances:47}{N/L}\cxbar{instances-47}{0.9 0.45 0}{s}(1) By Proposition~\ref{prop:automaton-system}, each history's table keeps the
 reachable rows of a matching execution, and each execution has a history whose
 table is exactly those rows.  By Proposition~\ref{prop:system-confluence},
 the histories are confluent at $j$ exactly when some row at $j$ survives in
@@ -2902,33 +2891,33 @@ histories of Proposition~\ref{prop:automaton-system}(2).  (3) A row at $j$
 reachable from executions with rows $(w_1,t_1),\ldots,(w_n,t_n)$ is a row of
 $P_M$ whose reply sequence extends each $t_r$, which is the common-extension
 condition (Proposition~\ref{prop:common-expansion-form}).  The registrar is a
-counterexample to the converse.\cxbar{instances-48}{0.9 0.45 0}{e}\color{black}
+counterexample to the converse.\cxbar{instances-47}{0.9 0.45 0}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:49}{N/M}\cxbar{instances-49}{0.4 0.4 1}{s}For the registrar, replying early loses every reachable row with reply
+\color{black}\cxtag{instances:48}{N/M}\cxbar{instances-48}{0.4 0.4 1}{s}For the registrar, replying early loses every reachable row with reply
 sequence $xz$, so its system removes them in a \commitment event.  An execution
 that replied early and one that waited and replied $xz$ then have no common
 reachable row at two ballots, and the registrar is not confluent, although its
 projected spec is consistent.  Closing the polls is a \commitment the projected
 spec does not require: a canonical run can emit $x$ after one ballot and still
-emit $xz$ after the second.\cxbar{instances-49}{0.4 0.4 1}{e}\color{black}
+emit $xz$ after the second.\cxbar{instances-48}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:50}{N/M}\cxbar{instances-50}{0.4 0.4 1}{s}Inconsistency can also come from the projected spec itself.  Consider a counter
+\color{black}\cxtag{instances:49}{N/M}\cxbar{instances-49}{0.4 0.4 1}{s}Inconsistency can also come from the projected spec itself.  Consider a counter
 whose report carries the count at the moment the report fires.  After two
 arrivals, one execution has reported $1$, before the second arrival, and
 another has reported $2$.  Neither reply sequence is a prefix of the other, so
 the projected spec is inconsistent.  A counter that records the count when each
 request arrives, and later reports from that record, sends the reports
 $1,2,\ldots,m$ in order.  Its projected spec is consistent, and the counter
-itself is confluent.\cxbar{instances-50}{0.4 0.4 1}{e}\color{black}
+itself is confluent.\cxbar{instances-49}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{Testing and proof.}
-\color{black}\cxtag{instances:51}{N/S}The projected spec and the system of an automaton are defined by every finite
+\color{black}\cxtag{instances:50}{N/S}The projected spec and the system of an automaton are defined by every finite
 execution of the automaton.  There are infinitely many such executions, so
 both are semantic objects: we can reason about them, but not list them.  Two
 standard approaches make that reasoning practical.\color{black}
 
-\color{black}\cxtag{instances:52}{N/M}\cxbar{instances-52}{0.4 0.4 1}{s}The first is testing.  A simulator or model checker runs the automaton on
+\color{black}\cxtag{instances:51}{N/M}\cxbar{instances-51}{0.4 0.4 1}{s}The first is testing.  A simulator or model checker runs the automaton on
 bounded inputs~\cite{misra1986des,flanagan2005dpor}; the pairs of receive and
 reply sequences it collects form a finite spec in our model, which can be
 checked for violations of Lifted Monotonicity.  This is routine engineering
@@ -2940,9 +2929,9 @@ the other.  A violation of the automaton's own confluence is shown by finitely
 many executions and a receive sequence at which they have no common reachable
 row, and confirming that they have none means exploring all of their
 continuations to that receive sequence.  Testing cannot show that Lifted
-Monotonicity holds, since that is a claim about every input.\cxbar{instances-52}{0.4 0.4 1}{e}\color{black}
+Monotonicity holds, since that is a claim about every input.\cxbar{instances-51}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:53}{N/L}\cxbar{instances-53}{0.9 0.45 0}{s}The second approach is proof.  Verification work routinely proves that an
+\color{black}\cxtag{instances:52}{N/L}\cxbar{instances-52}{0.9 0.45 0}{s}The second approach is proof.  Verification work routinely proves that an
 automaton refines a spec: every trace of the automaton is allowed by the spec.
 Such proofs use invariants, properties of the automaton's state that hold
 initially and are preserved by every step, so they are checked one step at a
@@ -2969,24 +2958,24 @@ nothing the automaton cannot produce; it too is proved once for all inputs,
 typically by induction on the input.  $D$ need not match the automaton
 exactly: it may leave out reply sequences that others extend.  For the
 recording counter, the rule ``after $n$ arrivals, the reports $1,\ldots,n$''
-satisfies both obligations.\cxbar{instances-53}{0.9 0.45 0}{e}\color{black}
+satisfies both obligations.\cxbar{instances-52}{0.9 0.45 0}{e}\color{black}
 
 \color{black}\begin{proposition}[Declared specifications]
 \label{prop:declared-specification}
-\cxtag{instances:54}{N/M}\cxbar{instances-54}{0.4 0.4 1}{s}Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
+\cxtag{instances:53}{N/M}\cxbar{instances-53}{0.4 0.4 1}{s}Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
 correspond, by an order isomorphism, to receive sequences.  If $D$ satisfies
 realizability and domination, then $D$ is consistent exactly when the
-projected spec is.\cxbar{instances-54}{0.4 0.4 1}{e}\color{black}
+projected spec is.\cxbar{instances-53}{0.4 0.4 1}{e}\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:55}{N/M}\cxbar{instances-55}{0.4 0.4 1}{s}We use the common-extension form.  Given rows of the projected spec, we
+\cxtag{instances:54}{N/M}\cxbar{instances-54}{0.4 0.4 1}{s}We use the common-extension form.  Given rows of the projected spec, we
 dominate each by a row of $D$, take their common \outnoun in $D$, and realize
 it.  Conversely, rows of $D$ are rows of the projected spec, and their common
-\outnoun there is dominated back into $D$.\cxbar{instances-55}{0.4 0.4 1}{e}\color{black}
+\outnoun there is dominated back into $D$.\cxbar{instances-54}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:56}{N/S}Together, the two obligations let $D$ stand in for the projected spec:
+\color{black}\cxtag{instances:55}{N/S}Together, the two obligations let $D$ stand in for the projected spec:
 consistency is checked on $D$ exactly as everywhere else in this paper.
 Whether the automaton itself is confluent is a question about its executions
 (Proposition~\ref{prop:automaton-confluence}).\color{black}

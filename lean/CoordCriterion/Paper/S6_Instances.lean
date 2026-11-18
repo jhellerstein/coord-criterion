@@ -175,8 +175,8 @@ contents of the messages it receives, and broadcasts its messages. … Under
 their placement, the environment gives each participant only its own facts, at
 the start, so the facts in a participant's input that name other participants
 arrived in messages, and a participant passes on only facts it holds.  A
-transducer that computes a behavior translates into a system whose runs stay
-confluent.  Every output that some fair run of the transducer can produce is
+transducer that computes a behavior translates into our framework as a system
+whose runs stay confluent.  Every output that some fair run of the transducer can produce is
 emitted by some run of that system."
 
 Lean: inputs are `QRef.ExtInp (QRef.netAdm loc)` (located facts; an input
@@ -204,10 +204,10 @@ theorem «sec:query-instance/mapping» {F Msg St Out : Type} {loc : F → Nat}
   ⟨BK.sysOf_anonymous Pg, BK.placedConsistent_of_computes,
     fun hCh _ _ hf hn hK => BK.covers_of_characterizes hCh hf hn hK⟩
 
-/-- Sec. `sec:query-instance`: "Their characterization can be recovered directly
-in our formalism, which drops their requirement that programs treat data
-values only as interchangeable symbols: a behavior is computable without the
-list of all nodes exactly when it contains a node monotone behavior."
+/-- Sec. `sec:query-instance`: "Their characterization also holds in our
+formalism: a behavior can be computed without the list of all nodes exactly
+when it contains a node monotone behavior.  Our version does not need their
+requirement that programs treat data values only as interchangeable symbols."
 
 Lean: "computable without the list of all nodes" is `BK.Computes` by a node
 program under Id+Ord (`BK.Prog`, their Def. 6 reading of coordination-free);
@@ -235,7 +235,7 @@ nodes.  Correctness is judged by the final output of a run, and the input is
 fixed when the run starts.  We ask instead when a spec requires a commitment,
 judge consistency at every point of a run, and let input arrive over time.  A
 behavior can therefore be coordination-free in their sense while still needing
-a commitment in ours, made by one participant, as in their constructions, where
+a commitment in ours, made locally by one participant, as in their constructions, where
 a group's smallest node chooses for the group."
 
 Lean: the last sentence's example is the matching problem below: it is node
@@ -251,14 +251,12 @@ theorem «sec:query-instance/aims» :
     fun h => QRef.matching_not_consistentOn.2.2.2.2.2.2.2
       ((liftedMono_iff_commonExpansion _).1 h)⟩
 
-/-- Sec. `sec:query-instance`: "Two sides of a partition cannot know that
-they are disconnected, so neither can tell whether it is the whole network,
-and each must emit.  When the partition heals, the outputs of both sides must
-have a common output extension at any input that extends what both sides have
-received.  This is what Baccaert and Ketsman call node monotonicity: the
-common-extension condition for outputs of participants that have heard from
-disjoint sets of participants.  They show that a behavior is coordination-free
-exactly when it contains a node monotone behavior."
+/-- Sec. `sec:query-instance`: "Two sides of a partition cannot tell that they
+are disconnected, so each must emit to be available, and when the partition
+heals, their outputs must have a common output extension at any input that
+extends what both sides have received. … Baccaert and Ketsman's node
+monotonicity is the same condition, restricted to sides whose inputs come from
+disjoint sets of participants."
 
 Lean, first conjunct: node monotonicity (`QRef.NodeMono`, their Def. 7) is
 the common-extension condition for two rows at disjoint networks and any
@@ -269,8 +267,8 @@ extension at the union of disjoint networks; the two witness histories are
 placed side by side, since no strategy can tell.  Third conjunct: through the
 translation, a behavior characterizing a transducer is node monotone on finite
 networks (their Prop. 11).  Their characterization theorem (Thm. 5 with
-Lemma 4) is proved in both directions in
-`«sec:query-instance/characterization»`. -/
+Lemma 4), stated in the paragraph's next sentence, is proved in both
+directions in `«sec:query-instance/characterization»`. -/
 theorem «sec:query-instance/node-monotonicity» :
     (∀ {F N G : Type} (loc : F → N) (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)),
       QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
@@ -283,27 +281,26 @@ theorem «sec:query-instance/node-monotonicity» :
     fun _ hA hc => BK.nodeMono_of_placedConsistent hA hc,
     fun _ _ hCh => BK.nodeMono_of_characterizes hCh⟩
 
-/-- Sec. `sec:query-instance`: "Complete CAP asks for more, because the
-environment is not constrained from back-channel sharing of facts across
-sides.  It requires the common-extension condition even when participants on
-different sides receive overlapping input."  Lean: the common-extension
-condition (equivalently Lifted Monotonicity, the condition of Theorem
-`thm:complete-cap` with `E = P`) implies node monotonicity, which asks it only
-for inputs at disjoint networks. -/
+/-- Sec. `sec:query-instance`: "Complete CAP requires this condition across
+every partition." and "Under Baccaert and Ketsman's placement, the inputs of
+two sides never overlap; in our model, the environment may give the same fact
+to both sides."  Lean: the common-extension condition (equivalently Lifted
+Monotonicity, the condition of Theorem `thm:complete-cap` with `E = P`), which
+also covers sides with overlapping inputs, implies node monotonicity, which
+asks it only for inputs at disjoint networks.  That their placement gives
+disjoint sides is `BK.Placed` (`«sec:query-instance/mapping»`). -/
 theorem «sec:query-instance/asks-for-more» {F N G : Type} (loc : F → N)
     (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)) :
     B.CommonExpansion → QRef.NodeMono loc B :=
   fun h => QRef.nodeMono_of_consistent loc ((complete_calm_commonExpansion B).2 h)
 
-/-- Sec. `sec:query-instance`: "Consider an unconstrained matching problem
-over data items partitioned across participants: any set of disjoint pairs of
-items is a permitted output.  Under a network partition with Baccaert and
-Ketsman's placement, each side can pair its items arbitrarily.  Two sides can
-always combine their pairings, because no item can be found on both sides.
-This changes in our model, where the environment can provide an item to
-participants on both sides of the partition.  An item `i` may then be paired
-with `j` on one side and with `k` on the other, and no matching contains both
-pairs."
+/-- Sec. `sec:query-instance`: "Unconstrained matching shows the difference:
+any set of disjoint pairs of items is a permitted output.  Under their
+placement, each side pairs only its own items, and the two sides' pairings
+always combine, so matching is node monotone.  In our model, an item `i` can
+reach both sides and be paired with `j` on one side and with `k` on the other;
+no matching contains both pairs, so matching does not satisfy Lifted
+Monotonicity."
 
 Lean: `QRef.matching loc` (items located by `loc`, outputs symmetric
 matchings of the input's items under inclusion, every matching permitted).
