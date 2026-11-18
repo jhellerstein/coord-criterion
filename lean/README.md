@@ -49,7 +49,7 @@ that a system's messages and partitions stay inside its component, that the
 implementation form determines which internal system model and coordination
 classification justify a component's admitted runs, the Hydro interface
 analogy, and the list of topics left out (cyclic dataflows, scheduling,
-placement, co-location, failure domains, one history across components); and the design discussion of §6–§7.  The `Paper/` docstrings point these out where
+placement, co-location, failure domains, one history across components); that reaching a common state takes an algorithm, message delivery, and a termination argument (§2.4); and the design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
 ## Building and checking
