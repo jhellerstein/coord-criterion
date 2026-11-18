@@ -2416,7 +2416,8 @@ levels~\cite{bailis2013hat,adya1999weakconsistency}. We take their
 assumptions as given. Items are partially replicated, and a client sends each
 operation to some replica of its item. A transaction's writes carry a unique
 client timestamp, and versions are ordered by timestamp, last writer wins. The system never aborts a transaction on its own. A replica answers a read
-with the highest-timestamped committed write of the item that it has received.
+with the highest-timestamped committed write of the item that it has received;
+we call this the store's \emph{read rule}.
 
 The HAT results illustrate the intersection reasoning of
 Section~\ref{sec:intersection}. An isolation level and a store are separate
@@ -2428,10 +2429,11 @@ Lifted Monotonicity.
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
 An input is a history ordered by happens-before: reads, each tagged with its
-replica; commits, each with its client timestamp and write set; and deliveries
-of committed writes to replicas. The history preserves
+replica; commits, each with its client timestamp and write set; and arrivals
+of committed writes at replicas. The history preserves
 each client's program order and each replica's arrival order, and a
-transaction's reads precede its commit, which precedes its deliveries. \textcolor{reviewed}{One input \inrel another when it adds events, none of which happens before an
+transaction's reads precede its commit, which precedes the arrivals of its
+writes at replicas. \textcolor{reviewed}{One input \inrel another when it adds events, none of which happens before an
 event already present.} \textcolor{reviewed}{An output is a set of read
 answers, ordered by inclusion.} \textcolor{reviewed}{A history is \emph{complete} when it answers
 every read and orders versions by timestamp.} \textcolor{reviewed}{For an isolation level $L$, the table $P_L$ of $\Spec_L$ contains
@@ -2447,14 +2449,16 @@ of Definition~\ref{def:hat-spec}. At each input, it permits any subset of the
 answers that the read rule gives.
 \end{definition}
 
-The store promises its read rule and nothing about isolation. It satisfies
-Lifted Monotonicity on its own: a read's answer under the read rule depends
-only on the history preceding it, so later input never changes it, and the rule
-is a monotone function of the input. Its full answers are the rows of $E$, and
-the intersection $\Spec_{\mathrm{st}}\cap\Spec_L$
-(Definition~\ref{def:intersection}) is the store held to isolation level $L$. It is total, since both permit the empty set of answers. By
-Proposition~\ref{prop:intersection-bound}, the intersection keeps Lifted
-Monotonicity when $\Spec_L$ permits the read rule's answers.
+The store spec says only that answers follow the read rule; it makes no
+promise about isolation. On its own it satisfies Lifted Monotonicity: a read's
+answer under the read rule depends only on the writes its replica received
+before the read, so later input never changes it. The store's rows that answer
+every read are exactly the rows of $E$. Holding the store to an isolation
+level $L$ means taking the intersection $\Spec_{\mathrm{st}}\cap\Spec_L$
+(Definition~\ref{def:intersection}), which is total, since both specs permit
+answering no reads. By Proposition~\ref{prop:intersection-bound}, the
+intersection keeps Lifted Monotonicity when $\Spec_L$ permits the read rule's
+answers.
 
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
@@ -2474,9 +2478,10 @@ For read uncommitted and read committed, the timestamp condition rules out the
 dependency cycles of G0 and G1c, so $\Spec_L$ permits the read rule's answers. Proposition~\ref{prop:intersection-bound}, with the read rule as the bound,
 gives Lifted Monotonicity of $\Spec_{\mathrm{st}}\cap\Spec_L$, whose rows
 include those of $E$. For the converse, let two transactions at different
-replicas each read $x_0$ and write $x$. Each replica's answer is forced, and
-their union contains a cycle on $x$ with an anti-dependency, which is Lost
-Update. So the store's forced answer at one replica has no extension in
+replicas each read $x_0$ and write $x$. Under the read rule, each replica can
+answer only $x_0$, since neither has received the other's write. Together the
+two answers contain a cycle on $x$ with an anti-dependency, which is Lost
+Update. So the store's answer at one replica has no extension in
 $\Spec_{\mathrm{st}}\cap\Spec_L$ once both transactions are in the input. The store needs no \commitment on its own, so this need comes from the
 intersection with $\Spec_L$.
 \end{proof}
@@ -2500,45 +2505,25 @@ the algorithm does not guarantee read committed, and therefore not monotonic
 atomic view either. With timestamps taken at commit, above every version
 read, it provides monotonic atomic view (Appendix~\ref{app:hat-taxonomy}).
 
-The same reasoning recovers the rest of Bailis et al.'s classification
-(Appendix~\ref{app:hat-taxonomy}). Each guarantee becomes a spec: a store that
-returns only versions the reading replica has received, held to the guarantee. A guarantee is highly available when some explicit relation inside its spec
-answers every read and some system has Availability for that relation and
-Partition Consistency. By Theorem~\ref{thm:complete-cap}, this holds exactly
-when the spec satisfies Lifted Monotonicity for such a relation. Bailis et
-al.'s algorithms supply the relations. For monotonic atomic view they reveal a
-write only once every replica of the items its transaction wrote has received
-it, and for the session guarantees only once the same holds for every
-transaction committed before it. With these read rules, monotonic atomic
-view, item cut isolation, predicate cut isolation, monotonic reads, monotonic
-writes, and writes follow reads are highly available, as Bailis et al.\
-report. Read your writes, PRAM,
-and causal consistency are not. They are sticky available: the same holds for
-a relation that answers every read at a replica that already holds the
-client's earlier writes. Assigning each client to such a replica is a
-deployment, and some system has Deployment Availability and Partition
-Consistency for it (Proposition~\ref{prop:deployment-complete-cap}). Levels
-that rule out Lost Update or Write Skew are unavailable, and so are guarantees
-on recency, with or without stickiness.
-
-Our classification matches theirs, and it differs in form in three ways. First, read your writes without stickiness, and recency in every case, fail
-because no permitted answer exists. When a client's write has not reached the
-replica that serves its next read, every version that replica holds violates
-read your writes. Recency fails the same way when the missing write comes
-from another client, so stickiness does not help. No explicit relation inside the spec can answer that read, so
-Lifted Monotonicity never comes into question. The unavailable isolation
-levels fail differently: answers that each side is forced to give have no
-common extension. Second, monotonic writes needs the version order to follow
-each session's order. Bailis et al.\ obtain this from client timestamps, and
-our inputs assume it: a client's commit timestamps increase along its session. Third, a predicate is a fixed range of items, and one recency guarantee, that a
-read returns a version at least as new as every write whose commit happens
-before it, stands for the four recency guarantees of Bailis et al.
+Bailis et al.\ also classify session guarantees and recency alongside further
+isolation levels, calling them all \emph{guarantees}. Each guarantee $G$
+becomes a spec $\Spec_G$: a store that returns only versions the reading
+replica has received, held to $G$. Their high availability becomes
+Availability for an explicit relation inside $\Spec_G$ that answers every read,
+together with Partition Consistency, so by Theorem~\ref{thm:complete-cap} it
+holds exactly when $\Spec_G$ satisfies Lifted Monotonicity for such a relation. Their sticky availability, in which each client is served by a replica that
+already holds its earlier writes, becomes Deployment Availability for a
+deployment that assigns clients to replicas
+(Proposition~\ref{prop:deployment-complete-cap}). Their algorithms supply the
+explicit relations. Our mapping recovers their classification of every
+guarantee, each as an instance of Complete CAP or its deployment form
+(Theorem~\ref{thm:hat-taxonomy}, Appendix~\ref{app:hat-taxonomy}).
 
 Stating the classification precisely also exposed a mismatch in the extended
 paper. Its formal definition of the anomaly that read your writes rules out
 lets the forbidden cycle pass through other clients' transactions on other
-items~\cite[Def.~34]{bailis2013hatextended}. Read that way, read your writes
-is not sticky available. Consider two clients at partitioned replicas. Client~1 writes $x$, and then a second transaction of client~1 reads $x$ and
+items~\cite[Def.~34]{bailis2013hatextended}. Under that definition, read your
+writes is not sticky available. Consider two clients at partitioned replicas. Client~1 writes $x$, and then a second transaction of client~1 reads $x$ and
 $y$ at its own replica, which has its write of $x$ but no write of $y$. Client~2 reads $x$ at the other replica, which has no write of $x$, and writes
 $y$. Every read is sticky, and each replica can return only the initial
 version of the item it lacks. Together these answers form the forbidden
@@ -3495,7 +3480,7 @@ paper gives no formal definition of recency. We take it to require that a
 read return a version at least as new as every write by another transaction
 whose commit happens before the read. A replica can return only versions it
 holds. So the \emph{visibility store} permits an answer only if its version is the initial
-one or was delivered to the reading replica before the read.
+one or arrived at the reading replica before the read.
 
 \begin{definition}[Guarantee spec, high availability, sticky read, sticky availability]
 \label{def:hat-availability}
@@ -3517,7 +3502,7 @@ Corollary~\ref{cor:complete-cap-any-system}, $G$ is highly available exactly
 when $\Spec_G$ satisfies Lifted Monotonicity for some $E\subseteq P_G$ that
 answers every read, and likewise for sticky availability.
 
-\paragraph{Read rules.}
+\paragraph{Reveal rules.}
 A transaction is \emph{pending stable} before a read when every replica of
 every item it wrote has received its write before the read. The algorithm of
 Bailis et al.\ for monotonic atomic view reveals a write only once its
@@ -3526,9 +3511,9 @@ until every transaction committed before it is pending stable: they ``wait to
 reveal new writes \ldots\ until each write's respective dependencies are
 visible on all replicas.''  Their cut isolation algorithm keeps the versions a
 transaction has read in a client-side cache. We combine these into one
-\emph{read rule}. A write is revealed at a read once its transaction and
+\emph{reveal rule}. A write is revealed at a read once its transaction and
 every transaction whose commit happens before its commit are pending stable. A transaction reads, for each item, the highest version revealed at every one
-of its reads so far. The \emph{sticky read rule} answers only sticky reads
+of its reads so far. The \emph{sticky reveal rule} answers only sticky reads
 and also reveals the client's own earlier writes, which a sticky read's
 replica holds.
 
@@ -3545,7 +3530,7 @@ Under the timestamp condition of Theorem~\ref{thm:hat-levels}, read
 Read your writes, PRAM, and causal consistency are sticky available
         and not highly available. Given at least two participants and any
         assignment of clients to them, consider the deployment that lets each
-        client's participant give the sticky read rule's answers to that
+        client's participant give the sticky reveal rule's answers to that
         client's reads. Some system has Deployment Availability and Partition
         Consistency for it.
 \item
@@ -3557,7 +3542,7 @@ Recency is neither highly available nor sticky available. For any
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) The read rule answers every read. Each answer depends only on the read's
+(1) The reveal rule answers every read. Each answer depends only on the read's
 past, so later input never changes it, and the rule is monotone. A monotone
 relation inside the spec satisfies Lifted Monotonicity for itself: rows below
 $j$ have the relation's own answer at $j$ as a common \outnoun. The rule
@@ -3570,7 +3555,7 @@ one. For read committed and monotonic atomic view, the timestamp condition rules
 out G1c, as in Theorem~\ref{thm:hat-levels}. By
 Theorem~\ref{thm:complete-cap}, each guarantee is highly available.
 
-(2) The sticky read rule does the same for every sticky read. The deployment
+(2) The sticky reveal rule does the same for every sticky read. The deployment
 authorizes only answers of this one monotone relation inside the spec, so it
 is monotone across partitions, and Proposition~\ref{prop:deployment-complete-cap}
 gives the system. Without stickiness, consider a client that writes $x$ at
@@ -3619,6 +3604,23 @@ read raised the required timestamp of $y$ to $T_j$'s, so the second read
 returns $T_j$'s version of $y$ or a newer one. Theorem~\ref{thm:complete-cap}
 gives the system.
 \end{proof}
+
+\paragraph{Differences in form.}
+Our classification matches theirs, and it differs in form in three ways. First, our framework separates two reasons a guarantee can be unavailable. The unavailable isolation levels fail Lifted Monotonicity: answers that the two
+sides give have no common extension. Read your writes without stickiness, and
+recency in every case, fail earlier, because some read has no permitted answer
+at all. When a client's write has not reached the replica that serves its next
+read, every version that replica holds, the initial version included, violates
+read your writes. Recency fails the same way when the missing write comes from
+another client, so stickiness does not help. No explicit relation inside the
+spec answers such a read, so the question of Lifted Monotonicity never arises. Second, monotonic writes needs the version order to follow each session's
+order. Bailis et al.\ obtain this from client timestamps, and our inputs
+assume it: a client's commit timestamps increase along its session. Third, we
+model a predicate as a fixed range of items; general predicates, whose items
+depend on the data, are not modeled. Bailis et al.\ list several recency
+guarantees without formal definitions, among them bounds on staleness and safe,
+regular, and linearizable register semantics; we model the one recency
+guarantee defined above.
 
 \paragraph{Differences from the extended paper's text.}
 Besides the definition of read your writes (\S\ref{sec:hat-instance}), the

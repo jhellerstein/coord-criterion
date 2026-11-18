@@ -442,7 +442,7 @@ each operation to some replica of its item.  A transaction's writes carry a
 unique client timestamp, and versions are ordered by timestamp, last writer
 wins.  The system never aborts a transaction on its own.  A replica answers a
 read with the highest-timestamped committed write of the item that it has
-received.") fixes the model of `Instances/HATSpec.lean`; the read rule is
+received; we call this the store's *read rule*.") fixes the model of `Instances/HATSpec.lean`; the read rule is
 `HATSpec.hatOut`.  The next paragraph ("The HAT results illustrate the
 intersection reasoning of Section `sec:intersection`.  An isolation level and a
 store are separate specs on the same histories: the level constrains which
@@ -454,17 +454,17 @@ intersections satisfy Lifted Monotonicity.") is realized by `HATSpec.store`,
 monotonic atomic view is `«sec:hat-instance/mav-timestamps»`; the paragraph
 recovering Bailis et al.'s classification (Table 3) is
 `«sec:hat-instance/session-guarantees»`, in the model of
-`Instances/HATTaxonomy.lean` (details in `Paper/AppB_HATTaxonomy.lean`); the
-paragraph on choices of form is `«sec:hat-instance/form-choices»`; and the
+`Instances/HATTaxonomy.lean` (details in `Paper/AppB_HATTaxonomy.lean`, where
+the differences in form are `«app:hat-taxonomy/form-choices»`); and the
 paragraph on the extended paper's definition of read your writes (Def. 34) is
 `«sec:hat-instance/myr-as-written»`. -/
 
 /-- **Definition `def:hat-spec`** (HAT specification): "An input is a history
 ordered by happens-before: reads, each tagged with its replica; commits, each
-with its client timestamp and write set; and deliveries of committed writes
-to replicas.  The history preserves each client's program order and each
+with its client timestamp and write set; and arrivals of committed writes
+at replicas.  The history preserves each client's program order and each
 replica's arrival order, and a transaction's reads precede its commit, which
-precedes its deliveries.  One input extends another when it adds events, none of which
+precedes the arrivals of its writes at replicas.  One input extends another when it adds events, none of which
 happens before an event already present.  An output is a set of read answers, ordered by
 inclusion.  A history is *complete* when it answers every read and orders
 versions by timestamp.  For an isolation level `L`, the table `P_L` of `𝒮_L`
@@ -481,7 +481,7 @@ inclusion.  An isolation level `L` is defined by the phenomena it proscribes.
 A history is complete when …" as above.)  A complete history is `HATSpec.CH`;
 `P_L` contains `F` when `F ≼ H.facts` for some complete `H` avoiding the
 phenomena (`HATSpec.specP`).
-Lean: inputs `HATSpec.Inp true` (events `rd`, `cm`, `dl`; legality `WF` plus
+Lean: inputs `HATSpec.Inp true` (events `rd`, `cm`, and `dl` for arrivals; legality `WF` plus
 the timestamp condition of Thm. `thm:hat-levels`, so that the theorem's
 hypothesis is part of the input domain; of program order only "reads precede
 their commit" is required); `𝒮_L = HATSpec.spec L`; `E = HATSpec.hatA`, the
@@ -514,15 +514,16 @@ theorem «def:hat-spec/read-rule» :
 /-- **Definition `def:store-spec`** (Store specification): "The store
 specification `𝒮_st` has the inputs and outputs of Definition `def:hat-spec`.
 At each input, it permits any subset of the answers that the read rule
-gives."  And after it: "The store promises its read rule and nothing about
-isolation.  It satisfies Lifted Monotonicity on its own: a read's answer under
-the read rule depends only on the history preceding it, so later input never
-changes it, and the rule is a monotone function of the input.  Its full answers
-are the rows of `E`, and the intersection `𝒮_st ∩ 𝒮_L` (Definition
-`def:intersection`) is the store held to isolation level `L`.  It is total,
-since both permit the empty set of answers.  By Proposition
-`prop:intersection-bound`, the intersection keeps Lifted Monotonicity when
-`𝒮_L` permits the read rule's answers."  Lean: `HATSpec.store`; its fiber at `j`
+gives."  And after it: "The store spec says only that answers follow the read
+rule; it makes no promise about isolation.  On its own it satisfies Lifted
+Monotonicity: a read's answer under the read rule depends only on the writes
+its replica received before the read, so later input never changes it.  The
+store's rows that answer every read are exactly the rows of `E`.  Holding the
+store to an isolation level `L` means taking the intersection `𝒮_st ∩ 𝒮_L`
+(Definition `def:intersection`), which is total, since both specs permit
+answering no reads.  By Proposition `prop:intersection-bound`, the
+intersection keeps Lifted Monotonicity when `𝒮_L` permits the read rule's
+answers."  Lean: `HATSpec.store`; its fiber at `j`
 is the subsets of `hatOut j`, so the rows of `E = HATSpec.hatA` are its full
 rows; the store satisfies Lifted Monotonicity (`HATSpec.store_liftedMono`, via
 `HATSpec.hatOut_mono`, which is `«thm:hat-levels/answers-stable»`); the
@@ -601,15 +602,16 @@ theorem «thm:hat-levels/answers-stable» :
   ⟨HATSpec.hat_rule.2, HATSpec.hatOut_rc⟩
 
 /-- Proof sketch of Thm. `thm:hat-levels`: "For the converse, let two
-transactions at different replicas each read `x₀` and write `x`.  Each
-replica's answer is forced, and their union contains a cycle on `x` with an
-anti-dependency, which is Lost Update.  So the store's forced answer at one
-replica has no extension in `𝒮_st ∩ 𝒮_L` once both transactions are in the
+transactions at different replicas each read `x₀` and write `x`.  Under the
+read rule, each replica can answer only `x₀`, since neither has received the
+other's write.  Together the two answers contain a cycle on `x` with an
+anti-dependency, which is Lost Update.  So the store's answer at one replica
+has no extension in `𝒮_st ∩ 𝒮_L` once both transactions are in the
 input.  The store needs no commitment on its own, so this need comes from the
 intersection with `𝒮_L`."  (The store's own Lifted Monotonicity is
 `HATSpec.store_liftedMono`; the last step is `HATSpec.store_inter_lostUpdate`: the row of `T₂`'s
 answer `x₀` at `i₂` has no extension at the union; `HATSpec.i2_ans`.)  Lean: `T₁` (timestamp `(1,1)`) and
-`T₂` (`(1,2)`) read and write `x` at replicas 0 and 1, with no delivery; at
+`T₂` (`(1,2)`) read and write `x` at replicas 0 and 1, with no arrival event; at
 each one-transaction input the only version a read may return is `x₀`; in
 every complete history of the union in which `T₂` read `x₀`, the
 anti-dependency `T₂ → T₁` and the write-dependency `T₁ → T₂` on `x` form a
@@ -671,27 +673,20 @@ theorem «sec:hat-instance/mav-timestamps» (D : Type) :
         HATTax.HighlyAvailable (reps := reps) (lam := true) (HATTax.tax .MAV) D :=
   ⟨HATTax.appB_not_rc, fun _ K => HATTax.mav_appB K D⟩
 
-/-- Sec. `sec:hat-instance`: "The same reasoning recovers the rest of Bailis et
-al.'s classification (Appendix `app:hat-taxonomy`).  Each guarantee becomes a
-spec: a store that returns only versions the reading replica has received,
-held to the guarantee.  A guarantee is highly available when some explicit
-relation inside its spec answers every read and some system has Availability
-for that relation and Partition Consistency.  By Theorem `thm:complete-cap`,
-this holds exactly when the spec satisfies Lifted Monotonicity for such a
-relation.  Bailis et al.'s algorithms supply the relations.  For monotonic
-atomic view they reveal a write only once every replica of the items its
-transaction wrote has received it, and for the session guarantees only once
-the same holds for every transaction committed before it.  With these read
-rules, monotonic atomic view, item cut isolation, predicate cut isolation,
-monotonic reads, monotonic writes, and writes follow reads are highly
-available, as Bailis et al. report.  Read your writes, PRAM, and causal
-consistency are not.  They are sticky available: the same holds for a
-relation that answers every read at a replica that already holds the client's
-earlier writes.  Assigning each client to such a replica is a deployment, and
-some system has Deployment Availability and Partition Consistency for it
-(Proposition `prop:deployment-complete-cap`).  Levels that rule out Lost
-Update or Write Skew are unavailable, and so are guarantees on recency, with
-or without stickiness."
+/-- Sec. `sec:hat-instance`: "Bailis et al. also classify session guarantees
+and recency alongside further isolation levels, calling them all
+*guarantees*.  Each guarantee `G` becomes a spec `𝒮_G`: a store that returns
+only versions the reading replica has received, held to `G`.  Their high
+availability becomes Availability for an explicit relation inside `𝒮_G` that
+answers every read, together with Partition Consistency, so by Theorem
+`thm:complete-cap` it holds exactly when `𝒮_G` satisfies Lifted Monotonicity
+for such a relation.  Their sticky availability, in which each client is
+served by a replica that already holds its earlier writes, becomes Deployment
+Availability for a deployment that assigns clients to replicas (Proposition
+`prop:deployment-complete-cap`).  Their algorithms supply the explicit
+relations.  Our mapping recovers their classification of every guarantee, each
+as an instance of Complete CAP or its deployment form (Theorem
+`thm:hat-taxonomy`, Appendix `app:hat-taxonomy`)."
 
 Lean: Bailis et al.'s classification (VLDB 2014, Table 3; guarantees as the
 phenomena of the extended paper's App. A), in the model of
@@ -701,7 +696,7 @@ and `HATTax.StickyAvailable`, and `HATTax.highlyAvailable_iff` is the step
 through `CAP.complete_cap_for`):
 
 * *highly available* (RC and MAV under the timestamp condition, I-CI, P-CI,
-  MR, MW, WFR): the read rule is an explicit relation inside the spec that
+  MR, MW, WFR): the reveal rule is an explicit relation inside the spec that
   answers every read and is monotone (`HATTax.ha_of_rule`); for MAV also the
   App. B algorithm itself (`«sec:hat-instance/mav-timestamps»`);
 * *sticky available* (RYW, PRAM, causal; also the highly available session
@@ -716,7 +711,7 @@ through `CAP.complete_cap_for`):
   The negative results for RYW and recency assume only that item `0` has
   replica `0`.
 
-The read rule in Lean reveals a write once its transaction and every
+The reveal rule in Lean reveals a write once its transaction and every
 transaction committed before it are pending stable, for all highly available
 guarantees at once (`HATTax.Rev`, `HATTax.DepStable`); for MAV the App. B
 algorithm, which waits only for pending stability, gives the same
@@ -747,50 +742,11 @@ theorem «sec:hat-instance/session-guarantees» (reps : Nat → List Nat) (lam :
      HATTax.recency_not_sticky h0 D⟩,
    fun L hL A hAS ht ha => (HATSpec.WS.writeSkew_unavailable L hL D A hAS ht ha).2⟩
 
-/-- Sec. `sec:hat-instance`: "Our classification matches theirs, and it
-differs in form in three ways.  First, read your writes without stickiness,
-and recency in every case, fail because no permitted answer exists.  When a
-client's write has not reached the replica that serves its next read, every
-version that replica holds violates read your writes.  Recency fails the same
-way when the missing write comes from another client, so stickiness does not
-help.  No explicit relation
-inside the spec can answer that read, so Lifted Monotonicity never comes into
-question.  The unavailable isolation levels fail differently: answers that
-each side is forced to give have no common extension.  Second, monotonic
-writes needs the version order to follow each session's order.  Bailis et al.
-obtain this from client timestamps, and our inputs assume it: a client's commit
-timestamps increase along its session.  Third, a predicate is a fixed range of
-items, and one recency guarantee, that a read returns a version at least as new
-as every write whose commit happens before it, stands for the four recency
-guarantees of Bailis et al."
-
-Lean: (1) on `HATTax.w1`, client 1's read of `x` is not sticky
-(`HATTax.w1_not_sticky`) and no output that the read-your-writes spec permits
-answers it (`HATTax.ryw_no_answer`); on `HATTax.w2`, the same holds for recency
-although the read is sticky (`HATTax.recency_no_answer`); the isolation levels'
-failure is the forced-answer pair of `«thm:hat-levels/lost-update-pair»` and
-`HATSpec.WS.ws_cycle`; (2) every taxonomy input has increasing commit
-timestamps along each client's session (field `sess_ts` of `HATTax.Sess`);
-(3) a predicate read `.prd c n ks r` names a fixed list of items `ks`, and
-recency is the single phenomenon `HATTax.Recency`. -/
-theorem «sec:hat-instance/form-choices» (reps : Nat → List Nat) (lam : Bool) (h0 : 0 ∈ reps 0) :
-    (¬ HATTax.Reflects (reps := reps) (HATTax.w1 (lam := lam) h0).1 1 1 0 ∧
-      ∀ o, (HATTax.tax (reps := reps) (lam := lam) .RYW).P (HATTax.w1 h0) o →
-        ∀ v, ¬ o (.rv 1 0 v)) ∧
-    (∀ o, (HATTax.tax (reps := reps) (lam := lam) .Rec).P (HATTax.w2 h0) o →
-        ∀ v, ¬ o (.rv 1 0 v)) ∧
-    (∀ (j : HATTax.SInp reps lam) {f f' c n n' t t' ks ks'},
-      j.1.lab f = some (.cm c n t ks) → j.1.lab f' = some (.cm c n' t' ks') → j.1.lt f f' →
-        HATRC.tsLt t t') :=
-  ⟨⟨HATTax.w1_not_sticky h0, fun _ ho v => HATTax.ryw_no_answer h0 ho v⟩,
-    fun _ ho v => HATTax.recency_no_answer h0 ho v,
-    fun j => j.2.2.sess_ts⟩
-
 /-- Sec. `sec:hat-instance`: "Stating the classification precisely also exposed
 a mismatch in the extended paper.  Its formal definition of the anomaly that
 read your writes rules out lets the forbidden cycle pass through other
-clients' transactions on other items [Def. 34].  Read that way, read your
-writes is not sticky available.  Consider two clients at partitioned replicas.
+clients' transactions on other items [Def. 34].  Under that definition, read
+your writes is not sticky available.  Consider two clients at partitioned replicas.
 Client 1 writes `x`, and then a second transaction of client 1 reads `x` and
 `y` at its own replica, which has its write of `x` but no write of `y`.
 Client 2 reads `x` at the other replica, which has no write of `x`, and writes

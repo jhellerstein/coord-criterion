@@ -38,7 +38,7 @@ that leader election is their running example, how Ameloot et al. and they
 model placement, that an identifier and an order on identifiers is what their
 coordination-free transducers know, that their programs must treat data values only as interchangeable symbols (their characterization theorem itself is proved in Lean, both directions, `«sec:query-instance/characterization»`); and their aims, notion of coordination, correctness criterion, fixed inputs, and quorum construction in which a group's smallest node chooses); in §4 (`sec:systems`), that Ameloot et al. show a list of
 all participants enlarges what a system can compute; in
-Appendix B (`app:hat-taxonomy`), what the extended HAT paper's text says (its descriptions of its algorithms, the wording, names and examples of Defs. 14, 24, 26, 28, 30, 32 and 34, and the legend of its dependency graphs, which swaps the labels of read- and anti-dependencies relative to its figures; the definitions as we read them, and the consequences of the literal readings of Defs. 26 and 34, are in Lean, `Paper/AppB_HATTaxonomy.lean`, `«sec:hat-instance/myr-as-written»`); in §6.3 (`sec:hat-instance`), the description of Kaki et al.'s program logic, its compositional proof rules and its inference procedure; in Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, the reading of an automaton as a server (arrival, handing a request to the computation, when a reply fires) and that a server built from several communicating automata is a distributed system; in its "Testing and proof" paragraph, that simulators and model checkers run the
+Appendix B (`app:hat-taxonomy`), what the HAT papers' text says (their list of recency guarantees, the extended paper's descriptions of its algorithms, the wording, names and examples of Defs. 14, 24, 26, 28, 30, 32 and 34, and the legend of its dependency graphs, which swaps the labels of read- and anti-dependencies relative to its figures; the definitions as we read them, and the consequences of the literal readings of Defs. 26 and 34, are in Lean, `Paper/AppB_HATTaxonomy.lean`, `«sec:hat-instance/myr-as-written»`); in §6.3 (`sec:hat-instance`), the description of Kaki et al.'s program logic, its compositional proof rules and its inference procedure; in Appendix E (`app:rtc`), that Mahajan et al.'s implementations satisfy the abstract execution-level forms used in Lean (their run model with environment graphs and messages is not formalized; their check, always availability, one-way convergence and blindness to real time are, in `Appendix/MahajanRTC.lean`, and their Theorem 3.1 is derived from ours, `«app:rtc/mahajan»`); in §6.5, the reading of an automaton as a server (arrival, handing a request to the computation, when a reply fires) and that a server built from several communicating automata is a distributed system; in its "Testing and proof" paragraph, that simulators and model checkers run the
 automaton on bounded inputs and that the pairs of receive and reply sequences they collect form a
 finite specification that can be checked for violations, that this is routine engineering practice and has
 found serious bugs in production systems, that confirming a violation of an automaton's confluence means exploring the continuations of the executions involved, and the relation of the
@@ -457,7 +457,6 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition in the theorem is required, correcting an error in the extended HAT paper. |
 | `«sec:hat-instance/mav-timestamps»` | theorem | Sec. |
 | `«sec:hat-instance/session-guarantees»` | theorem | Sec. |
-| `«sec:hat-instance/form-choices»` | theorem | Sec. |
 | `«sec:hat-instance/myr-as-written»` | theorem | Sec. |
 | `«sec:iconfluence-instance/model»` | abbrev | Sec. |
 | `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
@@ -645,13 +644,14 @@ File `Paper/AppB_HATTaxonomy.lean`; paper source `appendices/proof-machinery.tex
 | `«app:hat-taxonomy/guarantees»` | theorem | Paragraph "Guarantees": |
 | `«def:hat-availability»` | theorem | **Definition `def:hat-availability`** (Guarantee spec, high availability, sticky read, sticky availability). |
 | `«app:hat-taxonomy/complete-cap»` | theorem | "Sticky availability follows Bailis et al.: |
-| `«app:hat-taxonomy/read-rules»` | theorem | Paragraph "Read rules": |
+| `«app:hat-taxonomy/reveal-rules»` | theorem | Paragraph "Reveal rules": |
 | `«thm:hat-taxonomy»` | theorem | **Theorem `thm:hat-taxonomy`** (HAT taxonomy). |
 | `«thm:hat-taxonomy/proof-ha»` | theorem | Proof of Theorem `thm:hat-taxonomy`, item (1): |
 | `«thm:hat-taxonomy/proof-sticky»` | theorem | Proof of Theorem `thm:hat-taxonomy`, item (2): |
 | `«thm:hat-taxonomy/proof-unavailable»` | theorem | Proof of Theorem `thm:hat-taxonomy`, item (3): |
 | `«app:hat-taxonomy/mav-algorithm»` | theorem | Paragraph "The algorithm for monotonic atomic view": |
 | `«prop:hat-mav-algorithm»` | theorem | **Proposition `prop:hat-mav-algorithm`** (The algorithm provides monotonic atomic view). |
+| `«app:hat-taxonomy/form-choices»` | theorem | Paragraph "Differences in form": |
 | `«app:hat-taxonomy/pmp-for-some»` | theorem | Predicate cut isolation, read "for some": |
 | `«app:hat-taxonomy/otv-literal»` | theorem | Monotonic atomic view, read literally: |
 | `«app:hat-taxonomy/nmr-intermediate»` | theorem | Monotonic reads across intermediate versions: |

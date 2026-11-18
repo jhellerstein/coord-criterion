@@ -10,7 +10,7 @@ entries follow the paper's paragraphs in order; each quotes the claim it
 formalizes.  Unlabeled claims are named `«app:hat-taxonomy/<slug>»`.
 
 Library: `Instances/HATTaxonomy.lean` (model, phenomena, specifications),
-`Instances/HATTaxonomyRules.lean` (read rules, positive results),
+`Instances/HATTaxonomyRules.lean` (reveal rules, positive results),
 `Instances/HATTaxonomyWitness.lean` (negative results), `Instances/HATAppB.lean`
 (the algorithm for monotonic atomic view), `Instances/HATWriteSkew.lean`, all
 in namespace `CC.HATTax` (Write Skew in `CC.HATSpec.WS`).  The parameter
@@ -62,7 +62,7 @@ formal definition of recency.  We take it to require that a read return a
 version at least as new as every write by another transaction whose commit
 happens before the read.  A replica can return only versions it holds.  So the
 *visibility store* permits an answer only if its version is the initial one or
-was delivered to the reading replica before the read."
+arrived at the reading replica before the read."
 
 Lean: the edges are `HATSpec.wwI`, `HATTax.wr2`, `HATTax.rw2` and `HATTax.sess`;
 each guarantee's anomaly is `HATTax.Phen g`; read your writes is `HATTax.MYR`,
@@ -120,14 +120,14 @@ theorem «app:hat-taxonomy/complete-cap» {reps : Nat → List Nat} {lam : Bool}
         (∀ i o, E i o → AnswersSticky i o) ∧ CAP.ConsistentOn sp E) :=
   ⟨highlyAvailable_iff sp D, stickyAvailable_iff sp D⟩
 
-/-! ## Read rules -/
+/-! ## Reveal rules -/
 
-/-- Paragraph "Read rules": "A transaction is *pending stable* before a read
+/-- Paragraph "Reveal rules": "A transaction is *pending stable* before a read
 when every replica of every item it wrote has received its write before the
-read. … We combine these into one *read rule*.  A write is revealed at a read
+read. … We combine these into one *reveal rule*.  A write is revealed at a read
 once its transaction and every transaction whose commit happens before its
 commit are pending stable.  A transaction reads, for each item, the highest
-version revealed at every one of its reads so far.  The *sticky read rule*
+version revealed at every one of its reads so far.  The *sticky reveal rule*
 answers only sticky reads and also reveals the client's own earlier writes,
 which a sticky read's replica holds."  (The elided sentences quote Bailis et
 al.'s algorithms.)
@@ -138,7 +138,7 @@ writes); the candidates are `HATTax.SnapC`; the rule's output is
 `HATTax.outR s` (with `s = true` it answers only reads satisfying
 `HATTax.Reflects`).  Both rules answer only with versions the replica holds,
 answer every read (resp. every sticky read), and are monotone. -/
-theorem «app:hat-taxonomy/read-rules» {reps : Nat → List Nat} {lam : Bool} (s : Bool) :
+theorem «app:hat-taxonomy/reveal-rules» {reps : Nat → List Nat} {lam : Bool} (s : Bool) :
     (∀ j : SInp reps lam, (vstore (reps := reps) (lam := lam)).P j (outR s j)) ∧
     (∀ j : SInp reps lam, AnswersAll j (outR false j)) ∧
     (∀ j : SInp reps lam, AnswersSticky j (outR true j)) ∧
@@ -154,7 +154,7 @@ monotonic reads, monotonic writes, and writes follow reads are highly
 available.  (2) Read your writes, PRAM, and causal consistency are sticky
 available and not highly available.  Given at least two participants and any
 assignment of clients to them, consider the deployment that lets each client's
-participant give the sticky read rule's answers to that client's reads.  Some
+participant give the sticky reveal rule's answers to that client's reads.  Some
 system has Deployment Availability and Partition Consistency for it.
 (3) Recency is neither highly available nor sticky available.  For any level
 that rules out Lost Update or Write Skew, no system has Availability for an
@@ -194,7 +194,7 @@ theorem «thm:hat-taxonomy» (reps : Nat → List Nat) (lam : Bool) (D : Type) :
    fun h0 => ⟨recency_not_ha h0 D, recency_not_sticky h0 D⟩,
    fun L hL A hAS ht ha => (HATSpec.WS.writeSkew_unavailable L hL D A hAS ht ha).2⟩
 
-/-- Proof of Theorem `thm:hat-taxonomy`, item (1): "The read rule answers every
+/-- Proof of Theorem `thm:hat-taxonomy`, item (1): "The reveal rule answers every
 read.  Each answer depends only on the read's past, so later input never changes
 it, and the rule is monotone.  A monotone relation inside the spec satisfies
 Lifted Monotonicity for itself: rows below `j` have the relation's own answer at
@@ -219,7 +219,7 @@ theorem «thm:hat-taxonomy/proof-ha» {reps : Nat → List Nat} {lam : Bool} {g 
   ⟨rule_clean_ha hg, outR_tax (rule_clean_ha hg),
    ruleE_consistent _ (outR_tax (rule_clean_ha hg))⟩
 
-/-- Proof of Theorem `thm:hat-taxonomy`, item (2): "The sticky read rule does
+/-- Proof of Theorem `thm:hat-taxonomy`, item (2): "The sticky reveal rule does
 the same for every sticky read.  The deployment authorizes only answers of this
 one monotone relation inside the spec, so it is monotone across partitions, and
 Proposition `prop:deployment-complete-cap` gives the system.  Without
@@ -307,6 +307,50 @@ theorem «prop:hat-mav-algorithm» {reps : Nat → List Nat} (K : AckK reps) (D 
     (∀ i j : SInp reps true, i ≼ j → outB K i ≼ outB K j) ∧
     HighlyAvailable (reps := reps) (lam := true) (tax .MAV) D :=
   ⟨outB_tax_MAV K, outB_answers K, fun _ _ h => outB_mono K h, mav_appB K D⟩
+
+/-! ## Differences in form -/
+
+/-- Paragraph "Differences in form": "Our classification matches theirs, and it
+differs in form in three ways.  First, our framework separates two reasons a
+guarantee can be unavailable.  The unavailable isolation levels fail Lifted
+Monotonicity: answers that the two sides give have no common extension.  Read
+your writes without stickiness, and recency in every case, fail earlier,
+because some read has no permitted answer at all.  When a client's write has
+not reached the replica that serves its next read, every version that replica
+holds, the initial version included, violates read your writes.  Recency fails
+the same way when the missing write comes from another client, so stickiness
+does not help.  No explicit relation inside the spec answers such a read, so
+the question of Lifted Monotonicity never arises.  Second, monotonic writes
+needs the version order to follow each session's order.  Bailis et al. obtain
+this from client timestamps, and our inputs assume it: a client's commit
+timestamps increase along its session.  Third, we model a predicate as a fixed
+range of items; general predicates, whose items depend on the data, are not
+modeled.  Bailis et al. list several recency guarantees without formal
+definitions, among them bounds on staleness and safe, regular, and linearizable
+register semantics; we model the one recency guarantee defined above."
+(The statements about Bailis et al.'s paper are prose-only.)
+
+Lean: (1) on `HATTax.w1`, client 1's read of `x` is not sticky
+(`HATTax.w1_not_sticky`) and no output that the read-your-writes spec permits
+answers it (`HATTax.ryw_no_answer`); on `HATTax.w2`, the same holds for recency
+although the read is sticky (`HATTax.recency_no_answer`); the isolation levels'
+failure is the answer pair of `«thm:hat-levels/lost-update-pair»` and
+`HATSpec.WS.ws_cycle`; (2) every taxonomy input has increasing commit
+timestamps along each client's session (field `sess_ts` of `HATTax.Sess`);
+(3) a predicate read `.prd c n ks r` names a fixed list of items `ks`, and
+recency is the single phenomenon `HATTax.Recency`. -/
+theorem «app:hat-taxonomy/form-choices» (reps : Nat → List Nat) (lam : Bool) (h0 : 0 ∈ reps 0) :
+    (¬ HATTax.Reflects (reps := reps) (HATTax.w1 (lam := lam) h0).1 1 1 0 ∧
+      ∀ o, (HATTax.tax (reps := reps) (lam := lam) .RYW).P (HATTax.w1 h0) o →
+        ∀ v, ¬ o (.rv 1 0 v)) ∧
+    (∀ o, (HATTax.tax (reps := reps) (lam := lam) .Rec).P (HATTax.w2 h0) o →
+        ∀ v, ¬ o (.rv 1 0 v)) ∧
+    (∀ (j : HATTax.SInp reps lam) {f f' c n n' t t' ks ks'},
+      j.1.lab f = some (.cm c n t ks) → j.1.lab f' = some (.cm c n' t' ks') → j.1.lt f f' →
+        HATRC.tsLt t t') :=
+  ⟨⟨HATTax.w1_not_sticky h0, fun _ ho v => HATTax.ryw_no_answer h0 ho v⟩,
+    fun _ ho v => HATTax.recency_no_answer h0 ho v,
+    fun j => j.2.2.sess_ts⟩
 
 /-! ## Differences from the extended paper's text -/
 

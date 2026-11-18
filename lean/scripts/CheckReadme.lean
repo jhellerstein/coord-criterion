@@ -269,7 +269,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:hat-instance/rc-timestamps»
 #check @CC.Paper.«sec:hat-instance/mav-timestamps»
 #check @CC.Paper.«sec:hat-instance/session-guarantees»
-#check @CC.Paper.«sec:hat-instance/form-choices»
 #check @CC.Paper.«sec:hat-instance/myr-as-written»
 #check @CC.Paper.«sec:iconfluence-instance/model»
 #check @CC.Paper.«sec:iconfluence-instance/reachable»
@@ -422,13 +421,14 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:hat-taxonomy/guarantees»
 #check @CC.Paper.«def:hat-availability»
 #check @CC.Paper.«app:hat-taxonomy/complete-cap»
-#check @CC.Paper.«app:hat-taxonomy/read-rules»
+#check @CC.Paper.«app:hat-taxonomy/reveal-rules»
 #check @CC.Paper.«thm:hat-taxonomy»
 #check @CC.Paper.«thm:hat-taxonomy/proof-ha»
 #check @CC.Paper.«thm:hat-taxonomy/proof-sticky»
 #check @CC.Paper.«thm:hat-taxonomy/proof-unavailable»
 #check @CC.Paper.«app:hat-taxonomy/mav-algorithm»
 #check @CC.Paper.«prop:hat-mav-algorithm»
+#check @CC.Paper.«app:hat-taxonomy/form-choices»
 #check @CC.Paper.«app:hat-taxonomy/pmp-for-some»
 #check @CC.Paper.«app:hat-taxonomy/otv-literal»
 #check @CC.Paper.«app:hat-taxonomy/nmr-intermediate»
