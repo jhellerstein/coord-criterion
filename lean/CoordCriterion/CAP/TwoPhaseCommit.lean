@@ -32,9 +32,12 @@ coordinator's log, timeouts) are not modeled; only the decision rule is.  That
 each owner's prepare is its own commitment, coordination at that owner only,
 is the single-owner pattern of `ownerSys` (`CAP/Coordination.lean`).
 
-The last two sections support the majority-approval-vote example of the
-Complete CAP subsection: the voters' spec and its explicit relation, and the
-coordinator's majority decision (`decideMajority`, monotone).
+The voters' section supports the example of the Complete CAP subsection that
+returns to the election of Section `sec:election-story`: the voters' spec and
+its explicit relation.  The last section, a majority decision over the voters'
+responses (`decideMajority`, monotone), is library material no longer cited by
+the paper; the registrar's spec of that example is the election spec
+`CALM.elec`, monotone by `CALM.elec_monotone`.
 -/
 
 namespace CC
@@ -212,22 +215,21 @@ theorem prepare_decide {n : Nat} {I : Fin n → Type} {O : Fin n → Type}
 
 /-! ## The voters' spec and its explicit relation (§4.4)
 
-Supports the majority-approval-vote example of the Complete CAP subsection:
-"Consider a majority approval vote.  We focus on the spec for the voters; the
-coordinator is an observer of that spec.  The fiber of interest is at the input
-`propose(x)`: how each voter responds to the proposal.  Each voter's response
-is a row of `E`, while the sets of responses the coordinator may observe across
-voters are implicit outputs in `P \ E`."
+Supports the example of the Complete CAP subsection that returns to the
+election: "Here we consider the spec for the voters; the registrar is an
+observer of this spec.  Each voter's ballot is a row of `E`, while the sets of
+ballots the registrar may observe across voters are implicit outputs in
+`P \ E`."  A ballot for `a` or `b` is a response `true` or `false`.
 
-The single input is `propose(x)` (`Unit`); an output records the responses
+The voters' spec has a single input (`Unit`); an output records the ballots
 received so far, voter by voter (`Votes n`, ordered as above).  Every
 combination is permitted.  `E` contains the outputs in which exactly one
 voter has responded.  The voters' spec does not depend on how votes are
-tallied, so the same model serves the majority vote here and the unanimity
-decision of two-phase commit above. -/
+tallied, so the same model serves the election here (with `n = 3`) and the
+unanimity decision of two-phase commit above. -/
 
-/-- The voters' spec at the input `propose(x)`: every combination of
-responses is permitted. -/
+/-- The voters' spec at its single input: every combination of responses is
+permitted. -/
 def votersSpec (n : Nat) : Spec Unit (Votes n) where
   P _ _ := True
   total _ := ⟨fun _ => none, trivial⟩
@@ -280,19 +282,18 @@ theorem voters_explicit (n : Nat) :
     | none => exact Or.inl rfl
     | some b => exact Or.inr ((single_le_iff.1 (hw p b hu)).symm ▸ rfl)
 
-/-! ## The coordinator's majority decision (§4.4)
+/-! ## A majority decision over the voters' responses (library)
 
-Supports the last sentence of the majority-approval-vote example: "The
-coordinator's spec is monotone, simply collecting votes and emitting the
-majority's decision when it arrives."  The input is the votes received so far
-(`Votes n`: each voter at most one vote, and a received vote never changes,
-i.e. received votes ordered by inclusion); the output is `undecided ≼ approve,
-reject`.  The decision approves once a strict majority of the `n` voters has
-voted yes, rejects once a strict majority has voted no, and is undecided
-before then.  `decideMajority_mono`: it is monotone; `majoritySpec_consistent`,
-`majoritySpec_liftedMono`: hence the coordinator's spec is consistent. -/
+Not cited by the paper (the Complete CAP example now uses the election of
+Section `sec:election-story`, whose registrar's spec is `CALM.elec`).  The
+input is the votes received so far (`Votes n`: each voter at most one vote, and
+a received vote never changes); the output is `undecided ≼ approve, reject`.
+The decision approves once a strict majority of the `n` voters has voted yes,
+rejects once a strict majority has voted no, and is undecided before then.
+`decideMajority_mono`: it is monotone; `majoritySpec_consistent`,
+`majoritySpec_liftedMono`: hence its spec is consistent. -/
 
-/-- The outcome of a majority approval vote. -/
+/-- The outcome of a majority vote. -/
 inductive Approval where
   | undecided | approve | reject
   deriving DecidableEq
@@ -313,7 +314,7 @@ instance : PO Approval where
 def tally {n : Nat} (v : Votes n) (b : Bool) : Nat :=
   (List.finRange n).countP fun p => v p == some b
 
-/-- The coordinator's decision: approve once a strict majority voted yes,
+/-- The majority decision: approve once a strict majority voted yes,
 reject once a strict majority voted no, undecided before then. -/
 def decideMajority {n : Nat} (v : Votes n) : Approval :=
   if n < 2 * tally v true then .approve
@@ -363,7 +364,7 @@ theorem decideMajority_mono {n : Nat} {v w : Votes n} (h : v ≼ w) :
       simp only [h1, h2, hw1, hw2, ite_true, ite_false]; exact Or.inr rfl
     · simp only [h1, h2, ite_false]; exact Or.inl rfl
 
-/-- The coordinator's spec: the majority decision on the votes received. -/
+/-- The spec of the majority decision on the votes received. -/
 def majoritySpec (n : Nat) : Spec (Votes n) Approval where
   P v d := d = decideMajority v
   total _ := ⟨_, rfl⟩

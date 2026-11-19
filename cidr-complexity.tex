@@ -1365,26 +1365,31 @@ output, and Partition Consistency then gives those outputs a common \outnoun in
 $\fiber{j}$.  \fullproof\cxbar{128}{0.4 0.4 1}{e}
 \end{proof}
 
-\color{black}\cxtag{129}{N/S}For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as a majority approval vote shows.
+\color{black}\cxtag{129}{N/S}For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as the voters in the election of Section~\ref{sec:election-story} show.
 
-\color{blue!75!black}\cxtag{130}{B/M}\cxbar{130}{0.4 0.4 1}{s}Consider a majority approval vote.  We focus on the spec for the voters; the
-coordinator is an observer of that spec.  The fiber of interest is at the input
-\textsf{propose(x)}: how each voter responds to the proposal.  Each voter's
-response is a row of $E$, while the sets of responses the coordinator may
-observe across voters are implicit outputs in $P\setminus E$.  Each voter
-decides whether to approve and emits its vote, yes or no.  That decision is a
-\commitment: a voter that votes yes rules out every set of votes in which it
-votes no.  But it is a single-voter \commitment involving no communication, so
-the voter can make it and produce output during a partition.  Each vote is cast
-by a different voter, so votes emitted on different sides of a partition never
-conflict (the full paper
-formalizes this placement as a deployment~\extended), and every set of votes an observer may collect is
-consistent.  The coordinator's spec is monotone, simply collecting votes and
-emitting the majority's decision when it arrives.\cxbar{130}{0.4 0.4 1}{e}
+\color{blue!75!black}\cxtag{130}{B/M}\cxbar{130}{0.4 0.4 1}{s}Return to the election of Section~\ref{sec:election-story}.  That discussion
+centered on the spec for vote collection, as performed by the registrar.  Here
+we consider the spec for the voters; the registrar is an observer of this
+spec.  Each voter's ballot is a row of $E$, while the sets of ballots the
+registrar may observe across voters are implicit outputs in $P\setminus E$.
+Each voter decides between $a$ and $b$ and emits its ballot.  That decision is
+a \commitment: a voter that votes $a$ rules out every set of ballots in which
+it votes $b$.  But it is a single-voter \commitment involving no
+communication, so the voter can make it and produce output during a partition.
+Each ballot is cast by a different voter, so ballots emitted on different
+sides of a partition never conflict (the full paper formalizes this placement as a
+deployment~\extended), and every set of ballots an
+observer may collect is consistent.  The registrar's spec is the election spec
+of Section~\ref{sec:election-story}, which is monotone under its original
+output order: it collects ballots and announces whichever candidate has two
+ballots.\cxbar{130}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{131}{N/M}\cxbar{131}{0.4 0.4 1}{s}The majority approval vote illustrates what Complete CAP says in general. A partition does not change the intrinsic \commitments a spec needs; it prevents separated participants from jointly enforcing them through coordination.  When Lifted Monotonicity
-for $E$ fails, some output of $E$ waits for another side, sacrificing
-Availability, or is emitted anyway, sacrificing Partition Consistency.\cxbar{131}{0.4 0.4 1}{e}
+\color{black}\cxtag{131}{N/M}\cxbar{131}{0.4 0.4 1}{s}A partition does not change the intrinsic \commitments a spec needs; it
+prevents separated participants from jointly enforcing them through
+coordination.  The voters are unaffected, since each ballot is a \commitment
+its voter makes alone.  When Lifted Monotonicity for $E$ fails, some output of
+$E$ instead waits for another side, sacrificing Availability, or is emitted
+anyway, sacrificing Partition Consistency.\cxbar{131}{0.4 0.4 1}{e}
 
 \paragraph{Gilbert and Lynch.}
 \color{black}\cxtag{132}{N/M}\cxbar{132}{0.4 0.4 1}{s}Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted Monotonicity for $E$ fails. We show the failure for the register example, then extend the conclusion from the canonical system to every system.  Linearizability
