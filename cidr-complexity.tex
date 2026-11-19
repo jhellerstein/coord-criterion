@@ -489,15 +489,24 @@ instead votes for $a$
 states \emph{determined}.  In that case, input alone has determined an outcome,
 without \commitment.\cxbar{26}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{27}{N/M}\cxbar{27}{0.4 0.4 1}{s}Panel~(d), by contrast, adds a decision by the \emph{system}: the implementation
-that receives the ballots and announces the result (\S\ref{sec:systems}).  Here
+\paragraph{Output and consistency.}
+\color{black}\cxtag{27}{N/M}\cxbar{27}{0.4 0.4 1}{s}Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
+rows whose outputs \outrelbase $o$, since later outputs must not contradict it.
+In a functional table, $o$ is a \emph{legal output} when everything in the
+upper fiber already \outrel $o$, so the event removes nothing.  Thus
+$\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  When $o$ is not
+legal, the event removes the rows that conflict with $o$, ruling out their
+inputs; that removal is a \commitment.\cxbar{27}{0.4 0.4 1}{e}
+
+\color{black}\cxtag{28}{N/M}\cxbar{28}{0.4 0.4 1}{s}Panel~(d), by contrast, adds a decision by the \emph{system}: the implementation
+that receives the ballots and announces the result.  Here
 the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
 closes the polls.  Closing the polls is a \emph{\commitment}: it removes the
 still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$.
 The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result.
 The spec did not require this \commitment: emitting $\bot$ removes
 nothing by itself, since every output still possible extends $\bot$.  Closing the polls is
-the registrar's own fateful decision.\cxbar{27}{0.4 0.4 1}{e}
+the registrar's own fateful decision.\cxbar{28}{0.4 0.4 1}{e}
 
 \begin{figure}[t]
   \centering
@@ -534,15 +543,6 @@ the registrar's own fateful decision.\cxbar{27}{0.4 0.4 1}{e}
   Figure~\ref{fig:election-frames}(d) is required here.}
   \label{fig:nonmonotone-frame}
 \end{figure}
-
-\paragraph{Output and consistency.}
-\color{black}\cxtag{28}{N/M}\cxbar{28}{0.4 0.4 1}{s}Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
-rows whose outputs \outrelbase $o$, since later outputs must not contradict it.
-In a functional table, $o$ is a \emph{legal output} when everything in the
-upper fiber already \outrel $o$, so the event removes nothing.  Thus
-$\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  When $o$ is not
-legal, the event removes the rows that conflict with $o$, ruling out their
-inputs; that removal is a \commitment.\cxbar{28}{0.4 0.4 1}{e}
 
 \color{blue!75!black}\cxtag{29}{B/M}\cxbar{29}{0.4 0.4 1}{s}Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
