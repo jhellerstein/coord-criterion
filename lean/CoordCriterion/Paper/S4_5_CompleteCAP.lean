@@ -66,15 +66,10 @@ linearization may place the concurrent read before the write.  No participant
 emits this combined output, and availability does not need it.  Still, it
 extends both local outputs, which shows that the two are consistent, so the
 spec must contain it.  Had the write finished before the read began, no such
-combined output would exist; we return to this case at the end of the section.
+combined output would exist.
 
-We therefore pair a spec with an *explicit possibility relation* `E ⊆ P`, or
-explicit relation for short: the rows whose outputs participants actually
-emit.  Outputs in `P ∖ E` are not emitted by participants; they remain
-permitted in `P` to capture implicit combinations of emitted outputs.
-
-Both availability and consistency are judged on histories in which a
-partition separates the participants."  Lean: Theorem `thm:complete-cap`,
+We therefore pair a spec with an explicit possibility relation `E ⊆ P`, or
+explicit relation for short."  Lean: Theorem `thm:complete-cap`,
 `«thm:complete-cap/E-eq-P»`, and Corollary `cor:complete-cap-any-system`
 below, in their existential form: some system has the two properties iff the
 spec satisfies Lifted Monotonicity for `E` (resp. Lifted Monotonicity). -/
@@ -91,7 +86,9 @@ theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (E : Table I O)
 
 /-! ### Definition `def:partitioned-history` (Partitioned history) -/
 
-/-- **Def. `def:partitioned-history` (Partitioned history).**  "A partitioned
+/-- **Def. `def:partitioned-history` (Partitioned history).**  The paper
+introduces it with "Both availability and consistency are judged on histories
+in which a partition separates the participants."  "A partitioned
 history divides the participants into two or more sides and contains no
 receive whose matching send lies on another side; participants still
 receive environment input and emit outputs."
@@ -114,7 +111,9 @@ theorem «def:partitioned-history/unfolded» (H : History sp D n) (comp : Fin n 
 /-- **Def. `def:explicit-relation`** (Explicit possibility relation).  "An
 *explicit possibility relation* `E ⊆ P` is a set of rows whose outputs
 participants actually emit.  Write `E(i)` for its outputs at input `i`."
-The paper follows the definition with the two-phase-commit example of the
+The paper follows the definition with "Outputs in `P ∖ E` are not emitted by
+participants; they remain permitted in `P` to capture implicit combinations of
+emitted outputs." and then the two-phase-commit example of the
 voters' spec (`«def:explicit-relation/two-phase-commit»`).
 
 Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
@@ -123,7 +122,7 @@ abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
 
 /-- Example after Def. `def:explicit-relation`: "consider two-phase commit
 (2PC).  We focus on the spec for the voters; the coordinator is an observer of
-that spec.  We're interested in the fiber at the input `prepare(tx)`: how each
+that spec.  We focus on the fiber at the input `prepare(tx)`: how each
 voter responds to that prepare message.  Each possible explicit response is a
 row of `E`.  The overall *set* of responses the coordinator might observe
 across voters is in `P \ E`.  The spec includes these as implicit outputs,

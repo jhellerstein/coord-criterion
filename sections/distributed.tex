@@ -365,24 +365,10 @@ linearization may place the concurrent read before the write.  No participant
 emits this combined output, and availability does not need it.  Still, it
 \outrel both local outputs, which shows that the two are consistent, so the
 spec must contain it.  Had the write finished before the read began, no such
-combined output would exist; we return to this case at the end of the section.
+combined output would exist.
 
-We therefore pair a spec with an \emph{explicit possibility relation}
-$E\subseteq P$, or explicit relation for short: the rows whose outputs
-participants actually emit.  Outputs in
-$P\setminus E$ are not emitted by participants;
-they remain permitted in $P$ to capture implicit combinations of emitted outputs.
-
-Both availability and consistency are judged on histories in which a partition
-separates the participants.
-
-\begin{definition}[Partitioned history]
-\label{def:partitioned-history}
-A \emph{partitioned history} divides the participants into two or more
-sides and contains no receive whose matching send lies on another
-side.  Same-side messages are allowed, and participants still receive environment input
-and emit outputs.
-\end{definition}
+We therefore pair a spec with an explicit possibility relation $E\subseteq P$,
+or explicit relation for short.
 
 \begin{definition}[Explicit possibility relation]
 \label{def:explicit-relation}
@@ -391,8 +377,11 @@ outputs participants actually emit.  Write $E(i)$ for its outputs at input
 $i$.
 \end{definition}
 
+Outputs in $P\setminus E$ are not emitted by participants; they remain
+permitted in $P$ to capture implicit combinations of emitted outputs.
+
 For example, consider two-phase commit (2PC).  We focus on the spec for the
-voters; the coordinator is an observer of that spec.  We're interested in the
+voters; the coordinator is an observer of that spec.  We focus on the
 fiber at the input \textsf{prepare(tx)}: how each voter responds to that
 prepare message.  Each possible explicit response is a row of $E$.  The overall
 \emph{set} of responses the coordinator might observe across voters is in
@@ -410,6 +399,17 @@ An explicit relation is declared with the spec; the emitted rows depend on
 the system.  Availability for $E$ asks that every row of $E$ at a
 participant's state can become an emitted row.
 
+
+Both availability and consistency are judged on histories in which a partition
+separates the participants.
+
+\begin{definition}[Partitioned history]
+\label{def:partitioned-history}
+A \emph{partitioned history} divides the participants into two or more
+sides and contains no receive whose matching send lies on another
+side.  Same-side messages are allowed, and participants still receive environment input
+and emit outputs.
+\end{definition}
 
 We consider a system whose participants each follow a strategy that depends
 only on their local history, and an environment that may send any legal input
@@ -508,6 +508,12 @@ every system, whether or not it issues \commitments.  For
 $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and
 then the canonical system needs no \commitment at all.
 
+A partition does not change the intrinsic \commitments a spec needs; it prevents
+separated participants from jointly enforcing them through coordination.  When Lifted
+Monotonicity for $E$ fails, some output of $E$ waits for another side,
+sacrificing Availability, or is emitted anyway, sacrificing Partition
+Consistency.
+
 We return to the voters' spec.  Each voter decides whether it can commit and emits
 its vote, yes or no.  That decision is a \commitment: a voter that votes yes
 rules out every set of votes in which it votes no.  But it is a single-voter
@@ -515,12 +521,6 @@ rules out every set of votes in which it votes no.  But it is a single-voter
 output during a partition.  Each vote is cast by a different voter, so votes
 emitted on different sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this placement as a deployment), and every
 set of votes an observer may collect is consistent.
-
-A partition does not change the intrinsic \commitments a spec needs; it prevents
-separated participants from jointly enforcing them through coordination.  When Lifted
-Monotonicity for $E$ fails, some output of $E$ waits for another side,
-sacrificing Availability, or is emitted anyway, sacrificing Partition
-Consistency.
 
 \paragraph{Gilbert and Lynch.}
 Gilbert and Lynch's theorem is a case of Complete CAP.  Linearizability

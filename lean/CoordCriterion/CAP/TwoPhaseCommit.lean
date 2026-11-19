@@ -210,7 +210,7 @@ theorem prepare_decide {n : Nat} {I : Fin n → Type} {O : Fin n → Type}
 
 Supports the example after Def. `def:explicit-relation`: "consider two-phase
 commit (2PC).  We focus on the spec for the voters; the coordinator is an
-observer of that spec.  We're interested in the fiber at the input
+observer of that spec.  We focus on the fiber at the input
 `prepare(tx)`: how each voter responds to that prepare message.  Each possible
 explicit response is a row of `E`.  The overall *set* of responses the
 coordinator might observe across voters is in `P \ E`.  The spec includes

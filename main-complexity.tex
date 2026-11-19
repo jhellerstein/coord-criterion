@@ -1933,34 +1933,23 @@ linearization may place the concurrent read before the write.  No participant
 emits this combined output, and availability does not need it.  Still, it
 \outrel both local outputs, which shows that the two are consistent, so the
 spec must contain it.  Had the write finished before the read began, no such
-combined output would exist; we return to this case at the end of the section.\color{black}
+combined output would exist.\color{black}
 
-\color{black!45}\cxtag{distributed:40}{C}We therefore pair a spec with an \emph{explicit possibility relation}
-$E\subseteq P$, or explicit relation for short: the rows whose outputs
-participants actually emit.  Outputs in
-$P\setminus E$ are not emitted by participants;
-they remain permitted in $P$ to capture implicit combinations of emitted outputs.\color{black}
-
-\color{black!45}\cxtag{distributed:41}{C}Both availability and consistency are judged on histories in which a partition
-separates the participants.\color{black}
-
-\color{black!45}\begin{definition}[Partitioned history]
-\label{def:partitioned-history}
-\cxtag{distributed:42}{C}A \emph{partitioned history} divides the participants into two or more
-sides and contains no receive whose matching send lies on another
-side.  Same-side messages are allowed, and participants still receive environment input
-and emit outputs.\color{black}
-\end{definition}
+\color{black!45}\cxtag{distributed:40}{C}We therefore pair a spec with an explicit possibility relation $E\subseteq P$,
+or explicit relation for short.\color{black}
 
 \color{black!45}\begin{definition}[Explicit possibility relation]
 \label{def:explicit-relation}
-\cxtag{distributed:43}{C}An \emph{explicit possibility relation} $E\subseteq P$ is a set of rows whose
+\cxtag{distributed:41}{C}An \emph{explicit possibility relation} $E\subseteq P$ is a set of rows whose
 outputs participants actually emit.  Write $E(i)$ for its outputs at input
 $i$.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{distributed:44}{C}For example, consider two-phase commit (2PC).  We focus on the spec for the
-voters; the coordinator is an observer of that spec.  We're interested in the
+\color{black!45}\cxtag{distributed:42}{C}Outputs in $P\setminus E$ are not emitted by participants; they remain
+permitted in $P$ to capture implicit combinations of emitted outputs.\color{black}
+
+\color{black!45}\cxtag{distributed:43}{C}For example, consider two-phase commit (2PC).  We focus on the spec for the
+voters; the coordinator is an observer of that spec.  We focus on the
 fiber at the input \textsf{prepare(tx)}: how each voter responds to that
 prepare message.  Each possible explicit response is a row of $E$.  The overall
 \emph{set} of responses the coordinator might observe across voters is in
@@ -1969,58 +1958,69 @@ possible combined outcomes that respect each voter's response.\color{black}
 
 \color{black}\begin{definition}[Emitted rows]
 \label{def:emitted-rows}
-\cxtag{distributed:45}{N/S}The \emph{emitted rows} of a run are the pairs $(i,o)$ such that the run
+\cxtag{distributed:44}{N/S}The \emph{emitted rows} of a run are the pairs $(i,o)$ such that the run
 emits $o$ at current input $i$.  The emitted rows of a system are the
 emitted rows of its participants' runs in the histories it produces.\color{black}
 \end{definition}
 
-\color{black}\cxtag{distributed:46}{N/S}An explicit relation is declared with the spec; the emitted rows depend on
+\color{black}\cxtag{distributed:45}{N/S}An explicit relation is declared with the spec; the emitted rows depend on
 the system.  Availability for $E$ asks that every row of $E$ at a
 participant's state can become an emitted row.\color{black}
 
 
-\color{black!45}\cxtag{distributed:47}{C}We consider a system whose participants each follow a strategy that depends
+\color{black!45}\cxtag{distributed:46}{C}Both availability and consistency are judged on histories in which a partition
+separates the participants.\color{black}
+
+\color{black!45}\begin{definition}[Partitioned history]
+\label{def:partitioned-history}
+\cxtag{distributed:47}{C}A \emph{partitioned history} divides the participants into two or more
+sides and contains no receive whose matching send lies on another
+side.  Same-side messages are allowed, and participants still receive environment input
+and emit outputs.\color{black}
+\end{definition}
+
+\color{black!45}\cxtag{distributed:48}{C}We consider a system whose participants each follow a strategy that depends
 only on their local history, and an environment that may send any legal input
 to any participant.  Availability asks that, during a partition, each
 participant can still emit every explicit output its state permits.\color{black}
 
 \color{black}\begin{definition}[Same-side continuation]
 \label{def:local-continuation}
-\cxtag{distributed:48}{N/M}\cxbar{distributed-48}{0.4 0.4 1}{s}Consider a partitioned history that the system produces, in which participant
+\cxtag{distributed:49}{N/M}\cxbar{distributed-49}{0.4 0.4 1}{s}Consider a partitioned history that the system produces, in which participant
 $p$ ends in state $(i,R)$.  A \emph{same-side continuation} for $p$ extends that
 history with events the system can produce on $p$'s side alone, with no new
 input and no message from another side.  Participant $p$ can emit $o$ when some same-side continuation for $p$ emits
-$o$.\cxbar{distributed-48}{0.4 0.4 1}{e}\color{black}
+$o$.\cxbar{distributed-49}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{definition}[Availability]
 \label{def:partition-notions}
-\cxtag{distributed:49}{N/M}\cxbar{distributed-49}{0.4 0.4 1}{s}The system has \emph{Availability for $E$} when, in every partitioned history
+\cxtag{distributed:50}{N/M}\cxbar{distributed-50}{0.4 0.4 1}{s}The system has \emph{Availability for $E$} when, in every partitioned history
 it produces, each participant $p$ can emit every output in $R(i)\cap E(i)$,
 where $(i,R)$ is $p$'s final state.  \emph{Availability} is shorthand for
-Availability for $P$.\cxbar{distributed-49}{0.4 0.4 1}{e}\color{black}
+Availability for $P$.\cxbar{distributed-50}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
-\color{black}\cxtag{distributed:50}{N/S}Partition Consistency asks that, whatever participants emit on separate sides,
+\color{black}\cxtag{distributed:51}{N/S}Partition Consistency asks that, whatever participants emit on separate sides,
 their states can still be brought to a common state.\color{black}
 
 \color{black!45}\begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
-\cxtag{distributed:51}{C}The system has \emph{Partition Consistency} when the final cut of every
+\cxtag{distributed:52}{C}The system has \emph{Partition Consistency} when the final cut of every
 partitioned history it produces is confluent at every common \indesc of the
 participants' current inputs.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{distributed:52}{C}The \emph{canonical system for $E$} is the system whose participants follow
+\color{black!45}\cxtag{distributed:53}{C}The \emph{canonical system for $E$} is the system whose participants follow
 canonical runs and emit only outputs of $E$.\color{black}
 
 \color{black}\begin{definition}[Escaping CAP]
 \label{def:escapes-cap}
-\cxtag{distributed:53}{N/S}A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
+\cxtag{distributed:54}{N/S}A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
 Availability for $E$ and Partition Consistency.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{distributed:54}{C}The canonical system's participants never wait: each can emit any output of
+\color{black!45}\cxtag{distributed:55}{C}The canonical system's participants never wait: each can emit any output of
 $E$ that its state allows, so it always has Availability for $E$.  The
 question is whether their answers stay consistent across sides.  Complete CAP
 says they do exactly when outputs of $E$ emitted on different sides have a
@@ -2028,18 +2028,18 @@ common \outnoun in the spec at every common \indesc of their inputs.\color{black
 
 \color{black!45}\begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
-\cxtag{distributed:55}{C}$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
+\cxtag{distributed:56}{C}$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.\color{black}
 \end{definition}
 
 \color{black}\begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-\cxtag{distributed:56}{N/S}A spec escapes CAP for $E$ if and only if it satisfies Lifted Monotonicity for
+\cxtag{distributed:57}{N/S}A spec escapes CAP for $E$ if and only if it satisfies Lifted Monotonicity for
 $E$.\color{black}
 \end{theorem}
 
 \color{black!45}\begin{proof}[Proof sketch]
-\cxtag{distributed:57}{C}Suppose Lifted Monotonicity for $E$ holds, and let $j$ be a common \indesc of
+\cxtag{distributed:58}{C}Suppose Lifted Monotonicity for $E$ holds, and let $j$ be a common \indesc of
 the participants' current inputs.  The outputs emitted on all sides are outputs
 of $E$, so they have a common \outnoun $u$ in $\fiber{j}$.  Each participant
 still has the row $(j,u)$, since it makes no \commitments of its own and $u$
@@ -2054,12 +2054,12 @@ Appendix~\ref{app:proofs-sec4}.\color{black}
 
 \color{black!45}\begin{corollary}
 \label{cor:complete-cap-any-system}
-\cxtag{distributed:58}{C}If some system for a spec has Availability for $E$ and Partition Consistency,
+\cxtag{distributed:59}{C}If some system for a spec has Availability for $E$ and Partition Consistency,
 then so does the spec's canonical system for $E$.\color{black}
 \end{corollary}
 
 \color{black!45}\begin{proof}[Proof sketch]
-\cxtag{distributed:59}{C}We show that if Lifted Monotonicity for $E$ fails, the system loses Partition
+\cxtag{distributed:60}{C}We show that if Lifted Monotonicity for $E$ fails, the system loses Partition
 Consistency.  Then some rows of $E$ share a common \indesc $j$, but no output in
 $\fiber{j}$ \outrel all of their outputs.  We place each row's participant on
 its own side of a partition, and Availability lets each one emit its row's
@@ -2069,20 +2069,12 @@ state at $j$ would need a row that \outrel every participant's output, and
 there is none.  Full proof in Appendix~\ref{app:proofs-sec4}.\color{black}
 \end{proof}
 
-\color{black}\cxtag{distributed:60}{N/M}\cxbar{distributed-60}{0.4 0.4 1}{s}A system might hope to keep more outputs available, without losing Partition
+\color{black}\cxtag{distributed:61}{N/M}\cxbar{distributed-61}{0.4 0.4 1}{s}A system might hope to keep more outputs available, without losing Partition
 Consistency, by issuing \commitments that coordinate within each side of a
 partition.  It cannot: Corollary~\ref{cor:complete-cap-any-system} holds for
 every system, whether or not it issues \commitments.  For
 $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and
-then the canonical system needs no \commitment at all.\cxbar{distributed-60}{0.4 0.4 1}{e}\color{black}
-
-\color{black!45}\cxtag{distributed:61}{C}We return to the voters' spec.  Each voter decides whether it can commit and emits
-its vote, yes or no.  That decision is a \commitment: a voter that votes yes
-rules out every set of votes in which it votes no.  But it is a single-voter
-\commitment involving no communication, so the voter can make it and produce
-output during a partition.  Each vote is cast by a different voter, so votes
-emitted on different sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this placement as a deployment), and every
-set of votes an observer may collect is consistent.\color{black}
+then the canonical system needs no \commitment at all.\cxbar{distributed-61}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\cxtag{distributed:62}{C}A partition does not change the intrinsic \commitments a spec needs; it prevents
 separated participants from jointly enforcing them through coordination.  When Lifted
@@ -2090,8 +2082,16 @@ Monotonicity for $E$ fails, some output of $E$ waits for another side,
 sacrificing Availability, or is emitted anyway, sacrificing Partition
 Consistency.\color{black}
 
+\color{black!45}\cxtag{distributed:63}{C}We return to the voters' spec.  Each voter decides whether it can commit and emits
+its vote, yes or no.  That decision is a \commitment: a voter that votes yes
+rules out every set of votes in which it votes no.  But it is a single-voter
+\commitment involving no communication, so the voter can make it and produce
+output during a partition.  Each vote is cast by a different voter, so votes
+emitted on different sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this placement as a deployment), and every
+set of votes an observer may collect is consistent.\color{black}
+
 \paragraph{Gilbert and Lynch.}
-\color{black!45}\cxtag{distributed:63}{C}Gilbert and Lynch's theorem is a case of Complete CAP.  Linearizability
+\color{black!45}\cxtag{distributed:64}{C}Gilbert and Lynch's theorem is a case of Complete CAP.  Linearizability
 respects real-time order: if one operation finishes before another begins,
 every linearization puts the first before the
 second~\cite{herlihy1990linearizability}.  In the register example, suppose the
@@ -2104,7 +2104,7 @@ Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
 available and stay consistent across a partition, which is Gilbert and Lynch's
 theorem.\color{black}
 
-\color{black}\cxtag{distributed:64}{N/S}In this example, the proof of Corollary~\ref{cor:complete-cap-any-system}
+\color{black}\cxtag{distributed:65}{N/S}In this example, the proof of Corollary~\ref{cor:complete-cap-any-system}
 uses only weaker forms of its hypotheses, and these weaker forms are Gilbert
 and Lynch's, which is why it yields their theorem exactly.  We place $p$ and
 $q$ on separate sides.  Availability is used only to make $p$ acknowledge the
@@ -2115,11 +2115,11 @@ used only to demand a common \outnoun of the two answers.  Such an \outnoun is
 a single linearization that explains both answers, which is Gilbert and Lynch's
 consistency, and none exists.\color{black}
 
-\color{black}\cxtag{distributed:65}{N/M}\cxbar{distributed-65}{0.4 0.4 1}{s}In this section the real-time order of the write and the read is part of the
+\color{black}\cxtag{distributed:66}{N/M}\cxbar{distributed-66}{0.4 0.4 1}{s}In this section the real-time order of the write and the read is part of the
 input.  Appendix~\ref{app:cap-response} instead takes that order from the
 execution itself, extends Complete CAP to systems that choose their responses
 when responses are not forced, and derives the theorem in Gilbert and Lynch's
-asynchronous model.\cxbar{distributed-65}{0.4 0.4 1}{e}\color{black}
+asynchronous model.\cxbar{distributed-66}{0.4 0.4 1}{e}\color{black}
 
 
 \section{Composition and Proper Coordination}
