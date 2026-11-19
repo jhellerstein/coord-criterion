@@ -113,8 +113,8 @@ theorem «def:partitioned-history/unfolded» (H : History sp D n) (comp : Fin n 
 participants actually emit.  Write `E(i)` for its outputs at input `i`."
 The paper follows the definition with "Outputs in `P ∖ E` are not emitted by
 participants; they remain permitted in `P` to capture implicit combinations of
-emitted outputs."  The two-phase-commit example of the voters' spec, later in
-the subsection, illustrates it (`«def:explicit-relation/two-phase-commit»`).
+emitted outputs."  The majority-approval-vote example of the voters' spec,
+later in the subsection, illustrates it (`«def:explicit-relation/majority-vote»`).
 
 Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
 abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
@@ -122,21 +122,21 @@ abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
 
 /-- Example after Theorem `thm:complete-cap`, introduced by "Commitments and
 availability can still coexist when each commitment is made by a single
-participant, as two-phase commit shows" (prose-only signpost): "Consider
-two-phase commit.  We focus on the
-spec for the voters; the coordinator is an observer of that spec.  The fiber of
-interest is at the input `prepare(tx)`: how each voter responds to that
-prepare message.  Each voter's response is a row of `E`, while the sets of
-responses the coordinator may observe across voters are implicit outputs in
-`P \ E`."
+participant, as a majority approval vote shows" (prose-only signpost):
+"Consider a majority approval vote.  We focus on the spec for the voters; the
+coordinator is an observer of that spec.  The fiber of interest is at the input
+`propose(x)`: how each voter responds to the proposal.  Each voter's response
+is a row of `E`, while the sets of responses the coordinator may observe across
+voters are implicit outputs in `P \ E`."
 
-Lean (`CAP.votersSpec`, `CAP.votersE`): the input is `prepare(tx)`; an output
-records the responses received, voter by voter.  First conjunct: `E ⊆ P`.
-Second: the combined responses of two voters are permitted, not in `E`, and
-extend both voters' single responses.  Third: every permitted output respects
-each voter's response, being the least output extending the single responses
-it contains, each a row of `E`. -/
-theorem «def:explicit-relation/two-phase-commit» (n : Nat) :
+Lean (`CAP.votersSpec`, `CAP.votersE`): the input is `propose(x)`; an output
+records the responses received, voter by voter; the voters' spec does not
+depend on how votes are tallied.  First conjunct: `E ⊆ P`.  Second: the
+combined responses of two voters are permitted, not in `E`, and extend both
+voters' single responses.  Third: every permitted output respects each voter's
+response, being the least output extending the single responses it contains,
+each a row of `E`. -/
+theorem «def:explicit-relation/majority-vote» (n : Nat) :
     (∀ i v, CAP.votersE n i v → (CAP.votersSpec n).P i v) ∧
     (∀ (p q : Fin n), p ≠ q → ∀ b c : Bool,
       let u : CAP.Votes n := fun r => if r = p then some b else if r = q then some c else none
@@ -145,6 +145,21 @@ theorem «def:explicit-relation/two-phase-commit» (n : Nat) :
       (∀ p b, u p = some b → CAP.votersE n () (CAP.single p b) ∧ CAP.single p b ≼ u) ∧
       ∀ w : CAP.Votes n, (∀ p b, u p = some b → CAP.single p b ≼ w) → u ≼ w) :=
   CAP.voters_explicit n
+
+/-- Last sentence of the majority-approval-vote example: "The coordinator's
+spec is monotone, simply collecting votes and emitting the majority's decision
+when it arrives."
+
+Lean (`CAP.majoritySpec`, `CAP.decideMajority`): the input is the votes
+received so far, a received vote never changing; the output is
+`undecided ≼ approve, reject`, approving once a strict majority voted yes and
+rejecting once a strict majority voted no.  The decision is monotone, so the
+coordinator's spec is consistent. -/
+theorem «def:explicit-relation/majority-vote-coordinator» (n : Nat) :
+    (∀ v w : CAP.Votes n, v ≼ w → CAP.decideMajority v ≼ CAP.decideMajority w) ∧
+    (CAP.majoritySpec n).MonotoneF ∧ (CAP.majoritySpec n).Consistent :=
+  ⟨fun _ _ h => CAP.decideMajority_mono h, CAP.majoritySpec_monotone n,
+    CAP.majoritySpec_consistent n⟩
 
 /-! ### Definition `def:emitted-rows` (Emitted rows) -/
 
@@ -478,7 +493,7 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     ¬ Sys.CoordinationFreeH :=
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun ho hx hnx hqk
 
-  /-- Supporting example for the voters' remark in the two-phase commit
+  /-- Supporting example for the voters' remark in the majority approval vote
   example after Theorem `thm:complete-cap` (not quoted): for a smaller `E`, an output of `E`
   can still apply a commitment under the declared spec.  Lean: one input, `P = {o, x}` incomparable and `E = {o}`.
   `P` satisfies Lifted Monotonicity for `E`, but `o` is not exposable.  Thus the

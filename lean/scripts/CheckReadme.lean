@@ -183,7 +183,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:partitioned-history»
 #check @CC.Paper.«def:partitioned-history/unfolded»
 #check @CC.Paper.«def:explicit-relation»
-#check @CC.Paper.«def:explicit-relation/two-phase-commit»
+#check @CC.Paper.«def:explicit-relation/majority-vote»
+#check @CC.Paper.«def:explicit-relation/majority-vote-coordinator»
 #check @CC.Paper.«def:emitted-rows»
 #check @CC.Paper.«def:emitted-rows/availability»
 #check @CC.Paper.«sec:complete-cap/system»

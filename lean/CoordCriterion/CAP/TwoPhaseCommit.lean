@@ -31,6 +31,10 @@ Modeling choice: the protocol steps of 2PC (prepare messages, the
 coordinator's log, timeouts) are not modeled; only the decision rule is.  That
 each owner's prepare is its own commitment, coordination at that owner only,
 is the single-owner pattern of `ownerSys` (`CAP/Coordination.lean`).
+
+The last two sections support the majority-approval-vote example of the
+Complete CAP subsection: the voters' spec and its explicit relation, and the
+coordinator's majority decision (`decideMajority`, monotone).
 -/
 
 namespace CC
@@ -208,19 +212,21 @@ theorem prepare_decide {n : Nat} {I : Fin n → Type} {O : Fin n → Type}
 
 /-! ## The voters' spec and its explicit relation (§4.4)
 
-Supports the two-phase-commit example of the Complete CAP subsection:
-"Consider two-phase commit.  We focus on the spec for the voters; the
+Supports the majority-approval-vote example of the Complete CAP subsection:
+"Consider a majority approval vote.  We focus on the spec for the voters; the
 coordinator is an observer of that spec.  The fiber of interest is at the input
-`prepare(tx)`: how each voter responds to that prepare message.  Each voter's
-response is a row of `E`, while the sets of responses the coordinator may
-observe across voters are implicit outputs in `P \ E`."
+`propose(x)`: how each voter responds to the proposal.  Each voter's response
+is a row of `E`, while the sets of responses the coordinator may observe across
+voters are implicit outputs in `P \ E`."
 
-The single input is `prepare(tx)` (`Unit`); an output records the responses
+The single input is `propose(x)` (`Unit`); an output records the responses
 received so far, voter by voter (`Votes n`, ordered as above).  Every
 combination is permitted.  `E` contains the outputs in which exactly one
-voter has responded. -/
+voter has responded.  The voters' spec does not depend on how votes are
+tallied, so the same model serves the majority vote here and the unanimity
+decision of two-phase commit above. -/
 
-/-- The voters' spec at the input `prepare(tx)`: every combination of
+/-- The voters' spec at the input `propose(x)`: every combination of
 responses is permitted. -/
 def votersSpec (n : Nat) : Spec Unit (Votes n) where
   P _ _ := True
@@ -273,6 +279,108 @@ theorem voters_explicit (n : Nat) :
     cases hu : u p with
     | none => exact Or.inl rfl
     | some b => exact Or.inr ((single_le_iff.1 (hw p b hu)).symm ▸ rfl)
+
+/-! ## The coordinator's majority decision (§4.4)
+
+Supports the last sentence of the majority-approval-vote example: "The
+coordinator's spec is monotone, simply collecting votes and emitting the
+majority's decision when it arrives."  The input is the votes received so far
+(`Votes n`: each voter at most one vote, and a received vote never changes,
+i.e. received votes ordered by inclusion); the output is `undecided ≼ approve,
+reject`.  The decision approves once a strict majority of the `n` voters has
+voted yes, rejects once a strict majority has voted no, and is undecided
+before then.  `decideMajority_mono`: it is monotone; `majoritySpec_consistent`,
+`majoritySpec_liftedMono`: hence the coordinator's spec is consistent. -/
+
+/-- The outcome of a majority approval vote. -/
+inductive Approval where
+  | undecided | approve | reject
+  deriving DecidableEq
+
+instance : PO Approval where
+  le a b := a = .undecided ∨ a = b
+  refl _ := Or.inr rfl
+  trans {a b c} h₁ h₂ := by
+    rcases h₁ with rfl | rfl
+    · exact Or.inl rfl
+    · exact h₂
+  antisymm {a b} h₁ h₂ := by
+    rcases h₁ with rfl | h
+    · rcases h₂ with h | h <;> exact h.symm
+    · exact h
+
+/-- Number of received votes equal to `b`. -/
+def tally {n : Nat} (v : Votes n) (b : Bool) : Nat :=
+  (List.finRange n).countP fun p => v p == some b
+
+/-- The coordinator's decision: approve once a strict majority voted yes,
+reject once a strict majority voted no, undecided before then. -/
+def decideMajority {n : Nat} (v : Votes n) : Approval :=
+  if n < 2 * tally v true then .approve
+  else if n < 2 * tally v false then .reject
+  else .undecided
+
+/-- Two disjoint predicates count at most the length of a list. -/
+theorem countP_disjoint_le {α : Type} (p q : α → Bool)
+    (h : ∀ x, ¬ (p x = true ∧ q x = true)) :
+    ∀ l : List α, l.countP p + l.countP q ≤ l.length
+  | [] => by simp
+  | a :: l => by
+    have ih := countP_disjoint_le p q h l
+    have ha := h a
+    simp only [List.countP_cons, List.length_cons]
+    by_cases hp : p a = true <;> by_cases hq : q a = true <;> simp_all <;> omega
+
+/-- No voter is counted both yes and no. -/
+theorem tally_yes_no {n : Nat} (v : Votes n) : tally v true + tally v false ≤ n := by
+  have := countP_disjoint_le (fun p => v p == some true) (fun p => v p == some false)
+    (fun x ⟨h1, h2⟩ => by simp at h1 h2; rw [h1] at h2; cases h2) (List.finRange n)
+  simpa [tally, List.length_finRange] using this
+
+/-- Received votes only accumulate, so each tally only grows. -/
+theorem tally_mono {n : Nat} {v w : Votes n} (h : v ≼ w) (b : Bool) :
+    tally v b ≤ tally w b :=
+  List.countP_mono_left fun p _ hp => by
+    simp only [beq_iff_eq] at hp ⊢
+    rcases h p with h' | h'
+    · rw [hp] at h'; cases h'
+    · rw [← h', hp]
+
+/-- **The majority decision is monotone**: as votes arrive it only moves from
+undecided to approve or to reject, and never changes once made. -/
+theorem decideMajority_mono {n : Nat} {v w : Votes n} (h : v ≼ w) :
+    decideMajority v ≼ decideMajority w := by
+  have ty := tally_mono h true
+  have tn := tally_mono h false
+  have bw := tally_yes_no w
+  unfold decideMajority
+  by_cases h1 : n < 2 * tally v true
+  · have : n < 2 * tally w true := by omega
+    simp only [h1, this, ite_true]; exact Or.inr rfl
+  · by_cases h2 : n < 2 * tally v false
+    · have hw2 : n < 2 * tally w false := by omega
+      have hw1 : ¬ n < 2 * tally w true := by omega
+      simp only [h1, h2, hw1, hw2, ite_true, ite_false]; exact Or.inr rfl
+    · simp only [h1, h2, ite_false]; exact Or.inl rfl
+
+/-- The coordinator's spec: the majority decision on the votes received. -/
+def majoritySpec (n : Nat) : Spec (Votes n) Approval where
+  P v d := d = decideMajority v
+  total _ := ⟨_, rfl⟩
+
+theorem majoritySpec_functional (n : Nat) : (majoritySpec n).Functional :=
+  fun _ _ _ h h' => h.trans h'.symm
+
+theorem majoritySpec_monotone (n : Nat) : (majoritySpec n).MonotoneF := by
+  intro v w d e hvw hd he
+  show d ≼ e
+  rw [hd, he]; exact decideMajority_mono hvw
+
+theorem majoritySpec_consistent (n : Nat) : (majoritySpec n).Consistent :=
+  (functional_calm (majoritySpec_functional n)).2 (majoritySpec_monotone n)
+
+theorem majoritySpec_liftedMono (n : Nat) : (majoritySpec n).LiftedMono :=
+  (CALM.liftedMono_iff_monoF (majoritySpec_functional n)).2 (majoritySpec_monotone n)
 
 end CAP
 end CC
