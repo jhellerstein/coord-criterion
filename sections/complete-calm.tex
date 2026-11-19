@@ -135,16 +135,14 @@ Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study richer tran
 
 The two specs behave differently when an output is emitted.  In the transaction
 spec, no output \outrel both $[A,B]$ and $[B,A]$, so emitting either requires a
-\commitment that removes the other.  In the traceroute spec, by contrast, every
-route set that an output removes is contained in a remaining one that also
-contains the emitted observation, so the removal is an \emph{output
-subsumption}: it loses nothing and needs no \commitment.
+\commitment that removes the other.  In the traceroute spec, by contrast, each
+removed row has a remaining row at its input whose route set contains both the
+removed route set and the emitted observation, so the removal is an
+\emph{output subsumption}: it loses nothing and needs no \commitment.
 
-Lifted Monotonicity captures this difference.  It combines two properties:
-Relational Monotonicity requires each output to keep some \outnoun as input
-\ingrows, while \emph{directedness}, a standard notion from order theory,
-requires the outputs in each fiber to have common \outnouns.  We define them in
-turn.
+Lifted Monotonicity captures this difference by combining two properties:
+Relational Monotonicity, a condition across multiple inputs, and directedness,
+a condition within the fiber at each input.
 
 \label{sec:lifted-monotonicity}
 \begin{definition}[Relational Monotonicity]
@@ -180,17 +178,18 @@ $X\subseteq F$ is compatible in $F$.  A spec has \emph{directed fibers} when
 every fiber is directed.
 \end{definition}
 
-A singleton fiber is trivially directed.  The traceroute fibers of
-Figure~\ref{fig:ambiguity-frames}(g) are directed too: finitely many route
-sets in one fiber always have a common \outnoun in that fiber, their union.  The two
-transaction orders in panel~(f), by contrast, are incompatible.
+A singleton fiber is trivially directed.  Each traceroute fiber of
+Figure~\ref{fig:ambiguity-frames}(g) is directed too: the union of finitely
+many permitted route sets is itself a permitted route set, and it contains each
+of them.  The two transaction orders in panel~(f), by contrast, are
+incompatible.
 
-Directedness asks for some common \outnoun of each finite set, not a least one
-or one given by a fixed merge operator, so it is weaker than requiring a
-join-semilattice.  Under inclusion, for example, the fiber
-$\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ is directed, since
-$\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$ have two
-incomparable minimal common \outnouns.
+Directedness is more permissive than a join-semilattice.  It asks only that
+each finite set of outputs in a fiber have some common \outnoun within the
+fiber, while a join-semilattice requires a least one.  For example, the fiber
+$\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
+since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least
+common \outnoun: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal.
 
 \paragraph{Lifted Monotonicity.}
 To state both requirements at once, we lift $\OutputOrd$ from outputs to a

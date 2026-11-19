@@ -250,7 +250,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:fiber-directedness»` | abbrev | **Def. |
 | `«def:directed-outputs»` | abbrev | Def. |
 | `«def:fiber-directedness/singleton»` | theorem | After Def. |
-| `«sec:lifted-monotonicity/directed-example»` | theorem | "Directedness asks for some common output extension of each finite set, not a least one or one given by a fixed merge operator, so it is weaker than requirin… |
+| `«sec:lifted-monotonicity/directed-example»` | theorem | "Directedness is more permissive than a join-semilattice. |
 | `«sec:lifted-monotonicity/figure-fibers»` | theorem | "A singleton fiber is trivially directed. |
 | `«eq:joint-output-order»` | abbrev | **Eq. |
 | `«def:lifted-monotonicity»` | abbrev | **Def. |

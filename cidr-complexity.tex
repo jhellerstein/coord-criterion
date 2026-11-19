@@ -893,15 +893,14 @@ serial schedules, to which executions correspond via equivalence (\S\ref{sec:hat
 
 \color{black}\cxtag{67}{N/M}\cxbar{67}{0.4 0.4 1}{s}The two specs behave differently when an output is emitted.  The transaction
 schedules $[A,B]$ and $[B,A]$ are incompatible under the equality order, so emitting either requires a
-\commitment that removes the other.  In the traceroute spec, by contrast, every
-removed route set is contained in a remaining one that also contains the
-emitted observation, so the removal loses nothing and needs no \commitment.\cxbar{67}{0.4 0.4 1}{e}
+\commitment that removes the other.  In the traceroute spec, by contrast, each
+removed row has a remaining row at its input whose route set contains both the
+removed route set and the emitted observation, so the removal loses nothing and
+needs no \commitment.\cxbar{67}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{68}{N/M}\cxbar{68}{0.4 0.4 1}{s}Lifted Monotonicity captures this difference.  It combines two properties:
-Relational Monotonicity requires each output to keep some \outnoun as input
-\ingrows, while \emph{directedness}, a standard notion from order theory,
-requires the outputs in each fiber to have common \outnouns.  We define them in
-turn.\cxbar{68}{0.4 0.4 1}{e}
+\color{black}\cxtag{68}{N/M}\cxbar{68}{0.4 0.4 1}{s}Lifted Monotonicity captures this difference by combining two properties:
+Relational Monotonicity, a condition across multiple inputs, and directedness,
+a condition within the fiber at each input.\cxbar{68}{0.4 0.4 1}{e}
 
 \color{black}\begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -931,16 +930,16 @@ $X\subseteq F$ is compatible in $F$.  A spec has \emph{directed fibers} when eve
 \end{definition}
 
 \color{black}\cxtag{72}{N/M}\cxbar{72}{0.4 0.4 1}{s}A singleton fiber is trivially directed.  Each traceroute fiber is directed
-too: any route sets in it can be merged into one that contains them all, and
-the merged set is also a permitted observation.  The two transaction orders in
+too: the union of finitely many permitted route sets is itself a permitted
+route set, and it contains each of them.  The two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.\cxbar{72}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{73}{N/S}Directedness asks only for some upper bound within the fiber for each finite
-set, not a least one or a fixed merge operator, so it is weaker than a
-join-semilattice: a common \outnoun, like a common \indesc, need not be unique
-or least.  In the fiber $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under
-inclusion, for example, $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and
-$\{b\}$ have two incomparable minimal common \outnouns.
+\color{black}\cxtag{73}{N/S}Directedness is more permissive than a join-semilattice.  It asks only that
+each finite set of outputs in a fiber have some common \outnoun within the
+fiber, while a join-semilattice requires a least one.  For example, the fiber
+$\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
+since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least
+common \outnoun: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal.
 
 \paragraph{Lifted Monotonicity.} \color{black}\cxtag{74}{N/M}\cxbar{74}{0.4 0.4 1}{s}The two conditions become one
 criterion.

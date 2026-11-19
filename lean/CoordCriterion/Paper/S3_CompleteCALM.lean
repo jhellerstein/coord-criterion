@@ -226,26 +226,36 @@ theorem «def:fiber-directedness/singleton» {I O : Type} [PO I] [PO O] {sp : Sp
     (hf : sp.Functional) : sp.DirectedOutputs :=
   functional_directed hf
 
-/-- "Directedness asks for some common output extension of each finite set, not
-a least one or one given by a fixed merge operator, so it is weaker than
-requiring a join-semilattice.  Under inclusion, for example, the fiber
-`{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` is directed, since `{a,b,c,d}` extends
-every member, yet `{a}` and `{b}` have two incomparable minimal common output
-extensions."  The fiber is the type `F5` (all of it); the two minimal common
-output extensions are `{a,b,c}` and `{a,b,d}`. -/
+/-- "Directedness is more permissive than a join-semilattice.  It asks only that
+each finite set of outputs in a fiber have some common output extension within
+the fiber, while a join-semilattice requires a least one.  For example, the
+fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` under inclusion is directed, since
+`{a,b,c,d}` extends every member, but `{a}` and `{b}` have no least common
+output extension: `{a,b,c}` and `{a,b,d}` are both minimal."  The fiber is the
+type `F5` (all of it); the common output extensions of `{a}` and `{b}` are
+`{a,b,c}`, `{a,b,d}` and `{a,b,c,d}`; the first two are minimal and
+incomparable, so none is least.  "A join-semilattice requires a least one" is
+the definition of a join (prose). -/
 theorem «sec:lifted-monotonicity/directed-example» :
     JointLift (fun _ : F5 => True) (fun _ : F5 => True) ∧
       (∀ u, (F5.a ≼ u ∧ F5.b ≼ u) ↔ (u = .abc ∨ u = .abd ∨ u = .abcd)) ∧
       (¬ (F5.abc ≼ F5.abd) ∧ ¬ (F5.abd ≼ F5.abc) ∧
         (∀ u, F5.a ≼ u → F5.b ≼ u → u ≼ F5.abc → u = F5.abc) ∧
         (∀ u, F5.a ≼ u → F5.b ≼ u → u ≼ F5.abd → u = F5.abd)) ∧
-      CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] :=
-  ⟨f5_directed, f5_common_refinements, f5_minimal_incomparable, f5_compatible⟩
+      CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] ∧
+      ¬ ∃ u : F5, (F5.a ≼ u ∧ F5.b ≼ u) ∧ ∀ v : F5, F5.a ≼ v → F5.b ≼ v → u ≼ v := by
+  refine ⟨f5_directed, f5_common_refinements, f5_minimal_incomparable, f5_compatible, ?_⟩
+  rintro ⟨u, ⟨ha, hb⟩, hl⟩
+  have h1 := f5_minimal_incomparable.2.2.1 u ha hb (hl _ (by decide) (by decide))
+  have h2 := f5_minimal_incomparable.2.2.2 u ha hb (hl _ (by decide) (by decide))
+  exact absurd (h1.symm.trans h2) (by decide)
 
-/-- "A singleton fiber is trivially directed.  The traceroute fibers of Figure
-`fig:ambiguity-frames`(g) are directed too: finitely many route sets in one
-fiber always have a common output extension in that fiber, their union.  The
-two transaction orders in panel (f), by contrast, are incompatible." -/
+/-- "A singleton fiber is trivially directed.  Each traceroute fiber of Figure
+`fig:ambiguity-frames`(g) is directed too: the union of finitely many permitted
+route sets is itself a permitted route set, and it contains each of them.  The
+two transaction orders in panel (f), by contrast, are incompatible."  Lean: the
+union of two permitted route sets is permitted and extends both (finitely many
+by induction, packaged as `DirectedOutputs`). -/
 theorem «sec:lifted-monotonicity/figure-fibers» :
     (∀ X x y, Figures.Trace.inFib X x → Figures.Trace.inFib X y →
         Figures.Trace.inFib X (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) ∧
