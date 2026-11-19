@@ -321,12 +321,21 @@ theorem «def:lifted-monotonicity/not-reflexive» :
    fun h => Figures.Txn.not_monotone.2.1 fun _ => h⟩
 
 /-- Before Def. `def:common-expansion-condition`: "In the traceroute spec, one
-run may trace from `s` and another from `t`; at their common input extension
-`{s,t}`, the union of their route sets is a common output extension." -/
+run may trace from `s` and emit `{s→s1}`, while another traces from a second
+source `t` and emits `{t→s2}`.  At their common input extension `{s,t}`, the
+route set `{s→s1, t→s2}` is a common output extension of both."  Lean: the
+concrete instance (`Figures.Trace.common_extension_example`), and in general
+the union of any route set permitted at `{s}` with any permitted at `{t}`
+(`Figures.Trace.common_extension`).  The CIDR version quotes the same
+sentences. -/
 theorem «sec:lifted-monotonicity/traceroute-common-extension» (x y : Figures.Trace.RS)
     (hx : Figures.Trace.inFib .s x) (hy : Figures.Trace.inFib .t y) :
-    Figures.Trace.inFib .st (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y :=
-  Figures.Trace.common_extension x y hx hy
+    (Figures.Trace.inFib .s Figures.Trace.rS1 ∧ Figures.Trace.inFib .t Figures.Trace.rT ∧
+      Figures.Trace.inFib .st Figures.Trace.rS1T ∧
+      Figures.Trace.rS1 ≼ Figures.Trace.rS1T ∧ Figures.Trace.rT ≼ Figures.Trace.rS1T ∧
+      Figures.Trace.rS1.union Figures.Trace.rT = Figures.Trace.rS1T) ∧
+    (Figures.Trace.inFib .st (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) :=
+  ⟨Figures.Trace.common_extension_example, Figures.Trace.common_extension x y hx hy⟩
 
 /-- **Def. `def:common-expansion-condition`** (Common-extension condition).
 "For every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of `P` and every common

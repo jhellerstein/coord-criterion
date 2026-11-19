@@ -665,6 +665,14 @@ theorem common_extension (x y : RS) (hx : inFib .s x) (hy : inFib .t y) :
     inFib .st (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y :=
   union_mem .st x y (fib_mono x (by decide) hx) (fib_mono y (by decide) hy)
 
+/-- The concrete instance in the text: `{s→s1}` is permitted at `{s}`,
+`{t→s2}` at `{t}`, and `{s→s1, t→s2}` is permitted at `{s,t}` and extends
+both. -/
+theorem common_extension_example :
+    inFib .s rS1 ∧ inFib .t rT ∧ inFib .st rS1T ∧ rS1 ≼ rS1T ∧ rT ≼ rS1T ∧
+      rS1.union rT = rS1T := by
+  decide
+
 /-- After Cor. `cor:convergence`: a run at `{s}` that emitted `{s→s1}` and a
 run at `{s}` that emitted nothing reach the same input in different states;
 the first has subsumed `{s→h}`, the second keeps it. -/
