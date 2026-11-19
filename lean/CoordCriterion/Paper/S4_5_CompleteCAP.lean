@@ -120,8 +120,10 @@ Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
 abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
 
-/-- Example after the takeaway following Corollary
-`cor:complete-cap-any-system`: "consider two-phase commit.  We focus on the
+/-- Example after Theorem `thm:complete-cap`, introduced by "Commitments and
+availability can still coexist when each commitment is made by a single
+participant, as two-phase commit shows" (prose-only signpost): "Consider
+two-phase commit.  We focus on the
 spec for the voters; the coordinator is an observer of that spec.  The fiber of
 interest is at the input `prepare(tx)`: how each voter responds to that
 prepare message.  Each voter's response is a row of `E`, while the sets of
@@ -386,9 +388,8 @@ theorem «thm:complete-cap» (sp : Spec I O) (D : Type) (E : Table I O)
   ⟨fun ⟨hA, hP⟩ => consistentOn_of_availabilityFor E hES _ hA (commonRefinement_of_pc hP),
    fun h => ⟨availabilityFor_resp E, pc_resp E h⟩⟩
 
-/-- "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted
-Monotonicity, and then the canonical system needs no commitment" (first
-half). -/
+/-- "For `E=P`, a spec escapes CAP exactly when Lifted Monotonicity holds"
+(first half). -/
 theorem «thm:complete-cap/E-eq-P» (sp : Spec I O) (D : Type) :
     «def:escapes-cap» sp D sp.P ↔ sp.LiftedMono :=
   («thm:complete-cap» sp D sp.P (fun _ _ h => h)).trans
@@ -422,7 +423,7 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
     (hP : «def:partition-consistency» Sys) : «def:lm-for-A» sp E :=
   consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
 
-  /-- "For `E = P`, … and then the canonical system needs no commitment"
+  /-- "For `E=P`, … the canonical system then needs no commitment"
   (second half; for the canonical system itself see
   `«sec:complete-cap/canonical-system-commitment-free»`).  Lean: with
   Lifted Monotonicity, the commitment-free system `cfSystem` (empty basis,
@@ -445,8 +446,8 @@ theorem «sec:complete-cap/proof-system-commitment-free» (sp : Spec I O) (D : T
       (partitionConsistency_iff_atEnd _).1 (complete_cap_cf sp D h).2⟩,
     fun _ _ _ => cfSystem_coordinationFree⟩
 
-/-- "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted
-Monotonicity, and then the canonical system needs no commitment."  Lean: with
+/-- "For `E=P`, a spec escapes CAP exactly when Lifted Monotonicity holds; the
+canonical system then needs no commitment."  Lean: with
 Lifted Monotonicity, the canonical system for `P` (`respSystem sp.P`, the
 system of Def. `def:escapes-cap`) performs no commitment event, and every
 output it emits is exposable at the emitting participant's state, so no output
@@ -580,7 +581,10 @@ theorem «sec:complete-cap/gl-two-row-forced» (Sys : System sp D)
     ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
   cap_two_step_forced Sys hA hC h₁ h₂ hj₁ hj₂
 
-/-- "Gilbert and Lynch's theorem is a case of Complete CAP" … "Their theorem
+/-- "Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted
+Monotonicity for `E` fails.  We show the failure for the register example,
+then extend the conclusion from the canonical system to every system." …
+"Their theorem
 concerns every system, not only the canonical one, so it needs one more
 step." … "By Corollary `cor:complete-cap-any-system`, no system can keep both
 outputs available and stay consistent across a partition, which is Gilbert

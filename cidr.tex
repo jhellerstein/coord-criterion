@@ -1316,7 +1316,9 @@ output, and Partition Consistency then gives those outputs a common \outnoun in
 $\fiber{j}$.  \fullproof
 \end{proof}
 
-For example, consider two-phase commit.  We focus on the spec for the voters; the coordinator is an
+For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as two-phase commit shows.
+
+Consider two-phase commit.  We focus on the spec for the voters; the coordinator is an
 observer of that spec.  The fiber of interest is at the input
 \textsf{prepare(tx)}: how each voter responds to that prepare message.  Each
 voter's response is a row of $E$, while the sets of responses the coordinator
@@ -1330,14 +1332,12 @@ emitted on different sides of a partition never conflict (the full paper
 formalizes this placement as a deployment~\extended), and every set of votes an
 observer may collect is consistent.
 
-For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment.
-
-A partition does not change the intrinsic \commitments a spec needs; it prevents separated participants from jointly enforcing them through coordination.  When Lifted Monotonicity
+Two-phase commit illustrates what Complete CAP says in general. A partition does not change the intrinsic \commitments a spec needs; it prevents separated participants from jointly enforcing them through coordination.  When Lifted Monotonicity
 for $E$ fails, some output of $E$ waits for another side, sacrificing
 Availability, or is emitted anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
-Gilbert and Lynch's theorem is a case of Complete CAP.  Linearizability
+Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted Monotonicity for $E$ fails. We show the failure for the register example, then extend the conclusion from the canonical system to every system.  Linearizability
 respects real-time order: if one operation finishes before another begins,
 every linearization puts the first before the
 second~\cite{herlihy1990linearizability}.  In the register example, suppose the

@@ -209,7 +209,7 @@ theorem prepare_decide {n : Nat} {I : Fin n → Type} {O : Fin n → Type}
 /-! ## The voters' spec and its explicit relation (§4.4)
 
 Supports the two-phase-commit example of the Complete CAP subsection:
-"consider two-phase commit.  We focus on the spec for the voters; the
+"Consider two-phase commit.  We focus on the spec for the voters; the
 coordinator is an observer of that spec.  The fiber of interest is at the input
 `prepare(tx)`: how each voter responds to that prepare message.  Each voter's
 response is a row of `E`, while the sets of responses the coordinator may
