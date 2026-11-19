@@ -154,7 +154,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 67 & 7733\\
+unclassified & 67 & 7764\\
 signposting & 8 & 2543\\
 explanation & 4 & 199\\
 formal caution & 1 & 188\\
@@ -163,7 +163,7 @@ formal definition/notation & 6 & 116\\
 related-work detail & 1 & 61\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
 1. signposting, 2453 words: \textit{See Appendix .}\par
-2. unclassified, 1015 words: \textit{Subsequent extensions to the original CALM Theorem map into our ...}\par
+2. unclassified, 1046 words: \textit{Functional CALM restates the result as a property of a ...}\par
 3. unclassified, 968 words: \textit{The registrar shows how a system's own can block a ...}\par
 4. unclassified, 597 words: \textit{The extended paper's algorithm for monotonic atomic view has the ...}\par
 5. unclassified, 569 words: \textit{This is proper coordination in which the upstream itself needs ...}\par
@@ -1546,22 +1546,26 @@ and applications to distributed-systems protocols such as registers, $k$-set agr
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-\textcolor{newblue}{The CALM Theorem of Ameloot et al.\ is stated in a particular operational
-model: a query can be
-evaluated on a network of relational transducers without coordination exactly
-when it is monotone, under that model's assumptions about data placement and
-execution~\cite{ameloot2013relational,ameloot2015weaker}.} \textcolor{newblue}{Functional CALM
-restates the result as a property of a spec, so that it can be compared with
-specs outside Datalog; it does not replace the operational details.} \removednote{\textbf{unclassified}, 1015 words, rank 2; \textit{Subsequent extensions to the original CALM Theorem map into our framework as changes to the input ...}} \removednote{\textbf{unclassified}, 53 words, rank 42; \textit{A CRDT uses join semilattices to guarantee that replicas that have received the same updates converge ...}} \textcolor{newblue}{Li and
-Lee proved a counterpart for functions on set inputs under inclusion, with a
-coordination-free implementation in place of consistency~\cite{li2025coordinationfree}.} \textcolor{newblue}{Earlier
-refinements of the theorem change only the input order.} \textcolor{newblue}{When transducers know
-how data is placed, more queries become coordination-free; Ameloot et al.\
-characterized these classes by domain-distinct and domain-disjoint
+Several CALM results for deterministic queries share one form: a function can
+be computed without coordination exactly when it is monotone under some input
+order. Functional CALM states that form at the level of a spec, for any input
+and output orders. \textcolor{newblue}{The CALM Theorem of Ameloot et al.\ is stated in a
+particular operational model: a query can be evaluated on a network of
+relational transducers without coordination exactly when it is monotone, under
+that model's assumptions about data placement and
+execution~\cite{ameloot2013relational,ameloot2015weaker}.} \removednote{\textbf{unclassified}, 1046 words, rank 2; \textit{Functional CALM restates the result as a property of a spec, so that it can be ...}} \removednote{\textbf{unclassified}, 53 words, rank 42; \textit{A CRDT uses join semilattices to guarantee that replicas that have received the same updates converge ...}} \textcolor{newblue}{Functional CALM
+restates it as a property of a spec but does not replace those operational
+details.} \textcolor{newblue}{When transducers know how data is placed, more queries become
+coordination-free; Ameloot et al.\ characterized these classes by
+domain-distinct and domain-disjoint
 monotonicity~\cite{ameloot2015weaker,zinn2012winmove}.} \textcolor{newblue}{We model each data
 placement by an input order in which $I\cup J$ \inrelbase $I$ only when $J$ is
 domain-distinct (or domain-disjoint) from $I$; under these orders each form is
-functional monotonicity, so Functional CALM gives their characterizations.}
+functional monotonicity, so Functional CALM gives their characterizations.} \textcolor{newblue}{Li
+and Lee prove CALM for replicated objects with write, merge, and query
+operations~\cite{li2025coordinationfree}; in our terms, theirs is the case of
+set inputs ordered by inclusion and arbitrary partially ordered outputs, with a
+coordination-free implementation in place of consistency.}
 
 \textcolor{newblue}{Baccaert and Ketsman were the first to consider nondeterministic specs in a
 CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}.} \textcolor{newblue}{They keep the relational transducer setting, with a small extension that models

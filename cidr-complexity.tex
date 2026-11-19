@@ -1591,22 +1591,26 @@ and applications to distributed-systems protocols such as registers, $k$-set agr
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-\color{black}\cxtag{153}{N/M}\cxbar{153}{0.4 0.4 1}{s}The CALM Theorem of Ameloot et al.\ is stated in a particular operational
-model: a query can be
-evaluated on a network of relational transducers without coordination exactly
-when it is monotone, under that model's assumptions about data placement and
+\color{black}\cxtag{153}{N/M}\cxbar{153}{0.4 0.4 1}{s}Several CALM results for deterministic queries share one form: a function can
+be computed without coordination exactly when it is monotone under some input
+order.  Functional CALM states that form at the level of a spec, for any input
+and output orders.  The CALM Theorem of Ameloot et al.\ is stated in a
+particular operational model: a query can be evaluated on a network of
+relational transducers without coordination exactly when it is monotone, under
+that model's assumptions about data placement and
 execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
-restates the result as a property of a spec, so that it can be compared with
-specs outside Datalog; it does not replace the operational details.  Li and
-Lee proved a counterpart for functions on set inputs under inclusion, with a
-coordination-free implementation in place of consistency~\cite{li2025coordinationfree}.  Earlier
-refinements of the theorem change only the input order.  When transducers know
-how data is placed, more queries become coordination-free; Ameloot et al.\
-characterized these classes by domain-distinct and domain-disjoint
+restates it as a property of a spec but does not replace those operational
+details.  When transducers know how data is placed, more queries become
+coordination-free; Ameloot et al.\ characterized these classes by
+domain-distinct and domain-disjoint
 monotonicity~\cite{ameloot2015weaker,zinn2012winmove}.  We model each data
 placement by an input order in which $I\cup J$ \inrelbase $I$ only when $J$ is
 domain-distinct (or domain-disjoint) from $I$; under these orders each form is
-functional monotonicity, so Functional CALM gives their characterizations.\cxbar{153}{0.4 0.4 1}{e}
+functional monotonicity, so Functional CALM gives their characterizations.  Li
+and Lee prove CALM for replicated objects with write, merge, and query
+operations~\cite{li2025coordinationfree}; in our terms, theirs is the case of
+set inputs ordered by inclusion and arbitrary partially ordered outputs, with a
+coordination-free implementation in place of consistency.\cxbar{153}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{154}{N/M}\cxbar{154}{0.4 0.4 1}{s}Baccaert and Ketsman were the first to consider nondeterministic specs in a
 CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}.
