@@ -477,8 +477,8 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     ¬ Sys.CoordinationFreeH :=
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun ho hx hnx hqk
 
-  /-- Supporting example for the voters' remark after Corollary
-  `cor:complete-cap-any-system` (not quoted): for a smaller `E`, an output of `E`
+  /-- Supporting example for the voters' remark in the two-phase commit
+  example after Theorem `thm:complete-cap` (not quoted): for a smaller `E`, an output of `E`
   can still apply a commitment under the declared spec.  Lean: one input, `P = {o, x}` incomparable and `E = {o}`.
   `P` satisfies Lifted Monotonicity for `E`, but `o` is not exposable.  Thus the
   output event for `o` is not available under the empty basis, while the
@@ -580,11 +580,14 @@ theorem «sec:complete-cap/gl-two-row-forced» (Sys : System sp D)
     ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
   cap_two_step_forced Sys hA hC h₁ h₂ hj₁ hj₂
 
-/-- "Gilbert and Lynch's theorem is a case of Complete CAP" … "By Corollary
-`cor:complete-cap-any-system`, no system can keep both outputs available and
-stay consistent across a partition, which is Gilbert and Lynch's theorem.":  no system for the register lets every request receive a response
-and keeps the emitted responses reconcilable (explained by one
-linearization). -/
+/-- "Gilbert and Lynch's theorem is a case of Complete CAP" … "Their theorem
+concerns every system, not only the canonical one, so it needs one more
+step." … "By Corollary `cor:complete-cap-any-system`, no system can keep both
+outputs available and stay consistent across a partition, which is Gilbert
+and Lynch's theorem."  Lean: `Sys` is an arbitrary system (any basis, any
+local strategies), not only the canonical one: no system for the register
+lets every request receive a response and keeps the emitted responses
+reconcilable (explained by one linearization). -/
 theorem «sec:complete-cap/gilbert-lynch» (Sys : System CC.GL.regFullSpec D) :
     ¬ (AnsweringAtEnd Sys ∧ CommonRefinementAtEnd Sys) :=
   CC.GL.gilbert_lynch_direct Sys

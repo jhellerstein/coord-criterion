@@ -385,13 +385,13 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P`, … and then the canonical system needs no commitment" (second half; for the canonical system itself see `«sec:complete-cap/canonical-system-comm… |
 | `«sec:complete-cap/canonical-system-commitment-free»` | theorem | "For `E = P`, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and then the canonical system needs no commitment." Lean: |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | Supporting operational lemma for the full-availability case. |
-| `«sec:complete-cap/local-row-removal-necessary»` | theorem | Supporting example for the voters' remark after Corollary `cor:complete-cap-any-system` (not quoted): |
+| `«sec:complete-cap/local-row-removal-necessary»` | theorem | Supporting example for the voters' remark in the two-phase commit example after Theorem `thm:complete-cap` (not quoted): |
 | `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another side, sacrificing Availability, or is emitted anyway, sacrificing Partition Con… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Linearizability respects real-time order: |
 | `«sec:complete-cap/gl-no-system»` | theorem | "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay consistent across a partition, which is Gilbert and Lynch's t… |
 | `«sec:complete-cap/gl-two-row-forced»` | theorem | "In this example, the proof of Corollary `cor:complete-cap-any-system` uses only weaker forms of its hypotheses, and these weaker forms are Gilbert and Lynch… |
-| `«sec:complete-cap/gilbert-lynch»` | theorem | "Gilbert and Lynch's theorem is a case of Complete CAP" … "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay con… |
+| `«sec:complete-cap/gilbert-lynch»` | theorem | "Gilbert and Lynch's theorem is a case of Complete CAP" … "Their theorem concerns every system, not only the canonical one, so it needs one more step." … "By… |
 | `«sec:complete-cap/gl-realized»` | theorem | "In this section the real-time order of the write and the read is part of the input. |
 | `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |

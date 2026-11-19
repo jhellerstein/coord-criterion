@@ -1962,6 +1962,38 @@ $\fiber{j}$.} Full proof in
 Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
+\textcolor{reviewed}{For example, consider two-phase commit.} \textcolor{reviewed}{We focus on the spec for the voters;
+the coordinator is an observer of that spec.} \textcolor{reviewed}{The fiber of interest is at the
+input \textsf{prepare(tx)}: how each voter responds to that prepare message.} \textcolor{reviewed}{Each voter's response is a row of $E$, while the sets of responses the
+coordinator may observe across voters are implicit outputs in $P\setminus E$.} \textcolor{reviewed}{Each voter decides whether it can commit and emits
+its vote, yes or no.} \textcolor{reviewed}{That decision is a \commitment: a voter that votes yes
+rules out every set of votes in which it votes no.} \textcolor{reviewed}{But it is a single-voter
+\commitment involving no communication, so the voter can make it and produce
+output during a partition.} \textcolor{reviewed}{Each vote is cast by a different voter, so votes
+emitted on different sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this placement as a deployment), and every
+set of votes an observer may collect is consistent.}
+
+For $E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity,
+and then the canonical system needs no \commitment at all.
+
+\textcolor{reviewed}{A partition does not change the intrinsic \commitments a spec needs; it prevents
+separated participants from jointly enforcing them through coordination.} \textcolor{reviewed}{When Lifted
+Monotonicity for $E$ fails, some output of $E$ waits for another side,
+sacrificing Availability, or is emitted anyway, sacrificing Partition
+Consistency.}
+
+\paragraph{Gilbert and Lynch.}
+\textcolor{reviewed}{Gilbert and Lynch's theorem is a case of Complete CAP.} \textcolor{reviewed}{Linearizability
+respects real-time order: if one operation finishes before another begins,
+every linearization puts the first before the
+second~\cite{herlihy1990linearizability}.} \textcolor{reviewed}{In the register example, suppose the
+write finishes before the read begins.} \textcolor{reviewed}{Every linearization then puts the write
+first, so the read must return $v$.} \textcolor{reviewed}{But each of $p$ and $q$ sees only its own
+request, and Availability requires $p$ to acknowledge the write and $q$ to
+answer $v_0$.} \textcolor{reviewed}{No output for the two requests together \outrel both answers, so
+the spec does not satisfy Lifted Monotonicity for them.} \textcolor{reviewed}{Their theorem
+concerns every system, not only the canonical one, so it needs one more step.}
+
 \begin{corollary}
 \label{cor:complete-cap-any-system}
 \textcolor{reviewed}{If some system for a spec has Availability for $E$ and Partition Consistency,
@@ -1982,38 +2014,9 @@ there is none.} Full proof in Appendix~\ref{app:proofs-sec4}.
 A system might hope to keep more outputs available, without losing Partition
 Consistency, by issuing \commitments that coordinate within each side of a
 partition. It cannot: Corollary~\ref{cor:complete-cap-any-system} holds for
-every system, whether or not it issues \commitments. For
-$E=P$, a spec escapes CAP exactly when it satisfies Lifted Monotonicity, and
-then the canonical system needs no \commitment at all.
+every system, whether or not it issues \commitments.
 
-\textcolor{reviewed}{A partition does not change the intrinsic \commitments a spec needs; it prevents
-separated participants from jointly enforcing them through coordination.} \textcolor{reviewed}{When Lifted
-Monotonicity for $E$ fails, some output of $E$ waits for another side,
-sacrificing Availability, or is emitted anyway, sacrificing Partition
-Consistency.}
-
-\textcolor{reviewed}{For example, consider two-phase commit.} \textcolor{reviewed}{We focus on the spec for the voters;
-the coordinator is an observer of that spec.} \textcolor{reviewed}{The fiber of interest is at the
-input \textsf{prepare(tx)}: how each voter responds to that prepare message.} \textcolor{reviewed}{Each voter's response is a row of $E$, while the sets of responses the
-coordinator may observe across voters are implicit outputs in $P\setminus E$.} \textcolor{reviewed}{Each voter decides whether it can commit and emits
-its vote, yes or no.} \textcolor{reviewed}{That decision is a \commitment: a voter that votes yes
-rules out every set of votes in which it votes no.} \textcolor{reviewed}{But it is a single-voter
-\commitment involving no communication, so the voter can make it and produce
-output during a partition.} \textcolor{reviewed}{Each vote is cast by a different voter, so votes
-emitted on different sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this placement as a deployment), and every
-set of votes an observer may collect is consistent.}
-
-\paragraph{Gilbert and Lynch.}
-\textcolor{reviewed}{Gilbert and Lynch's theorem is a case of Complete CAP.} \textcolor{reviewed}{Linearizability
-respects real-time order: if one operation finishes before another begins,
-every linearization puts the first before the
-second~\cite{herlihy1990linearizability}.} \textcolor{reviewed}{In the register example, suppose the
-write finishes before the read begins.} \textcolor{reviewed}{Every linearization then puts the write
-first, so the read must return $v$.} \textcolor{reviewed}{But each of $p$ and $q$ sees only its own
-request, and Availability requires $p$ to acknowledge the write and $q$ to
-answer $v_0$.} \textcolor{reviewed}{No output for the two requests together \outrel both answers, so
-the spec does not satisfy Lifted Monotonicity for them.} \textcolor{reviewed}{By
-Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
+\textcolor{reviewed}{By Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
 available and stay consistent across a partition, which is Gilbert and Lynch's
 theorem.}
 
