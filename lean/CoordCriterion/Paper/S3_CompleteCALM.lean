@@ -195,19 +195,6 @@ theorem «sec:lifted-monotonicity/traceroute-relational» :
       Figures.Trace.spec.RelMono :=
   ⟨fun x hx => Figures.Trace.fib_mono x (by decide) hx, Figures.Trace.directed.2.1⟩
 
-/-- After Def. `def:relational-monotonicity`: "A tool that reports the cut
-points between the traced sources and `s2`, the hops that every observed route
-passes through, fails it.  At `{s}`, every route to `s2` passes through `h`, so
-the tool reports `h`.  If `t` reaches `s2` directly, `h` is no longer a cut
-point at `{s,t}`, and no permitted output there extends the earlier report."
-Lean: `Figures.Trace.cutSpec`, whose one output at each set of sources is the
-set of hops on every route to `s2` (`routesToS2`); it reports `h` at `{s}`,
-nothing at `{s,t}`, and fails Relational Monotonicity. -/
-theorem «sec:lifted-monotonicity/cut-points» :
-    Figures.Trace.cutH .s = true ∧ Figures.Trace.cutH .st = false ∧
-      ¬ Figures.Trace.cutSpec.RelMono :=
-  Figures.Trace.cut_fails
-
 /-- After Def. `def:relational-monotonicity`: "For singleton fibers this is
 functional monotonicity." -/
 theorem «def:relational-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}

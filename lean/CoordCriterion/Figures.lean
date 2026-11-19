@@ -665,51 +665,6 @@ theorem common_extension (x y : RS) (hx : inFib .s x) (hy : inFib .t y) :
     inFib .st (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y :=
   union_mem .st x y (fib_mono x (by decide) hx) (fib_mono y (by decide) hy)
 
-/-! ### The cut-point tool -/
-
-/-- The only intermediate hop. -/
-inductive Hop where
-  | h
-  deriving DecidableEq
-
-/-- The routes to `s2` from each set of sources, as lists of intermediate
-hops: `s→h→s2` from `s`, `t→s2` from `t`. -/
-def routesToS2 : Src → List (List Hop)
-  | .s => [[.h]]
-  | .t => [[]]
-  | .st => [[.h], []]
-
-/-- Is `h` a cut point: on every route to `s2`? -/
-def cutH (X : Src) : Bool := (routesToS2 X).all (fun r => r.contains .h)
-
-/-- A report of cut points: a subset of `{h}`, ordered by inclusion. -/
-structure Cut where
-  h : Bool
-  deriving DecidableEq
-
-instance : PO Cut where
-  le a b := a.h = true → b.h = true
-  refl _ := id
-  trans h1 h2 := h2 ∘ h1
-  antisymm {a b} h1 h2 := by
-    obtain ⟨a⟩ := a; obtain ⟨b⟩ := b; cases a <;> cases b <;> simp_all
-
-/-- The cut-point tool: at each set of sources, its one output is the set of
-cut points between those sources and `s2`. -/
-def cutSpec : Spec Src Cut where
-  P X c := c = ⟨cutH X⟩
-  total _ := ⟨_, rfl⟩
-
-/-- At `{s}` the tool reports `h`; at `{s,t}` it reports nothing, so the
-report at `{s}` has no extension there: the tool fails Relational
-Monotonicity. -/
-theorem cut_fails : cutH .s = true ∧ cutH .st = false ∧ ¬ cutSpec.RelMono := by
-  refine ⟨rfl, rfl, fun hm => ?_⟩
-  obtain ⟨u, hu, hle⟩ := hm .s .st ⟨true⟩ (by decide) rfl
-  have hu' : u = ⟨false⟩ := hu
-  subst hu'
-  exact absurd (hle rfl) (by decide)
-
 /-- After Cor. `cor:convergence`: a run at `{s}` that emitted `{s→s1}` and a
 run at `{s}` that emitted nothing reach the same input in different states;
 the first has subsumed `{s→h}`, the second keeps it. -/

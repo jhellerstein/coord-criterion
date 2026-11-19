@@ -85,7 +85,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:relational-monotonicity»
 #check @CC.Paper.«eq:relational-monotonicity»
 #check @CC.Paper.«sec:lifted-monotonicity/traceroute-relational»
-#check @CC.Paper.«sec:lifted-monotonicity/cut-points»
 #check @CC.Paper.«def:relational-monotonicity/functional»
 #check @CC.Paper.«sec:lifted-monotonicity/compatible»
 #check @CC.Paper.«def:fiber-directedness»

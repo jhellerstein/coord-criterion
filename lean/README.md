@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-699 entries.
+698 entries.
 
 ### §2 Functional CALM
 
@@ -245,7 +245,6 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:relational-monotonicity»` | abbrev | **Def. |
 | `«eq:relational-monotonicity»` | theorem | **Eq. |
 | `«sec:lifted-monotonicity/traceroute-relational»` | theorem | After Def. |
-| `«sec:lifted-monotonicity/cut-points»` | theorem | After Def. |
 | `«def:relational-monotonicity/functional»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/compatible»` | abbrev | "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in `F`* if some `u ∈ F` extends all of them." Lean: |
 | `«def:fiber-directedness»` | abbrev | **Def. |
