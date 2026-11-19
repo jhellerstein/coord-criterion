@@ -154,7 +154,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 67 & 7711\\
+unclassified & 67 & 7733\\
 signposting & 8 & 2543\\
 explanation & 4 & 199\\
 formal caution & 1 & 188\\
@@ -168,8 +168,8 @@ related-work detail & 1 & 61\\
 4. unclassified, 597 words: \textit{The extended paper's algorithm for monotonic atomic view has the ...}\par
 5. unclassified, 569 words: \textit{This is proper coordination in which the upstream itself needs ...}\par
 6. unclassified, 235 words: \textit{events only remove rows, so dropping them can only keep ...}\par
-7. unclassified, 212 words: \textit{The environment observes nothing from a event.}\par
-8. unclassified, 194 words: \textit{Theorem follows a pipeline event by event, with one system ...}\par
+7. unclassified, 216 words: \textit{Longer pipelines nest: the composite [math] of a proper pipeline ...}\par
+8. unclassified, 212 words: \textit{The environment observes nothing from a event.}\par
 9. formal caution, 188 words: \textit{The current row [math] remains, since [math] itself, so the ...}\par
 10. unclassified, 182 words: \textit{A system's strategies select the events of an actual execution; ...}\par
 11. result, 181 words: \textit{In any history of a consistent functional specification, every participant ...}\par
@@ -1168,7 +1168,7 @@ $\mathsf{output}(o)$.} \textcolor{newblue}{A \emph{\commitment event} $\mathsf{a
 applies a sequence $\gamma$ of \commitments and emits nothing, and systems may
 choose to apply \commitments this way, independent of inputs or outputs.} \textcolor{newblue}{When
 a \commitment event precedes an output event, the output event has less left to
-remove.} \removednote{\textbf{unclassified}, 212 words, rank 7; \textit{The environment observes nothing from a event.}; labels def:commitment-basis, def:run-under-basis} \removednote{\textbf{unclassified}, 139 words, rank 20; \textit{A local history of participant [math] is a finite sequence of [math]'s history events, including the ...}; labels def:local-history, def:strategy, def:system, def:produced-history}
+remove.} \removednote{\textbf{unclassified}, 212 words, rank 8; \textit{The environment observes nothing from a event.}; labels def:commitment-basis, def:run-under-basis} \removednote{\textbf{unclassified}, 139 words, rank 20; \textit{A local history of participant [math] is a finite sequence of [math]'s history events, including the ...}; labels def:local-history, def:strategy, def:system, def:produced-history}
 
 \textcolor{newblue}{A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ and a
 possibly nondeterministic \emph{strategy} per participant that picks its next output,
@@ -1448,7 +1448,7 @@ By associativity the lemma extends to finite pipelines. \removednote{\textbf{for
 \textcolor{newblue}{We return to the replicated store of the section's opening.} The key-value store is not
 monotone on its own, but it is monotone on what the log offers: a log fixes
 the order of commands, and a longer log only extends the responses. The log
-issues a \commitment to offer only such inputs, freeing the store from making any
+issues a \commitment to offer only such inputs, so the store need make no
 \commitments.
 
 More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
@@ -1486,15 +1486,16 @@ Proposition~\ref{prop:exposure-boundary}) applied to $\Spec_2|_{\Spec_1}$. \text
 full proof of (1) and the proofs of (2) and (3) are in \extended.}
 \end{proof}
 
-\textcolor{newblue}{Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
-itself guard a third stage, and the theorem applies again (\extended).} Locks in
-the key-value store would be pure overhead: by (1), the store restricted to
-logs needs no \commitment. \removednote{\textbf{unclassified}, 194 words, rank 8; \textit{Theorem follows a pipeline event by event, with one system per stage.}}
+This answers the opening puzzle. By (1), the store restricted to logs needs
+no \commitment, so locks in the store would be pure overhead. By (3), since
+the replicated store as a whole is not monotone, some output of the log needs
+a \commitment: the upstream log is where that belongs, and consensus provides
+it. \removednote{\textbf{unclassified}, 216 words, rank 7; \textit{Longer pipelines nest: the composite [math] of a proper pipeline can itself guard a third stage, ...}}
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Proper coordination answers our opening puzzle by showing how an upstream
+Proper coordination shows how an upstream
 component can discharge a pipeline's \commitment obligations. \emph{Composite CALM} asks a stronger question: when does a pipeline need no
 \commitment at any stage? If every stage is monotone, the answer is immediate:
 by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
@@ -1525,7 +1526,8 @@ monotone; when the upstream is also monotone, the whole pipeline is
 \commitment-free.} \textcolor{newblue}{Some \commitment-free composites arise in other ways (see
 \extended).}
 
-\textcolor{newblue}{The full paper extends these results to more complex
+\textcolor{newblue}{The full paper extends these results to longer pipelines, in which the
+composite of a proper pipeline guards a further stage, and to more complex
 compositions than sequential stages, including
 stages with inputs of their own and arbitrary acyclic graphs of stages, checked node
 by node much as types are~\cite{hellerstein2026completecalmfull}.}

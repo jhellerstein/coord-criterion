@@ -1442,7 +1442,7 @@ By associativity the lemma extends to finite pipelines.
 We return to the replicated store of the section's opening.  The key-value store is not
 monotone on its own, but it is monotone on what the log offers: a log fixes
 the order of commands, and a longer log only extends the responses.  The log
-issues a \commitment to offer only such inputs, freeing the store from making any
+issues a \commitment to offer only such inputs, so the store need make no
 \commitments.
 
 More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
@@ -1478,15 +1478,16 @@ Proposition~\ref{prop:exposure-boundary}) applied to $\Spec_2|_{\Spec_1}$. The
 full proof of (1) and the proofs of (2) and (3) are in \extended.
 \end{proof}
 
-Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
-itself guard a third stage, and the theorem applies again (\extended).  Locks in
-the key-value store would be pure overhead: by (1), the store restricted to
-logs needs no \commitment.
+This answers the opening puzzle.  By (1), the store restricted to logs needs
+no \commitment, so locks in the store would be pure overhead.  By (3), since
+the replicated store as a whole is not monotone, some output of the log needs
+a \commitment: the upstream log is where that belongs, and consensus provides
+it.
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Proper coordination answers our opening puzzle by showing how an upstream
+Proper coordination shows how an upstream
 component can discharge a pipeline's \commitment obligations.
 \emph{Composite CALM} asks a stronger question: when does a pipeline need no
 \commitment at any stage?  If every stage is monotone, the answer is immediate:
@@ -1519,7 +1520,8 @@ monotone; when the upstream is also monotone, the whole pipeline is
 \commitment-free.  Some \commitment-free composites arise in other ways (see
 \extended).
 
-The full paper extends these results to more complex
+The full paper extends these results to longer pipelines, in which the
+composite of a proper pipeline guards a further stage, and to more complex
 compositions than sequential stages, including
 stages with inputs of their own and arbitrary acyclic graphs of stages, checked node
 by node much as types are~\cite{hellerstein2026completecalmfull}.

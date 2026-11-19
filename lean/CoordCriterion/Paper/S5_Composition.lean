@@ -90,8 +90,8 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 /-- "We return to the replicated store of the opening.  The key-value store is
 not monotone on its own, but it is monotone on what the log offers: a log
 fixes the order of commands, and a longer log only extends the responses.  The
-log issues a commitment to offer only such inputs, freeing the store from
-making any commitments."  Lean, for any
+log issues a commitment to offer only such inputs, so the store need make no
+commitments."  Lean, for any
 deterministic state machine `δ` and two distinct commands: the key-value store
 `𝒦 ∘ 𝒫` (`𝒫 = Inst.smrS1`, the log) is not Lifted-Monotone, execution
 `Inst.execF δ σ₀` is monotone on logs, and the log is not Lifted-Monotone. -/
@@ -185,21 +185,46 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
     fun hP fam h1 h2 h3 h4 j hj hS => Guard.proper_confluent hP fam h1 h2 h3 h4 j hj hS,
     fun hP hnot => Guard.proper_needs_commit hP hnot⟩
 
-/-- "Longer pipelines nest: the composite `P₂ ∘ P₁` of a proper pipeline can
-itself guard a third stage, and the theorem applies again (Corollary
-`cor:pipelines`).  Locks in the
-key-value store would be pure overhead: by (1), the store restricted to logs
-needs no commitment."  Lean: for the log `𝒫 = Inst.smrS1` and execution
+/-- "This answers the opening puzzle.  By (1), the store restricted to logs
+needs no commitment, so locks in the store would be pure overhead.  By (3),
+since the replicated store as a whole is not monotone, some output of the log
+needs a commitment: the upstream log is where that belongs, and consensus
+provides it."  Lean: for the log `𝒫 = Inst.smrS1` and execution
 `Inst.execF δ σ₀`, every log is an output of the log, and the pipeline is
-proper, so the store restricted to logs needs no commitment.  Being a guard
-is `«cor:pipelines»`. -/
+proper, so the store restricted to logs needs no commitment (item (1)); the
+composite store is not Lifted-Monotone, and some output `m` of the log at a
+canonical state is not exposable there, while every log output `m'` that the
+store answers the same way is not exposable at the log's canonical state
+either: that output of the log needs a commitment (item (3),
+`Guard.proper_needs_commit` via `Guard.smr_proper`).  "Consensus provides it"
+names the mechanism and is prose. -/
 theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R)
     (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     (∀ m, Joint.Img (Inst.smrS1 (Cmd := Cmd)) m) ∧
-      ∀ τ : State (Guard.rest Inst.smrS1 (graph (Inst.execF δ σ0))), ReachableCF τ →
-        ∀ o, τ.R τ.cur o → Exposable τ o :=
+      (∀ τ : State (Guard.rest Inst.smrS1 (graph (Inst.execF δ σ0))), ReachableCF τ →
+        ∀ o, τ.R τ.cur o → Exposable τ o) ∧
+      ¬ (Guard.comp Inst.smrS1 (Inst.execF δ σ0)).LiftedMono ∧
+      ∃ i m, Inst.smrS1.P i m ∧
+        ¬ Exposable (canon (Guard.comp Inst.smrS1 (Inst.execF δ σ0)) i) (Inst.execF δ σ0 m) ∧
+        ∀ m', Inst.smrS1.P i m' → Inst.execF δ σ0 m' = Inst.execF δ σ0 m →
+          ¬ Exposable (canon Inst.smrS1 i) m' :=
   let h := Guard.smr_proper δ σ0 hne
-  ⟨h.2.2.2.1, h.2.2.2.2.1⟩
+  ⟨h.2.2.2.1, h.2.2.2.2.1, h.2.1, h.2.2.2.2.2⟩
+
+/-- "Longer pipelines nest: the composite `P₂ ∘ P₁` of a proper pipeline can
+itself guard a third stage, and the theorem applies again (Corollary
+`cor:pipelines`)."  (Full paper only; in the CIDR version this is folded into
+the closing pointer to the full paper.)  Lean: the pipeline of a proper guard
+emits only canonical runs of `P₂ ∘ P₁` (`Guard.proper_pipeline_step`), so the
+composite is again a guard, and the theorem's item (1) applies to the next
+stage (`Guard.proper_iff`); this is `«cor:pipelines»`. -/
+theorem «sec:proper-coordination/nesting» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q]
+    {s1 : Spec I M} {s2 : Spec M O} (s3 : Spec O Q) (h12 : Guard.Proper s1 s2)
+    (P : Guard.Sys s1) (K2 : Guard.Sys (Guard.rest s1 s2)) :
+    (∀ l', Guard.GEmits (Guard.liftU P) K2 l' →
+      (Guard.Sys.free (canonCommitmentBasis (Comp.seq s1 s2))).emits l') ∧
+    (Guard.Proper (Comp.seq s1 s2) s3 ↔ Joint.CEOn s3 (Joint.Img (Comp.seq s1 s2))) :=
+  ⟨fun _ h => Guard.proper_pipeline_step h12 h, Guard.proper_iff⟩
 
 /-- "We call a system for one spec, seen only through its boundary, a
 component.  A component may run as one process or as a replicated cluster.

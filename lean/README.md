@@ -25,7 +25,7 @@ The index below lists every `Paper/` declaration.  The library files carry
 module docstrings that name the paper section they support, what they
 contain, and their modeling choices.
 
-What is argued only in prose, not in Lean: in Appendix F, Lynch's result that atomicity is a safety property (Lean takes atomicity of an infinite execution to be atomicity of each finite prefix, `«prop:gl-async/fair-executions»`); the description of the 2PL and MVTO protocols themselves (which arrival makes a lock wait, issues a timestamp, or triggers the write rule; Appendix G, where Lean checks the commitments those steps apply, when `order(A,B)` removes nothing, and the MVTO run driven by arrivals); the messaging of two-phase commit in §4.3 (prepare messages, logging, blocking; Lean checks that a prepare reports the owner's commitments, that the decision is monotone, applies no commitment, and commits exactly when every owner's commitments allow commit); the
+What is argued only in prose, not in Lean: in Appendix F, Lynch's result that atomicity is a safety property (Lean takes atomicity of an infinite execution to be atomicity of each finite prefix, `«prop:gl-async/fair-executions»`); the description of the 2PL and MVTO protocols themselves (which arrival makes a lock wait, issues a timestamp, or triggers the write rule; Appendix G, where Lean checks the commitments those steps apply, when `order(A,B)` removes nothing, and the MVTO run driven by arrivals); the messaging of two-phase commit in §4.3 (prepare messages, logging, blocking; Lean checks that a prepare reports the owner's commitments, that the decision is monotone, applies no commitment, and commits exactly when every owner's commitments allow commit); that consensus is the mechanism that provides the log's commitment in §5.1 (Lean checks that some output of the log needs a commitment, `«sec:proper-coordination/locks-overhead»`); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman as statements about transducer
 runs (which input order policy-aware, domain-guided and original placement
@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-700 entries.
+701 entries.
 
 ### §2 Functional CALM
 
@@ -412,7 +412,8 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:proper-coordination/kvs-on-logs»` | theorem | "We return to the replicated store of the opening. |
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
-| `«sec:proper-coordination/locks-overhead»` | theorem | "Longer pipelines nest: |
+| `«sec:proper-coordination/locks-overhead»` | theorem | "This answers the opening puzzle. |
+| `«sec:proper-coordination/nesting»` | theorem | "Longer pipelines nest: |
 | `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, seen only through its boundary, a component. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
