@@ -284,7 +284,9 @@ theorem «app:deployment/uniform-availability» {D : Type} (Sys : CAP.System sp 
     (CAP.AvailabilityFor E Sys ↔ ∀ m, AvailabilityForAt E Sys m) :=
   ⟨deploymentAvailability_uniform Sys E hES, availabilityFor_iff_at E Sys⟩
 
-/-- "… and for `E_p = P` it is Availability."  `AvailabilityAt Sys n` is
+/-- Supporting lemma (the sentence it backed, "… and for `E_p = P` it is
+Availability", was removed): with `E_p = P` for every `p`, Deployment
+Availability is Availability for `P`.  `AvailabilityAt Sys n` is
 `CAP.Availability` restricted to histories over `Fin n`
 (`CAP.Availability Sys ↔ ∀ n, AvailabilityAt Sys n`). -/
 theorem «app:deployment/full-deployment-availability» {D : Type} (Sys : CAP.System sp D)

@@ -191,7 +191,7 @@ theorem «app:additional-applications/renaming-each-extends» {P : Type} [Decida
 no common output extension.  The spec therefore fails Lifted Monotonicity,
 and by Theorem `thm:complete-cap` with `E = P` and Corollary
 `cor:complete-cap-any-system` a partition separating `p` and `q` rules out
-Availability with Partition Consistency." -/
+Availability for `P` with Partition Consistency." -/
 theorem «app:additional-applications/renaming-not-monotone» {P : Type} [DecidableEq P]
     {p q : P} (h : p ≠ q) (D : Type) :
     (¬ ∃ u, name2 p q 1 2 ≼ u ∧ name2 p q 2 1 ≼ u) ∧

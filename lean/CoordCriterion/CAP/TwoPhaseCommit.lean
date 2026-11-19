@@ -208,14 +208,12 @@ theorem prepare_decide {n : Nat} {I : Fin n → Type} {O : Fin n → Type}
 
 /-! ## The voters' spec and its explicit relation (§4.4)
 
-Supports the example after Def. `def:explicit-relation`: "consider two-phase
-commit (2PC).  We focus on the spec for the voters; the coordinator is an
-observer of that spec.  We focus on the fiber at the input
-`prepare(tx)`: how each voter responds to that prepare message.  Each possible
-explicit response is a row of `E`.  The overall *set* of responses the
-coordinator might observe across voters is in `P \ E`.  The spec includes
-these as implicit outputs, representing the possible combined outcomes that
-respect each voter's response."
+Supports the two-phase-commit example of the Complete CAP subsection:
+"consider two-phase commit.  We focus on the spec for the voters; the
+coordinator is an observer of that spec.  The fiber of interest is at the input
+`prepare(tx)`: how each voter responds to that prepare message.  Each voter's
+response is a row of `E`, while the sets of responses the coordinator may
+observe across voters are implicit outputs in `P \ E`."
 
 The single input is `prepare(tx)` (`Unit`); an output records the responses
 received so far, voter by voter (`Votes n`, ordered as above).  Every

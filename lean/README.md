@@ -357,7 +357,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partitioned-history»` | abbrev | **Def. |
 | `«def:partitioned-history/unfolded»` | theorem | Def. |
 | `«def:explicit-relation»` | abbrev | **Def. |
-| `«def:explicit-relation/two-phase-commit»` | theorem | Example after Def. |
+| `«def:explicit-relation/two-phase-commit»` | theorem | Example after the takeaway following Corollary `cor:complete-cap-any-system`: |
 | `«def:emitted-rows»` | abbrev | **Def. |
 | `«def:emitted-rows/availability»` | theorem | After Def. |
 | `«sec:complete-cap/system»` | abbrev | Paragraph after Def. |
@@ -781,7 +781,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/full-deployment/pairs-suffice»` | theorem | The pairs-suffice step used above (Appendix `app:pairs-suffice`). |
 | `«def:deployment-availability»` | theorem | **Definition `def:deployment-availability`** (Deployment Availability). |
 | `«app:deployment/uniform-availability»` | theorem | "This is Availability for `E_p`, one relation per participant. |
-| `«app:deployment/full-deployment-availability»` | theorem | "… and for `E_p = P` it is Availability." `AvailabilityAt Sys n` is `CAP.Availability` restricted to histories over `Fin n` (`CAP.Availability Sys ↔ ∀ n, Ava… |
+| `«app:deployment/full-deployment-availability»` | theorem | Supporting lemma (the sentence it backed, "… and for `E_p = P` it is Availability", was removed): |
 | `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `E_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
 | `«app:deployment/single-authority»` | theorem | "Monotonicity across partitions then says only that each such row has an output extension at every input extension of its input." (With `\|𝒩\| ≥ 2`, so that so… |

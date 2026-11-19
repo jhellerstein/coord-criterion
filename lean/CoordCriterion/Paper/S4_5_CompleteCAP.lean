@@ -113,21 +113,20 @@ theorem «def:partitioned-history/unfolded» (H : History sp D n) (comp : Fin n 
 participants actually emit.  Write `E(i)` for its outputs at input `i`."
 The paper follows the definition with "Outputs in `P ∖ E` are not emitted by
 participants; they remain permitted in `P` to capture implicit combinations of
-emitted outputs." and then the two-phase-commit example of the
-voters' spec (`«def:explicit-relation/two-phase-commit»`).
+emitted outputs."  The two-phase-commit example of the voters' spec, later in
+the subsection, illustrates it (`«def:explicit-relation/two-phase-commit»`).
 
 Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
 abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
 
-/-- Example after Def. `def:explicit-relation`: "consider two-phase commit
-(2PC).  We focus on the spec for the voters; the coordinator is an observer of
-that spec.  We focus on the fiber at the input `prepare(tx)`: how each
-voter responds to that prepare message.  Each possible explicit response is a
-row of `E`.  The overall *set* of responses the coordinator might observe
-across voters is in `P \ E`.  The spec includes these as implicit outputs,
-representing the possible combined outcomes that respect each voter's
-response."
+/-- Example after the takeaway following Corollary
+`cor:complete-cap-any-system`: "consider two-phase commit.  We focus on the
+spec for the voters; the coordinator is an observer of that spec.  The fiber of
+interest is at the input `prepare(tx)`: how each voter responds to that
+prepare message.  Each voter's response is a row of `E`, while the sets of
+responses the coordinator may observe across voters are implicit outputs in
+`P \ E`."
 
 Lean (`CAP.votersSpec`, `CAP.votersE`): the input is `prepare(tx)`; an output
 records the responses received, voter by voter.  First conjunct: `E ⊆ P`.
@@ -241,10 +240,10 @@ abbrev «def:local-continuation» (Sys : System sp D) : Prop :=
 /-- **Def. `def:partition-notions`** (Availability).  "The system has
 *Availability for `E`* when, in every partitioned history it produces, each
 participant `p` can emit every output in `R(i) ∩ E(i)`, where `(i,R)` is `p`'s
-final state.  *Availability* is shorthand for Availability for `P`."
+final state."
 
-Lean: `AvailabilityAtEnd Sys` (= `AvailabilityFor sp.P Sys`); for a general
-`E`, use `«def:partition-notions/for»`. -/
+Lean: `AvailabilityAtEnd Sys` is the case `E = P` (= `AvailabilityFor sp.P Sys`);
+for a general `E`, use `«def:partition-notions/for»`. -/
 abbrev «def:partition-notions» (Sys : System sp D) : Prop := AvailabilityAtEnd Sys
 
 /-- Def. `def:partition-notions`: "The system has Availability for `E` when,
@@ -253,8 +252,8 @@ output in `R(i) ∩ E(i)`, where `(i,R)` is `p`'s final state." -/
 abbrev «def:partition-notions/for» (E : Table I O) (Sys : System sp D) : Prop :=
   AvailabilityFor E Sys
 
-/-- Def. `def:partition-notions`: "Availability is shorthand for Availability
-for `P`." -/
+/-- Def. `def:partition-notions` at `E = P` (supporting lemma; the paper no
+longer names this case): Availability for `P` is `AvailabilityAtEnd`. -/
 theorem «def:partition-notions/for-S» (Sys : System sp D) :
     «def:partition-notions/for» sp.P Sys ↔ «def:partition-notions» Sys :=
   availabilityFor_S Sys

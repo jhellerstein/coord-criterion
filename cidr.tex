@@ -1068,7 +1068,8 @@ happens-before: whenever $C$ contains an event, it contains every event that
 happens before it~\cite{lamport1978time,chandy1985distributed}.
 \end{definition}
 
-The term is standard and unrelated to our notion of consistency.  At a
+The term is standard and unrelated to our notion of consistency.  A history
+is itself a consistent cut, its \emph{final cut}.  At a
 consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, ending in some state
 $\sigma_p$.  For a common \indesc $j$ of the participants' current inputs,
@@ -1239,14 +1240,6 @@ $i$.
 Outputs in $P\setminus E$ are not emitted by participants; they remain
 permitted in $P$ to capture implicit combinations of emitted outputs.
 
-For example, consider two-phase commit.  We focus on the spec for the
-voters; the coordinator is an observer of that spec.  We focus on the
-fiber at the input \textsf{prepare(tx)}: how each voter responds to that
-prepare message.  Each possible explicit response is a row of $E$.  The overall
-\emph{set} of responses the coordinator might observe across voters is in
-$P\setminus E$.  The spec includes these as implicit outputs, representing the
-possible combined outcomes that respect each voter's response.
-
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
 
@@ -1271,7 +1264,6 @@ history with events the system can produce on $p$'s side alone, with no new
 input and no message from another side.  Participant $p$ can emit $o$ when some same-side continuation for $p$ emits
 $o$.  The system has \emph{Availability for $E$} when, in every
 such history, each participant $p$ can emit every output in $R(i)\cap E(i)$.
-\emph{Availability} is shorthand for Availability for $P$.
 \end{definition}
 
 Partition Consistency asks that the sides' states can still be brought to a
@@ -1347,7 +1339,12 @@ A partition does not change the intrinsic \commitments a spec needs; it prevents
 for $E$ fails, some output of $E$ waits for another side, sacrificing
 Availability, or is emitted anyway, sacrificing Partition Consistency.
 
-We return to the voters' spec.  Each voter decides whether it can commit and
+For example, consider two-phase commit.  We focus on the spec for the voters; the coordinator is an
+observer of that spec.  The fiber of interest is at the input
+\textsf{prepare(tx)}: how each voter responds to that prepare message.  Each
+voter's response is a row of $E$, while the sets of responses the coordinator
+may observe across voters are implicit outputs in $P\setminus E$.  Each voter
+decides whether it can commit and
 emits its vote, yes or no.  That decision is a \commitment: a voter that votes
 yes rules out every set of votes in which it votes no.  But it is a single-voter
 \commitment involving no communication, so the voter can make it and produce

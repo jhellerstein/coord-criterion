@@ -380,14 +380,6 @@ $i$.
 Outputs in $P\setminus E$ are not emitted by participants; they remain
 permitted in $P$ to capture implicit combinations of emitted outputs.
 
-For example, consider two-phase commit (2PC).  We focus on the spec for the
-voters; the coordinator is an observer of that spec.  We focus on the
-fiber at the input \textsf{prepare(tx)}: how each voter responds to that
-prepare message.  Each possible explicit response is a row of $E$.  The overall
-\emph{set} of responses the coordinator might observe across voters is in
-$P\setminus E$.  The spec includes these as implicit outputs, representing the
-possible combined outcomes that respect each voter's response.
-
 \begin{definition}[Emitted rows]
 \label{def:emitted-rows}
 The \emph{emitted rows} of a run are the pairs $(i,o)$ such that the run
@@ -429,8 +421,7 @@ $o$.
 \label{def:partition-notions}
 The system has \emph{Availability for $E$} when, in every partitioned history
 it produces, each participant $p$ can emit every output in $R(i)\cap E(i)$,
-where $(i,R)$ is $p$'s final state.  \emph{Availability} is shorthand for
-Availability for $P$.
+where $(i,R)$ is $p$'s final state.
 \end{definition}
 
 Partition Consistency asks that, whatever participants emit on separate sides,
@@ -514,7 +505,12 @@ Monotonicity for $E$ fails, some output of $E$ waits for another side,
 sacrificing Availability, or is emitted anyway, sacrificing Partition
 Consistency.
 
-We return to the voters' spec.  Each voter decides whether it can commit and emits
+For example, consider two-phase commit.  We focus on the spec for the voters;
+the coordinator is an observer of that spec.  The fiber of interest is at the
+input \textsf{prepare(tx)}: how each voter responds to that prepare message.
+Each voter's response is a row of $E$, while the sets of responses the
+coordinator may observe across voters are implicit outputs in $P\setminus E$.
+Each voter decides whether it can commit and emits
 its vote, yes or no.  That decision is a \commitment: a voter that votes yes
 rules out every set of votes in which it votes no.  But it is a single-voter
 \commitment involving no communication, so the voter can make it and produce
