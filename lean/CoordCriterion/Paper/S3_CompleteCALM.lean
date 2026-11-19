@@ -19,8 +19,11 @@ tables are predicates `I → O → Prop`, the fiber at `i` is `sp.P i`, a set of
 outputs is a predicate `O → Prop`, and finite sets of outputs or rows are
 `List`s.  The two figure specifications are `Figures.Txn.spec` (panel (f): one
 input `{A,B}`, modeled by `Unit`, outputs `[A,B]`/`[B,A]` under the equality
-order) and `Figures.Trace.spec` (panel (g): one input `i`, modeled by `Unit`,
-the five printed route sets under inclusion).
+order) and `Figures.Trace.spec` (panels (g)–(h): inputs are the nonempty sets
+of traced sources among `s` and `t`, `Figures.Trace.Src`, under inclusion;
+outputs are route sets under inclusion, and the fiber at a set of sources is
+every nonempty set of routes from those sources that contains each prefix of
+its routes).
 -/
 
 namespace CC.Paper
@@ -41,21 +44,53 @@ theorem «fig:ambiguity-frames/f» :
       ¬ ∃ u, Figures.Txn.spec.P () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
   ⟨Figures.Txn.after_ab, Figures.Txn.ba_excluded⟩
 
-/-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is extended by a remaining one: an output
-subsumption."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
-`{s→s1,s→a,s→a→s2}`; the removed `{s→a}` and `{s→a,s→a→s2}` are in
-  `Subsumed_o`; nothing is in `Excluded_o`, so `{s→s1}` is a legal output. -/
+/-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` at input `{s}` … each
+removed row is extended by a remaining one at its input: an output
+subsumption."  The rows shown are those whose input extends `{s}`: the five
+route sets at `{s}` and the eleven at `{s,t}` (`fiber_s`, `fiber_st`).  The
+remaining rows are the route sets containing `s→s1`, at both inputs; the
+removed ones are `{s→h}` and `{s→h,s→h→s2}` at both inputs and, at `{s,t}`,
+`{t→s2}`, `{s→h,t→s2}` and `{s→h,s→h→s2,t→s2}`; each is in `Subsumed_o`,
+nothing is in `Excluded_o`, so `{s→s1}` is a legal output. -/
 theorem «fig:ambiguity-frames/g» :
-    (∀ x, outputTable (canon Figures.Trace.spec ()) Figures.Trace.rS1 () x ↔
-        (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rS1A ∨ x = Figures.Trace.rAll)) ∧
-      ((∀ x, (canon Figures.Trace.spec ()).R () x →
-          (¬ outputTable (canon Figures.Trace.spec ()) Figures.Trace.rS1 () x ↔
-            (x = Figures.Trace.rA ∨ x = Figures.Trace.rA2))) ∧
-        Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
-        Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 ∧
-        (¬ ∃ k x, Excluded (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
-        Exposable (canon Figures.Trace.spec ()) Figures.Trace.rS1) :=
-  ⟨Figures.Trace.after_s1, Figures.Trace.removed_subsumed⟩
+    (∀ x, Figures.Trace.inFib .s x ↔ (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rH ∨
+        x = Figures.Trace.rH2 ∨ x = Figures.Trace.rS1H ∨ x = Figures.Trace.rAll)) ∧
+      (∀ k x, outputTable (canon Figures.Trace.spec .s) Figures.Trace.rS1 k x ↔
+        ((k = .s ∨ k = .st) ∧ (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rS1H ∨
+            x = Figures.Trace.rAll)) ∨
+          (k = .st ∧ (x = Figures.Trace.rS1T ∨ x = Figures.Trace.rS1HT ∨
+            x = Figures.Trace.rAllT))) ∧
+      (∀ k x, ((canon Figures.Trace.spec .s).R k x ∧
+          ¬ outputTable (canon Figures.Trace.spec .s) Figures.Trace.rS1 k x) ↔
+        ((k = .s ∨ k = .st) ∧ (x = Figures.Trace.rH ∨ x = Figures.Trace.rH2)) ∨
+          (k = .st ∧ (x = Figures.Trace.rT ∨ x = Figures.Trace.rHT ∨ x = Figures.Trace.rH2T))) ∧
+      ((∀ k x, (canon Figures.Trace.spec .s).R k x → ¬ Figures.Trace.rS1 ≼ x →
+          Subsumed (canon Figures.Trace.spec .s) Figures.Trace.rS1 k x) ∧
+        (¬ ∃ k x, Excluded (canon Figures.Trace.spec .s) Figures.Trace.rS1 k x) ∧
+        Exposable (canon Figures.Trace.spec .s) Figures.Trace.rS1) :=
+  ⟨Figures.Trace.fiber_s, Figures.Trace.after_s1, Figures.Trace.removed,
+    Figures.Trace.removed_subsumed⟩
+
+/-- Fig. `fig:ambiguity-frames`(h): "(h) After `input({s,t})` … the emitted
+route set `{s→s1}` keeps output extensions at the new input."  From the state of
+panel (g), `input({s,t})` is a legal input event; the rows that remain are the
+six route sets at `{s,t}` that contain `s→s1`, and the rows at `{s}` are lost. -/
+theorem «fig:ambiguity-frames/h» :
+    Step Figures.Trace.stateG (.input .st) Figures.Trace.stateH ∧
+      ∀ k x, Figures.Trace.stateH.R k x ↔
+        (k = .st ∧ (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rS1H ∨ x = Figures.Trace.rAll ∨
+          x = Figures.Trace.rS1T ∨ x = Figures.Trace.rS1HT ∨ x = Figures.Trace.rAllT)) :=
+  Figures.Trace.after_input
+
+/-- Fig. `fig:ambiguity-frames`, caption: "An output is a nonempty set of
+routes from the traced sources that contains each prefix of its routes."  The
+fiber at `{s,t}` is the eleven route sets panel (g) prints. -/
+theorem «fig:ambiguity-frames/caption» :
+    ∀ x, Figures.Trace.inFib .st x ↔ (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rH ∨
+      x = Figures.Trace.rH2 ∨ x = Figures.Trace.rS1H ∨ x = Figures.Trace.rAll ∨
+      x = Figures.Trace.rT ∨ x = Figures.Trace.rS1T ∨ x = Figures.Trace.rHT ∨
+      x = Figures.Trace.rH2T ∨ x = Figures.Trace.rS1HT ∨ x = Figures.Trace.rAllT) :=
+  Figures.Trace.fiber_st
 
 /-- §3.1 "Commitment and directedness": "In panel (f) … emitting one
 requires an *commitment* that removes the other while the input stays
@@ -95,13 +130,6 @@ theorem «sec:ambiguity-story/transactions-fail» :
         ¬ Figures.Txn.spec.LiftedMono ∧ ¬ Figures.Txn.spec.Consistent) :=
   ⟨Figures.Txn.runs_not_confluent, Figures.Txn.not_monotone⟩
 
-/-- §3.1: "two traceroute runs that emit different route sets pass it, since
-their union survives in both." -/
-theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
-    (hx : Figures.Trace.inFib x) (hy : Figures.Trace.inFib y) :
-    (outState (canon Figures.Trace.spec ()) x ((Figures.Trace.canonR x).2 hx)).R () (x.union y) ∧
-      (outState (canon Figures.Trace.spec ()) y ((Figures.Trace.canonR y).2 hy)).R () (x.union y) :=
-  Figures.Trace.union_survives x y hx hy
 
 /-- **Def. `def:relational-specification`** (I/O specification).
 "`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
@@ -156,6 +184,30 @@ abbrev «def:relational-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O
 theorem «eq:relational-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.RelMono ↔ ∀ i j o, i ≼ j → sp.P i o → ∃ u, sp.P j u ∧ o ≼ u :=
   Iff.rfl
+/-- After Def. `def:relational-monotonicity`: "In the traceroute spec, tracing
+from a second source `t` moves the input from `{s}` to `{s,t}` (Figure
+`fig:ambiguity-frames`(h)).  Every route set permitted at `{s}` is still
+permitted at `{s,t}`, so Relational Monotonicity holds."  Lean: the fibers grow
+with the input (`fib_mono`), and the traceroute spec satisfies Relational
+Monotonicity. -/
+theorem «sec:lifted-monotonicity/traceroute-relational» :
+    (∀ x, Figures.Trace.inFib .s x → Figures.Trace.inFib .st x) ∧
+      Figures.Trace.spec.RelMono :=
+  ⟨fun x hx => Figures.Trace.fib_mono x (by decide) hx, Figures.Trace.directed.2.1⟩
+
+/-- After Def. `def:relational-monotonicity`: "A tool that reports the cut
+points between the traced sources and `s2`, the hops that every observed route
+passes through, fails it.  At `{s}`, every route to `s2` passes through `h`, so
+the tool reports `h`.  If `t` reaches `s2` directly, `h` is no longer a cut
+point at `{s,t}`, and no permitted output there extends the earlier report."
+Lean: `Figures.Trace.cutSpec`, whose one output at each set of sources is the
+set of hops on every route to `s2` (`routesToS2`); it reports `h` at `{s}`,
+nothing at `{s,t}`, and fails Relational Monotonicity. -/
+theorem «sec:lifted-monotonicity/cut-points» :
+    Figures.Trace.cutH .s = true ∧ Figures.Trace.cutH .st = false ∧
+      ¬ Figures.Trace.cutSpec.RelMono :=
+  Figures.Trace.cut_fails
+
 /-- After Def. `def:relational-monotonicity`: "For singleton fibers this is
 functional monotonicity." -/
 theorem «def:relational-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
@@ -203,13 +255,13 @@ theorem «sec:lifted-monotonicity/directed-example» :
       CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] :=
   ⟨f5_directed, f5_common_refinements, f5_minimal_incomparable, f5_compatible⟩
 
-/-- "A singleton fiber is trivially directed.  The traceroute fiber of Figure
-`fig:ambiguity-frames`(g) is directed too: finitely many route sets in it
-always have a common output extension in the fiber, their union.  The two
-transaction orders in panel (f), by contrast, are incompatible." -/
+/-- "A singleton fiber is trivially directed.  The traceroute fibers of Figure
+`fig:ambiguity-frames`(g) are directed too: finitely many route sets in one
+fiber always have a common output extension in that fiber, their union.  The
+two transaction orders in panel (f), by contrast, are incompatible." -/
 theorem «sec:lifted-monotonicity/figure-fibers» :
-    (∀ x y, Figures.Trace.inFib x → Figures.Trace.inFib y →
-        Figures.Trace.inFib (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) ∧
+    (∀ X x y, Figures.Trace.inFib X x → Figures.Trace.inFib X y →
+        Figures.Trace.inFib X (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) ∧
       Figures.Trace.spec.DirectedOutputs ∧
       ¬ CompatibleIn (Figures.Txn.spec.P ()) [.ab, .ba] :=
   ⟨Figures.Trace.union_mem, Figures.Trace.directed.1, Figures.Txn.not_monotone.1⟩
@@ -280,6 +332,14 @@ theorem «def:lifted-monotonicity/not-reflexive» :
       ¬ JointLift (Figures.Txn.spec.P ()) (Figures.Txn.spec.P ()) :=
   ⟨fun _ _ A => Front.HoareLe.refl A, fun _ _ _ => Iff.rfl,
    fun h => Figures.Txn.not_monotone.2.1 fun _ => h⟩
+
+/-- Before Def. `def:common-expansion-condition`: "In the traceroute spec, one
+run may trace from `s` and another from `t`; at their common input extension
+`{s,t}`, the union of their route sets is a common output extension." -/
+theorem «sec:lifted-monotonicity/traceroute-common-extension» (x y : Figures.Trace.RS)
+    (hx : Figures.Trace.inFib .s x) (hy : Figures.Trace.inFib .t y) :
+    Figures.Trace.inFib .st (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y :=
+  Figures.Trace.common_extension x y hx hy
 
 /-- **Def. `def:common-expansion-condition`** (Common-extension condition).
 "For every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of `P` and every common

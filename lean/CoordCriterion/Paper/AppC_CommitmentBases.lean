@@ -56,14 +56,17 @@ theorem «eq:canonical-commitment-relational» {sp : Spec I O}
     obtain ⟨_, _, u, hu, hou, hxu⟩ := h
     exact ⟨u, ⟨hu, hou⟩, hxu⟩
 
-  /-- The transaction-order example excludes `[B,A]`; the routing example only subsumes
-its removed route sets. -/
+  /-- "In Figure `fig:ambiguity-frames`(f), emitting `[A,B]` places the row
+for `[B,A]` in `Excluded_o` … In panel (g), the removed route sets, at both
+inputs, are in `Subsumed_o`, each extended by a retained route set at its
+input, so the event subsumes them without commitment."  The transaction-order
+example excludes `[B,A]`; the routing example only subsumes its removed route
+sets, at `{s}` and at `{s,t}`. -/
 theorem «def:lifted-output-event/examples» :
     Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
-      Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
-      Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 :=
-  ⟨Figures.Txn.ba_excluded.1, Figures.Trace.removed_subsumed.2.1,
-   Figures.Trace.removed_subsumed.2.2.1⟩
+      (∀ k x, (canon Figures.Trace.spec .s).R k x → ¬ Figures.Trace.rS1 ≼ x →
+        Subsumed (canon Figures.Trace.spec .s) Figures.Trace.rS1 k x) :=
+  ⟨Figures.Txn.ba_excluded.1, Figures.Trace.removed_subsumed.1⟩
 
 /-- `Subsumed_o` and `Excluded_o` are disjoint. -/
 theorem «app:lifted-output-events/disjoint» {sp : Spec I O}

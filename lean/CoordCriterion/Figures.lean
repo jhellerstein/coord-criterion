@@ -10,8 +10,8 @@ import CoordCriterion.Distributed.Systems
   Sec. `sec:functional-events` about it, and the printed rows and upper
   fibers of panels (a)–(d) (`Elec.*`).  The figure prints exactly the rows
   whose input ⪰ `a··`, as its caption says (`Elec.printed_complete`).
-* Fig. `fig:ambiguity-frames`(f), transaction ordering (`Txn.*`), and (g),
-  traceroute (`Trace.*`), as printed (one input; the rows at it), with the
+* Fig. `fig:ambiguity-frames`(f), transaction ordering (`Txn.*`), and
+  (g)–(h), traceroute from several sources (`Trace.*`), as printed, with the
   claims of Sec. `sec:ambiguity-story`, Sec. `sec:lifted-monotonicity`,
   Sec. `sec:lifted-output-events` and the remark after
   Prop. `prop:exposure-boundary`.
@@ -432,141 +432,294 @@ theorem runs_not_confluent :
 
 end Txn
 
-/-! ## 3. Fig. `fig:ambiguity-frames`(g): traceroute
+/-! ## 3. Fig. `fig:ambiguity-frames`(g)–(h): traceroute from several sources
 
-One input `i` (`Unit`); outputs are sets of the three routes
-`s→s1`, `s→a`, `s→a→s2` (a `Bool` per route), ordered by inclusion; the fiber
-is the five printed route sets. -/
+Inputs are the nonempty sets of traced sources among `s` and `t` (`Src`),
+ordered by inclusion.  Outputs are sets of the four routes `s→s1`, `s→h`,
+`s→h→s2`, `t→s2` (a `Bool` per route), ordered by inclusion.  The fiber at a
+set of sources contains every nonempty set of routes from those sources that
+contains each prefix of its routes (`s→h` whenever `s→h→s2`); at `{s}` these
+are the five route sets the figure prints, and at `{s,t}` the eleven it
+prints. -/
 
 namespace Trace
 
+/-- The nonempty sets of traced sources: `{s}`, `{t}`, `{s,t}`. -/
+inductive Src where
+  | s | t | st
+  deriving DecidableEq
+
+def Src.leb : Src → Src → Bool
+  | .s, .s => true
+  | .s, .st => true
+  | .t, .t => true
+  | .t, .st => true
+  | .st, .st => true
+  | _, _ => false
+
+instance : PO Src where
+  le a b := a.leb b = true
+  refl a := by cases a <;> rfl
+  trans {a b c} h1 h2 := by
+    cases a <;> cases b <;> cases c <;> simp_all [Src.leb]
+  antisymm {a b} h1 h2 := by
+    cases a <;> cases b <;> simp_all [Src.leb]
+
+instance (a b : Src) : Decidable (a ≼ b) := inferInstanceAs (Decidable (a.leb b = true))
+
+def Src.hasS : Src → Bool
+  | .t => false
+  | _ => true
+
+def Src.hasT : Src → Bool
+  | .s => false
+  | _ => true
+
+/-- A set of observed routes: `s→s1`, `s→h`, `s→h→s2`, `t→s2`. -/
 structure RS where
   s1 : Bool
-  a : Bool
-  a2 : Bool
+  h : Bool
+  h2 : Bool
+  t2 : Bool
   deriving DecidableEq
 
 abbrev RS.sub (x y : RS) : Prop :=
-  (x.s1 = true → y.s1 = true) ∧ (x.a = true → y.a = true) ∧ (x.a2 = true → y.a2 = true)
+  (x.s1 = true → y.s1 = true) ∧ (x.h = true → y.h = true) ∧
+    (x.h2 = true → y.h2 = true) ∧ (x.t2 = true → y.t2 = true)
 
 instance : PO RS where
   le := RS.sub
-  refl _ := ⟨id, id, id⟩
-  trans h1 h2 := ⟨h2.1 ∘ h1.1, h2.2.1 ∘ h1.2.1, h2.2.2 ∘ h1.2.2⟩
+  refl _ := ⟨id, id, id, id⟩
+  trans h1 h2 := ⟨h2.1 ∘ h1.1, h2.2.1 ∘ h1.2.1, h2.2.2.1 ∘ h1.2.2.1, h2.2.2.2 ∘ h1.2.2.2⟩
   antisymm {x y} h1 h2 := by
-    obtain ⟨a, b, c⟩ := x; obtain ⟨d, e, f⟩ := y
-    cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> cases f <;>
-      simp_all [RS.sub]
+    obtain ⟨a, b, c, d⟩ := x; obtain ⟨e, f, g, k⟩ := y
+    cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> cases f <;> cases g <;>
+      cases k <;> simp_all [RS.sub]
 
 instance (x y : RS) : Decidable (x ≼ y) := inferInstanceAs (Decidable (RS.sub x y))
 
-def rS1 : RS := ⟨true, false, false⟩      -- {s→s1}
-def rA : RS := ⟨false, true, false⟩       -- {s→a}
-def rA2 : RS := ⟨false, true, true⟩       -- {s→a, s→a→s2}
-def rS1A : RS := ⟨true, true, false⟩      -- {s→s1, s→a}
-def rAll : RS := ⟨true, true, true⟩       -- {s→s1, s→a, s→a→s2}
+def rS1 : RS := ⟨true, false, false, false⟩     -- {s→s1}
+def rH : RS := ⟨false, true, false, false⟩      -- {s→h}
+def rH2 : RS := ⟨false, true, true, false⟩      -- {s→h, s→h→s2}
+def rS1H : RS := ⟨true, true, false, false⟩     -- {s→s1, s→h}
+def rAll : RS := ⟨true, true, true, false⟩      -- {s→s1, s→h, s→h→s2}
+def rT : RS := ⟨false, false, false, true⟩      -- {t→s2}
+def rS1T : RS := ⟨true, false, false, true⟩     -- {s→s1, t→s2}
+def rHT : RS := ⟨false, true, false, true⟩      -- {s→h, t→s2}
+def rH2T : RS := ⟨false, true, true, true⟩      -- {s→h, s→h→s2, t→s2}
+def rS1HT : RS := ⟨true, true, false, true⟩     -- {s→s1, s→h, t→s2}
+def rAllT : RS := ⟨true, true, true, true⟩      -- {s→s1, s→h, s→h→s2, t→s2}
 
-def inFib (x : RS) : Prop := x = rS1 ∨ x = rA ∨ x = rA2 ∨ x = rS1A ∨ x = rAll
+/-- Membership in the fiber at `X`: nonempty, prefix-closed, and only routes
+from the traced sources. -/
+def fibB (X : Src) (x : RS) : Bool :=
+  (x.s1 || x.h || x.h2 || x.t2) && (!x.h2 || x.h) &&
+    (X.hasS || !(x.s1 || x.h || x.h2)) && (X.hasT || !x.t2)
 
-instance (x : RS) : Decidable (inFib x) := inferInstanceAs (Decidable (_ ∨ _))
+def inFib (X : Src) (x : RS) : Prop := fibB X x = true
 
-def spec : Spec Unit RS where
-  P _ x := inFib x
-  total _ := ⟨rS1, Or.inl rfl⟩
+instance (X : Src) (x : RS) : Decidable (inFib X x) :=
+  inferInstanceAs (Decidable (fibB X x = true))
 
-def RS.union (x y : RS) : RS := ⟨x.s1 || y.s1, x.a || y.a, x.a2 || y.a2⟩
+def spec : Spec Src RS where
+  P := inFib
+  total X := by cases X <;> first | exact ⟨rS1, rfl⟩ | exact ⟨rT, rfl⟩
+
+def RS.union (x y : RS) : RS := ⟨x.s1 || y.s1, x.h || y.h, x.h2 || y.h2, x.t2 || y.t2⟩
 
 macro "rs_cases" x:ident : tactic =>
-  `(tactic| (obtain ⟨b1, b2, b3⟩ := $x:ident; cases b1 <;> cases b2 <;> cases b3))
+  `(tactic| (obtain ⟨b1, b2, b3, b4⟩ := $x:ident;
+             cases b1 <;> cases b2 <;> cases b3 <;> cases b4))
 
-/-- The union of two route sets of the fiber is in the fiber and extends both. -/
-theorem union_mem (x y : RS) (hx : inFib x) (hy : inFib y) :
-    inFib (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y := by
-  revert hx hy; rs_cases x <;> (rs_cases y) <;> decide
-
-theorem canonR (x : RS) : (canon spec ()).R () x ↔ inFib x :=
-  ⟨fun h => h.1, fun h => ⟨h, trivial⟩⟩
-
-/-- After `output({s→s1})` the rows `{s→s1}`, `{s→s1,s→a}`,
-`{s→s1,s→a,s→a→s2}` remain (shaded). -/
-theorem after_s1 (x : RS) :
-    outputTable (canon spec ()) rS1 () x ↔ (x = rS1 ∨ x = rS1A ∨ x = rAll) := by
-  show (inFib x ∧ True) ∧ rS1 ≼ x ↔ _
+/-- The fiber at `{s}` is the five route sets printed in panel (g). -/
+theorem fiber_s (x : RS) :
+    inFib .s x ↔ (x = rS1 ∨ x = rH ∨ x = rH2 ∨ x = rS1H ∨ x = rAll) := by
   rs_cases x <;> decide
 
-/-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output subsumptions,
-each extended by the remaining `{s→s1,s→a,s→a→s2}`; nothing is excluded or
-excluded, so `{s→s1}` is exposable. -/
+/-- The fiber at `{s,t}` is the eleven route sets printed in panel (g). -/
+theorem fiber_st (x : RS) :
+    inFib .st x ↔ (x = rS1 ∨ x = rH ∨ x = rH2 ∨ x = rS1H ∨ x = rAll ∨ x = rT ∨
+      x = rS1T ∨ x = rHT ∨ x = rH2T ∨ x = rS1HT ∨ x = rAllT) := by
+  rs_cases x <;> decide
+
+/-- The fibers grow with the input: a route set permitted at `X` is permitted
+at every `Y ⪰ X`. -/
+theorem fib_mono {X Y : Src} (x : RS) (hXY : X ≼ Y) (hx : inFib X x) : inFib Y x := by
+  revert hXY hx; cases X <;> cases Y <;> rs_cases x <;> decide
+
+/-- The union of two route sets of a fiber is in the fiber and extends both. -/
+theorem union_mem (X : Src) (x y : RS) (hx : inFib X x) (hy : inFib X y) :
+    inFib X (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y := by
+  revert hx hy; cases X <;> (rs_cases x) <;> (rs_cases y) <;> decide
+
+theorem canonR (i k : Src) (x : RS) : (canon spec i).R k x ↔ (inFib k x ∧ i ≼ k) :=
+  Iff.rfl
+
+theorem sR1 : (canon spec .s).R .s rS1 := ⟨rfl, rfl⟩
+
+/-- Panel (g): after `output({s→s1})` at `{s}` the rows that remain (shaded)
+are, at both `{s}` and `{s,t}`, the route sets containing `s→s1`. -/
+theorem after_s1 (k : Src) (x : RS) :
+    outputTable (canon spec .s) rS1 k x ↔
+      ((k = .s ∨ k = .st) ∧ (x = rS1 ∨ x = rS1H ∨ x = rAll)) ∨
+        (k = .st ∧ (x = rS1T ∨ x = rS1HT ∨ x = rAllT)) := by
+  show (inFib k x ∧ Src.s ≼ k) ∧ rS1 ≼ x ↔ _
+  cases k <;> rs_cases x <;> decide
+
+/-- Panel (g): the removed rows (gray) are `{s→h}` and `{s→h,s→h→s2}` at both
+inputs, and, at `{s,t}`, the three route sets that add `t→s2` to `∅`, `{s→h}`
+or `{s→h,s→h→s2}`. -/
+theorem removed (k : Src) (x : RS) :
+    ((canon spec .s).R k x ∧ ¬ outputTable (canon spec .s) rS1 k x) ↔
+      ((k = .s ∨ k = .st) ∧ (x = rH ∨ x = rH2)) ∨
+        (k = .st ∧ (x = rT ∨ x = rHT ∨ x = rH2T)) := by
+  show (inFib k x ∧ Src.s ≼ k) ∧ ¬ ((inFib k x ∧ Src.s ≼ k) ∧ rS1 ≼ x) ↔ _
+  cases k <;> rs_cases x <;> decide
+
+/-- `{s→s1}` is a legal output at `{s}`: every removed row, at either input,
+is extended by a remaining one at its input (`{s→s1,s→h,s→h→s2}` at `{s}`,
+`{s→s1,s→h,s→h→s2,t→s2}` at `{s,t}`). -/
+theorem exposable : Exposable (canon spec .s) rS1 := by
+  intro k x hx _
+  cases k with
+  | s =>
+    refine ⟨rAll, ⟨rfl, hx.2⟩, by decide, ?_⟩
+    have h1 : inFib .s x := hx.1; revert h1; rs_cases x <;> decide
+  | t => exact absurd hx.2 (fun h => nomatch h)
+  | st =>
+    refine ⟨rAllT, ⟨rfl, hx.2⟩, by decide, ?_⟩
+    rs_cases x <;> decide
+
+/-- Panel (g)'s footnote: every removed row is an output subsumption, and
+nothing is excluded, so `{s→s1}` is a legal output. -/
 theorem removed_subsumed :
-    (∀ x, (canon spec ()).R () x → (¬ outputTable (canon spec ()) rS1 () x ↔ (x = rA ∨ x = rA2))) ∧
-    Subsumed (canon spec ()) rS1 () rA ∧ Subsumed (canon spec ()) rS1 () rA2 ∧
-    (¬ ∃ k x, Excluded (canon spec ()) rS1 k x) ∧ Exposable (canon spec ()) rS1 := by
-  have hall : (canon spec ()).R () rAll := (canonR _).2 (by decide)
-  have hexp : Exposable (canon spec ()) rS1 := by
-    intro k x hx _
-    cases k
-    exact ⟨rAll, hall, by decide, by have := (canonR x).1 hx; revert this; rs_cases x <;> decide⟩
-  have hE := (exposable_iff_empty _ _).1 hexp
-  refine ⟨?_, ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩,
-    ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩, hE, hexp⟩
-  intro x hx
-  rw [after_s1]
-  have := (canonR x).1 hx
-  revert this; rs_cases x <;> decide
+    (∀ k x, (canon spec .s).R k x → ¬ rS1 ≼ x → Subsumed (canon spec .s) rS1 k x) ∧
+      (¬ ∃ k x, Excluded (canon spec .s) rS1 k x) ∧ Exposable (canon spec .s) rS1 :=
+  ⟨fun k x hx hn => ⟨hx, hn, exposable k x hx hn⟩,
+    (exposable_iff_empty _ _).1 exposable, exposable⟩
 
-/-- "The traceroute fiber is directed": every nonempty finite set of route
-sets in it has a common output extension in it (its union). -/
-theorem directed : spec.DirectedOutputs ∧ spec.LiftedMono ∧ spec.Consistent := by
-  have key : ∀ X : List RS, (∀ x ∈ X, inFib x) → ∀ x0, inFib x0 →
-      ∃ u, inFib u ∧ x0 ≼ u ∧ ∀ x ∈ X, x ≼ u := by
-    intro X
-    induction X with
-    | nil => exact fun _ x0 h0 => ⟨x0, h0, PO.refl _, by simp⟩
-    | cons y ys ih =>
-      intro hX x0 h0
-      obtain ⟨u, hu, h0u, hys⟩ := ih (fun x hx => hX x (List.mem_cons_of_mem _ hx)) x0 h0
-      obtain ⟨hm, h1, h2⟩ := union_mem u y hu (hX y List.mem_cons_self)
-      refine ⟨u.union y, hm, PO.trans h0u h1, ?_⟩
-      intro x hx
-      rcases List.mem_cons.1 hx with rfl | hx
-      · exact h2
-      · exact PO.trans (hys x hx) h1
-  have hd : spec.DirectedOutputs := by
-    intro i X hne hX
-    cases X with
-    | nil => exact absurd rfl hne
-    | cons y ys =>
-      obtain ⟨u, hu, hyu, hys⟩ := key ys (fun x hx => hX x (List.mem_cons_of_mem _ hx)) y
-        (hX y List.mem_cons_self)
-      refine ⟨u, hu, fun x hx => ?_⟩
-      rcases List.mem_cons.1 hx with rfl | hx
-      · exact hyu
-      · exact hys x hx
-  have hl : spec.LiftedMono := fun i j _ => by cases i; cases j; exact hd ()
-  exact ⟨hd, hl, (complete_calm spec).2 hl⟩
+/-- The state of panel (g). -/
+def stateG : State spec := outState (canon spec .s) rS1 sR1
 
-/-- "Two traceroute runs that emit different route sets pass it, since their
-union survives in both." -/
-theorem union_survives (x y : RS) (hx : inFib x) (hy : inFib y) :
-    (outState (canon spec ()) x ((canonR x).2 hx)).R () (x.union y) ∧
-    (outState (canon spec ()) y ((canonR y).2 hy)).R () (x.union y) := by
-  obtain ⟨hm, h1, h2⟩ := union_mem x y hx hy
-  exact ⟨⟨(canonR _).2 hm, h1⟩, ⟨(canonR _).2 hm, h2⟩⟩
+theorem stG_st : stateG.R .st rS1 := ⟨⟨rfl, rfl⟩, PO.refl _⟩
 
-/-- Remark after Prop. `prop:exposure-boundary`: a run that emitted
-`{s→s1}` and a run that emitted nothing reach the same input in different
-states; the first has subsumed `{s→a}`, the second keeps it. -/
+/-- The state of panel (h): after `input({s,t})` from panel (g). -/
+def stateH : State spec := CALM.inputState stateG .st rS1 stG_st
+
+/-- Panel (h): `input({s,t})` is a legal input event from panel (g); the rows
+that remain are the six route sets at `{s,t}` that contain `s→s1`, so the
+emitted `{s→s1}` keeps output extensions at the new input. -/
+theorem after_input :
+    Step stateG (.input .st) stateH ∧
+      ∀ k x, stateH.R k x ↔
+        (k = .st ∧ (x = rS1 ∨ x = rS1H ∨ x = rAll ∨ x = rS1T ∨ x = rS1HT ∨ x = rAllT)) := by
+  refine ⟨Step.input _ _ _ ⟨rS1, stG_st⟩ rfl rfl, fun k x => ?_⟩
+  show ((inFib k x ∧ Src.s ≼ k) ∧ rS1 ≼ x) ∧ Src.st ≼ k ↔ _
+  cases k <;> rs_cases x <;> decide
+
+/-- Directedness inside one fiber, with a seed: a finite list of route sets of
+the fiber at `X` and one more have a common extension there. -/
+theorem key (X : Src) : ∀ L : List RS, (∀ x ∈ L, inFib X x) → ∀ x0, inFib X x0 →
+    ∃ u, inFib X u ∧ x0 ≼ u ∧ ∀ x ∈ L, x ≼ u := by
+  intro L
+  induction L with
+  | nil => exact fun _ x0 h0 => ⟨x0, h0, PO.refl _, by simp⟩
+  | cons y ys ih =>
+    intro hL x0 h0
+    obtain ⟨u, hu, h0u, hys⟩ := ih (fun x hx => hL x (List.mem_cons_of_mem _ hx)) x0 h0
+    obtain ⟨hm, h1, h2⟩ := union_mem X u y hu (hL y List.mem_cons_self)
+    refine ⟨u.union y, hm, PO.trans h0u h1, ?_⟩
+    intro x hx
+    rcases List.mem_cons.1 hx with rfl | hx
+    · exact h2
+    · exact PO.trans (hys x hx) h1
+
+/-- The traceroute spec satisfies Lifted Monotonicity: route sets permitted at
+`X` stay permitted at every `Y ⪰ X`, and finitely many of them have their
+union as a common extension there. -/
+theorem liftedMono : spec.LiftedMono := by
+  intro i j hij L hne hL
+  cases L with
+  | nil => exact absurd rfl hne
+  | cons y ys =>
+    obtain ⟨u, hu, hyu, hys⟩ := key j ys
+      (fun x hx => fib_mono x hij (hL x (List.mem_cons_of_mem _ hx))) y
+      (fib_mono y hij (hL y List.mem_cons_self))
+    refine ⟨u, hu, fun x hx => ?_⟩
+    rcases List.mem_cons.1 hx with rfl | hx
+    · exact hyu
+    · exact hys x hx
+
+/-- "The traceroute fibers are directed", Relational Monotonicity ("every
+route set permitted at `{s}` is still permitted at `{s,t}`"), Lifted
+Monotonicity and consistency. -/
+theorem directed :
+    spec.DirectedOutputs ∧ spec.RelMono ∧ spec.LiftedMono ∧ spec.Consistent :=
+  ⟨fun i => liftedMono i i (PO.refl i),
+    fun _ _ o hij ho => ⟨o, fib_mono o hij ho, PO.refl o⟩,
+    liftedMono, (complete_calm spec).2 liftedMono⟩
+
+/-- Common extension: a route set traced from `s` and one traced from `t`
+have their union as a common output extension at `{s,t}`. -/
+theorem common_extension (x y : RS) (hx : inFib .s x) (hy : inFib .t y) :
+    inFib .st (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y :=
+  union_mem .st x y (fib_mono x (by decide) hx) (fib_mono y (by decide) hy)
+
+/-! ### The cut-point tool -/
+
+/-- The only intermediate hop. -/
+inductive Hop where
+  | h
+  deriving DecidableEq
+
+/-- The routes to `s2` from each set of sources, as lists of intermediate
+hops: `s→h→s2` from `s`, `t→s2` from `t`. -/
+def routesToS2 : Src → List (List Hop)
+  | .s => [[.h]]
+  | .t => [[]]
+  | .st => [[.h], []]
+
+/-- Is `h` a cut point: on every route to `s2`? -/
+def cutH (X : Src) : Bool := (routesToS2 X).all (fun r => r.contains .h)
+
+/-- A report of cut points: a subset of `{h}`, ordered by inclusion. -/
+structure Cut where
+  h : Bool
+  deriving DecidableEq
+
+instance : PO Cut where
+  le a b := a.h = true → b.h = true
+  refl _ := id
+  trans h1 h2 := h2 ∘ h1
+  antisymm {a b} h1 h2 := by
+    obtain ⟨a⟩ := a; obtain ⟨b⟩ := b; cases a <;> cases b <;> simp_all
+
+/-- The cut-point tool: at each set of sources, its one output is the set of
+cut points between those sources and `s2`. -/
+def cutSpec : Spec Src Cut where
+  P X c := c = ⟨cutH X⟩
+  total _ := ⟨_, rfl⟩
+
+/-- At `{s}` the tool reports `h`; at `{s,t}` it reports nothing, so the
+report at `{s}` has no extension there: the tool fails Relational
+Monotonicity. -/
+theorem cut_fails : cutH .s = true ∧ cutH .st = false ∧ ¬ cutSpec.RelMono := by
+  refine ⟨rfl, rfl, fun hm => ?_⟩
+  obtain ⟨u, hu, hle⟩ := hm .s .st ⟨true⟩ (by decide) rfl
+  have hu' : u = ⟨false⟩ := hu
+  subst hu'
+  exact absurd (hle rfl) (by decide)
+
+/-- After Cor. `cor:convergence`: a run at `{s}` that emitted `{s→s1}` and a
+run at `{s}` that emitted nothing reach the same input in different states;
+the first has subsumed `{s→h}`, the second keeps it. -/
 theorem state_depends_on_outputs :
-    IsRun (outState (canon spec ()) rS1 ((canonR _).2 (by decide))) ∧ IsRun (canon spec ()) ∧
-    (outState (canon spec ()) rS1 ((canonR _).2 (by decide))).cur = (canon spec ()).cur ∧
-    ¬ (outState (canon spec ()) rS1 ((canonR _).2 (by decide))).R () rA ∧
-    (canon spec ()).R () rA ∧
-    outState (canon spec ()) rS1 ((canonR _).2 (by decide)) ≠ canon spec () := by
-  have hn : ¬ (outState (canon spec ()) rS1 ((canonR _).2 (by decide))).R () rA :=
-    fun h => absurd h.2 (by decide)
-  have hc : (canon spec ()).R () rA := (canonR _).2 (by decide)
-  refine ⟨⟨(), _, Exec.cons (Step.output _ (outState _ _ _) _ ((canonR _).2 (by decide)) rfl rfl)
-    (Exec.nil _)⟩, ⟨(), [], Exec.nil _⟩, rfl, hn, hc, fun he => hn (by rw [he]; exact hc)⟩
+    IsRun stateG ∧ IsRun (canon spec .s) ∧ stateG.cur = (canon spec .s).cur ∧
+      ¬ stateG.R .s rH ∧ (canon spec .s).R .s rH ∧ stateG ≠ canon spec .s := by
+  have hn : ¬ stateG.R .s rH := fun h => absurd (h.2 : rS1 ≼ rH) (by decide)
+  have hc : (canon spec .s).R .s rH := ⟨rfl, rfl⟩
+  refine ⟨⟨.s, _, Exec.cons (Step.output _ stateG _ sR1 rfl rfl) (Exec.nil _)⟩,
+    ⟨.s, [], Exec.nil _⟩, rfl, hn, hc, fun he => hn (by rw [he]; exact hc)⟩
 
 end Trace
 

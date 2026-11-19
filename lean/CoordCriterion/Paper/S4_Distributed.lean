@@ -269,37 +269,36 @@ theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consis
 
 /-- After Cor. `cor:convergence`: "With several outputs per input, convergence
 can fail even for consistent specs.  In Figure `fig:ambiguity-frames`(g), a run
-that emitted `{s→s1}` has subsumed the route sets that leave it out, while a
-run at the same input that emitted nothing keeps them.  Consistency then
-guarantees only that such participants can be reconciled, not that they agree."  The
-traceroute specification is consistent; the run that emitted `{s→s1}` and the
-canonical run end at the same input in different states (the first has
-subsumed `{s→a}`, the second keeps it); and the two are confluent at that
-input. -/
+at input `{s}` that emitted `{s→s1}` has subsumed the route sets that leave it
+out, while a run at the same input that emitted nothing keeps them.
+Consistency then guarantees only that such participants can be reconciled, not
+that they agree."  The traceroute specification is consistent; the run that
+emitted `{s→s1}` at `{s}` and the canonical run at `{s}` end at the same input
+in different states (the first has subsumed `{s→h}`, the second keeps it); and
+the two are confluent at that input. -/
 theorem «cor:convergence/relational-fails» :
     Figures.Trace.spec.Consistent ∧
-      (IsRun (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide))) ∧
-        IsRun (canon Figures.Trace.spec ()) ∧
-        (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide))).cur = (canon Figures.Trace.spec ()).cur ∧
-        ¬ (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide))).R () Figures.Trace.rA ∧
-        (canon Figures.Trace.spec ()).R () Figures.Trace.rA ∧
-        outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide)) ≠ canon Figures.Trace.spec ()) ∧
-      ConfluentAt [outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide)), canon Figures.Trace.spec ()] () := by
-  have hc := Figures.Trace.directed.2.2
+      (IsRun Figures.Trace.stateG ∧ IsRun (canon Figures.Trace.spec .s) ∧
+        Figures.Trace.stateG.cur = (canon Figures.Trace.spec .s).cur ∧
+        ¬ Figures.Trace.stateG.R .s Figures.Trace.rH ∧
+        (canon Figures.Trace.spec .s).R .s Figures.Trace.rH ∧
+        Figures.Trace.stateG ≠ canon Figures.Trace.spec .s) ∧
+      ConfluentAt [Figures.Trace.stateG, canon Figures.Trace.spec .s] .s := by
+  have hc := Figures.Trace.directed.2.2.2
   have hd := Figures.Trace.state_depends_on_outputs
-  refine ⟨hc, hd, hc _ ?_ () ?_⟩
+  refine ⟨hc, hd, hc _ ?_ .s ?_⟩
   · intro σ hσ
     rcases List.mem_cons.1 hσ with rfl | hσ
     · exact hd.1
     · rcases List.mem_cons.1 hσ with rfl | hσ
       · exact hd.2.1
       · cases hσ
-  · intro σ _; exact PO.refl _
+  · intro σ hσ
+    rcases List.mem_cons.1 hσ with rfl | hσ
+    · exact PO.refl _
+    · rcases List.mem_cons.1 hσ with rfl | hσ
+      · exact PO.refl _
+      · cases hσ
 
 /-- The same failure on a minimal example: a consistent specification with one
 input and outputs `lo ≼ hi` has a run ending at a non-canonical state. -/

@@ -960,16 +960,16 @@ apply unchanged to relational tables.
 
 \textcolor{reviewed}{Figure~\ref{fig:ambiguity-frames} contrasts two specs with several outputs in
 one fiber: serial schedules for two transactions and route sets observed by a
-traceroute-like tool.} \textcolor{reviewed}{For the discussion here, transaction outputs are simply
+traceroute-like tool, whose input is the set of sources traced so far.} \textcolor{reviewed}{For the discussion here, transaction outputs are simply
 serial schedules, to which executions correspond via equivalence;
 Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study richer transactional specs.}
 
 \label{sec:ambiguity-story}
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
   \small
   \setlength{\tabcolsep}{4pt}
-  \begin{minipage}[t]{0.36\columnwidth}
+  \begin{minipage}[t]{0.15\textwidth}
     \raggedright
     (f) After $[A,B]$\par\smallskip
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
@@ -981,30 +981,74 @@ Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study richer tran
     \end{tabular*}\par\smallskip
     {\footnotesize no remaining row \outrel the removed one: a \commitment}
   \end{minipage}\hfill
-  \begin{minipage}[t]{0.6\columnwidth}
+  \begin{minipage}[t]{0.405\textwidth}
     \raggedright
-    (g) After $\{\texttt{s}{\to}\texttt{s1}\}$\par\smallskip
+    (g) After $\{\texttt{s}{\to}\texttt{s1}\}$ at input $\{\texttt{s}\}$\par\smallskip
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-      $i$ & \sh{$\{\texttt{s}{\to}\texttt{s1}\}$} \\
-      \grayrow{$i$} & \grayrow{$\{\texttt{s}{\to}\texttt{h}\}$} \\
-      \grayrow{$i$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
-      $i$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h}\}$} \\
-      $i$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      \sh{$\{\texttt{\textbf{s}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1}\}$} \\
+      \grayrow{$\{\texttt{s}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h}\}$} \\
+      \grayrow{$\{\texttt{s}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      \sh{$\{\texttt{\textbf{s}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h}\}$} \\
+      \sh{$\{\texttt{\textbf{s}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      $\{\texttt{s},\texttt{t}\}$ & \sh{$\{\texttt{s}{\to}\texttt{s1}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      $\{\texttt{s},\texttt{t}\}$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h}\}$} \\
+      $\{\texttt{s},\texttt{t}\}$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{t}{\to}\texttt{s2}\}$} \\
+      $\{\texttt{s},\texttt{t}\}$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      $\{\texttt{s},\texttt{t}\}$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      $\{\texttt{s},\texttt{t}\}$ & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2},\ \texttt{t}{\to}\texttt{s2}\}$} \\
       \bottomrule
     \end{tabular*}\par\smallskip
-    {\footnotesize each removed row is \outrelpast by a remaining one: an output
-    subsumption}
+    {\footnotesize each removed row is \outrelpast by a remaining one at its input: an output subsumption}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.405\textwidth}
+    \raggedright
+    (h) After $\mathsf{input}(\{\texttt{s},\texttt{t}\})$\par\smallskip
+    \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
+      \toprule
+      $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
+      \grayrow{$\{\texttt{s}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{s1}\}$} \\
+      \grayrow{$\{\texttt{s}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h}\}$} \\
+      \grayrow{$\{\texttt{s}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      \grayrow{$\{\texttt{s}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h}\}$} \\
+      \grayrow{$\{\texttt{s}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      \sh{$\{\texttt{\textbf{s}},\texttt{\textbf{t}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      \sh{$\{\texttt{\textbf{s}},\texttt{\textbf{t}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h}\}$} \\
+      \sh{$\{\texttt{\textbf{s}},\texttt{\textbf{t}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{t}{\to}\texttt{s2}\}$} \\
+      \sh{$\{\texttt{\textbf{s}},\texttt{\textbf{t}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      \grayrow{$\{\texttt{s},\texttt{t}\}$} & \grayrow{$\{\texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      \sh{$\{\texttt{\textbf{s}},\texttt{\textbf{t}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      \sh{$\{\texttt{\textbf{s}},\texttt{\textbf{t}}\}$} & \sh{$\{\texttt{s}{\to}\texttt{s1},\ \texttt{s}{\to}\texttt{h},\ \texttt{s}{\to}\texttt{h}{\to}\texttt{s2},\ \texttt{t}{\to}\texttt{s2}\}$} \\
+      \bottomrule
+    \end{tabular*}\par\smallskip
+    {\footnotesize the emitted route set $\{\texttt{s}{\to}\texttt{s1}\}$ keeps \outnouns at the new input}
   \end{minipage}
-  \caption{Two specs with several rows at one input, each after one output
-  event.  (f) Serial orders of two concurrent transactions, under the equality
-  order.  (g) Route sets from a source \texttt{s} to a service on \texttt{s1} and
-  \texttt{s2}, ordered by inclusion; \texttt{s} reaches \texttt{s1} directly and
-  \texttt{s2} through hop \texttt{h}.  Legend as in Figure~\ref{fig:election-frames};
-  here gray alone marks output subsumption.}
+  \caption{Two specs with several rows at one input.  (f) Serial orders of two
+  concurrent transactions, under the equality order, after the output event
+  $[A,B]$.  (g) and (h) Route sets traced to a service on \texttt{s1} and
+  \texttt{s2}.  The input is the set of sources traced so far; inputs and
+  outputs are both ordered by inclusion, and the rows shown are those whose
+  input \inrel $\{\texttt{s}\}$.  Source \texttt{s} reaches \texttt{s1} directly and
+  \texttt{s2} through hop \texttt{h}; a second source \texttt{t} reaches
+  \texttt{s2} directly.  An output is a nonempty set of routes from the traced
+  sources that contains each prefix of its routes.  Panel (g) shows the state
+  after the output event $\{\texttt{s}{\to}\texttt{s1}\}$ at input
+  $\{\texttt{s}\}$, and (h) the state after a further input event to
+  $\{\texttt{s},\texttt{t}\}$.  Legend as in Figure~\ref{fig:election-frames};
+  in (g) gray alone marks output subsumption, and in (h) gray also marks the
+  rows at $\{\texttt{s}\}$ lost after the input event.}
   \label{fig:ambiguity-frames}
-\end{figure}
+\end{figure*}
 
 \textcolor{reviewed}{The two specs behave differently when an output is emitted.} In the transaction
 spec, no output \outrel both $[A,B]$ and $[B,A]$, so emitting either requires a
@@ -1032,6 +1076,18 @@ when every output keeps some \outnoun as input \ingrows:}
         \end{equation}
 \end{definition}
 
+In the traceroute spec, tracing from a second source \texttt{t} moves the
+input from $\{\texttt{s}\}$ to $\{\texttt{s},\texttt{t}\}$
+(Figure~\ref{fig:ambiguity-frames}(h)). Every route set permitted at
+$\{\texttt{s}\}$ is still permitted at $\{\texttt{s},\texttt{t}\}$, so
+Relational Monotonicity holds. A tool that reports the cut points between the
+traced sources and \texttt{s2}, the hops that every observed route passes
+through, fails it. At $\{\texttt{s}\}$, every route to \texttt{s2} passes
+through \texttt{h}, so the tool reports \texttt{h}. If \texttt{t} reaches
+\texttt{s2} directly, \texttt{h} is no longer a cut point at
+$\{\texttt{s},\texttt{t}\}$, and no permitted output there extends the
+earlier report.
+
 \textcolor{reviewed}{For singleton fibers this is functional monotonicity,
 Equation~\ref{eq:functional-monotonicity}.} Relational Monotonicity quantifies over each
 output $o$ separately,
@@ -1046,9 +1102,9 @@ $X\subseteq F$ is compatible in $F$.} \textcolor{reviewed}{A spec has \emph{dire
 every fiber is directed.}
 \end{definition}
 
-\textcolor{reviewed}{A singleton fiber is trivially directed.} The traceroute fiber of
-Figure~\ref{fig:ambiguity-frames}(g) is directed too: finitely many route sets
-in it always have a common \outnoun in the fiber, their union. The two
+\textcolor{reviewed}{A singleton fiber is trivially directed.} The traceroute fibers of
+Figure~\ref{fig:ambiguity-frames}(g) are directed too: finitely many route
+sets in one fiber always have a common \outnoun in that fiber, their union. The two
 transaction orders in panel~(f), by contrast, are incompatible.
 
 Directedness asks for some common \outnoun of each finite set, not a least one
@@ -1111,7 +1167,9 @@ not, so that spec fails Lifted Monotonicity already at $j=i$.
 \textcolor{reviewed}{Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.} \textcolor{reviewed}{Such runs can be reconciled only at a common \indesc $j$ of both, which calls
 for a condition on rows at different inputs: a common \outnoun of $o_1$ and
-$o_2$ in the fiber at $j$.} \textcolor{reviewed}{The two conditions turn out to be equivalent.}
+$o_2$ in the fiber at $j$.} \textcolor{reviewed}{The two conditions turn out to be equivalent.} In the traceroute spec, one run may trace from \texttt{s} and another from
+\texttt{t}; at their common \indesc $\{\texttt{s},\texttt{t}\}$, the union
+of their route sets is a common \outnoun.
 
 \begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
@@ -1167,7 +1225,7 @@ under the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows
 for $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs.} \textcolor{reviewed}{Emitting
 $[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in
 $\Excluded_o$ and rules out that output at $\{A,B\}$.} \textcolor{reviewed}{The route sets removed in
-panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.} Appendix~\ref{app:lifted-output-events} gives the formal definitions.
+panel~(g), at both inputs, are in $\Subsumed_o$, so that output needs no \commitment.} Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
 \textcolor{reviewed}{Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
 applies no \commitment, that is, when $\Excluded_o$ is empty.} \textcolor{reviewed}{With several
@@ -1441,8 +1499,8 @@ Each participant run is a run, so Corollary~\ref{cor:state-by-input} applies.
 \end{proof}
 
 With several outputs per input, convergence can fail even for consistent
-specs. In Figure~\ref{fig:ambiguity-frames}(g), a run that emitted $\{\texttt{s}{\to}\texttt{s1}\}$
-has subsumed the route sets that leave it out, while a run at the same input that
+specs. In Figure~\ref{fig:ambiguity-frames}(g), a run at input $\{\texttt{s}\}$ that emitted
+$\{\texttt{s}{\to}\texttt{s1}\}$ has subsumed the route sets that leave it out, while a run at the same input that
 emitted nothing keeps them. Consistency then guarantees only that such participants can be reconciled, not
 that they agree.
 
@@ -3730,8 +3788,8 @@ Thus $x_o$ removes exactly the rows in $\Excluded_o$. At an input $k$, if
 \end{definition}
 
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places the row for
-$[B,A]$ in $\Excluded_o$, so the event rules out that output at $\{A,B\}$. In panel~(g), the two removed route sets are in $\Subsumed_o$, each
-\outrelpast by a retained route set, so the event subsumes them without
+$[B,A]$ in $\Excluded_o$, so the event rules out that output at $\{A,B\}$. In panel~(g), the removed route sets, at both inputs, are in $\Subsumed_o$,
+each \outrelpast by a retained route set at its input, so the event subsumes them without
 \commitment. With one row per input, $\Subsumed_o$ is empty, and $x_o$ rules
 out each input whose row is removed; this is the functional output event of
 Definition~\ref{def:output-event}. Apart from output subsumption and

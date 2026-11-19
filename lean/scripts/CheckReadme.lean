@@ -72,10 +72,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:query-monotonicity»
 #check @CC.Paper.«fig:ambiguity-frames/f»
 #check @CC.Paper.«fig:ambiguity-frames/g»
+#check @CC.Paper.«fig:ambiguity-frames/h»
+#check @CC.Paper.«fig:ambiguity-frames/caption»
 #check @CC.Paper.«sec:ambiguity-story/commitment»
 #check @CC.Paper.«sec:ambiguity-story/three-ways»
 #check @CC.Paper.«sec:ambiguity-story/transactions-fail»
-#check @CC.Paper.«sec:ambiguity-story/traceroute-passes»
 #check @CC.Paper.«def:relational-specification»
 #check @CC.Paper.«eq:relational-specification»
 #check @CC.Paper.«eq:fiber»
@@ -83,6 +84,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:nondeterministic»
 #check @CC.Paper.«def:relational-monotonicity»
 #check @CC.Paper.«eq:relational-monotonicity»
+#check @CC.Paper.«sec:lifted-monotonicity/traceroute-relational»
+#check @CC.Paper.«sec:lifted-monotonicity/cut-points»
 #check @CC.Paper.«def:relational-monotonicity/functional»
 #check @CC.Paper.«sec:lifted-monotonicity/compatible»
 #check @CC.Paper.«def:fiber-directedness»
@@ -97,6 +100,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:lifted-monotonicity/relmono-directed»
 #check @CC.Paper.«def:lifted-monotonicity/hoare»
 #check @CC.Paper.«def:lifted-monotonicity/not-reflexive»
+#check @CC.Paper.«sec:lifted-monotonicity/traceroute-common-extension»
 #check @CC.Paper.«def:common-expansion-condition»
 #check @CC.Paper.«def:common-expansion-condition/empty»
 #check @CC.Paper.«prop:common-expansion-form»

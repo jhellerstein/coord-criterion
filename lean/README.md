@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-695 entries.
+699 entries.
 
 ### §2 Functional CALM
 
@@ -232,10 +232,11 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 |---|---|---|
 | `«fig:ambiguity-frames/f»` | theorem | Fig. |
 | `«fig:ambiguity-frames/g»` | theorem | Fig. |
+| `«fig:ambiguity-frames/h»` | theorem | Fig. |
+| `«fig:ambiguity-frames/caption»` | theorem | Fig. |
 | `«sec:ambiguity-story/commitment»` | theorem | §3.1 "Commitment and directedness": |
 | `«sec:ambiguity-story/three-ways»` | theorem | §3.1: |
 | `«sec:ambiguity-story/transactions-fail»` | theorem | §3.1: |
-| `«sec:ambiguity-story/traceroute-passes»` | theorem | §3.1: |
 | `«def:relational-specification»` | abbrev | **Def. |
 | `«eq:relational-specification»` | abbrev | **Eq. |
 | `«eq:fiber»` | abbrev | **Eq. |
@@ -243,6 +244,8 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:nondeterministic»` | abbrev | **Def. |
 | `«def:relational-monotonicity»` | abbrev | **Def. |
 | `«eq:relational-monotonicity»` | theorem | **Eq. |
+| `«sec:lifted-monotonicity/traceroute-relational»` | theorem | After Def. |
+| `«sec:lifted-monotonicity/cut-points»` | theorem | After Def. |
 | `«def:relational-monotonicity/functional»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/compatible»` | abbrev | "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in `F`* if some `u ∈ F` extends all of them." Lean: |
 | `«def:fiber-directedness»` | abbrev | **Def. |
@@ -257,6 +260,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:lifted-monotonicity/relmono-directed»` | theorem | After Def. |
 | `«def:lifted-monotonicity/hoare»` | theorem | After Def. |
 | `«def:lifted-monotonicity/not-reflexive»` | theorem | After Def. |
+| `«sec:lifted-monotonicity/traceroute-common-extension»` | theorem | Before Def. |
 | `«def:common-expansion-condition»` | abbrev | **Def. |
 | `«def:common-expansion-condition/empty»` | theorem | After Def. |
 | `«prop:common-expansion-form»` | theorem | **Prop. |
@@ -669,7 +673,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«def:lifted-output-event»` | abbrev | **Def. |
 | `«def:canonical-commitment»` | abbrev | **Def. |
 | `«eq:canonical-commitment-relational»` | theorem | **Eq. |
-| `«def:lifted-output-event/examples»` | theorem | The transaction-order example excludes `[B,A]`; the routing example only subsumes its removed route sets. |
+| `«def:lifted-output-event/examples»` | theorem | "In Figure `fig:ambiguity-frames`(f), emitting `[A,B]` places the row for `[B,A]` in `Excluded_o` … In panel (g), the removed route sets, at both inputs, are… |
 | `«app:lifted-output-events/disjoint»` | theorem | `Subsumed_o` and `Excluded_o` are disjoint. |
 | `«app:lifted-output-events/functional»` | theorem | With one row per input, no ruled-out row is subsumed. |
 | `«app:lifted-output-events/exposable»` | theorem | A legal output applies no commitment exactly when `Excluded_o` is empty. |
