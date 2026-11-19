@@ -1603,7 +1603,8 @@ common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monot
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-\textcolor{newblue}{We take the assumptions of Bailis et al.\ as given~\cite{bailis2013hat}:
+\textcolor{newblue}{Bailis et al.\ asked which transactional isolation levels a system can provide
+while every replica stays available during a partition~\cite{bailis2013hat}.} \textcolor{newblue}{We take their assumptions as given:
 items are partially replicated; a client sends each operation to some replica
 of its item; a transaction's writes carry a unique client timestamp, last
 writer wins; the system never aborts on its own; and a replica answers a read
@@ -1634,6 +1635,12 @@ Lost Update, such as snapshot isolation, repeatable read, and serializability, $
 \end{theorem}
 \textcolor{newblue}{\proofinfull}
 
+\textcolor{newblue}{The failure takes two transactions on different sides of a partition that
+each read the initial version of an item and then write it.} \textcolor{newblue}{Each side can
+answer its read only with that version, since neither has received the
+other's write, and no complete history containing both answers avoids Lost
+Update.}
+
 The timestamp condition in the theorem is required, correcting an error in
 the extended HAT paper~\cite{bailis2013hatextended}. That paper's pseudocode
 fixes each transaction's timestamp when it begins. A transaction can then read
@@ -1651,7 +1658,7 @@ but no stronger consistency, while staying always available (every read and
 write completes whatever messages are lost) and one-way convergent (a node that
 can receive from another eventually reflects the other's
 updates)~\cite{mahajan2011consistency}.} \textcolor{newblue}{With real-time precedence recorded in
-the input, both parts of their result follow from Complete CAP (see \extended).}
+the input, both parts of their result follow from our results on deployments (see \extended).}
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}

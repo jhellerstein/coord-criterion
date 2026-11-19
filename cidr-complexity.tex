@@ -1649,7 +1649,9 @@ common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monot
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-\color{black}\cxtag{157}{N/M}\cxbar{157}{0.4 0.4 1}{s}We take the assumptions of Bailis et al.\ as given~\cite{bailis2013hat}:
+\color{black}\cxtag{157}{N/M}\cxbar{157}{0.4 0.4 1}{s}Bailis et al.\ asked which transactional isolation levels a system can provide
+while every replica stays available during a partition~\cite{bailis2013hat}.
+We take their assumptions as given:
 items are partially replicated; a client sends each operation to some replica
 of its item; a transaction's writes carry a unique client timestamp, last
 writer wins; the system never aborts on its own; and a replica answers a read
@@ -1681,7 +1683,13 @@ Lost Update, such as snapshot isolation, repeatable read, and serializability, $
 \end{theorem}
 \proofinfull
 
-\color{black}\cxtag{160}{N/M}\cxbar{160}{0.4 0.4 1}{s}The timestamp condition in the theorem is required, correcting an error in
+\color{black}\cxtag{160}{N/S}The failure takes two transactions on different sides of a partition that
+each read the initial version of an item and then write it.  Each side can
+answer its read only with that version, since neither has received the
+other's write, and no complete history containing both answers avoids Lost
+Update.
+
+\color{black}\cxtag{161}{N/M}\cxbar{161}{0.4 0.4 1}{s}The timestamp condition in the theorem is required, correcting an error in
 the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
 fixes each transaction's timestamp when it begins.  A transaction can then read
 a version with a higher timestamp than its own and overwrite it, so its write
@@ -1692,27 +1700,27 @@ up, since the read rule's output at such an input is not in $P_{\mathrm{RC}}$.
 Taking each timestamp at commit, above every version read, repairs the
 algorithm.  Details are in \extended.  The same reasoning recovers the rest of
 Bailis et al.'s classification of isolation levels and session guarantees, with
-sticky availability as a deployment (see \extended).\cxbar{160}{0.4 0.4 1}{e}
+sticky availability as a deployment (see \extended).\cxbar{161}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{161}{N/M}\cxbar{161}{0.4 0.4 1}{s}Mahajan et al.\ showed that a system can provide real-time causal consistency,
+\color{black}\cxtag{162}{N/M}\cxbar{162}{0.4 0.4 1}{s}Mahajan et al.\ showed that a system can provide real-time causal consistency,
 but no stronger consistency, while staying always available (every read and
 write completes whatever messages are lost) and one-way convergent (a node that
 can receive from another eventually reflects the other's
 updates)~\cite{mahajan2011consistency}.  With real-time precedence recorded in
-the input, both parts of their result follow from Complete CAP (see \extended).\cxbar{161}{0.4 0.4 1}{e}
+the input, both parts of their result follow from our results on deployments (see \extended).\cxbar{162}{0.4 0.4 1}{e}
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
-\color{black}\cxtag{162}{N/M}\cxbar{162}{0.4 0.4 1}{s}In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
+\color{black}\cxtag{163}{N/M}\cxbar{163}{0.4 0.4 1}{s}In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
 is a set of versions, and replicas merge states by union.  Transactions run on
 a replica's state and only add versions.  A state is \emph{reachable} when it
 can be derived from an initial state by running transactions and merging, with
 every state along the way satisfying an invariant $\mathcal I$.  A set $T$ of
 transactions is \emph{invariant confluent} for $\mathcal I$ when the merge of
-any two reachable states satisfies $\mathcal I$.\cxbar{162}{0.4 0.4 1}{e}
+any two reachable states satisfies $\mathcal I$.\cxbar{163}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{163}{N/M}\cxbar{163}{0.4 0.4 1}{s}We construct a spec $\Spec_{\mathcal I}$ from this model.  An input is a
+\color{black}\cxtag{164}{N/M}\cxbar{164}{0.4 0.4 1}{s}We construct a spec $\Spec_{\mathcal I}$ from this model.  An input is a
 \emph{transaction history}: the transactions executed so far, partially
 ordered so that one precedes another when the second ran on a state that
 included the first's writes.  One history \inrel another when it adds
@@ -1726,25 +1734,25 @@ that precedes one of its own, and \emph{valid} when the state of each of its
 closed sub-histories satisfies $\mathcal I$.  At input $h$, each valid
 closed sub-history of $h$ contributes its state as a permitted output.
 An output may therefore leave out some of the input's transactions, but what
-it includes must be closed and valid.\cxbar{163}{0.4 0.4 1}{e}
+it includes must be closed and valid.\cxbar{164}{0.4 0.4 1}{e}
 
 \color{black}\begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
-\cxtag{164}{N/S}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
+\cxtag{165}{N/S}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
 Monotonicity.
 \end{proposition}
 \proofinfull
 
-\color{black}\cxtag{165}{N/M}\cxbar{165}{0.4 0.4 1}{s}In Bailis et al.'s payroll example, employee IDs must be unique, yet two
+\color{black}\cxtag{166}{N/M}\cxbar{166}{0.4 0.4 1}{s}In Bailis et al.'s payroll example, employee IDs must be unique, yet two
 replicas can concurrently assign the same unused ID (say, 7) to two employees.
 The history with both assignments \inrel each history with only one.  But every state that \outrel both single-assignment
 states has two employees with ID~7, violating the invariant, so $T$ is not
-invariant confluent.\cxbar{165}{0.4 0.4 1}{e}
+invariant confluent.\cxbar{166}{0.4 0.4 1}{e}
 
 \subsection{Operational models and scope}
 \label{sec:scope}
 
-\color{blue!75!black}\cxtag{166}{B/M}\cxbar{166}{0.4 0.4 1}{s}An I/O automaton~\cite{lynch1987io} projects onto a spec that pairs each
+\color{blue!75!black}\cxtag{167}{B/M}\cxbar{167}{0.4 0.4 1}{s}An I/O automaton~\cite{lynch1987io} projects onto a spec that pairs each
 execution's receive sequence with its reply sequence, ordered by prefix.
 Every automaton execution is matched by a run of this spec, but not
 necessarily vice versa.  For example, the automaton may choose not to produce
@@ -1756,15 +1764,15 @@ its canonical runs could still agree on.  Model checkers can refute
 consistency on bounded inputs~\cite{newcombe2015aws}, and mechanized
 proofs~\cite{hawblitzel2015ironfleet} can show, by the standard obligations of
 refinement~\cite{abadi1991refinement}, that a declared spec stands in for the
-projected one; \extended{} gives the details.\cxbar{166}{0.4 0.4 1}{e}
+projected one; \extended{} gives the details.\cxbar{167}{0.4 0.4 1}{e}
 
-  \color{black}\cxtag{167}{N/M}\cxbar{167}{0.4 0.4 1}{s}Our conditions are semantic.  Confluence guarantees that
+  \color{black}\cxtag{168}{N/M}\cxbar{168}{0.4 0.4 1}{s}Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
 liveness, and cost belong to the operational model in which a spec
 is realized.  Free termination likewise corresponds to a determined canonical
 state in our model, but Power et al.\ additionally study fairness and eventual
 response, liveness concerns whose semantic generalization remains future
-work~\cite{power2025freetermination}.\cxbar{167}{0.4 0.4 1}{e}
+work~\cite{power2025freetermination}.\cxbar{168}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Discussion}
@@ -1780,9 +1788,9 @@ work~\cite{power2025freetermination}.\cxbar{167}{0.4 0.4 1}{e}
 
     % Leading with the payoff:
 
-\color{black}\cxtag{168}{N/M}\cxbar{168}{0.4 0.4 1}{s}Several observations that motivated CALM can now be explained
+\color{black}\cxtag{169}{N/M}\cxbar{169}{0.4 0.4 1}{s}Several observations that motivated CALM can now be explained
 in context. We revisit them briefly, because the
-trajectory of the work points to next steps.\cxbar{168}{0.4 0.4 1}{e}
+trajectory of the work points to next steps.\cxbar{169}{0.4 0.4 1}{e}
 
     % Leading with history:
 
@@ -1797,16 +1805,16 @@ trajectory of the work points to next steps.\cxbar{168}{0.4 0.4 1}{e}
 
 % A. Origins and the conjecture:
 
-\color{black}\cxtag{169}{N/M}\cxbar{169}{0.4 0.4 1}{s}The computing literature is rich with coordination mechanisms. Prior to the CALM
+\color{black}\cxtag{170}{N/M}\cxbar{170}{0.4 0.4 1}{s}The computing literature is rich with coordination mechanisms. Prior to the CALM
 Conjecture, the justifications for these mechanisms were often situational. In
 the best cases---serializability being a prime example---there is a crisp,
 whole-system invariant, and coordination mechanisms provably enforce system
 correctness. But mechanisms like locks, atomics and total orders are also used
 liberally for guaranteeing local operational properties of concurrent data
 structures or algorithms, and have often been used poorly in both systems and
-academic literature.\cxbar{169}{0.4 0.4 1}{e}
+academic literature.\cxbar{170}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{170}{N/S}A suggestive example arose in the conflation of barriers with communication in Google's
+\color{black}\cxtag{171}{N/S}A suggestive example arose in the conflation of barriers with communication in Google's
 much-cited MapReduce system~\cite{dean2004mapreduce}. In database systems, query
 engines typically pipeline data between operators in a query plan, and wait only
 where a non-monotone operator, such as aggregation, needs all of its input to
@@ -1819,7 +1827,7 @@ coordination~\cite{valiant1990bsp,karloff2010mrc}. It was clear to the database
 community that this was not intrinsically
 required~\cite{dewitt2008mapreduce,condie2010online}.
 
-\color{blue!75!black}\cxtag{171}{B/M}\cxbar{171}{0.4 0.4 1}{s}Rather than repairing a specific model, the CALM Conjecture asked the underlying
+\color{blue!75!black}\cxtag{172}{B/M}\cxbar{172}{0.4 0.4 1}{s}Rather than repairing a specific model, the CALM Conjecture asked the underlying
 question: when is coordination inherent, and why? The question was
 first addressed in the context of declarative
 networking~\cite{loo2009declarative}, another query processing setting. That
@@ -1831,21 +1839,21 @@ payoffs~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2010bo
 This validation, combined with query processing intuition, suggested the answer
 to the CALM question: coordination of any kind is required if and only if the
 system's declarative specification is non-monotone. Ameloot et al.\ proved it
-for relational languages~\cite{ameloot2013relational}.\cxbar{171}{0.4 0.4 1}{e}
+for relational languages~\cite{ameloot2013relational}.\cxbar{172}{0.4 0.4 1}{e}
 
   % B. From programs to specs (the paragraph you said needed rewording):
-\color{blue!75!black}\cxtag{172}{B/M}\cxbar{172}{0.4 0.4 1}{s}This paper raises the abstraction level yet further: from logic programs to the
+\color{blue!75!black}\cxtag{173}{B/M}\cxbar{173}{0.4 0.4 1}{s}This paper raises the abstraction level yet further: from logic programs to the
 \spectype[s] of any system. All that matters about a spec is which outputs it
 permits for each input; the analysis needs no language or programming model,
 declarative or otherwise. By going a level higher to specs, we not only set
 aside the lack of mainstream adoption of declarative languages; we also capture
 families of guarantees, like CAP and isolation levels, that have no application
-or protocol in mind.\cxbar{172}{0.4 0.4 1}{e}
+or protocol in mind.\cxbar{173}{0.4 0.4 1}{e}
 
 % C. What analysis at the level of specs gives (the two composition paragraphs
 % merged):
 
-\color{black}\cxtag{173}{N/M}\cxbar{173}{0.4 0.4 1}{s}Raising the level to specs also enables deeper analysis.
+\color{black}\cxtag{174}{N/M}\cxbar{174}{0.4 0.4 1}{s}Raising the level to specs also enables deeper analysis.
 Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs and
 conservatively injected coordination code in front of it. Coordination code is
 itself non-monotone, so this only adds more non-monotone syntax, leaving the
@@ -1856,9 +1864,9 @@ operation the weakest consistency or isolation level a store offers that still
 satisfies them. We ask what a spec itself requires, independent of any menu of
 levels, and by Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}) the
 answer holds for every mechanism. Our work is also constructive on both sides of the
-boundary (\S\ref{sec:composition}).\cxbar{173}{0.4 0.4 1}{e}
+boundary (\S\ref{sec:composition}).\cxbar{174}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{174}{N/M}\cxbar{174}{0.4 0.4 1}{s}Underlying these issues is a reassessment of Codd's declarative tradition: how
+\color{black}\cxtag{175}{N/M}\cxbar{175}{0.4 0.4 1}{s}Underlying these issues is a reassessment of Codd's declarative tradition: how
 ``declarative'' can a specification be? How little structure does it need to be
 useful? The question is timely. Coding agents today translate from natural
 language to imperative code, which is often rife with bugs. This has renewed
@@ -1873,21 +1881,21 @@ programs in a relatively high degree of detail, as in declarative networking.
 Our \spectype[] model and its composition point to the possibility of
 specification at a higher level still, suggesting we could declare far less detail
 and still get the neurosymbolic advantage of heuristic search for
-provably correct implementations.\cxbar{174}{0.4 0.4 1}{e}
+provably correct implementations.\cxbar{175}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-\color{black}\cxtag{175}{N/M}\cxbar{175}{0.4 0.4 1}{s}The simplicity of \spectype[s] provides a unified foundation for the
+\color{black}\cxtag{176}{N/M}\cxbar{176}{0.4 0.4 1}{s}The simplicity of \spectype[s] provides a unified foundation for the
 literature on coordination. It also clarifies the intrinsic purpose of
 coordination: removing possibilities via \commitments. The question of
 coordination-free consistency becomes clear in this model: when must a system
 make a fateful decision---a \commitment---in order to emit an output? Functional CALM answers
 the question for functional specs:  runs stay confluent as input arrives exactly
-when specs are monotone; otherwise \commitment is required.  This generalizes CALM to any function between ordered domains.\cxbar{175}{0.4 0.4 1}{e}
+when specs are monotone; otherwise \commitment is required.  This generalizes CALM to any function between ordered domains.\cxbar{176}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{176}{N/M}\cxbar{176}{0.4 0.4 1}{s}Complete CALM extends the answer to specs that offer several outputs
+\color{black}\cxtag{177}{N/M}\cxbar{177}{0.4 0.4 1}{s}Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When the test fails, some reachable output
 requires a \commitment to rule out a possible input/output pair.
@@ -1898,9 +1906,9 @@ composition coordinates.
 % guards the store, the log's \commitments are all the composition needs, and
 % the store needs none.  Multi-Paxos is one way to distribute them.
 Complete CAP is the partition form of the same equivalence: a spec escapes
-the CAP tradeoff exactly when it satisfies Lifted Monotonicity for its explicit possibility relation.\cxbar{176}{0.4 0.4 1}{e}
+the CAP tradeoff exactly when it satisfies Lifted Monotonicity for its explicit possibility relation.\cxbar{177}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{177}{N/M}\cxbar{177}{0.4 0.4 1}{s}Our model of \spectype[s] and \commitments opens a range of new questions.
+\color{black}\cxtag{178}{N/M}\cxbar{178}{0.4 0.4 1}{s}Our model of \spectype[s] and \commitments opens a range of new questions.
 One direction
 extends the boolean criterion of this paper to a quantity: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
@@ -1908,16 +1916,16 @@ needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, which brings formal models of provenance to
 concurrent systems. A third direction is to provide general-purpose static
-analysis and synthesis of properly coordinated systems in practical programming frameworks.\cxbar{177}{0.4 0.4 1}{e}
+analysis and synthesis of properly coordinated systems in practical programming frameworks.\cxbar{178}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{178}{N/M}\cxbar{178}{0.4 0.4 1}{s}\begin{acks}
+\color{black}\cxtag{179}{N/M}\cxbar{179}{0.4 0.4 1}{s}\begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.
 Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
 Kleppmann, Paris Koutris, Edward Lee, Shulu Li, Vincent Liu, David Chu McElroy,
 Sarah Morin, and Dan Suciu for helpful feedback. Thanks also to
-anonymous reviewers of this and previous submissions for frank feedback.\cxbar{178}{0.4 0.4 1}{e}
+anonymous reviewers of this and previous submissions for frank feedback.\cxbar{179}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{179}{N/S}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
+\color{black}\cxtag{180}{N/S}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
 reviewing assistants during the preparation of this work, including drafting
 and revising text, and synthesizing Lean proofs for all mathematical arguments.  All
 content was reviewed, validated, and approved by the author.
