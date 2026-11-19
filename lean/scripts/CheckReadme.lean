@@ -284,7 +284,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:iconfluence-instance/bailis-definition»
 #check @CC.Paper.«sec:iconfluence-instance/spec»
 #check @CC.Paper.«prop:iconfluence-lm»
-#check @CC.Paper.«sec:iconfluence-instance/iconfluence-is-consistency»
 #check @CC.Paper.«sec:iconfluence-instance/uniqueness»
 #check @CC.Paper.«sec:iconfluence-instance/concurrency-decides»
 #check @CC.Paper.«def:projection»

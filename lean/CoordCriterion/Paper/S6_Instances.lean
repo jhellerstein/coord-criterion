@@ -26,7 +26,7 @@ it formalizes.
 * Numbered results and displayed equations are named by their LaTeX label
   (`«prop:iconfluence-lm»`, …).
 * Unlabeled claims are named `«<enclosing label>/<slug>»`, e.g.
-  `«sec:iconfluence-instance/iconfluence-is-consistency»`.
+  `«sec:iconfluence-instance/spec»`.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
   `Instances/QueryRefinements.lean`, `Instances/Placement.lean`,
   `Instances/InvariantConfluence.lean`,
@@ -875,21 +875,18 @@ theorem «sec:iconfluence-instance/spec» {V Tx : Type} (M : IConf.Model V Tx) (
     (IConf.SI M).P h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s :=
   Iff.rfl
 
-/-- **Proposition `prop:iconfluence-lm`** (Invariant confluence and Lifted
+/-- **Proposition `prop:iconfluence-lm`** (Invariant confluence as Lifted
 Monotonicity): "`T` is invariant confluent if and only if `𝒮_𝓘` satisfies
-Lifted Monotonicity." -/
-theorem «prop:iconfluence-lm» {V Tx : Type} (M : IConf.Model V Tx) :
-    M.IConfluent ↔ (IConf.SI M).LiftedMono :=
-  IConf.ic_iff_liftedMono M
+Lifted Monotonicity, that is, if and only if the runs of `𝒮_𝓘` are
+consistent."
 
-/-- Invariant confluence is consistency of `𝒮_𝓘`: Prop. `prop:iconfluence-lm`
-read through "applying either CALM theorem" (§6 opening: "Each setting
-declares an input, an output, and their orders before applying either CALM
-theorem.").  The sentence that stated this directly was removed from §6.4;
-Lean: by Complete CALM, Lifted Monotonicity of `𝒮_𝓘` is its consistency. -/
-theorem «sec:iconfluence-instance/iconfluence-is-consistency» {V Tx : Type} (M : IConf.Model V Tx) :
-    M.IConfluent ↔ (IConf.SI M).Consistent :=
-  (IConf.ic_iff_liftedMono M).trans (complete_calm _).symm
+Lean: the first claim is `IConf.ic_iff_liftedMono`; the second ("that is")
+follows by Complete CALM (`complete_calm`), which equates Lifted Monotonicity
+of a spec with consistency of its runs (`Spec.Consistent`). -/
+theorem «prop:iconfluence-lm» {V Tx : Type} (M : IConf.Model V Tx) :
+    (M.IConfluent ↔ (IConf.SI M).LiftedMono) ∧
+      (M.IConfluent ↔ (IConf.SI M).Consistent) :=
+  ⟨IConf.ic_iff_liftedMono M, (IConf.ic_iff_liftedMono M).trans (complete_calm _).symm⟩
 
 /-- The uniqueness example: "The uniqueness constraint in Bailis et al.'s
 payroll example is not invariant confluent, and `𝒮_𝓘` shows where Lifted

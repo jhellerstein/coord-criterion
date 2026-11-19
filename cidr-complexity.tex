@@ -1749,10 +1749,10 @@ closed sub-history of $h$ contributes its state as a permitted output.
 An output may therefore leave out some of the input's transactions, but what
 it includes must be closed and valid.\cxbar{165}{0.4 0.4 1}{e}
 
-\color{black}\begin{proposition}[Invariant confluence and Lifted Monotonicity]
+\color{black}\begin{proposition}[Invariant confluence as Lifted Monotonicity]
 \label{prop:iconfluence-lm}
 \cxtag{166}{N/S}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
-Monotonicity.
+Monotonicity, that is, if and only if the runs of $\Spec_{\mathcal I}$ are consistent.
 \end{proposition}
 \proofinfull
 
@@ -1782,10 +1782,10 @@ projected one; \extended{} gives the details.\cxbar{168}{0.4 0.4 1}{e}
   \color{black}\cxtag{169}{N/M}\cxbar{169}{0.4 0.4 1}{s}Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
 liveness, and cost belong to the operational model in which a spec
-is realized.  Free termination likewise corresponds to a determined canonical
-state in our model, but Power et al.\ additionally study fairness and eventual
-response, liveness concerns whose semantic generalization remains future
-work~\cite{power2025freetermination}.\cxbar{169}{0.4 0.4 1}{e}
+is realized.  Power et al.'s free termination~\cite{power2025freetermination}
+likewise corresponds to a determined canonical state in our model, but they
+additionally study fairness and eventual response, liveness concerns whose
+semantic generalization remains future work.\cxbar{169}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Discussion}
@@ -1827,8 +1827,7 @@ liberally for guaranteeing local operational properties of concurrent data
 structures or algorithms, and have often been used poorly in both systems and
 academic literature.\cxbar{171}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{172}{N/S}A suggestive example arose in the conflation of barriers with communication in Google's
-much-cited MapReduce system~\cite{dean2004mapreduce}. In database systems, query
+\color{black}\cxtag{172}{N/S}MapReduce~\cite{dean2004mapreduce} conflated barriers with communication. In database systems, query
 engines typically pipeline data between operators in a query plan, and wait only
 where a non-monotone operator, such as aggregation, needs all of its input to
 produce an output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce
@@ -1836,9 +1835,7 @@ instead tightly coupled barrier coordination into every communication phase,
 so even monotone parallel operators like join had to wait for coordination.
 Parallel complexity models that count rounds, including Valiant's BSP model,
 similarly conflate communication and
-coordination~\cite{valiant1990bsp,karloff2010mrc}. It was clear to the database
-community that this was not intrinsically
-required~\cite{dewitt2008mapreduce,condie2010online}.
+coordination~\cite{valiant1990bsp,karloff2010mrc}.
 
 \color{blue!75!black}\cxtag{173}{B/M}\cxbar{173}{0.4 0.4 1}{s}Rather than repairing a specific model, the CALM Conjecture asked the underlying
 question: when is coordination inherent, and why? The question was
@@ -1876,8 +1873,7 @@ contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
 operation the weakest consistency or isolation level a store offers that still
 satisfies them. We ask what a spec itself requires, independent of any menu of
 levels, and by Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}) the
-answer holds for every mechanism. Our work is also constructive on both sides of the
-boundary (\S\ref{sec:composition}).\cxbar{175}{0.4 0.4 1}{e}
+answer holds for every mechanism.\cxbar{175}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{176}{N/M}\cxbar{176}{0.4 0.4 1}{s}Underlying these issues is a reassessment of Codd's declarative tradition: how
 ``declarative'' can a specification be? How little structure does it need to be
