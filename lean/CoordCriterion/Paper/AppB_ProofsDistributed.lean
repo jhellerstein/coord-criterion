@@ -33,10 +33,10 @@ variable {I O : Type} [PO I] [PO O]
 
 /-- Proof of Prop. `prop:distributed-consistency`: "A cut is confluent at `j`
 exactly when its participant runs are.  The participant runs at any cut form a
-finite family of runs, so consistency gives distributed consistency.
+finite family of runs, so consistent runs give consistent histories.
 Conversely, every finite family of runs is the family of participant runs, at
 the final cut, of a message-free history with one participant per run, so
-distributed consistency gives consistency." -/
+consistent histories give consistent runs." -/
 theorem «proof:prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
   Dist.consistent_iff_distConsistent sp D

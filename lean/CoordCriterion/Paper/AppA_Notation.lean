@@ -150,7 +150,7 @@ abbrev «app:notation/commitment-free» {sp : Spec I O} (σ : State sp) (es : Li
     (τ : State sp) : Prop :=
   ExecCF σ es τ
 
-/-- *consistent* — every finite family of runs can reach one common state at
+/-- *consistent runs* — every finite family of runs can reach one common state at
 each common input extension `j` (Def. `def:consistency`).  Lean:
 `Spec.Consistent`. -/
 abbrev «app:notation/consistent» (sp : Spec I O) : Prop := sp.Consistent
@@ -281,7 +281,7 @@ abbrev «app:notation/cut-confluent-at» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) (C : Dist.Pos n → Prop) (j : I) : Prop :=
   H.CutConfluentAt sp C j
 
-/-- *distributed consistency* — every consistent cut of every history is
+/-- *consistent distributed histories* — every consistent cut of every history is
 confluent at every common input extension (Def. `def:distributed-consistency`).
 Lean: `Dist.DistConsistent sp D`, for message data `D`. -/
 abbrev «app:notation/distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=

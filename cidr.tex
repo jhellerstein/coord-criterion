@@ -109,9 +109,10 @@ compared or combined, which leaves developers guessing.
 We put them on common ground, in a formalism that clarifies the literature and
 offers new results.  A minimalist \emph{\spectype} (spec) is a possibility table containing, for
 each input, every output a system may produce, with partial orders on inputs and
-outputs.  It is \emph{consistent} when all its runs are confluent.
+outputs.  Its runs are \emph{consistent} when they are confluent.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
-between ordered domains: consistency is monotonicity.  \emph{Complete CALM}
+between ordered domains: the runs are consistent exactly when the function is
+monotone.  \emph{Complete CALM}
 extends this to nondeterministic specs, where the test is
 \emph{Lifted Monotonicity}, and \emph{Complete CAP} follows as a corollary.
 Highly Available Transactions, Invariant Confluence, and later refinements of
@@ -239,8 +240,8 @@ mechanisms such as locks and consensus.
 
 \paragraph{The Criterion: Lifted Monotonicity.}
 The model provides clean definitions for the key ingredients of CALM:
-Consistency and Monotonicity.  A spec is \emph{consistent} when all its possible
-executions are \emph{confluent}: states reached along different paths can be
+Consistency and Monotonicity.  A spec's possible executions, its runs, are
+\emph{consistent} when they are \emph{confluent}: states reached along different paths can be
 brought to a common state.  We will see that this definition is general.  The spec is a parameter:
 specs and confluence together capture a range of classical consistency models,
 from linearizability, through serializability and other transactional isolation
@@ -249,15 +250,17 @@ levels, to the eventual consistency guarantees of replicated data.
 For a spec that permits exactly one output per input, the possibility table is a
 function, and monotonicity is standard: $i\InputOrd j$ implies
 $f(i)\OutputOrd f(j)$.  \emph{Functional CALM} (\S\ref{sec:functional-calm-theorem})
-proves that consistency is equivalent to monotonicity in this setting, which
+proves that in this setting the runs are consistent exactly when the spec is
+monotone, which
 covers prior CALM work and CRDT state.  Many specs are nondeterministic: leader
 election and transaction scheduling permit several outputs for one input.
 These need a second invariant: whatever outputs different runs choose at the
 same input, some permitted output must \outrelbase them all.  Together, the two
 invariants make every output decision incidental, and we call the pair
 \emph{Lifted Monotonicity}.  \emph{Complete CALM} (\S\ref{sec:complete-calm-theorem})
-proves that Consistency is equivalent to Lifted Monotonicity, a new reading of
-the CALM acronym.
+proves that the runs are consistent exactly when the spec satisfies Lifted
+Monotonicity: Consistency As Lifted Monotonicity, a new reading of the CALM
+acronym.
 
 Distributed histories are captured under the same consistency criteria as
 centralized ones (\S\ref{sec:distributed-execution}).  Complete CAP
@@ -269,7 +272,7 @@ partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directl
 mechanism achieves, apart from how it achieves it: locks, consensus,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
-A system that omits a required \commitment can become inconsistent; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
+A system that omits a required \commitment can produce inconsistent runs; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
@@ -286,7 +289,7 @@ We make contributions in four categories:
 
 \noindent
 \emph{2. A unified criterion.} For functions between ordered domains,
-        Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specs,
+        Functional CALM shows that the runs are consistent exactly when the spec is monotone. For nondeterministic specs,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
@@ -513,11 +516,11 @@ Emitting $\bot$ is safe only with the \commitment that rules out $aba$ and
 $abb$; without it, the two runs would diverge for good.  The argument uses only the table and its orders, so the need for the \commitment is a property of the spec, not of any system.
 
 Runs are the foundation of the consistency side of CALM.  Input and output
-events form a transition system over specification states, and a spec is
-\emph{consistent} when its runs are \emph{confluent}: runs whose inputs have a
+events form a transition system over specification states, and the runs of a
+spec are \emph{consistent} when they are \emph{confluent}: runs whose inputs have a
 common \indesc can always be continued to a common state there.
-Section~\ref{sec:functional-calm-theorem} shows that for functional tables consistency corresponds exactly to
-monotonicity.
+Section~\ref{sec:functional-calm-theorem} shows that for functional tables the
+runs are consistent exactly when the spec is monotone.
 
 \subsection{The functional framework in brief}
 \label{sec:framework-brief}
@@ -676,9 +679,9 @@ Different runs may retain different rows.
 \label{def:consistency}
 Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are \emph{confluent at} a
 common \indesc $j$ of their current inputs when each can be continued to one
-common state with current input $j$.  An \spectype is \emph{consistent} when
-every finite family of runs is confluent at every common \indesc of its current
-inputs, including inputs that some run's \commitments have ruled out.
+common state with current input $j$.  The runs of an \spectype are
+\emph{consistent} when every finite family of them is confluent at every common
+\indesc of their current inputs.
 \end{definition}
 
 Consistency as we define it has to hold after every output.  An inconsistent
@@ -687,7 +690,7 @@ inputs based on that output, leading to unintended consequences.  This is what
 Lamport calls ``anomalous behavior''~\cite{lamport1978time}, and our
 definitions forbid it.  Nonetheless, output orders align our view with the ``eventual
 consistency'' literature: outputs that can only \outrelbase each other, as in
-CRDTs, are always consistent by our definition (\S\ref{sec:crdt-instance}).
+CRDTs, never make runs inconsistent by our definition (\S\ref{sec:crdt-instance}).
 
 Confluence asks whether runs can be continued to a common state.  That question
 can be answered for any finite set of runs by examining their current remainder
@@ -710,39 +713,40 @@ $R_r$.  Conversely, the two events above reach a common state.  \fullproof
 Consistency thus ensures that runs never diverge irreparably: there is no
 ``split brain''.  Whatever events a finite collection of runs contains, at any
 common \indesc of their current inputs, some state is reachable by every run
-and contradicts none of their outputs.  Consistency is a safety property of the spec:
+and contradicts none of their outputs.  Consistency is a safety property of the spec's runs:
 it describes no protocol and promises no delivery or termination.
+
+\begin{lemma}[Confluence and legality]
+\label{lem:confluence-legality}
+The runs of an \spectype are consistent if and only if every output that a
+run can emit is legal at the state where it is emitted.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+An output that is not legal removes some row $(k,x)$; one continuation emits
+the output, another takes $\mathsf{input}(k)$ and emits $x$, and the two share
+no row at $k$.  If every output is legal, the rows the runs keep at their
+current inputs have a common \outnoun at $j$, which survives in every run.
+\fullproof
+\end{proof}
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
 Monotonicity is defined by a spec's table and orders; consistency is defined by
-its runs.  Functional CALM shows that these coincide.
-
-\begin{theorem}[Functional CALM]
-\label{thm:functional-calm}
-A functional \spectype is consistent if and only if it is
-monotone.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-If $f$ is monotone, each output a run has emitted lies below $f(j)$ at every
-\indesc $j$ of its current input, so the row $(j,f(j))$ survives in every run,
-and the Survivor test (Proposition~\ref{prop:confluence}) gives confluence at
-$j$.  If $f$ is not monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.
-Emitting $f(i)$ removes the only row at $k$, so a run that does so can never be
-reconciled at $k$ with one that receives $k$.  \fullproof
-\end{proof}
+its runs.  Functional CALM shows that one holds exactly when the other does,
+and by Lemma~\ref{lem:confluence-legality} the question is when every output a
+run can emit is legal.
 
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
-In a consistent functional specification, every run ending at current
+In a monotone functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 \begin{proof}[Proof sketch]
 By monotonicity, the outputs a run emits remove no row at an input extension of
-$i$.
+$i$ (Lemma~\ref{lem:run-residual}).
 \fullproof
 \end{proof}
 
@@ -751,6 +755,19 @@ state, and with it the one output.  Monotonicity also governs legality: a monoto
 current output without \commitment, while if $f(i)\not\OutputOrd f(k)$ for some
 $i\InputOrd k$, emitting $f(i)$ at $\sigma_P(i)$ must rule out $k$
 (\S\ref{sec:complete-calm-theorem} states this in general).
+
+\begin{theorem}[Functional CALM]
+\label{thm:functional-calm}
+The runs of a functional \spectype are consistent if and only if the spec is
+monotone.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+every output a run can emit is legal.  A monotone spec's runs stay at canonical
+states, where every output is legal; a non-monotone spec has an output that is
+not legal at a canonical state.  \fullproof
+\end{proof}
 
 \paragraph{Classical CALM and CRDTs.}
 Functional CALM restates the familiar CALM dichotomy at the level of the spec
@@ -977,34 +994,12 @@ remaining output at $j$ have a common \outnoun at $j$.
 Moving from functions to nondeterministic specs changes only what an output
 event removes; the rest of the framework carries over.  States, input events,
 runs, and consistency are defined as in \S\ref{sec:framework-brief}, and the
-rows-remaining lemma (Lemma~\ref{lem:run-residual}) and the Survivor test
-(Proposition~\ref{prop:confluence}) hold as stated, since they depend on output
-events only through Equation~\ref{eq:output-action}.  The question is therefore
-the same as for functions: when does a common row always survive at a common
-\indesc?  Complete CALM answers it with a condition on the table and its orders
-alone.
-
-\begin{theorem}[Complete CALM]
-\label{thm:complete-calm}
-An \spectype is consistent if and only if it satisfies Lifted
-Monotonicity.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds
-if and only if the common-extension condition holds.
-If that condition holds, a common \outnoun $u\in P(j)$
-of everything emitted survives in every run.
-If outputs emitted at inputs with a common \indesc $j$ are incompatible in
-$P(j)$, the runs that emit them share no row at $j$ and can never be
-reconciled there.  \fullproof
-\end{proof}
-
-The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
-ordinary monotonicity.  Both theorems also hold for distributed histories
-(\S\ref{sec:distributed-consistency}).
-
-The same condition decides which outputs need a \commitment.
+rows-remaining lemma (Lemma~\ref{lem:run-residual}), the Survivor test
+(Proposition~\ref{prop:confluence}), and Lemma~\ref{lem:confluence-legality},
+with legality as in \S\ref{sec:lifted-output-events}, hold as stated, since
+they depend on output events only through Equation~\ref{eq:output-action}.  The
+question is therefore when every output a run can emit is legal, and Lifted
+Monotonicity answers it.
 
 \begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
@@ -1018,6 +1013,24 @@ a common \outnoun with each remaining output, so it is legal.  Conversely,
 checking legality at canonical states, row by row, yields the common
 \outnouns the condition requires.  \fullproof
 \end{proof}
+
+\begin{theorem}[Complete CALM]
+\label{thm:complete-calm}
+The runs of an \spectype are consistent if and only if the spec satisfies
+Lifted Monotonicity.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+every output a run can emit is legal.  If every output at every state reachable
+without \commitment is legal, every run is reachable without \commitment, so
+Proposition~\ref{prop:exposure-boundary} applies.  \fullproof
+\end{proof}
+
+The condition that characterizes consistency of runs is a property of the spec
+alone: Lifted Monotonicity, which for a function is ordinary monotonicity.
+Both theorems also hold for distributed histories
+(\S\ref{sec:distributed-consistency}).
 
 For functions, Lifted Monotonicity is monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and its
@@ -1223,7 +1236,7 @@ spec has a row for this situation: its input is the pair of requests, and its
 output is the pair of responses.  The spec permits the row because a
 linearization may place the concurrent read before the write.  No participant
 emits this combined output, and availability does not need it.  Still, it
-\outrel both local outputs, which shows that the two are consistent, so the
+\outrel both local outputs, which shows that the two are compatible, so the
 spec must contain it.  Had the write finished before the read began, no such
 combined output would exist.
 
@@ -1287,7 +1300,7 @@ Availability for $E$ and Partition Consistency.
 
 The canonical system's participants never wait: each can emit any output of
 $E$ that its state allows, so it always has Availability for $E$.  The
-question is whether their answers stay consistent across sides.  Complete CAP
+question is whether their answers stay compatible across sides.  Complete CAP
 says they do exactly when outputs of $E$ emitted on different sides have a
 common \outnoun in the spec at every common \indesc of their inputs.
 
@@ -1330,7 +1343,7 @@ communication, so the voter can make it and produce output during a partition.
 Each ballot is cast by a different voter, so ballots emitted on different
 sides of a partition never conflict (the full paper formalizes this placement as a
 deployment~\extended), and every set of ballots an
-observer may collect is consistent.  The registrar's spec is the election spec
+observer may collect is compatible.  The registrar's spec is the election spec
 of Section~\ref{sec:election-story}, which is monotone under its original
 output order: it collects ballots and announces whichever candidate has two
 ballots.
@@ -1381,7 +1394,7 @@ model~\cite{hellerstein2026completecalmfull}.
 \label{sec:composition}
 
 A replicated key-value store poses a puzzle.  With mutable values, it is
-non-monotone and inconsistent~\cite{alvaro2011bloom}. The pragmatic solution is
+non-monotone, and its replicas can diverge without coordination~\cite{alvaro2011bloom}. The pragmatic solution is
 to impose a consensus-driven log upstream of the replicas, \`a la
 Multi-Paxos~\cite{lamport2001paxos}, so all replicas execute the same commands
 in the same order. But consensus is itself non-monotone: when two commands
@@ -1588,7 +1601,7 @@ state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
 We take as input the set of updates a replica has received, ordered by inclusion;
 the replica's state is their join in the semilattice.  The output is the answer
 to a client's query, so the client-visible spec is a function: query the state
-those updates produce.  By Functional CALM, it is consistent exactly when
+those updates produce.  By Functional CALM, its runs are consistent exactly when
 receiving more updates never yields an answer that fails to extend an earlier
 one.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only

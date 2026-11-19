@@ -1,4 +1,5 @@
 import CoordCriterion.Figures
+import CoordCriterion.CompleteCALM.Legality
 import CoordCriterion.Appendix.Frontiers
 
 /-!
@@ -122,7 +123,7 @@ theorem «sec:ambiguity-story/three-ways» {I O : Type} [PO I] [PO O] {sp : Spec
 
 /-- §3.1: "Two transaction scheduling runs that emit `[A,B]` and `[B,A]` fail
 it": they are not confluent at `{A,B}`; the specification is neither directed
-nor monotone nor consistent. -/
+nor monotone, and its runs are not consistent. -/
 theorem «sec:ambiguity-story/transactions-fail» :
     ¬ ConfluentAt [outState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR _),
         outState (canon Figures.Txn.spec ()) .ba (Figures.Txn.sR _)] () ∧
@@ -416,24 +417,38 @@ theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
 /-- "Specification states, input events, runs, commitment-free runs, and
 consistency are defined as before.  The results of Section `sec:executions`
 use output events only through Equation `eq:output-action`, which lifted
-output events still satisfy, so the rows-remaining lemma and the Survivor test
-apply unchanged." In Lean there is
-nothing to lift: the transition system, Lemma `lem:run-residual` and Prop.
-`prop:confluence` are stated for arbitrary (relational) specifications from the
-start; this
-restates the lemma for the record. -/
+output events still satisfy, so the rows-remaining lemma (Lemma
+`lem:run-residual`), the Survivor test (Proposition `prop:confluence`), and
+Lemma `lem:confluence-legality`, with legality as in Section
+`sec:lifted-output-events`, apply unchanged.  The question is therefore when
+every output a run can emit is legal, and Lifted Monotonicity answers it."
+In Lean there is nothing to lift: the transition system, Lemma
+`lem:run-residual`, Prop. `prop:confluence` and Lemma `lem:confluence-legality`
+(`consistent_iff_runsLegal`, with the lifted `Exposable`) are stated for
+arbitrary (relational) specifications from the start; this restates the first
+for the record. -/
 theorem «sec:complete-calm-theorem/lift-unchanged» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} {i : I} {es : List (Event I O)} {τ : State sp}
     (hx : Exec (canon sp i) es τ) :
     ∀ k u, τ.R k u ↔ (sp.P k u ∧ τ.cur ≼ k ∧ ∀ o ∈ outs es, o ≼ u) :=
   run_residual hx
 
-/-- **Theorem `thm:complete-calm`** (Complete CALM).  "An ordered
-specification is consistent if and only if it satisfies Lifted Monotonicity,
-equivalently the common-extension condition." -/
+/-- **Theorem `thm:complete-calm`** (Complete CALM).  "The runs of an I/O
+specification are consistent if and only if the spec satisfies Lifted
+Monotonicity."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs
+are consistent exactly when every output a run can emit is legal.  If every
+output at every state reachable without commitment is legal, every run is
+reachable without commitment, so this is the condition of Proposition
+`prop:exposure-boundary`, which holds exactly when the spec satisfies Lifted
+Monotonicity."  After the theorem: "The condition that characterizes
+consistency of runs is a property of the spec alone: Lifted Monotonicity,
+which for a function is ordinary monotonicity."
+
+Lean: the first conjunct is `complete_calm_via_legality`, assembled in the
+paper's order; the second is the common-extension form. -/
 theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (sp.Consistent ↔ sp.LiftedMono) ∧ (sp.Consistent ↔ sp.CommonExpansion) :=
-  ⟨complete_calm sp, complete_calm_commonExpansion sp⟩
+  ⟨complete_calm_via_legality sp, complete_calm_commonExpansion sp⟩
 
 /-- **Prop. `prop:exposure-boundary`** (No-commitment test).  "An ordered
 specification satisfies Lifted Monotonicity if and only if every output at
@@ -446,12 +461,18 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
 
-/-- Prop. `prop:exposure-boundary`, proof sketch: "If the common-extension
-condition holds, the spec is consistent by Complete CALM. … Conversely, if
-every such output is legal, applying Proposition `prop:exposability` at
-canonical states, one row at a time, builds the common output extension that
-the condition asks for."  The common-extension
-form of the proposition. -/
+/-- Prop. `prop:exposure-boundary`, proof sketch: "By Proposition
+`prop:common-expansion-form`, Lifted Monotonicity holds if and only if the
+common-extension condition holds.  Suppose it does, and take a state `(i,R)`
+reachable without commitment, an output `o ∈ R(i)`, a legal input extension
+`j` of `i`, and `x ∈ R(j)`.  The condition gives `u ∈ P(j)` that extends both
+`o` and `x`, and `(j,u) ∈ R` by Lemma `lem:run-residual`, which makes `o`
+legal (Proposition `prop:exposability`).  Conversely, if every such output is
+legal, applying Proposition `prop:exposability` at canonical states, one row
+at a time, builds the common output extension that the condition asks for."
+The common-extension form of the proposition; its forward direction
+(`commonExpansion_exposable`) uses the rows-remaining lemma directly, not
+Complete CALM. -/
 theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.CommonExpansion ↔
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=

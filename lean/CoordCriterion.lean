@@ -6,6 +6,7 @@ import CoordCriterion.Foundations.IOAutomata
 import CoordCriterion.FunctionalCALM.Theorem
 import CoordCriterion.CompleteCALM.Theorem
 import CoordCriterion.CompleteCALM.Cofinal
+import CoordCriterion.CompleteCALM.Legality
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.CALM.Examples
 import CoordCriterion.CALM.TransientConflict

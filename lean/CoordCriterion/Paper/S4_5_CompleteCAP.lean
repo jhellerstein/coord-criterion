@@ -65,7 +65,7 @@ spec has a row for this situation: its input is the pair of requests, and its
 output is the pair of responses.  The spec permits the row because a
 linearization may place the concurrent read before the write.  No participant
 emits this combined output, and availability does not need it.  Still, it
-extends both local outputs, which shows that the two are consistent, so the
+extends both local outputs, which shows that the two are compatible, so the
 spec must contain it.  Had the write finished before the read began, no such
 combined output would exist.
 
@@ -379,7 +379,7 @@ abbrev «def:escapes-cap» (sp : Spec I O) (D : Type) (E : Table I O) : Prop :=
 
 /-- "The canonical system's participants never wait: each can emit any output
 of `E` that its state allows, so it always has Availability for `E`.  The
-question is whether their answers stay consistent across sides.  Complete CAP
+question is whether their answers stay compatible across sides.  Complete CAP
 says they do exactly when outputs of `E` emitted on different sides have a
 common output extension in the spec at every common input extension of their
 inputs."  This entry checks the first sentence, for every spec and every `E`;

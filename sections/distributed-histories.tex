@@ -150,28 +150,28 @@ that extends the history events of $C$ with further history events after
 them.  All of $H'$ is a consistent cut of $H'$, its \emph{final cut}.  Let $j$ be a common \indesc of the participants' current inputs at a consistent cut $C$.  The cut $C$ is \emph{confluent at} $j$ when some continuation at $C$ has a final cut with endpoint $\bigl((j,R)\bigr)_{p\in\mathcal N}$ for some $R$, so that every participant ends in the same state $(j,R)$.  History events at different participants are independent, so this holds exactly when the participant runs at $C$ are
 confluent at $j$ (Definition~\ref{def:consistency}).
 
-\begin{definition}[Distributed consistency]
+\begin{definition}[Consistency of distributed histories]
 \label{def:distributed-consistency}
-An \spectype has \emph{distributed consistency} when, for every
+The distributed histories of an \spectype are \emph{consistent} when, for every
 finite participant set, every consistent cut of every history is confluent
 at every common \indesc of the participants' current inputs.
 \end{definition}
 
-\begin{proposition}[Consistency and distributed consistency]
+\begin{proposition}[Distributed consistency]
 \label{prop:distributed-consistency}
-An \spectype is consistent if and only if it has distributed
-consistency.
+The runs of an \spectype are consistent if and only if its distributed
+histories are consistent.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-The participant runs at a cut are a finite family of runs, so consistency gives
-distributed consistency.  Conversely, any finite family of runs can be placed at
+The participant runs at a cut are a finite family of runs, so consistent runs
+give consistent histories.  Conversely, any finite family of runs can be placed at
 participants that exchange no messages.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 By Complete CALM, which reduces to Functional CALM with one output per input,
-a spec has distributed consistency exactly when it satisfies Lifted
-Monotonicity.  For specs with Lifted Monotonicity, the Survivor test
+the distributed histories of a spec are consistent exactly when the spec
+satisfies Lifted Monotonicity.  For specs with Lifted Monotonicity, the Survivor test
 (Proposition~\ref{prop:confluence}) gives a row $(j,u)$ that every participant's
 state still contains, where $j$ is a common \indesc of all participants' current
 inputs; by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have
@@ -186,7 +186,7 @@ Corollary~\ref{cor:state-by-input} also gives convergence:
 
 \begin{corollary}[Convergence]
 \label{cor:convergence}
-In any history of a consistent functional specification, every
+In any history of a monotone functional specification, every
 participant whose current input at a consistent cut is $j$ is in state
 $\sigma_P(j)$.  Participants with the same current input therefore agree,
 regardless of message paths, arrival order, or the outputs they emitted.
@@ -196,8 +196,8 @@ regardless of message paths, arrival order, or the outputs they emitted.
 Each participant run is a run, so Corollary~\ref{cor:state-by-input} applies.
 \end{proof}
 
-With several outputs per input, convergence can fail even for consistent
-specs.  In Figure~\ref{fig:ambiguity-frames}(g), a run at input $\{\texttt{s}\}$ that emitted
+With several outputs per input, convergence can fail even when the spec
+satisfies Lifted Monotonicity.  In Figure~\ref{fig:ambiguity-frames}(g), a run at input $\{\texttt{s}\}$ that emitted
 $\{\texttt{s}{\to}\texttt{s1}\}$ has subsumed the route sets that leave it out, while a run at the same input that
 emitted nothing keeps them.  Consistency then guarantees only that such participants can be reconciled, not
 that they agree.

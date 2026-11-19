@@ -125,7 +125,7 @@ together with nondeterministic outputs, for Baccaert and Ketsman.
 A CRDT uses join semilattices to guarantee that replicas that have received the
 same updates converge to equivalent states, whatever the order of delivery and
 merge~\cite{shapiro2011crdt}.  That guarantee, Strong Eventual Consistency, is the convergence of
-Corollary~\ref{cor:convergence}, which every consistent functional spec has,
+Corollary~\ref{cor:convergence}, which every monotone functional spec has,
 so a semilattice merge suffices for it but is not needed.  It says nothing
 about what a
 client observes when it queries a replica that has not yet received every
@@ -143,7 +143,7 @@ the replica's state is $s(U)=s_0\sqcup\bigsqcup U$.  Then $U\subseteq V$
 implies $s(U)\sqsubseteq s(V)$, and $s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$ is the
 least state \outrelpart both~\cite{shapiro2011crdt}.  A client observation
 $q:D\to(Y,\preceq_Y)$ gives the client-visible spec $q\circ s$.  By
-Functional CALM, $q\circ s$ is consistent exactly when $U\subseteq V$ implies
+Functional CALM, the runs of $q\circ s$ are consistent exactly when $U\subseteq V$ implies
 $q(s(U))\preceq_Y q(s(V))$.  Monotonicity of $q$ on all of $D$ suffices, but
 $q$ need only be monotone between reachable states.  The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set fails the test: a deleted item grows $U$ and shrinks the answer.
 Operation-based CRDTs fit too, with the causally closed set of
@@ -379,7 +379,7 @@ automaton may make \commitments along the way, like the registrar that closes
 the polls early (Section~\ref{sec:systems}).  After such a \commitment, it can
 no longer reach some rows that other executions do reach.  We therefore also
 map the automaton into our system model, with its choices as \commitment
-events.  Complete CALM tells whether the projected spec is consistent.
+events.  Complete CALM tells whether the projected spec's runs are consistent.
 Comparing the automaton's runs with the spec's canonical runs tells whether the
 automaton itself is: it is confluent exactly when its \commitments never remove
 every row its canonical runs could still agree on.  We close with two ways to
@@ -425,8 +425,8 @@ Let $M$ be an automaton.
   \item $P_M$ is an \spectype, and every finite execution of $M$ is a run of
         $P_M$ from the canonical state at the empty receive sequence, with
         one input event per arrival and one output event per reply.
-  \item $P_M$ satisfies Relational Monotonicity.  It is consistent exactly
-        when, at each receive sequence, any two reply sequences in its fiber
+  \item $P_M$ satisfies Relational Monotonicity.  Its runs are consistent
+        exactly when, at each receive sequence, any two reply sequences in its fiber
         are one a prefix of the other.
 \end{enumerate}
 \end{proposition}
@@ -451,7 +451,8 @@ $x$, and later reply $z$.  Its projected spec has a run that receives $p$,
 replies $x$, receives a second $p$, and replies $z$: each row the run passes
 through occurs in some execution.  No execution has that trace, because a
 registrar that replied early never replies $z$.  Every reply sequence of the
-registrar is empty, $x$, or $xz$, so its projected spec is consistent.
+registrar is empty, $x$, or $xz$, so the runs of its projected spec are
+consistent.
 
 \paragraph{The automaton as a system.}
 To recover what the projection drops, we map the automaton into our system
@@ -544,7 +545,8 @@ Let $M$ be an automaton.
         finitely many executions and any common \indesc $j$ of their receive
         sequences, some row at $j$ lies in the canonical table of each and in
         none of the sets of removed rows.
-  \item If $M$ is confluent, $P_M$ is consistent.  The converse fails.
+  \item If $M$ is confluent, the runs of $P_M$ are consistent.  The converse
+        fails.
 \end{enumerate}
 \end{proposition}
 
@@ -565,18 +567,18 @@ counterexample to the converse.
 For the registrar, replying early loses every reachable row with reply
 sequence $xz$, so its system removes them in a \commitment event.  An execution
 that replied early and one that waited and replied $xz$ then have no common
-reachable row at two ballots, and the registrar is not confluent, although its
-projected spec is consistent.  Closing the polls is a \commitment the projected
+reachable row at two ballots, and the registrar is not confluent, although the
+runs of its projected spec are consistent.  Closing the polls is a \commitment the projected
 spec does not require: a canonical run can emit $x$ after one ballot and still
 emit $xz$ after the second.
 
-Inconsistency can also come from the projected spec itself.  Consider a counter
+A failure can also come from the projected spec itself.  Consider a counter
 whose report carries the count at the moment the report fires.  After two
 arrivals, one execution has reported $1$, before the second arrival, and
 another has reported $2$.  Neither reply sequence is a prefix of the other, so
-the projected spec is inconsistent.  A counter that records the count when each
+the projected spec does not satisfy Lifted Monotonicity.  A counter that records the count when each
 request arrives, and later reports from that record, sends the reports
-$1,2,\ldots,m$ in order.  Its projected spec is consistent, and the counter
+$1,2,\ldots,m$ in order.  Its projected spec satisfies Lifted Monotonicity, and the counter
 itself is confluent.
 
 \paragraph{Testing and proof.}
@@ -591,7 +593,8 @@ reply sequences it collects form a finite spec in our model, which can be
 checked for violations of Lifted Monotonicity.  This is routine engineering
 practice and has found serious bugs in production
 systems~\cite{newcombe2015aws,zhou2021foundationdb}.  Testing suits
-refutation.  If the projected spec is inconsistent, two executions show it:
+refutation.  If the projected spec does not satisfy Lifted Monotonicity, two
+executions show it:
 they have the same receive sequence, and neither reply sequence is a prefix of
 the other.  A violation of the automaton's own confluence is shown by finitely
 many executions and a receive sequence at which they have no common reachable
@@ -609,7 +612,7 @@ mappings~\cite{abadi1991refinement}, and are mechanized for practical
 distributed systems~\cite{hawblitzel2015ironfleet}.  Our use adds one
 obligation.  A \emph{declared} spec $D$ gives, for each receive sequence, a set
 of reply sequences by a rule; it does not enumerate executions.  To check
-consistency on $D$ instead of on the projected spec, two things must be shown,
+Lifted Monotonicity on $D$ instead of on the projected spec, two things must be shown,
 and both are needed: if $D$ omits a reply sequence the automaton can produce,
 it may hide an incompatibility, and if $D$ adds one the automaton cannot
 produce, it may create an incompatibility the automaton does not have.
@@ -632,8 +635,8 @@ satisfies both obligations.
 \label{prop:declared-specification}
 Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
 correspond, by an order isomorphism, to receive sequences.  If $D$ satisfies
-realizability and domination, then $D$ is consistent exactly when the
-projected spec is.
+realizability and domination, then $D$ satisfies Lifted Monotonicity exactly
+when the projected spec does.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -644,6 +647,6 @@ it.  Conversely, rows of $D$ are rows of the projected spec, and their common
 \end{proof}
 
 Together, the two obligations let $D$ stand in for the projected spec:
-consistency is checked on $D$ exactly as everywhere else in this paper.
+Lifted Monotonicity is checked on $D$ exactly as everywhere else in this paper.
 Whether the automaton itself is confluent is a question about its executions
 (Proposition~\ref{prop:automaton-confluence}).

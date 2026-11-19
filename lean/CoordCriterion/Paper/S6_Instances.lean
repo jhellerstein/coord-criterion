@@ -405,8 +405,8 @@ theorem «sec:crdt-instance/state-monotone» {D : Type} [PO D] [Inst.JSL D] (s0 
           ∀ c, Inst.st s0 U₁ ≼ c → Inst.st s0 U₂ ≼ c → Inst.st s0 (U₁.union U₂) ≼ c :=
   ⟨Inst.st_mono s0, Inst.st_union s0, Inst.st_union_least s0⟩
 
-/-- Sec. `sec:crdt-instance`: "By Functional CALM, `q ∘ s` is consistent
-exactly when `U ⊆ V` implies `q(s(U)) ≼_Y q(s(V))`." -/
+/-- Sec. `sec:crdt-instance`: "By Functional CALM, the runs of `q ∘ s` are
+consistent exactly when `U ⊆ V` implies `q(s(U)) ≼_Y q(s(V))`." -/
 theorem «sec:crdt-instance/query-calm» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D) (q : D → Y) :
     (graph (fun U : Inst.FSet D => q (Inst.st s0 U))).Consistent ↔
       ∀ U V : Inst.FSet D, U ≼ V → q (Inst.st s0 U) ≼ q (Inst.st s0 V) :=
@@ -945,7 +945,7 @@ automaton is a run of this spec" is Prop. `prop:projection` (1); "a run of the
 spec may combine rows that no single execution reaches in that order" and
 "After such a commitment, it can no longer reach some rows that other
 executions do reach" are `«sec:operational-models/registrar»`; "Complete CALM
-tells whether the projected spec is consistent" is Prop. `prop:projection`
+tells whether the projected spec's runs are consistent" is Prop. `prop:projection`
 (2); and "it is confluent exactly when its commitments never remove every row
 its canonical runs could still agree on" is Prop. `prop:automaton-confluence`
 (2).
@@ -1015,8 +1015,9 @@ theorem «sec:operational-models/step-by-step» {A : Type} (M : IOA.Automaton A)
 (1) `P_M` is an I/O specification, and every finite execution of `M` is a run
 of `P_M` from the canonical state at the empty receive sequence, with one
 input event per arrival and one output event per reply.  (2) `P_M` satisfies
-Relational Monotonicity.  It is consistent exactly when, at each receive
-sequence, any two reply sequences in its fiber are one a prefix of the other."
+Relational Monotonicity.  Its runs are consistent exactly when, at each
+receive sequence, any two reply sequences in its fiber are one a prefix of the
+other."
 
 Lean: (1) every receive sequence has a row (`IOT.spec` is a `Spec`), and
 `IOT.exec_run`: the events `IOT.evs M β` run from `canon (spec M) (inW M [])`
@@ -1059,7 +1060,8 @@ ballots, which closes the polls.  Or it may wait for a second ballot, reply
 replies `x`, receives a second `p`, and replies `z`: each row the run passes
 through occurs in some execution.  No execution has that trace, because a
 registrar that replied early never replies `z`.  Every reply sequence of the
-registrar is empty, `x`, or `xz`, so its projected spec is consistent."
+registrar is empty, `x`, or `xz`, so the runs of its projected spec are
+consistent."
 
 Lean: the registrar is `IOT.Poll.M` (`s1 → cl` replies early; `cl` ignores
 later ballots).  `IOT.Poll.spec_run`: the events of `p, x, p, z` form a run of
@@ -1205,7 +1207,7 @@ those rows less the rows its commitment events removed.  `M` is confluent
 exactly when, for any finitely many executions and any common input
 extension `j` of their receive sequences, some row at `j` lies in the
 canonical table of each and in none of the sets of removed rows.  (3) If `M`
-is confluent, `P_M` is consistent.  The converse fails."
+is confluent, the runs of `P_M` are consistent.  The converse fails."
 
 Lean: (1) `IOT.sys_consistent_iff` (`Guard.SysConsistent` of the system's
 history endpoints `IOT.SysRun`), proved with the Survivor test for runs
@@ -1238,8 +1240,8 @@ theorem «prop:automaton-confluence» {A : Type} (M : IOA.Automaton A) :
 /-- "For the registrar, replying early loses every reachable row with reply
 sequence `xz`, so its system removes them in a commitment event.  An execution
 that replied early and one that waited and replied `xz` then have no common
-reachable row at two ballots, and the registrar is not confluent, although its
-projected spec is consistent.  Closing the polls is a commitment the projected
+reachable row at two ballots, and the registrar is not confluent, although the
+runs of its projected spec are consistent.  Closing the polls is a commitment the projected
 spec does not require: a canonical run can emit `x` after one ballot and still
 emit `xz` after the second."
 
@@ -1256,25 +1258,27 @@ theorem «sec:operational-models/registrar-commitment» :
       (IOT.evs IOT.Poll.M [.p, .x, .p, .z]) σ) :=
   ⟨IOT.Poll.early_removes, IOT.Poll.not_confluent, IOT.Poll.consistent, IOT.Poll.spec_run⟩
 
-/-- "Inconsistency can also come from the projected spec itself.  Consider a
+/-- "A failure can also come from the projected spec itself.  Consider a
 counter whose report carries the count at the moment the report fires.  After
 two arrivals, one execution has reported `1`, before the second arrival, and
 another has reported `2`.  Neither reply sequence is a prefix of the other, so
-the projected spec is inconsistent.  A counter that records the count when
-each request arrives, and later reports from that record, sends the reports
-`1,2,…,m` in order.  Its projected spec is consistent, and the counter itself
-is confluent."
+the projected spec does not satisfy Lifted Monotonicity.  A counter that
+records the count when each request arrives, and later reports from that
+record, sends the reports `1,2,…,m` in order.  Its projected spec satisfies
+Lifted Monotonicity, and the counter itself is confluent."
 
 Lean: `IOT.Ctr.Race` (state: the count; a report `rep n` at count `n`) and
 `IOT.Ctr.Queue` (state `(n, m)`: arrivals and reports; it reports `m + 1`
 when `m < n`).  `IOT.Ctr.race_inconsistent`; `IOT.Ctr.queue_exec` (the reply
 sequence of every execution is `reps m`, the reports `1, …, m`);
-`IOT.Ctr.queue_consistent`; `IOT.Ctr.queue_confluent`. -/
+`IOT.Ctr.queue_consistent`; `IOT.Ctr.queue_confluent`; Lifted Monotonicity
+from consistency by Complete CALM. -/
 theorem «sec:operational-models/counters» :
-    ¬ (IOT.spec IOT.Ctr.Race).Consistent ∧
+    ¬ (IOT.spec IOT.Ctr.Race).LiftedMono ∧
     (∀ β s, IOA.Execution IOT.Ctr.Queue β s → IOT.replies IOT.Ctr.Queue β = IOT.Ctr.reps s.2) ∧
-    (IOT.spec IOT.Ctr.Queue).Consistent ∧ IOT.Confluent IOT.Ctr.Queue :=
-  ⟨IOT.Ctr.race_inconsistent, fun _ _ h => (IOT.Ctr.queue_exec h).2.1, IOT.Ctr.queue_consistent,
+    (IOT.spec IOT.Ctr.Queue).LiftedMono ∧ IOT.Confluent IOT.Ctr.Queue :=
+  ⟨fun h => IOT.Ctr.race_inconsistent ((complete_calm _).2 h),
+    fun _ _ h => (IOT.Ctr.queue_exec h).2.1, (complete_calm _).1 IOT.Ctr.queue_consistent,
     IOT.Ctr.queue_confluent⟩
 
 /-! "Testing and proof": "The projected spec and the system of an automaton
@@ -1289,25 +1293,28 @@ has found serious bugs in production systems.  Testing suits refutation."
 These sentences describe tools and practice and are argued in prose only (see
 the README); the refutation claim is the next entry. -/
 
-/-- "If the projected spec is inconsistent, two executions show it: they have
+/-- "If the projected spec does not satisfy Lifted Monotonicity, two
+executions show it: they have
 the same receive sequence, and neither reply sequence is a prefix of the
 other.  A violation of the automaton's own confluence is shown by finitely
 many executions and a receive sequence at which they have no common
 reachable row, and confirming that they have none means exploring all of their
 continuations to that receive sequence."
 
-Lean: `IOT.not_consistent_iff`; the violation of confluence is the negation of
+Lean: `IOT.not_consistent_iff`, with Complete CALM turning Lifted Monotonicity
+into consistency of the runs; the violation of confluence is the negation of
 Def. `def:confluent-automaton`, unfolded here.  That confirming it means
 exploring the continuations is argued in prose only (see the README). -/
 theorem «sec:operational-models/testing-witness» {A : Type} (M : IOA.Automaton A) :
-    (¬ (IOT.spec M).Consistent ↔
+    (¬ (IOT.spec M).LiftedMono ↔
       ∃ β s β' s', IOA.Execution M β s ∧ IOA.Execution M β' s' ∧ IOT.inW M β = IOT.inW M β' ∧
         ¬ (IOT.outW M β ≼ IOT.outW M β' ∨ IOT.outW M β' ≼ IOT.outW M β)) ∧
     (¬ IOT.Confluent M ↔
       ∃ fam : List (List A × M.St), (∀ e ∈ fam, IOA.Execution M e.1 e.2) ∧
         ∃ j : IOT.InS M, (∀ e ∈ fam, IOT.inW M e.1 ≼ j) ∧
           ∀ u, ∃ e ∈ fam, ¬ IOT.Live M e.1 e.2 j u) := by
-  refine ⟨IOT.not_consistent_iff, ⟨fun h => ?_, fun ⟨fam, hx, j, hj, hu⟩ hc => ?_⟩⟩
+  refine ⟨(not_congr (complete_calm _)).symm.trans IOT.not_consistent_iff,
+    ⟨fun h => ?_, fun ⟨fam, hx, j, hj, hu⟩ hc => ?_⟩⟩
   · apply Classical.byContradiction
     intro hn
     apply h
@@ -1339,7 +1346,7 @@ theorem «sec:operational-models/testing-cannot-show» (X : List Testing.Stage) 
 an automaton refines a spec: every trace of the automaton is allowed by the
 spec. … Our use adds one obligation.  A *declared* spec `D` gives, for each
 receive sequence, a set of reply sequences by a rule; it does not enumerate
-executions.  To check consistency on `D` instead of on the projected spec, two
+executions.  To check Lifted Monotonicity on `D` instead of on the projected spec, two
 things must be shown, and both are needed: if `D` omits a reply sequence the
 automaton can produce, it may hide an incompatibility, and if `D` adds one the
 automaton cannot produce, it may create an incompatibility the automaton does
@@ -1383,8 +1390,8 @@ theorem «sec:operational-models/recording-rule» :
 /-- **Prop. `prop:declared-specification`** (Declared specifications).  "Let
 `D` be an I/O specification whose outputs are reply sequences and whose inputs
 correspond, by an order isomorphism, to receive sequences.  If `D` satisfies
-realizability and domination, then `D` is consistent exactly when the
-projected spec is."  With the obligations: "*Realizability.*  Every reply
+realizability and domination, then `D` satisfies Lifted Monotonicity exactly
+when the projected spec does."  With the obligations: "*Realizability.*  Every reply
 sequence that `D` allows at a receive sequence is the reply sequence of some
 execution with that receive sequence.  *Domination.*  Every execution's reply
 sequence is a prefix of one that `D` allows at its receive sequence."
@@ -1397,15 +1404,15 @@ is an order embedding that is onto; ontoness is not assumed, since
 Realizability and totality of `D` imply it.  `IOT.declared`, through
 `liftedMono_iff_of_cofinalAlong`, whose proof follows the sketch through the
 common-extension form.  The closing paragraph ("Together, the two obligations
-let `D` stand in for the projected spec: consistency is checked on `D` exactly
-as everywhere else in this paper.  Whether the automaton itself is confluent
+let `D` stand in for the projected spec: Lifted Monotonicity is checked on `D`
+exactly as everywhere else in this paper.  Whether the automaton itself is confluent
 is a question about its executions (Proposition
 `prop:automaton-confluence`).") relates the statement to the rest of the
 subsection. -/
 theorem «prop:declared-specification» {A J : Type} [PO J] (M : IOA.Automaton A)
     (φ : IOT.InS M → J) (D : Spec J (IOT.OutS M)) (H : CofinalAlong φ D (IOT.spec M)) :
-    D.Consistent ↔ (IOT.spec M).Consistent :=
-  IOT.declared φ D H
+    D.LiftedMono ↔ (IOT.spec M).LiftedMono :=
+  (complete_calm D).symm.trans ((IOT.declared φ D H).trans (complete_calm _))
 
 end Paper
 end CC

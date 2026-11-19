@@ -25,7 +25,7 @@ The index below lists every `Paper/` declaration.  The library files carry
 module docstrings that name the paper section they support, what they
 contain, and their modeling choices.
 
-What is argued only in prose, not in Lean: in Appendix F, Lynch's result that atomicity is a safety property (Lean takes atomicity of an infinite execution to be atomicity of each finite prefix, `«prop:gl-async/fair-executions»`); the description of the 2PL and MVTO protocols themselves (which arrival makes a lock wait, issues a timestamp, or triggers the write rule; Appendix G, where Lean checks the commitments those steps apply, when `order(A,B)` removes nothing, and the MVTO run driven by arrivals); the messaging of two-phase commit in §4.3 (prepare messages, logging, blocking; Lean checks that a prepare reports the owner's commitments, that the decision is monotone, applies no commitment, and commits exactly when every owner's commitments allow commit); that consensus is the mechanism that provides the log's commitment in §5.1 (Lean checks that some output of the log needs a commitment, `«sec:proper-coordination/locks-overhead»`); the
+What is argued only in prose, not in Lean: the reading of consistency in §2 as a safety property of a spec's runs that guarantees a common state exists but not that a system reaches it, and the remark in §1 and §5 that a system omitting a required commitment can produce inconsistent runs or that a mutable replicated store's replicas can diverge without coordination; in Appendix F, Lynch's result that atomicity is a safety property (Lean takes atomicity of an infinite execution to be atomicity of each finite prefix, `«prop:gl-async/fair-executions»`); the description of the 2PL and MVTO protocols themselves (which arrival makes a lock wait, issues a timestamp, or triggers the write rule; Appendix G, where Lean checks the commitments those steps apply, when `order(A,B)` removes nothing, and the MVTO run driven by arrivals); the messaging of two-phase commit in §4.3 (prepare messages, logging, blocking; Lean checks that a prepare reports the owner's commitments, that the decision is monotone, applies no commitment, and commits exactly when every owner's commitments allow commit); that consensus is the mechanism that provides the log's commitment in §5.1 (Lean checks that some output of the log needs a commitment, `«sec:proper-coordination/locks-overhead»`); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman as statements about transducer
 runs (which input order policy-aware, domain-guided and original placement
@@ -77,6 +77,7 @@ first and supporting claims and examples follow.
 | `Foundations/IOAutomata.lean` | `CC.IOA` | §6 | Lynch–Tuttle I/O automata: signatures, input-enabled automata, executions, compatible composition, projection and its converse |
 | `FunctionalCALM/Theorem.lean` | `CC` | §2 | Thm. Functional CALM, Cor. state-by-input, functional exposure boundary |
 | `CompleteCALM/Theorem.lean` | `CC` | §3 | LM characterizations, common-expansion form, pairs suffice, lifted output event, Thm. Complete CALM, exposure boundary |
+| `CompleteCALM/Legality.lean` | `CC` | §2–§3 | Lemma confluence-legality (runs consistent iff every output a run can emit is legal), the bridge to legality at states reachable without commitment, and Functional and Complete CALM assembled in the paper's order |
 | `CompleteCALM/Cofinal.lean` | `CC` | §6.5 | Cofinality (used by Prop. declared-specification): a declared spec whose rows are rows of `T` and dominate every row of `T` (same inputs, or along an order embedding) is Lifted Monotone / consistent iff `T` is |
 | `CALM/Lemmas.lean` | `CC.CALM` | §2–§3, App. B | Event facts, functional remarks, Lemma reconciliation, paper proof routes, pairs suffice |
 | `CALM/Examples.lean` | `CC.CALM` | §2–§3, App. B | `k`-set agreement (pairs), rows at `j`, relational state-by-input, election, directed fiber |
@@ -148,7 +149,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-701 entries.
+702 entries.
 
 ### §2 Functional CALM
 
@@ -216,6 +217,8 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:consistency»` | abbrev | **Def. |
 | `«prop:confluence»` | theorem | **Prop. |
 | `«eq:reconciliation»` | abbrev | **Eq. |
+| `«sec:executions/safety-of-runs»` | theorem | Before Lemma `lem:confluence-legality`: |
+| `«lem:confluence-legality»` | theorem | **Lemma `lem:confluence-legality`** (Confluence and legality). |
 | `«thm:functional-calm»` | theorem | **Theorem `thm:functional-calm`** (Functional CALM). |
 | `«thm:functional-calm/example»` | theorem | Example after Theorem `thm:functional-calm`: |
 | `«cor:state-by-input»` | theorem | **Corollary `cor:state-by-input`** (State is fixed by input). |
@@ -293,7 +296,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:distributed-consistency»` | abbrev | **Def. |
 | `«prop:distributed-consistency»` | theorem | **Prop. |
 | `«prop:distributed-consistency/literal-matching»` | theorem | Prop. |
-| `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, a spec has distributed consistency exactly when it satisfies Lifted Monotonici… |
+| `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, the distributed histories of a spec are consistent exactly when the spec satis… |
 | `«cor:distributed-calm»` | theorem | **Corollary `cor:distributed-calm`** (Complete CALM at consistent cuts). |
 | `«sec:distributed-consistency/constructive-continuation»` | theorem | "For specs with Lifted Monotonicity, the Survivor test (Proposition `prop:confluence`) gives a row `(j,u)` that every participant's state still contains, whe… |
 | `«cor:convergence»` | theorem | **Cor. |
@@ -485,8 +488,8 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«def:confluent-automaton»` | abbrev | **Def. |
 | `«prop:automaton-confluence»` | theorem | **Prop. |
 | `«sec:operational-models/registrar-commitment»` | theorem | "For the registrar, replying early loses every reachable row with reply sequence `xz`, so its system removes them in a commitment event. |
-| `«sec:operational-models/counters»` | theorem | "Inconsistency can also come from the projected spec itself. |
-| `«sec:operational-models/testing-witness»` | theorem | "If the projected spec is inconsistent, two executions show it: |
+| `«sec:operational-models/counters»` | theorem | "A failure can also come from the projected spec itself. |
+| `«sec:operational-models/testing-witness»` | theorem | "If the projected spec does not satisfy Lifted Monotonicity, two executions show it: |
 | `«sec:operational-models/testing-cannot-show»` | theorem | "Testing cannot show that Lifted Monotonicity holds, since that is a claim about every input." Lean (`Testing.testing_cannot_show`): |
 | `«sec:operational-models/both-halves»` | theorem | "The second approach is proof. |
 | `«sec:operational-models/recording-rule»` | theorem | "Domination is the counterpart, for receive and reply sequences, of the refinement obligation above. |
@@ -521,7 +524,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/determined»` | abbrev | *determined* — the upper fiber has one element; *determination* — reaching such a state (Sec. |
 | `«app:notation/run»` | abbrev | *canonical run* (*run*) — finite sequence of specification events from a canonical state (Def. |
 | `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
-| `«app:notation/consistent»` | abbrev | *consistent* — every finite family of runs can reach one common state at each common input extension `j` (Def. |
+| `«app:notation/consistent»` | abbrev | *consistent runs* — every finite family of runs can reach one common state at each common input extension `j` (Def. |
 | `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
 | `«app:notation/relational-specification»` | abbrev | *I/O specification* — `P ⊆ I × O` total on `I` (Def. |
 | `«app:notation/nondeterministic»` | abbrev | *nondeterministic* — some fiber has several outputs (Def. |
@@ -546,7 +549,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input, output, and commitment events at `C`; `(σ_p(C))_{p ∈ 𝒩}` (Def. |
 | `«app:notation/continuation»` | abbrev | *continuation* — a history extending `C` (Sec. |
 | `«app:notation/cut-confluent-at»` | abbrev | *cut confluent at `j`* — some continuation brings every participant to one state `(j,R)` (Sec. |
-| `«app:notation/distributed-consistency»` | abbrev | *distributed consistency* — every consistent cut of every history is confluent at every common input extension (Def. |
+| `«app:notation/distributed-consistency»` | abbrev | *consistent distributed histories* — every consistent cut of every history is confluent at every common input extension (Def. |
 | `«app:notation/commitment»` | abbrev | *commitment* — partial function on states removing rows, none extended by a remaining row at the same input (Def. |
 | `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, commitment, and send events `p` may perform next (Def. |
 | `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
@@ -578,17 +581,16 @@ File `Paper/AppB_Proofs.lean`; paper source `appendices/proof-machinery.tex`.
 |---|---|---|
 | `«proof:lem:run-residual»` | theorem | Proof of Lemma `lem:run-residual`: |
 | `«proof:prop:confluence»` | theorem | Proof of Prop. |
-| `«proof:thm:functional-calm»` | theorem | Proof of Thm. |
+| `«proof:lem:confluence-legality»` | theorem | Proof of Lemma `lem:confluence-legality`. |
 | `«proof:cor:state-by-input»` | theorem | Proof of Cor. |
 | `«proof:prop:functional-exposure-boundary»` | theorem | Proof of Prop. |
+| `«proof:thm:functional-calm»` | theorem | Proof of Thm. |
 | `«proof:prop:common-expansion-form»` | theorem | Proof of Prop. |
 | `«lem:reconciliation»` | theorem | **Lemma `lem:reconciliation`** (Reconciliation). |
 | `«lem:reconciliation/consistency-over-runs»` | theorem | Lemma `lem:reconciliation` quantifies over runs with their events; Def. |
-| `«proof:thm:complete-calm/if»` | theorem | Proof of Thm. |
-| `«proof:thm:complete-calm/only-if»` | theorem | Proof of Thm. |
-| `«proof:thm:complete-calm»` | theorem | Proof of Thm. |
 | `«proof:prop:exposure-boundary/only-if»` | theorem | Proof of Prop. |
 | `«proof:prop:exposure-boundary»` | theorem | Proof of Prop. |
+| `«proof:thm:complete-calm»` | theorem | Proof of Thm. |
 | `«app:pairs-suffice»` | theorem | `app:pairs-suffice`: |
 | `«app:pairs-suffice/rows-at-j»` | theorem | `app:pairs-suffice`: |
 | `«app:pairs-suffice/k-at-a-time»` | theorem | `app:pairs-suffice`: |

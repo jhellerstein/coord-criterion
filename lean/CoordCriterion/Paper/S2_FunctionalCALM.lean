@@ -1,4 +1,5 @@
 import CoordCriterion.Figures
+import CoordCriterion.CompleteCALM.Legality
 
 /-!
 # Paper §2: Functional CALM (`sections/functional-calm.tex`)
@@ -204,10 +205,12 @@ theorem «sec:election-story/not-reconciled» :
         ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba] baba :=
   elecEq_not_confluent
 
-/-- §2.1: "Input and output events form a transition system, and the
-specification is consistent when its runs are confluent.  For functional
-tables this corresponds exactly to monotonicity": the election is consistent
-under the output-extension order and not under the equality order. -/
+/-- §2.1: "Input and output events form a transition system over
+specification states, and the runs of a spec are consistent when they are
+confluent … Section `sec:functional-calm-theorem` shows that for functional
+tables the runs are consistent exactly when the spec is monotone": the
+election's runs are consistent under the output-extension order and not under
+the equality order. -/
 theorem «sec:election-story/consistency» :
     elec.Consistent ∧ ¬ elecEq.Consistent :=
   ⟨elec_consistent, elecEq_not_consistent⟩
@@ -563,9 +566,13 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (fam : List (State sp)) (j : I) : Prop :=
   ConfluentAt fam j
 
-/-- **Def. `def:consistency`** (Consistency).  "An I/O specification is
-*consistent* when every finite family of runs is confluent at every common input extension of their current inputs, including
-inputs that some run's commitments have ruled out."  "Consistency requires
+/-- **Def. `def:consistency`** (Consistency).  "The runs of an I/O
+specification are *consistent* when every finite family of them is confluent
+at every common input extension of their current inputs."  The common input
+extension `j` ranges over every `j` above all current inputs, including inputs
+at which some run's outputs have removed every row; `Spec.Consistent`
+quantifies over exactly these.  Runs may emit any permitted output, legal or
+not; commitments are not separate events in this model.  "Consistency requires
   confluence at every common input extension of the runs' current inputs, not
   just at some larger common input extension that arrives later.  Otherwise the
   runs could emit conflicting outputs before that larger input arrives.  In the
@@ -579,7 +586,7 @@ inputs that some run's commitments have ruled out."  "Consistency requires
   exists, it might never arrive."  The observability claim
   is the paper's modeling rationale.
 
-Lean: `Spec.Consistent`. -/
+Lean: `Spec.Consistent`, a property of the spec's runs. -/
 abbrev «def:consistency» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.Consistent
 
@@ -605,13 +612,62 @@ abbrev «eq:reconciliation» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (fam : List (State sp)) (j : I) : Prop :=
   ∃ u, sp.P j u ∧ ∀ σ ∈ fam, σ.R j u
 
+/-- Before Lemma `lem:confluence-legality`: "Consistency is a safety property
+of the spec's runs: it guarantees that a common state exists, not that a
+system reaches it."  "Whether runs are consistent depends on the outputs they
+emit.  Confluence fails exactly when some run can emit an output that is not
+legal."  The first sentence is the reading of Def. `def:consistency` (prose);
+the second is the lemma. -/
+theorem «sec:executions/safety-of-runs» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    sp.Consistent ↔ sp.RunsLegal :=
+  consistent_iff_runsLegal sp
+
+/-- **Lemma `lem:confluence-legality`** (Confluence and legality).  "The runs
+of an I/O specification are consistent if and only if every output that a run
+can emit is legal at the state where it is emitted."  Proof sketch: "If a run
+can emit an output `o` that is not legal, `output(o)` removes some row `(k,x)`
+such that no row at `k` extends both `x` and `o`.  One continuation of the run
+emits `o`; another takes `input(k)` and then emits `x`.  The two share no row
+at `k`, so by the Survivor test they are not confluent at `k`.  Conversely,
+suppose every output is legal, and take a family of runs and a common input
+extension `j`.  Pick for each run a row `(i_r,u_r)` remaining at its current
+input; `u_r` extends everything that run emitted (Lemma `lem:run-residual`).
+Each `u_r` is legal at `σ_P(i_r)`, the canonical state of its input, so every
+output at an input extension of `i_r` has an output extension there that also
+extends `u_r`.  Taking the runs one at a time gives `u ∈ P(j)` that extends
+every `u_r`.  The row `(j,u)` remains in every run, and the Survivor test gives
+confluence."
+
+Lean: `consistent_iff_runsLegal` (`Spec.RunsLegal`: every output at every run
+state is `Exposable`).  It holds for every spec, functional or not, with the
+lifted legality of §3.2 (`Exposable`), which in a functional spec is Def.
+`def:exposable`.  The second conjunct is the bridge used by both CALM proofs:
+legality at every run state is the same as legality at every state reachable
+without commitment (`runsLegal_iff_legalReachLegal`). -/
+theorem «lem:confluence-legality» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    (sp.Consistent ↔ sp.RunsLegal) ∧ (sp.RunsLegal ↔ sp.LegalReachLegal) :=
+  ⟨consistent_iff_runsLegal sp, runsLegal_iff_legalReachLegal sp⟩
+
 /-! ## The Functional CALM theorem (`sec:functional-calm-theorem`) -/
 
-/-- **Theorem `thm:functional-calm`** (Functional CALM).  "A functional ordered
-specification is consistent if and only if it is monotone." -/
+/-- **Theorem `thm:functional-calm`** (Functional CALM).  "The runs of a
+functional I/O specification are consistent if and only if the spec is
+monotone."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs are
+consistent exactly when every output a run can emit is legal.  If every output
+at every state reachable without commitment is legal, every run is reachable
+without commitment, so this is the condition of Proposition
+`prop:functional-exposure-boundary`, which holds exactly when the spec is
+monotone."  Section opening: "Monotonicity is defined by a spec's table and
+orders alone, consistency by its runs.  Functional CALM shows that one holds
+exactly when the other does.  By Lemma `lem:confluence-legality`, the question
+is when every output a run can emit is legal."
+
+Lean: `functional_calm_via_legality`, which follows the paper's order
+(Lemma `lem:confluence-legality`, the bridge, Prop.
+`prop:functional-exposure-boundary`). -/
 theorem «thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
     (hf : sp.Functional) : sp.Consistent ↔ sp.MonotoneF :=
-  functional_calm hf
+  functional_calm_via_legality hf
 
 /-- Example after Theorem `thm:functional-calm`: "In the equality-order
 election, `f(ab·) = ⊥` and `f(aba) = a` are incomparable: a run that emits `⊥`
@@ -623,21 +679,28 @@ theorem «thm:functional-calm/example» :
         ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba] baba :=
   ⟨winner_bab, winner_baba, bab_le_baba, elecEq_not_monotone, elecEq_not_confluent⟩
 
-/-- **Corollary `cor:state-by-input`** (State is fixed by input).  "In a
-consistent functional specification, every run ending at current input `i` is
-in the canonical state `σ_P(i)`, whatever outputs it emitted along the way." -/
+/-- **Corollary `cor:state-by-input`** (State is fixed by input).  "In the
+functional case, monotonicity has a strong consequence: emitting outputs never
+changes the state, which depends only on the input."  "In a monotone
+functional specification, every run ending at current input `i` is in the
+canonical state `σ_P(i)`, whatever outputs it emitted along the way."  Proof
+sketch: "By monotonicity, the outputs a run emits remove no row at an input
+extension of `i` (Lemma `lem:run-residual`)."
+
+Lean: `run_canon_of_mono`, from the rows-remaining lemma; functionality is
+not needed. -/
 theorem «cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (hf : sp.Functional) (hc : sp.Consistent) {τ : State sp} (hτ : IsRun τ) :
+    (_hf : sp.Functional) (hm : sp.MonotoneF) {τ : State sp} (hτ : IsRun τ) :
     τ = canon sp τ.cur :=
-  state_by_input hf hc hτ
+  run_canon_of_mono hm hτ
 
 /-- After Cor. `cor:state-by-input`: "To be confluent at a common input extension
 `j`, each run therefore needs only the single event `input(j)`, which takes it
 to `σ_P(j)`." -/
 theorem «cor:state-by-input/input-suffices» {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (hf : sp.Functional) (hc : sp.Consistent) {σ : State sp} (hrun : IsRun σ) {j : I}
+    (hf : sp.Functional) (hm : sp.MonotoneF) {σ : State sp} (hrun : IsRun σ) {j : I}
     (hj : σ.cur ≼ j) : Exec σ [.input j] (canon sp j) :=
-  functional_meet_by_input hf hc hrun hj
+  functional_meet_by_input hf (consistent_of_mono hm) hrun hj
 
 /-- **Prop. `prop:functional-exposure-boundary`** (No-commitment test).  "A
 functional I/O specification is monotone if and only if every output at

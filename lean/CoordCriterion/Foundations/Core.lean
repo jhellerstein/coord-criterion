@@ -114,7 +114,10 @@ def IsRun {sp : Spec I O} (τ : State sp) : Prop := ∃ i, Reach (canon sp i) τ
 def ConfluentAt {sp : Spec I O} (fam : List (State sp)) (j : I) : Prop :=
   ∃ τ : State sp, τ.cur = j ∧ ∀ σ ∈ fam, Reach σ τ
 
-/-- Consistency (Def. consistency). -/
+/-- Consistency of the spec's runs (Def. consistency): "The runs of an I/O
+specification are consistent when every finite family of them is confluent at
+every common input extension of their current inputs."  Runs may emit any
+permitted output, legal or not. -/
 def Spec.Consistent (sp : Spec I O) : Prop :=
   ∀ fam : List (State sp), (∀ σ ∈ fam, IsRun σ) →
     ∀ j : I, (∀ σ ∈ fam, σ.cur ≼ j) → ConfluentAt fam j

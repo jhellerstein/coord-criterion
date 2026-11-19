@@ -94,8 +94,8 @@ mechanisms such as locks and consensus.
 
 \subsection{The Criterion: Lifted Monotonicity}
 The model provides clean definitions for the key ingredients of CALM:
-Consistency and Monotonicity.  A spec is \emph{consistent} when all its possible
-executions are \emph{confluent}: states reached along different paths can be
+Consistency and Monotonicity.  A spec's possible executions, its runs, are
+\emph{consistent} when they are \emph{confluent}: states reached along different paths can be
 brought to a common state.  We will see that this definition is general.  The spec is a parameter:
 specs and confluence together capture a range of classical consistency models,
 from linearizability, through serializability and other transactional isolation
@@ -104,22 +104,24 @@ levels, to the eventual consistency guarantees of replicated data.
 For a spec that permits exactly one output per input, the possibility table is a
 function, and monotonicity is standard: $i\InputOrd j$ implies
 $f(i)\OutputOrd f(j)$.  \emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem})
-proves that consistency is equivalent to monotonicity in this setting, which
+proves that in this setting the runs are consistent exactly when the spec is
+monotone, which
 covers prior CALM work and CRDT state.  Many specs are nondeterministic: leader
 election and transaction scheduling permit several outputs for one input.
 These need a second invariant: whatever outputs different runs choose at the
 same input, some permitted output must \outrelbase them all.  Together, the two
 invariants make every output decision incidental, and we call the pair
 \emph{Lifted Monotonicity}.  \emph{Complete CALM} (Section~\ref{sec:complete-calm-theorem})
-proves that Consistency is equivalent to Lifted Monotonicity, a new reading of
-the CALM acronym.
+proves that the runs are consistent exactly when the spec satisfies Lifted
+Monotonicity: Consistency As Lifted Monotonicity, a new reading of the CALM
+acronym.
 
 \subsection{Coordination is for \commitment}
 What of coordination?  A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, consensus,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
-A system that omits a required \commitment can become inconsistent; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
+A system that omits a required \commitment can produce inconsistent runs; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
@@ -142,7 +144,7 @@ We make contributions in four categories:
 
 \noindent
 \emph{2. A unified criterion.} For functions between ordered domains,
-        Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specs,
+        Functional CALM shows that the runs are consistent exactly when the spec is monotone. For nondeterministic specs,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 

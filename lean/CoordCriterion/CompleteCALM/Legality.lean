@@ -3,8 +3,8 @@ import CoordCriterion.CALM.Lemmas
 /-!
 # Complete CALM as "confluence is legality" + "legality is Lifted Monotonicity"
 
-Scratch formalization of a proposed restructuring of Sections 2–3 (branch
-`calm-restructure`; not yet cited by the paper).
+Library for Lemma `lem:confluence-legality` and the route of the paper's
+proofs of Functional CALM and Complete CALM (Sections 2–3).
 
 * `Spec.RunsLegal` — every output at every run state is legal (exposable).
   Runs here are arbitrary sequences of input and output events; output events

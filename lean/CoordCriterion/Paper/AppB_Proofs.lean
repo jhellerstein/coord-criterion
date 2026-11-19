@@ -1,4 +1,5 @@
 import CoordCriterion.CALM.Examples
+import CoordCriterion.CompleteCALM.Legality
 
 /-!
 # Paper Appendix B: deferred proofs for §2–§3 (`appendices/proof-machinery.tex`)
@@ -48,21 +49,33 @@ theorem «proof:prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
         Exec σ [.input j, .output u] (meetState sp j u (σ.sub _ _ hju))) :=
   ⟨reach_sub, fun h _ _ hju => survivor_exec h hju⟩
 
-/-- Proof of Thm. `thm:functional-calm`: "By Prop. `prop:confluence`, a finite
-family of runs is therefore confluent at a common input extension `j` exactly when
-`f(j)` extends every output emitted on any of them.  If `f` is monotone, this
-holds … If `f` is not monotone, some `i ≼ k` has `f(i) ⋠ f(k)`.  Of two runs
-from `σ_P(i)`, one that emits `f(i)` no longer has the row `(k,f(k))`, while
-one that accepts `input(k)` keeps it; no row at `k` survives in both, so they
-are not confluent at `k`."  The theorem, along the library route. -/
-theorem «proof:thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
-    (hf : sp.Functional) : sp.Consistent ↔ sp.MonotoneF :=
-  functional_calm hf
+/-- Proof of Lemma `lem:confluence-legality`.  "We use legality in a form that
+covers both functional and nondeterministic specs: `o` is legal at `(i,R)`
+when, for every row `(k,x) ∈ R`, some `u ∈ R(k)` extends both `o` and `x`."
+(⇒) "Suppose a run ends at `(i,R)` and `o ∈ R(i)` is not legal there.  Then
+some `(k,x) ∈ R` has no `u ∈ R(k)` extending both `o` and `x`.  We extend the
+run in two ways: by `output(o)`, and by `input(k)` followed by `output(x)` …
+By Proposition `prop:confluence`, the two runs are not confluent at `k`."
+(⇐) "Each `R_r` keeps a row at its current input, say `(i_r,u_r)` … `u_r` is
+legal [at `σ_P(i_r)`].  By totality there is some `v₀ ∈ P(j)`.  For
+`r = 1,…,m` in turn, `(j,v_{r-1})` is a row of `σ_P(i_r)` … so legality of
+`u_r` gives `v_r ∈ P(j)` extending both `u_r` and `v_{r-1}`. … Proposition
+`prop:confluence` gives confluence at `j`."
 
-/-- Proof of Cor. `cor:state-by-input`: "By Functional CALM …, the
-spec is monotone. … monotonicity gives `o_ℓ ≼ f(k)`, and the output
-conditions remove nothing."  The key step: in a monotone specification every
-run state is canonical. -/
+Lean: `Exposable σ o` is this form of legality.  The first conjunct is (⇒) at
+every run state (`exposable_of_consistent`); the second is (⇐)
+(`consistent_iff_runsLegal`, whose proof builds the common extension from
+legality at canonical states, `exposure_boundary`, and applies the survivor
+test, `commonExpansion_consistent`). -/
+theorem «proof:lem:confluence-legality» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    (sp.Consistent → ∀ τ : State sp, IsRun τ → ∀ o, τ.R τ.cur o → Exposable τ o) ∧
+      (sp.RunsLegal → sp.Consistent) :=
+  ⟨fun hc _ hτ _ ho => exposable_of_consistent hc hτ ho, (consistent_iff_runsLegal sp).2⟩
+
+/-- Proof of Cor. `cor:state-by-input`: "By Lemma `lem:run-residual`, the run's
+remainder table is `P[in ⪰ i, out ⪰ o₁, …, out ⪰ o_m]` … monotonicity gives
+`o_ℓ ≼ f(k)`, and the output conditions remove nothing."  The key step: in a
+monotone specification every run state is canonical. -/
 theorem «proof:cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hm : sp.MonotoneF) {τ : State sp} (hτ : IsRun τ) : τ = canon sp τ.cur :=
   run_canon_of_mono hm hτ
@@ -75,6 +88,22 @@ theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) (hf : sp.Functional) :
     sp.MonotoneF ↔ ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   functional_exposure_boundary hf
+
+/-- Proof of Thm. `thm:functional-calm`: "By Lemma `lem:confluence-legality`,
+the runs are consistent exactly when every output that a run can emit is
+legal.  This condition is equivalent to legality at every state reachable
+without commitment. … suppose every output at every state reachable without
+commitment is legal.  Then, by induction along any run, each of its output
+events is legal, so the run is commitment-free and every state it reaches is
+reachable without commitment … By Proposition
+`prop:functional-exposure-boundary`, legality at every state reachable without
+commitment holds exactly when `f` is monotone."  The first conjunct is the
+bridge (`runsLegal_iff_legalReachLegal`, by induction along the run,
+`reachableCF_of_exec`); the second is the theorem along this route. -/
+theorem «proof:thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
+    (hf : sp.Functional) :
+    (sp.RunsLegal ↔ sp.LegalReachLegal) ∧ (sp.Consistent ↔ sp.MonotoneF) :=
+  ⟨runsLegal_iff_legalReachLegal sp, functional_calm_via_legality hf⟩
 
 /-! ## Proofs for Section 3 -/
 
@@ -109,39 +138,17 @@ theorem «lem:reconciliation/consistency-over-runs» {I O : Type} [PO I] [PO O]
       (∀ r ∈ fam, r.fin.cur ≼ j) → ConfluentAt (fam.map RunW.fin) j :=
   consistent_iff_runs
 
-/-- Proof of Thm. `thm:complete-calm`, (⇐): "Each output `o` emitted on a run
-was emitted at some input `i_o ≼ j`, so `(i_o,o)` is a row of `P`; the
-condition supplies `u ∈ P(j)` extending all of them, and
-Lemma `lem:reconciliation` gives confluence." -/
-theorem «proof:thm:complete-calm/if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (hC : sp.CommonExpansion) : sp.Consistent :=
-  consistent_of_ce_paper hC
-
-/-- Proof of Thm. `thm:complete-calm`, (⇒): "Given rows `(i_r,o_r)` with
-common input extension `j`, consider the runs that start at `σ_P(i_r)` and emit
-`o_r`.  Consistency and Lemma `lem:reconciliation`, applied to them, give some
-`u ∈ P(j)` extending every `o_r`.  For the empty family, totality gives
-`P(j) ≠ ∅`."   (Lean needs no separate empty case: consistency of the
-empty family and the lemma already give `P(j) ≠ ∅`.) -/
-theorem «proof:thm:complete-calm/only-if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (hc : sp.Consistent) : sp.CommonExpansion :=
-  ce_of_consistent_paper hc
-
-/-- Proof of Thm. `thm:complete-calm`, assembled along the paper's route
-(both forms, via Prop. `prop:common-expansion-form`). -/
-theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
-    (sp.Consistent ↔ sp.CommonExpansion) ∧ (sp.Consistent ↔ sp.LiftedMono) :=
-  ⟨complete_calm_paper sp, complete_calm_paper_lm sp⟩
-
-/-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Let `(i,R)` be reached by a
-run (commitment-free or not) … We extend the run in two ways: by `output(o)`,
-and by `input(j)` followed by `output(x)`.  By consistency the two extended
-runs are confluent at `j` … the legal-output test makes `o` a legal output."
-Stated, as in the proof, at every run state. -/
+/-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Suppose it holds.  Let
+`(i,R)` be reached by a run (commitment-free or not), and let `o ∈ R(i)`,
+`j ⪰ i` legal, and `x ∈ R(j)`.  The rows `(i,o)` and `(j,x)` of `P` have common
+input extension `j`, so the condition supplies `u ∈ P(j)` extending both `o`
+and `x`.  By Lemma `lem:run-residual`, `(j,u) ∈ R` … and the legal-output test
+makes `o` a legal output."  Stated, as in the proof, at every run state; it
+uses the rows-remaining lemma (`run_survive`), not consistency. -/
 theorem «proof:prop:exposure-boundary/only-if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (hc : sp.Consistent) {τ : State sp} (hτ : IsRun τ) {o : O} (ho : τ.R τ.cur o) :
+    (hC : sp.CommonExpansion) {τ : State sp} (hτ : IsRun τ) {o : O} (ho : τ.R τ.cur o) :
     Exposable τ o :=
-  exposable_of_consistent hc hτ ho
+  commonExpansion_exposable hC hτ ho
 
 /-- Proof of Prop. `prop:exposure-boundary`, both directions; the converse is
 the paper's: "By totality there is some `u₀ ∈ P(j)`.  For `r = 1,…,k` in turn, the
@@ -151,6 +158,19 @@ theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I
     sp.CommonExpansion ↔
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   exposure_boundary_paper sp
+
+/-- Proof of Thm. `thm:complete-calm`: "The proof of Lemma
+`lem:confluence-legality` covers nondeterministic specs, so the runs are
+consistent exactly when every output that a run can emit is legal.  As in the
+proof of Theorem `thm:functional-calm`, this holds exactly when every output at
+every state reachable without commitment is legal.  By Proposition
+`prop:exposure-boundary`, that holds exactly when the spec satisfies Lifted
+Monotonicity."  The three steps and their composite. -/
+theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    (sp.Consistent ↔ sp.RunsLegal) ∧ (sp.RunsLegal ↔ sp.LegalReachLegal) ∧
+      (sp.LegalReachLegal ↔ sp.LiftedMono) ∧ (sp.Consistent ↔ sp.LiftedMono) :=
+  ⟨consistent_iff_runsLegal sp, runsLegal_iff_legalReachLegal sp,
+    legalReachLegal_iff_liftedMono sp, complete_calm_via_legality sp⟩
 
 /-! ### Pairs suffice for the common-extension condition (`app:pairs-suffice`) -/
 

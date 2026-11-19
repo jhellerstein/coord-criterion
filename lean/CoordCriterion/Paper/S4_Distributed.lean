@@ -192,9 +192,9 @@ theorem «sec:distributed-consistency/cut-confluent-iff-runs» {D : Type} {n : N
     H.CutConfluentAt sp C j ↔ ∃ τ : State sp, τ.cur = j ∧ ∀ p, Reach (σs p) τ :=
   Dist.cut_confluent_iff hW hC hE j
 
-/-- **Def. distributed consistency** (`def:distributed-consistency`).  "An
-I/O specification has distributed consistency when, for every finite
-participant set, every consistent cut of every history is confluent at every
+/-- **Def. `def:distributed-consistency`** (Consistency of distributed
+histories).  "The distributed histories of an I/O specification are
+consistent when, for every finite participant set, every consistent cut of every history is confluent at every
 common input extension of the participants' current inputs."
 
 Lean: for message data of type `D`; "every finite participant set" is "every
@@ -202,9 +202,12 @@ Lean: for message data of type `D`; "every finite participant set" is "every
 abbrev «def:distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
   Dist.DistConsistent sp D
 
-/-- **Prop. consistency and distributed consistency**
-(`prop:distributed-consistency`).  "An I/O specification is consistent if
-and only if it has distributed consistency." -/
+/-- **Prop. `prop:distributed-consistency`** (Distributed consistency).  "The
+runs of an I/O specification are consistent if and only if its distributed
+histories are consistent."  Proof sketch: "The participant runs at a cut are a
+finite family of runs, so consistent runs give consistent histories.
+Conversely, any finite family of runs can be placed at participants that
+exchange no messages." -/
 theorem «prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
   Dist.consistent_iff_distConsistent sp D
@@ -217,8 +220,8 @@ theorem «prop:distributed-consistency/literal-matching» (sp : Spec I O) (D : T
   Dist.consistent_iff_distConsistent0 sp D
 
 /-- "By Complete CALM, which reduces to Functional CALM with one output per
-input, a spec has distributed consistency exactly when it satisfies
-Lifted Monotonicity." -/
+input, the distributed histories of a spec are consistent exactly when the
+spec satisfies Lifted Monotonicity." -/
 theorem «sec:distributed-consistency/lifted-monotonicity» (sp : Spec I O) (D : Type) :
     Dist.DistConsistent sp D ↔ sp.LiftedMono :=
   Dist.distConsistent_iff_liftedMono sp D
@@ -252,7 +255,7 @@ theorem «sec:distributed-consistency/constructive-continuation» {sp : Spec I O
       ∀ σ ∈ fam, ExecCF σ [.input j, .output u] (meetState sp j u hu) :=
   Dist.reconcile_cf hLM fam hrun j hj
 
-/-- **Cor. convergence** (`cor:convergence`).  "In any history of a consistent
+/-- **Cor. convergence** (`cor:convergence`).  "In any history of a monotone
 functional specification, every participant whose current input at a
 consistent cut is `j` is in state `σ_P(j)`.  Participants with the same current
 input therefore agree, regardless of message paths, arrival order, or the
@@ -260,19 +263,20 @@ outputs they emitted."
 
 Lean: `σs` is the endpoint of the cut; the first conjunct is "`σ_p(C) =
 σ_P(cur)`", the second "same current input ⇒ same state". -/
-theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consistent)
+theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hm : sp.MonotoneF)
     (hf : sp.Functional) {H : Dist.History I O D n} {C : Dist.Pos n → Prop}
     {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) :
     (∀ p, σs p = canon sp (σs p).cur) ∧
     (∀ p q, (σs p).cur = (σs q).cur → σs p = σs q) :=
-  ⟨fun p => Dist.convergence hc hf hE p rfl, Dist.convergence_agree hc hf hE⟩
+  ⟨fun p => Dist.convergence (consistent_of_mono hm) hf hE p rfl,
+    Dist.convergence_agree (consistent_of_mono hm) hf hE⟩
 
 /-- After Cor. `cor:convergence`: "With several outputs per input, convergence
-can fail even for consistent specs.  In Figure `fig:ambiguity-frames`(g), a run
+can fail even when the spec satisfies Lifted Monotonicity.  In Figure `fig:ambiguity-frames`(g), a run
 at input `{s}` that emitted `{s→s1}` has subsumed the route sets that leave it
 out, while a run at the same input that emitted nothing keeps them.
 Consistency then guarantees only that such participants can be reconciled, not
-that they agree."  The traceroute specification is consistent; the run that
+that they agree."  The traceroute specification's runs are consistent; the run that
 emitted `{s→s1}` at `{s}` and the canonical run at `{s}` end at the same input
 in different states (the first has subsumed `{s→h}`, the second keeps it); and
 the two are confluent at that input. -/

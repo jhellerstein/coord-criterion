@@ -284,7 +284,7 @@ theorem «sec:composite-calm/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
   ⟨Comp.seq_liftedMono hP hK, fun _ h => (Guard.pipeline_coordination_free hP hK h).2⟩
 
 /-- "The composite is itself an I/O specification.  By Complete CALM,
-it is consistent exactly when it satisfies Lifted
+its runs are consistent exactly when it satisfies Lifted
 Monotonicity, and then no output needs a commitment (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/
 theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
@@ -380,8 +380,8 @@ theorem «sec:composite-calm/cancellation» :
   Joint.bool_toggle
 
 /-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "The
-composite `P₂ ∘ P₁` satisfies Lifted Monotonicity, and so is consistent and
-needs no commitment, in each of the following cases.  (1) `𝒮₁` and `𝒮₂`
+composite `P₂ ∘ P₁` satisfies Lifted Monotonicity, so its runs are consistent
+and it needs no commitment, in each of the following cases.  (1) `𝒮₁` and `𝒮₂`
 satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity; `𝒮₂`
 satisfies it on `𝒮₁`'s outputs.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
 Monotonicity via a different order on `M`."  Lean: the hypothesis is the
@@ -392,7 +392,8 @@ Section `sec:proper-coordination`; see `«def:proper-coordination»`), and
 are the same tables with `M` ordered by `inst`; "a different order" is any
 partial order `inst` (it may coincide with `≼_M`, which is case (1)).  (1) `Comp.seq_liftedMono`;
 (2) `Joint.seq_liftedMono_img`; (3) `Joint.seq_liftedMono_reorder`.
-"Consistent and needs no commitment" is `«sec:composite-calm/complete-calm»`. -/
+"Its runs are consistent and it needs no commitment" is
+`«sec:composite-calm/complete-calm»`. -/
 theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     (sp1 : Spec I M) (sp2 : Spec M O)
     (hcase : (sp1.LiftedMono ∧ sp2.LiftedMono) ∨

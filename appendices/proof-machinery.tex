@@ -28,23 +28,39 @@ $P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
 starting run.
 \end{proof}
 
-\begin{proof}[Proof of Theorem~\ref{thm:functional-calm}]
-Every input has one row, so an output emitted at current input $k$ is $f(k)$.
-By Lemma~\ref{lem:run-residual}, a run ending at input $i$ keeps the
-row $(j,f(j))$ at an \indesc $j$ of $i$ exactly when $f(j)$ \outrel every
-output the run has emitted.  By Proposition~\ref{prop:confluence}, a finite
-family of runs is therefore confluent at a common \indesc $j$ exactly
-when $f(j)$ \outrel every output emitted on any of them.  If $f$ is monotone,
-this holds, since each emitted $f(k)$ has $k\InputOrd j$.  If $f$ is not
-monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.  Of two
-runs from $\sigma_P(i)$, one that emits $f(i)$ no longer has the row
-$(k,f(k))$, while one that accepts $\mathsf{input}(k)$ keeps it; no row at $k$
-survives in both, so they are not confluent at $k$.
+\begin{proof}[Proof of Lemma~\ref{lem:confluence-legality}]
+We use legality in a form that covers both functional and nondeterministic
+specs: $o$ is legal at $(i,R)$ when, for every row $(k,x)\in R$, some
+$u\in R(k)$ \outrel both $o$ and $x$.  In a functional table the only row at
+$k$ is $(k,x)$, so this says $x$ \outrel $o$
+(Definition~\ref{def:exposable}); with several outputs per input it says that
+$\Excluded_o$ is empty (Section~\ref{sec:lifted-output-events}).
+
+($\Rightarrow$) Suppose a run ends at $(i,R)$ and $o\in R(i)$ is not legal
+there.  Then some $(k,x)\in R$ has no $u\in R(k)$ \outrelpart both $o$ and
+$x$.  We extend the run in two ways: by $\mathsf{output}(o)$, and by
+$\mathsf{input}(k)$ followed by $\mathsf{output}(x)$, which is defined since
+$(k,x)$ remains after $\mathsf{input}(k)$.  The input $k$ is a common \indesc
+of the two current inputs.  A row at $k$ in both resulting tables would be a
+row $(k,u)\in R$ with $u$ \outrelpart both $o$ and $x$, and there is none.  By
+Proposition~\ref{prop:confluence}, the two runs are not confluent at $k$.
+
+($\Leftarrow$) Suppose every output that a run can emit is legal, and let runs
+end at $(i_r,R_r)$, $r=1,\ldots,m$, with common \indesc $j$.  Each $R_r$ keeps a
+row at its current input, say $(i_r,u_r)$, and by Lemma~\ref{lem:run-residual}
+$u_r$ \outrel every output emitted on run $r$.  The canonical state
+$\sigma_P(i_r)$ is reached by the empty run and has $u_r$ as an output, so $u_r$
+is legal there.  By totality there is some $v_0\in P(j)$.  For $r=1,\ldots,m$
+in turn, $(j,v_{r-1})$ is a row of $\sigma_P(i_r)$, since $j\InputGe i_r$, so
+legality of $u_r$ gives $v_r\in P(j)$ \outrelpart both $u_r$ and $v_{r-1}$.
+Then $v_m$ \outrel every $u_r$.  By Lemma~\ref{lem:run-residual},
+$(j,v_m)\in R_r$ for every $r$, since $j\InputGe i_r$ and $v_m$ \outrel every
+output emitted on run $r$.  Proposition~\ref{prop:confluence} gives
+confluence at $j$.
 \end{proof}
 
 \begin{proof}[Proof of Corollary~\ref{cor:state-by-input}]
-By Functional CALM (Theorem~\ref{thm:functional-calm}), the spec is
-monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
+By Lemma~\ref{lem:run-residual}, the run's remainder table is
 $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
 \mathrm{out}\OutputGe o_m]$, where each $o_\ell=f(i_\ell)$ for some
 $i_\ell\InputOrd i$.  Every row whose input \inrel $i$ has the form $(k,f(k))$ with
@@ -53,13 +69,26 @@ output conditions remove nothing.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:functional-exposure-boundary}]
-Suppose $f$ is monotone, and let a \commitment-free run reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
+Suppose $f$ is monotone, and let a \commitment-free run reach $(i,R)$.  By Corollary~\ref{cor:state-by-input},
 $(i,R)=\sigma_P(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
 $i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each, so $f(i)$ is a
 legal output (Definition~\ref{def:exposable}).
 Conversely, if every such output is a legal output, then at $\sigma_P(i)$,
 which the empty run reaches, legality of $f(i)$ gives $f(i)\OutputOrd f(j)$
 for every \indesc $j$ of $i$, so $f$ is monotone.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:functional-calm}]
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+every output that a run can emit is legal.  This condition is equivalent to
+legality at every state reachable without \commitment.  One direction is
+immediate, since such states are reached by runs.  For the other, suppose every
+output at every state reachable without \commitment is legal.  Then, by
+induction along any run, each of its output events is legal, so the run is
+\commitment-free and every state it reaches is reachable without \commitment;
+hence every output it can emit is legal.  By
+Proposition~\ref{prop:functional-exposure-boundary}, legality at every state
+reachable without \commitment holds exactly when $f$ is monotone.
 \end{proof}
 
 \subsection{Proofs for Section~\ref{sec:complete-calm}}
@@ -95,33 +124,30 @@ By Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ exactly when $u\in\fiber{j}$
 gives the claim.
 \end{proof}
 
-\begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
-By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
-common-extension condition.  ($\Leftarrow$) Let finitely many runs end at
-$(i_r,R_r)$ with common \indesc $j$.  Each output $o$ emitted on a run was
-emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $P$; the
-condition supplies $u\in\fiber{j}$ \outrelpart all of them, and
-Lemma~\ref{lem:reconciliation} gives confluence.  ($\Rightarrow$) Given rows $(i_r,o_r)$ with common \indesc $j$, consider
-the runs that start at $\sigma_P(i_r)$ and emit $o_r$.  Consistency and
-Lemma~\ref{lem:reconciliation}, applied to them, give some $u\in\fiber{j}$
-\outrelpart every $o_r$.  For the empty family, totality gives
-$\fiber{j}\neq\varnothing$.
-\end{proof}
-
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
-Suppose the common-extension condition holds; by Theorem~\ref{thm:complete-calm}, the
-spec is consistent.  Let $(i,R)$ be reached by a run (\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
-$x\in R(j)$.  We extend the run in two ways: by $\mathsf{output}(o)$, and by
-$\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
-By consistency the two extended runs are confluent at $j$, so
-Proposition~\ref{prop:confluence} supplies a row $(j,u)$ in both tables.  Both
-tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the legal-output test
+By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
+common-extension condition.  Suppose it holds.  Let $(i,R)$ be reached by a run
+(\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
+$x\in R(j)$.  The rows $(i,o)$ and $(j,x)$ of $P$ have common \indesc $j$, so
+the condition supplies $u\in P(j)$ \outrelpart both $o$ and $x$.  By
+Lemma~\ref{lem:run-residual}, $(j,u)\in R$, since $j\InputGe i$ and $u$
+\outrel $o$, which \outrel every output emitted on the run.  So $u\in R(j)$
+\outrel $o$ and $x$, and the legal-output test
 (Proposition~\ref{prop:exposability}) makes $o$ a legal output.
 Conversely, suppose every such output is a legal output, and let rows
 $(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality there is some
 $u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the legal-output test for $o_r$ at
 $\sigma_P(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in P(j)$ \outrelpart both
 $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
+The proof of Lemma~\ref{lem:confluence-legality} covers nondeterministic specs,
+so the runs are consistent exactly when every output that a run can emit is
+legal.  As in the proof of Theorem~\ref{thm:functional-calm}, this holds exactly
+when every output at every state reachable without \commitment is legal.  By
+Proposition~\ref{prop:exposure-boundary}, that holds exactly when the spec
+satisfies Lifted Monotonicity.
 \end{proof}
 
 \paragraph{Pairs suffice for the common-extension condition.}
@@ -144,10 +170,10 @@ rows are not.
 \begin{proof}[Proof of Proposition~\ref{prop:distributed-consistency}]
 A cut is confluent at $j$ exactly when its participant runs are
 (\S\ref{sec:distributed-consistency}).  The participant runs at any cut form a
-finite family of runs, so consistency gives distributed consistency.
+finite family of runs, so consistent runs give consistent histories.
 Conversely, every finite family of runs is the family of participant runs, at
 the final cut, of a message-free history with one participant per run, so
-distributed consistency gives consistency.
+consistent histories give consistent runs.
 \end{proof}
 
 \paragraph{Exchanging outputs.}

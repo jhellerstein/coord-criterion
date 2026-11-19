@@ -324,31 +324,12 @@ Specification states, input events, runs, \commitment-free runs, and
 consistency are defined as before.  The results of Section~\ref{sec:executions}
 use output events only through Equation~\ref{eq:output-action}, which lifted
 output events still satisfy, so the rows-remaining lemma
-(Lemma~\ref{lem:run-residual}) and the Survivor test
-(Proposition~\ref{prop:confluence}) apply unchanged.  With them, Complete CALM
-characterizes consistency by Lifted Monotonicity.
-
-\begin{theorem}[Complete CALM]
-\label{thm:complete-calm}
-An \spectype is consistent if and only if it satisfies Lifted
-Monotonicity.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds
-if and only if the common-extension condition holds.
-If that condition holds, a common \outnoun $u\in P(j)$
-of everything emitted survives in every run.
-If outputs emitted at inputs with a common \indesc $j$ are incompatible in
-$P(j)$, the runs that emit them share no row at $j$ and can never be
-reconciled there.  Full proof in Appendix~\ref{app:proofs-sec3}.
-\end{proof}
-
-The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
-ordinary monotonicity.  Both theorems also hold for distributed histories
-(Section~\ref{sec:distributed-consistency}).
-
-The same condition decides which outputs need a \commitment.
+(Lemma~\ref{lem:run-residual}), the Survivor test
+(Proposition~\ref{prop:confluence}), and
+Lemma~\ref{lem:confluence-legality}, with legality as in
+Section~\ref{sec:lifted-output-events}, apply unchanged.  The question is
+therefore when every output a run can emit is legal, and Lifted Monotonicity
+answers it.
 
 \begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
@@ -357,17 +338,36 @@ if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-If the common-extension condition holds, the spec is consistent by Complete
-CALM.  Take a reachable state $(i,R)$, an output $o\in R(i)$, a legal \indesc
-$j$ of $i$, and $x\in R(j)$.  Extending a run that reaches $(i,R)$ by
-$\mathsf{output}(o)$, or by $\mathsf{input}(j)$ and then $\mathsf{output}(x)$,
-gives two runs that are confluent at $j$, so some $u\in R(j)$ \outrel both $o$
-and $x$, which makes $o$ legal (Proposition~\ref{prop:exposability}).
-Conversely, if every such output is legal, applying
-Proposition~\ref{prop:exposability} at canonical states, one row at a time,
-builds the common \outnoun that the condition asks for.  Full proof in
+By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds if
+and only if the common-extension condition holds.  Suppose it does, and take a
+state $(i,R)$ reachable without \commitment, an output $o\in R(i)$, a legal
+\indesc $j$ of $i$, and $x\in R(j)$.  The condition gives $u\in P(j)$ that
+\outrel both $o$ and $x$, and $(j,u)\in R$ by Lemma~\ref{lem:run-residual},
+which makes $o$ legal (Proposition~\ref{prop:exposability}).  Conversely, if
+every such output is legal, applying Proposition~\ref{prop:exposability} at
+canonical states, one row at a time, builds the common \outnoun that the
+condition asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
+\end{proof}
+
+\begin{theorem}[Complete CALM]
+\label{thm:complete-calm}
+The runs of an \spectype are consistent if and only if the spec satisfies
+Lifted Monotonicity.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+every output a run can emit is legal.  If every output at every state reachable
+without \commitment is legal, every run is reachable without \commitment, so
+this is the condition of Proposition~\ref{prop:exposure-boundary}, which holds
+exactly when the spec satisfies Lifted Monotonicity.  Full proof in
 Appendix~\ref{app:proofs-sec3}.
 \end{proof}
+
+The condition that characterizes consistency of runs is a property of the spec
+alone: Lifted Monotonicity, which for a function is ordinary monotonicity.
+Both theorems also hold for distributed histories
+(Section~\ref{sec:distributed-consistency}).
 
 For functional specs, Lifted Monotonicity and the common-extension condition
 are both functional monotonicity, so Complete CALM and

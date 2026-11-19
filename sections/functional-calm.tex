@@ -201,11 +201,11 @@ the table's rows and its two orders, so the need for the \commitment is a
 property of the spec, not of any system that implements it.
 
 Runs are the foundation of the consistency side of CALM.  Input and output
-events form a transition system over specification states, and a spec is
-\emph{consistent} when its runs are \emph{confluent}: runs whose inputs have a
+events form a transition system over specification states, and the runs of a
+spec are \emph{consistent} when they are \emph{confluent}: runs whose inputs have a
 common \indesc can always be continued to a common state there.
-Section~\ref{sec:functional-calm-theorem} shows that for functional tables consistency corresponds exactly to
-monotonicity.
+Section~\ref{sec:functional-calm-theorem} shows that for functional tables the
+runs are consistent exactly when the spec is monotone.
 Appendix~\ref{app:notation} collects the notation for reference.
 
 \subsection{Specifications and states}
@@ -493,9 +493,8 @@ A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{c
 
 \begin{definition}[Consistency]
 \label{def:consistency}
-An \spectype is \emph{consistent} when every finite family of
-runs is confluent at every common \indesc of their current inputs, including
-inputs that some run's \commitments have ruled out.
+The runs of an \spectype are \emph{consistent} when every finite family of
+them is confluent at every common \indesc of their current inputs.
 \end{definition}
 
 Consistency requires confluence at every common \indesc of the runs' current
@@ -534,46 +533,57 @@ Consistency thus ensures that runs never diverge irreparably: there is no
 ``split brain.''  Whatever events a finite collection of runs contains, at any
 common \indesc of their current inputs, some state is reachable by every run
 and contradicts none of their outputs; Proposition~\ref{prop:confluence}
-identifies it.  Consistency is a safety property of the spec: it guarantees that a common
+identifies it.  Consistency is a safety property of the spec's runs: it guarantees that a common
 state exists, not that a system reaches it
 (Section~\ref{sec:commitment-conflict}).  Reaching it takes an algorithm,
 message delivery, and a termination argument, which belong to the operational
 model in which a spec is realized.
 
+Whether runs are consistent depends on the outputs they emit.  Confluence
+fails exactly when some run can emit an output that is not legal:
+
+\begin{lemma}[Confluence and legality]
+\label{lem:confluence-legality}
+The runs of an \spectype are consistent if and only if every output that a
+run can emit is legal at the state where it is emitted.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+If a run can emit an output $o$ that is not legal, $\mathsf{output}(o)$
+removes some row $(k,x)$ such that no row at $k$ \outrel both $x$ and $o$.  One
+continuation of the run emits $o$; another takes $\mathsf{input}(k)$ and then
+emits $x$.  The two share no row at $k$, so by the Survivor test they are not
+confluent at $k$.  Conversely, suppose every output is legal, and take a family of runs and
+a common \indesc $j$.  Pick for each run a row $(i_r,u_r)$ remaining at its
+current input; $u_r$ \outrel everything that run emitted
+(Lemma~\ref{lem:run-residual}).  Each $u_r$ is legal at $\sigma_P(i_r)$, the
+canonical state of its input, so every output at an \indesc of $i_r$ has an
+\outnoun there that also \outrel $u_r$.  Taking the runs one at a time gives
+$u\in P(j)$ that \outrel every $u_r$.  The row $(j,u)$ remains in every run,
+and the Survivor test gives confluence.  Full proof in
+Appendix~\ref{app:proofs-sec2}.
+\end{proof}
+
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
 Monotonicity is defined by a spec's table and orders alone, consistency by its
-runs.  Functional CALM shows that these coincide.
-
-\begin{theorem}[Functional CALM]
-\label{thm:functional-calm}
-A functional \spectype is consistent if and only if it is
-monotone.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-If $f$ is monotone, each output a run has emitted lies below $f(j)$ at every
-\indesc $j$ of its current input, so the row $(j,f(j))$ survives in every run,
-and the Survivor test (Proposition~\ref{prop:confluence}) gives confluence at
-$j$.  If $f$ is not monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.
-Emitting $f(i)$ removes the only row at $k$, so a run that does so can never be
-reconciled at $k$ with one that receives $k$.  Full proof in Appendix~\ref{app:proofs-sec2}.
-\end{proof}
-
-In the functional case, consistency has a strong consequence: emitting outputs
-never changes the state, which depends only on the input.
+runs.  Functional CALM shows that one holds exactly when the other does.  By
+Lemma~\ref{lem:confluence-legality}, the question is when every output a run
+can emit is legal.  In the functional case, monotonicity has a strong
+consequence: emitting outputs never changes the state, which depends only on
+the input.
 
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
-In a consistent functional specification, every run ending at current
+In a monotone functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
 By monotonicity, the outputs a run emits remove no row at an \indesc
-of $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
+of $i$ (Lemma~\ref{lem:run-residual}).  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 To be confluent at a common \indesc $j$, each run therefore needs only the
@@ -599,6 +609,21 @@ A monotone spec can thus emit every current output without \commitment. If a
 spec is non-monotone, then for some $i\InputOrd k$,
 $f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
 $\mathsf{output}(f(i))$ applies $x_{f(i)}$ and rules out input $k$.
+
+\begin{theorem}[Functional CALM]
+\label{thm:functional-calm}
+The runs of a functional \spectype are consistent if and only if the spec is
+monotone.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+every output a run can emit is legal.  If every output at every state reachable
+without \commitment is legal, every run is reachable without \commitment, so
+this is the condition of Proposition~\ref{prop:functional-exposure-boundary},
+which holds exactly when the spec is monotone.  Full proof in
+Appendix~\ref{app:proofs-sec2}.
+\end{proof}
 
 Functional CALM restates the familiar CALM dichotomy at the level of the spec
 rather than inside a particular programming language.

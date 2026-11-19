@@ -2,7 +2,7 @@
 \label{sec:composition}
 
 A replicated key-value store poses a puzzle.  With mutable values, it is
-non-monotone and inconsistent~\cite{alvaro2011bloom}. The pragmatic solution is
+non-monotone, and its replicas can diverge without coordination~\cite{alvaro2011bloom}. The pragmatic solution is
 to impose a consensus-driven log upstream of the replicas, \`a la
 Multi-Paxos~\cite{lamport2001paxos}, so all replicas execute the same commands
 in the same order. But consensus is itself non-monotone: when two commands
@@ -168,8 +168,8 @@ contradict it.  Yet when composed after the capped counter, the pair of
 components needs no \commitment.  When do composed specs erase the need for
 \commitment entirely?
 
-The composite is itself an \spectype.  By Complete CALM, it is consistent
-exactly when it satisfies Lifted Monotonicity, and then no output needs a
+The composite is itself an \spectype.  By Complete CALM, its runs are
+consistent exactly when it satisfies Lifted Monotonicity, and then no output needs a
 \commitment (Theorem~\ref{thm:complete-calm},
 Proposition~\ref{prop:exposure-boundary}).  The orders on $I$ and $O$ are part
 of the composite's contract with its environment.  The order on $M$ is not:
@@ -202,8 +202,8 @@ Neither stage is monotone, but under the reversed order on $M$, both are
 
 \begin{proposition}[Jointly monotone composites]
 \label{prop:joint-monotone}
-The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, and so is
-consistent and needs no \commitment, in each of the following cases.
+The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, so its runs are
+consistent and it needs no \commitment, in each of the following cases.
 \begin{enumerate}
   \item $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity.
   \item $\Spec_1$ satisfies Lifted Monotonicity; $\Spec_2$ satisfies it on
