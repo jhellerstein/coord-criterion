@@ -1205,27 +1205,28 @@ that is, $i\mapsto\fiber{i}$ is monotone under the joint refinement lift:
         \end{equation}
 \end{definition}
 
-\color{blue!75!black}\cxtag{complete-calm:16}{B/L}\cxbar{complete-calm-16}{0.9 0.45 0}{s}With singleton fibers, Lifted Monotonicity is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).  Taking $X$ to be a single
-output gives Relational Monotonicity, and taking $j=i$ gives directed fibers,
-so Lifted Monotonicity implies both.  Conversely, suppose both
-hold, and take $i\InputOrd j$ and a finite nonempty $X\subseteq\fiber{i}$.
-Relational Monotonicity gives each $x\in X$ an \outnoun in $\fiber{j}$, and
-since $\fiber{j}$ is directed, those \outnouns have a common \outnoun in
-$\fiber{j}$.  So Lifted Monotonicity holds exactly when both do.  In
-powerdomain terms, Relational Monotonicity is monotonicity of
+\color{black}\cxtag{complete-calm:16}{N/M}\cxbar{complete-calm-16}{0.4 0.4 1}{s}With singleton fibers, Lifted Monotonicity is functional monotonicity
+(Definition~\ref{def:functional-monotonicity}).  In general it is exactly
+Relational Monotonicity together with directed fibers.  Taking $X$ to be a
+single output gives Relational Monotonicity, and taking $j=i$ gives directed
+fibers.  Conversely, take $i\InputOrd j$ and a finite nonempty
+$X\subseteq\fiber{i}$.  Relational Monotonicity gives each member of $X$ an
+\outnoun in $\fiber{j}$, and since $\fiber{j}$ is directed, those \outnouns
+have a common \outnoun there.  Lifted Monotonicity therefore constrains a spec
+even at $j=i$, where it asks that each fiber be directed.  The transaction
+fiber of Figure~\ref{fig:ambiguity-frames}(f) is not, so that spec fails
+Lifted Monotonicity already at $j=i$.\cxbar{complete-calm-16}{0.4 0.4 1}{e}\color{black}
+
+\color{black}\cxtag{complete-calm:17}{N/M}\cxbar{complete-calm-17}{0.4 0.4 1}{s}In powerdomain terms, Relational Monotonicity is monotonicity of
 $i\mapsto\fiber{i}$ under the Hoare preorder~\cite{abramsky1994domain}, which
 asks only that each output in $A$ have an \outnoun in $B$.  The joint
 refinement lift asks that every finite set of them have a common one, and the
 two agree when $B$ is directed.  Unlike the Hoare preorder, the joint
-refinement lift, as a relation on sets, is not reflexive: $A\LiftedOrd A$ holds
-only when $A$ is directed.  So Lifted Monotonicity already constrains a spec at
-$j=i$, where it asks $\fiber{i}\LiftedOrd\fiber{i}$, that is, that each fiber be
-directed.  The transaction fiber of Figure~\ref{fig:ambiguity-frames}(f) is
-not, so that spec fails Lifted Monotonicity already at $j=i$.\cxbar{complete-calm-16}{0.9 0.45 0}{e}\color{black}
+refinement lift is not reflexive: $A\LiftedOrd A$ holds only when $A$ is
+directed.\cxbar{complete-calm-17}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{The common-extension condition.}
-\color{black!45}\cxtag{complete-calm:17}{C}Lifted Monotonicity is stated for one input and its extensions, but runs may
+\color{black!45}\cxtag{complete-calm:18}{C}Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
 Such runs can be reconciled only at a common \indesc $j$ of both, which calls
 for a condition on rows at different inputs: a common \outnoun of $o_1$ and
@@ -1239,41 +1240,41 @@ $\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ is a common
 
 \color{black!45}\begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
-\cxtag{complete-calm:18}{C}An \spectype satisfies the \emph{common-extension condition} when,
+\cxtag{complete-calm:19}{C}An \spectype satisfies the \emph{common-extension condition} when,
 for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
 common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{complete-calm:19}{C}For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
+\color{black!45}\cxtag{complete-calm:20}{C}For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
 follows from $P$ being total on $I$.\color{black}
 
 \color{black!45}\begin{proposition}[Common-extension form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
-\cxtag{complete-calm:20}{C}An \spectype satisfies Lifted Monotonicity if and only
+\cxtag{complete-calm:21}{C}An \spectype satisfies Lifted Monotonicity if and only
 if it satisfies the common-extension condition.\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{complete-calm:21}{N/M}\cxbar{complete-calm-21}{0.4 0.4 1}{s}Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$
+\cxtag{complete-calm:22}{N/M}\cxbar{complete-calm-22}{0.4 0.4 1}{s}Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$
 to some \outnoun in the fiber at $j$, and that fiber is directed, so those
 \outnouns have a common \outnoun there.  Conversely, for $i\InputOrd j$, the
 rows $(i,x)$ for $x$ in a finite $X\subseteq\fiber{i}$ have $j$ as a common
 \indesc, so the condition gives the common \outnoun that Lifted Monotonicity
-asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.\cxbar{complete-calm-21}{0.4 0.4 1}{e}\color{black}
+asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.\cxbar{complete-calm-22}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
 \subsection{Lifted output events}
 \label{sec:lifted-output-events}
 
-\color{black!45}\cxtag{complete-calm:22}{C}To connect Lifted Monotonicity to consistency, we return to runs, where
+\color{black!45}\cxtag{complete-calm:23}{C}To connect Lifted Monotonicity to consistency, we return to runs, where
 nondeterminism raises a new question: when emitting one output removes others,
 is that removal a \commitment?  The output event is unchanged from the
 functional case: at a state $(i,R)$ with $o\in R(i)$, $\mathsf{output}(o)$ emits
 $o$ and keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).\color{black}
 
-\color{black!45}\cxtag{complete-calm:23}{C}Removing a row $(k,x)$ does not always lose the information in its output.  If
+\color{black!45}\cxtag{complete-calm:24}{C}Removing a row $(k,x)$ does not always lose the information in its output.  If
 some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
 nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
 would have.  This is output subsumption, and we put $(k,x)$ in $\Subsumed_o$.
@@ -1287,10 +1288,10 @@ every row at $k$, it rules out the input $k$; otherwise it rules out only the
 excluded outputs at $k$.  In the functional case every removed row is excluded,
 so $x_o$ is as before.\color{black}
 
-\color{black!45}\cxtag{complete-calm:24}{C}The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split.  Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g), at both inputs, are in $\Subsumed_o$, so that output needs no \commitment.
+\color{black!45}\cxtag{complete-calm:25}{C}The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split.  Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g), at both inputs, are in $\Subsumed_o$, so that output needs no \commitment.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.\color{black}
 
-\color{black!45}\cxtag{complete-calm:25}{C}Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
+\color{black!45}\cxtag{complete-calm:26}{C}Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
 applies no \commitment, that is, when $\Excluded_o$ is empty.  With several
 outputs at one input, this is more permissive than in the functional case,
 since an output event may remove rows by output subsumption without a
@@ -1301,22 +1302,22 @@ since an output event may remove rows by output subsumption without a
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
-\color{black}\cxtag{complete-calm:26}{N/M}\cxbar{complete-calm-26}{0.4 0.4 1}{s}Specification states, input events, runs, \commitment-free runs, and
+\color{black}\cxtag{complete-calm:27}{N/M}\cxbar{complete-calm-27}{0.4 0.4 1}{s}Specification states, input events, runs, \commitment-free runs, and
 consistency are defined as before.  The results of Section~\ref{sec:executions}
 use output events only through Equation~\ref{eq:output-action}, which lifted
 output events still satisfy, so the rows-remaining lemma
 (Lemma~\ref{lem:run-residual}) and the Survivor test
 (Proposition~\ref{prop:confluence}) apply unchanged.  With them, Complete CALM
-characterizes consistency by Lifted Monotonicity.\cxbar{complete-calm-26}{0.4 0.4 1}{e}\color{black}
+characterizes consistency by Lifted Monotonicity.\cxbar{complete-calm-27}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-\cxtag{complete-calm:27}{C}An \spectype is consistent if and only if it satisfies Lifted
+\cxtag{complete-calm:28}{C}An \spectype is consistent if and only if it satisfies Lifted
 Monotonicity.\color{black}
 \end{theorem}
 
 \color{black!45}\begin{proof}[Proof sketch]
-\cxtag{complete-calm:28}{C}By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds
+\cxtag{complete-calm:29}{C}By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds
 if and only if the common-extension condition holds.
 If that condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run.
@@ -1325,20 +1326,20 @@ $P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.  Full proof in Appendix~\ref{app:proofs-sec3}.\color{black}
 \end{proof}
 
-\color{black!45}\cxtag{complete-calm:29}{C}The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
+\color{black!45}\cxtag{complete-calm:30}{C}The condition that characterizes consistency is a property of a spec: Lifted Monotonicity, which for a function is
 ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that both
 theorems hold for distributed histories.\color{black}
 
-\color{black!45}\cxtag{complete-calm:30}{C}The same condition decides which outputs need a \commitment.\color{black}
+\color{black!45}\cxtag{complete-calm:31}{C}The same condition decides which outputs need a \commitment.\color{black}
 
 \color{black!45}\begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
-\cxtag{complete-calm:31}{C}An \spectype satisfies Lifted Monotonicity if and only
+\cxtag{complete-calm:32}{C}An \spectype satisfies Lifted Monotonicity if and only
 if every output at every state reachable without \commitment is legal.\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{complete-calm:32}{N/L}\cxbar{complete-calm-32}{0.9 0.45 0}{s}If the common-extension condition holds, the spec is consistent by Complete
+\cxtag{complete-calm:33}{N/L}\cxbar{complete-calm-33}{0.9 0.45 0}{s}If the common-extension condition holds, the spec is consistent by Complete
 CALM.  Take a reachable state $(i,R)$, an output $o\in R(i)$, a legal \indesc
 $j$ of $i$, and $x\in R(j)$.  Extending a run that reaches $(i,R)$ by
 $\mathsf{output}(o)$, or by $\mathsf{input}(j)$ and then $\mathsf{output}(x)$,
@@ -1347,10 +1348,10 @@ and $x$, which makes $o$ legal (Proposition~\ref{prop:exposability}).
 Conversely, if every such output is legal, applying
 Proposition~\ref{prop:exposability} at canonical states, one row at a time,
 builds the common \outnoun that the condition asks for.  Full proof in
-Appendix~\ref{app:proofs-sec3}.\cxbar{complete-calm-32}{0.9 0.45 0}{e}\color{black}
+Appendix~\ref{app:proofs-sec3}.\cxbar{complete-calm-33}{0.9 0.45 0}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{complete-calm:33}{N/S}For functional specs, Lifted Monotonicity and the common-extension condition
+\color{black}\cxtag{complete-calm:34}{N/S}For functional specs, Lifted Monotonicity and the common-extension condition
 are both functional monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.\color{black}

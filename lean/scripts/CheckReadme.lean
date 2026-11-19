@@ -97,6 +97,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:lifted-monotonicity»
 #check @CC.Paper.«def:lifted-monotonicity/functional»
 #check @CC.Paper.«def:lifted-monotonicity/relmono-directed»
+#check @CC.Paper.«def:lifted-monotonicity/at-j-eq-i»
 #check @CC.Paper.«def:lifted-monotonicity/hoare»
 #check @CC.Paper.«def:lifted-monotonicity/not-reflexive»
 #check @CC.Paper.«sec:lifted-monotonicity/traceroute-common-extension»

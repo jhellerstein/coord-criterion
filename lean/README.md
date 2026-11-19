@@ -148,7 +148,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-698 entries.
+699 entries.
 
 ### §2 Functional CALM
 
@@ -257,6 +257,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«eq:lifted-monotonicity»` | theorem | **Eq. |
 | `«def:lifted-monotonicity/functional»` | theorem | After Def. |
 | `«def:lifted-monotonicity/relmono-directed»` | theorem | After Def. |
+| `«def:lifted-monotonicity/at-j-eq-i»` | theorem | After Def. |
 | `«def:lifted-monotonicity/hoare»` | theorem | After Def. |
 | `«def:lifted-monotonicity/not-reflexive»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/traceroute-common-extension»` | theorem | Before Def. |

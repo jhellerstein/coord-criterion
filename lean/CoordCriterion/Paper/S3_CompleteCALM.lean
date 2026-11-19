@@ -280,13 +280,29 @@ theorem «def:lifted-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : 
     (hf : sp.Functional) : sp.LiftedMono ↔ sp.MonotoneF :=
   liftedMono_iff_monoF hf
 
-/-- After Def. `def:lifted-monotonicity`: "Taking `X` to be a single output gives
-Relational Monotonicity, and taking `j=i` gives directed fibers, so Lifted
-Monotonicity implies both.  Conversely, … So Lifted Monotonicity holds exactly
-when both do." -/
+/-- After Def. `def:lifted-monotonicity`: "In general it is exactly Relational
+Monotonicity together with directed fibers.  Taking `X` to be a single output
+gives Relational Monotonicity, and taking `j=i` gives directed fibers.
+Conversely, take `i ≼ j` and a finite nonempty `X ⊆ P(i)`.  Relational
+Monotonicity gives each member of `X` an output extension in `P(j)`, and since
+`P(j)` is directed, those output extensions have a common output extension
+there." -/
 theorem «def:lifted-monotonicity/relmono-directed» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) : sp.LiftedMono ↔ sp.RelMono ∧ sp.DirectedOutputs :=
   liftedMono_iff_relMono_directed sp
+
+/-- After Def. `def:lifted-monotonicity`: "Lifted Monotonicity therefore
+constrains a spec even at `j=i`, where it asks that each fiber be directed.  The
+transaction fiber of Figure `fig:ambiguity-frames`(f) is not, so that spec
+fails Lifted Monotonicity already at `j=i`."  Lean: at `j = i` the joint
+refinement lift `P(i) ⊑ P(i)` is by definition directedness of `P(i)`
+(Def. `def:fiber-directedness`); the panel (f) fiber `{[A,B],[B,A]}` is not
+directed, so `P(i) ⊑ P(i)` fails at `i = {A,B}`. -/
+theorem «def:lifted-monotonicity/at-j-eq-i» :
+    (∀ (O : Type) [PO O] (A : O → Prop),
+        JointLift A A ↔ ∀ X : List O, X ≠ [] → (∀ x ∈ X, A x) → CompatibleIn A X) ∧
+      ¬ JointLift (Figures.Txn.spec.P ()) (Figures.Txn.spec.P ()) :=
+  ⟨fun _ _ _ => Iff.rfl, fun h => Figures.Txn.not_monotone.2.1 fun _ => h⟩
 
 /-- After Def. `def:lifted-monotonicity`: "In powerdomain terms, Relational
 Monotonicity is monotonicity of `i ↦ P(i)` under the Hoare preorder, which
@@ -304,14 +320,11 @@ theorem «def:lifted-monotonicity/hoare» {I O : Type} [PO I] [PO O] :
   ⟨Front.relMono_iff_hoare, fun _ _ => Front.jointLift_hoare,
    fun _ _ => Front.hoare_iff_jointLift_of_directed⟩
 
-/-- After Def. `def:lifted-monotonicity`: "Unlike the Hoare preorder, the
-joint refinement lift, as a relation on sets, is not reflexive: `A ⊑ A` holds
-only when `A` is directed.  So Lifted Monotonicity already constrains a spec at
-`j=i`, where it asks `P(i) ⊑ P(i)`, that is, that each fiber be directed.  The
-transaction fiber of Figure `fig:ambiguity-frames`(f) is not, so that spec
-fails Lifted Monotonicity already at `j=i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
-directedness of `A` (Def. `def:fiber-directedness`); the panel (f) fiber
-`{[A,B],[B,A]}` is not directed, so `P(i) ⊑ P(i)` fails at `i = {A,B}`. -/
+/-- After Def. `def:lifted-monotonicity`: "Unlike the Hoare preorder, the joint
+refinement lift is not reflexive: `A ⊑ A` holds only when `A` is directed."
+Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition directedness
+of `A` (Def. `def:fiber-directedness`); the panel (f) fiber `{[A,B],[B,A]}` is
+a set with `¬ A ⊑ A`. -/
 theorem «def:lifted-monotonicity/not-reflexive» :
     (∀ (O : Type) [PO O] (A : O → Prop), Front.HoareLe A A) ∧
       (∀ (O : Type) [PO O] (A : O → Prop),
