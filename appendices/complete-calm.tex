@@ -7,13 +7,14 @@ definition of the lifted output events of Section~\ref{sec:lifted-output-events}
 \subsection{Proofs}
 
 \begin{proof}[Proof of Proposition~\ref{prop:common-expansion-form}]
-Suppose the spec satisfies Lifted Monotonicity, and let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows
-with common \indesc $j$.  If $k=0$, any $u\in\fiber{j}$ will do, and since
-$\Spec$ is total, $j$ appears in some row $(j,u)$.  Otherwise, since $i_r\InputOrd j$, Relational Monotonicity gives, for each
-$r$, a $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ all lie in the
-one fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel
-every $u_r$, hence every $o_r$.  Conversely, let $i\InputOrd j$ and
-$X\subseteq\fiber{i}$ be nonempty and finite.  The rows $\{(i,x):x\in X\}$
+First assume Lifted Monotonicity, and let $(i_1,o_1),\ldots,(i_k,o_k)$ be
+rows with common \indesc $j$.  If $k=0$, any $u\in\fiber{j}$ will do, and
+$\fiber{j}$ is nonempty since $\Spec$ is total.  Otherwise, since
+$i_r\InputOrd j$, Relational Monotonicity gives, for each $r$, a
+$u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ all lie in the one
+fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel every
+$u_r$, hence every $o_r$.  Now assume the common-extension condition, and let
+$i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty and finite.  The rows $\{(i,x):x\in X\}$
 have common \indesc $j$, so some $u\in\fiber{j}$ \outrel all of $X$; that is
 $\fiber{i}\LiftedOrd\fiber{j}$.
 \end{proof}
@@ -38,26 +39,28 @@ gives the claim.
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
 By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
-common-extension condition.  Suppose it holds.  Let $(i,R)$ be reached by a run
-(\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
+common-extension condition.  First assume it holds.  Let $(i,R)$ be reached by
+a run (\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
 $x\in R(j)$.  The rows $(i,o)$ and $(j,x)$ of $P$ have common \indesc $j$, so
 the condition supplies $u\in P(j)$ \outrelpart both $o$ and $x$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R$, since $j\InputGe i$ and $u$
 \outrel $o$, which \outrel every output emitted on the run.  So $u\in R(j)$
 \outrel $o$ and $x$, and the legal-output test
-(Proposition~\ref{prop:exposability}) makes $o$ a legal output.
-Conversely, suppose every such output is a legal output, and let rows
+(Proposition~\ref{prop:exposability}) makes $o$ a legal output.  Now assume
+every output at every state reachable without \commitment is legal, and let
+rows
 $(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality there is some
 $u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the legal-output test for $o_r$ at
 $\sigma_P(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in P(j)$ \outrelpart both
-$o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
+$o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$, and the
+common-extension condition follows.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
 The proof of Lemma~\ref{lem:confluence-legality} covers nondeterministic specs,
 so the runs are consistent exactly when no output event of a run applies a
-\commitment, that is, when every output that a run can emit is legal.  As in the proof of Theorem~\ref{thm:functional-calm}, this holds exactly
-when every output at every state reachable without \commitment is legal.  By
+\commitment, that is, when every output that a run can emit is legal.  As in
+the proof of Theorem~\ref{thm:functional-calm}, this holds exactly when every output at every state reachable without \commitment is legal.  By
 Proposition~\ref{prop:exposure-boundary}, that holds exactly when the spec
 satisfies Lifted Monotonicity.
 \end{proof}
@@ -71,10 +74,10 @@ $(j,u)$ whose output $u$ \outrel both, and repeat until one row remains; a
 single row, paired with any row at $j$, has an \outnoun in $\fiber{j}$.  The
 pairwise hypothesis must cover all rows of $P$, including rows at $j$ itself,
 since the replacement rows are at $j$.  Checking only rows at single-proposal
-inputs does not suffice, even with families of up to $k$ rows: in the $k$-set agreement example of
-Appendix~\ref{app:additional-applications}, every family of at most $k$ rows
-at such inputs is compatible at each common \indesc, but the $k+1$ proposal
-rows are not.
+inputs does not suffice, even with families of up to $k$ rows.  In the
+$k$-set agreement example of Appendix~\ref{app:additional-applications},
+every family of at most $k$ rows at such inputs is compatible at each common
+\indesc, but the $k+1$ proposal rows are not.
 
 \subsection{Lifted output events}
 \label{app:lifted-output-events}
@@ -111,8 +114,7 @@ When $\Excluded_o\neq\varnothing$, the output event applies the \emph{canonical
   Thus $x_o$ removes exactly the rows in $\Excluded_o$.  At an input $k$, if
   $\Excluded_o(k)=R(k)$, it rules out $k$; otherwise it rules out only the
   outputs in $\Excluded_o(k)$.  A row in $\Subsumed_o(k)$ has a kept \outnoun
-  at $k$.  The output event removes that row separately by output subsumption,
-  and its kept \outnoun prevents the event from ruling out $k$.
+  at $k$, so removing it by output subsumption does not rule out $k$.
 \end{definition}
 
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places the row for
@@ -142,11 +144,8 @@ $j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
 \end{proposition}
 
 \begin{proof}
-The output $o$ is legal exactly when $\Excluded_o$ is empty, that is, when every
-ruled-out row $(j,x)$ lies in $\Subsumed_o$, that is, is \outrelpast by some row
-$(j,u)$ \outrelpart $o$.  Rows that already \outrelbase $o$ satisfy the stated
-test with $u=x$, so this is exactly the stated test.
+The output $o$ is legal exactly when $\Excluded_o$ is empty, that is, when
+every ruled-out row $(j,x)$ is \outrelpast by some row $(j,u)$ \outrelpart
+$o$.  Rows that already \outrelbase $o$ satisfy the test with $u=x$, so this
+is the stated test.
 \end{proof}
-
-This test marks the \commitment boundary: if it fails, emitting $o$ requires an
-\commitment.

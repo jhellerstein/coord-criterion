@@ -37,10 +37,11 @@ theorem «proof:lem:run-residual» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     ∀ k u, τ.R k u ↔ (sp.P k u ∧ τ.cur ≼ k ∧ ∀ o ∈ E ++ outs [e], o ≼ u) :=
   residual_step hσ hs
 
-/-- Proof of Prop. `prop:confluence`: "A common state with current input `j`
-has a row at `j`, and since rows are never added, that row belongs to every
-`R_r`.  Conversely … After `input(j)` and `output(u)`, the same lemma leaves
-exactly `P[in ⪰ j, out ⪰ u]`, independent of the starting run."  The two
+/-- Proof of Prop. `prop:confluence`: "First assume the runs are confluent at
+`j`.  The common state has a row at `j`, and since rows are never added, that
+row belongs to every `R_r`.  Now assume `(j,u)` belongs to every `R_r`. … so
+after `input(j)` and `output(u)` the same lemma leaves exactly
+`P[in ⪰ j, out ⪰ u]`, independent of the starting run."  The two
 steps: events only remove rows; and the explicit continuation to
 `meetState sp j u _ = (j, P[in ⪰ j, out ⪰ u])`. -/
 theorem «proof:prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
@@ -55,12 +56,14 @@ when, for every row `(k,x) ∈ R`, some `u ∈ R(k)` extends both `o` and `x`. �
 An output event `output(o)` from `(i,R)` applies a commitment exactly when `o`
 is not legal at `(i,R)`, so the lemma's condition says that every output a run
 can emit is legal at the state where it is emitted."
-(⇒) "Suppose an output event of some run applies a commitment: the run ends at
-`(i,R)` before it, and `o ∈ R(i)` is not legal there.  Then
-some `(k,x) ∈ R` has no `u ∈ R(k)` extending both `o` and `x`.  We extend the
+(⇒) "First assume the runs are consistent, and suppose, for contradiction,
+that an output event of some run applies a commitment.  The run ends at
+`(i,R)` before that event, and `o ∈ R(i)` is not legal there, so some
+`(k,x) ∈ R` has no `u ∈ R(k)` extending both `o` and `x`.  We extend the
 run in two ways: by `output(o)`, and by `input(k)` followed by `output(x)` …
-By Proposition `prop:confluence`, the two runs are not confluent at `k`."
-(⇐) "Suppose no output event applies a commitment, so every output that a run
+By Proposition `prop:confluence`, the two runs are not confluent at `k`,
+contradicting consistency."
+(⇐) "Now assume no output event applies a commitment, so every output that a run
 can emit is legal … Each `R_r` keeps a row at its current input, say `(i_r,u_r)` … `u_r` is
 legal [at `σ_P(i_r)`].  By totality there is some `v₀ ∈ P(j)`.  For
 `r = 1,…,m` in turn, `(j,v_{r-1})` is a row of `σ_P(i_r)` … so legality of
@@ -98,10 +101,10 @@ theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
 the runs are consistent exactly when no output event of a run applies a
 commitment, that is, when every output that a run can emit is legal.  This
 condition is equivalent to legality at every state reachable
-without commitment. … suppose every output at every state reachable without
-commitment is legal.  Then, by induction along any run, each of its output
-events is legal, so the run is commitment-free and every state it reaches is
-reachable without commitment … By Proposition
+without commitment. … assume every output at every state reachable without
+commitment is legal.  By induction along any run, each of its output events is
+then legal, so the run is commitment-free, every state it reaches is reachable
+without commitment, and every output it can emit is legal.  By Proposition
 `prop:functional-exposure-boundary`, legality at every state reachable without
 commitment holds exactly when `f` is monotone."  The first conjunct is the
 bridge (`runsLegal_iff_legalReachLegal`, by induction along the run,
@@ -113,11 +116,11 @@ theorem «proof:thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
 
 /-! ## Proofs for Section 3 -/
 
-/-- Proof of Prop. `prop:common-expansion-form`: "Suppose Lifted
+/-- Proof of Prop. `prop:common-expansion-form`: "First assume Lifted
 Monotonicity … Relational Monotonicity gives, for each `r`, a `u_r ∈ P(j)`
 with `o_r ≼ u_r`.  The `u_r` all lie in the one fiber `P(j)`, which is
 directed, so some `u ∈ P(j)` extends every `u_r`, hence every `o_r`.
-Conversely, … the rows `{(i,x) : x ∈ X}` have common input extension `j`, so some
+Now assume the common-extension condition, … the rows `{(i,x) : x ∈ X}` have common input extension `j`, so some
 `u ∈ P(j)` extends all of `X`."  Both directions. -/
 theorem «proof:prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=
@@ -144,7 +147,7 @@ theorem «lem:reconciliation/consistency-over-runs» {I O : Type} [PO I] [PO O]
       (∀ r ∈ fam, r.fin.cur ≼ j) → ConfluentAt (fam.map RunW.fin) j :=
   consistent_iff_runs
 
-/-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Suppose it holds.  Let
+/-- Proof of Prop. `prop:exposure-boundary`, (⇒): "First assume it holds.  Let
 `(i,R)` be reached by a run (commitment-free or not), and let `o ∈ R(i)`,
 `j ⪰ i` legal, and `x ∈ R(j)`.  The rows `(i,o)` and `(j,x)` of `P` have common
 input extension `j`, so the condition supplies `u ∈ P(j)` extending both `o`
@@ -203,7 +206,7 @@ theorem «app:pairs-suffice/rows-at-j» :
   rowsAtJ_needed
 
 /-- `app:pairs-suffice`: "Checking only rows at single-proposal inputs does
-not suffice, even with families of up to `k` rows: in the `k`-set agreement
+not suffice, even with families of up to `k` rows.  In the `k`-set agreement
 example …, every family of at most `k` rows at such inputs is compatible at
 each common input extension, but the `k+1` proposal rows are not."
 
