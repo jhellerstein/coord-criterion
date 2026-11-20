@@ -572,7 +572,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/response-obligation»` | abbrev | *response obligation* — per participant, the outputs that count as answers; upward closed within fibers (Def. |
 | `«app:notation/response-interface»` | abbrev | *response interface* — a total, self-continuing explicit relation `T ⊆ Q` (Def. |
 
-### Appendix B: Deferred proofs
+### Appendix B: Deferred Proofs
 
 File `Paper/AppB_Proofs.lean`; paper source `appendices/proof-machinery.tex`.
 
@@ -595,7 +595,7 @@ File `Paper/AppB_Proofs.lean`; paper source `appendices/proof-machinery.tex`.
 | `«app:pairs-suffice/k-at-a-time»` | theorem | `app:pairs-suffice`: |
 | `«app:pairs-suffice/k-set-not-monotone»` | theorem | Consequence for `app:pairs-suffice`: |
 
-### Appendix B: Deferred proofs for §4
+### Appendix B: Deferred Proofs for §4
 
 File `Paper/AppB_ProofsDistributed.lean`; paper source `appendices/proof-machinery.tex`.
 
@@ -703,7 +703,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«app:bases/basis-2PL»` | abbrev | *Application-specific commitments.* "Locks and timestamps are examples: |
 | `«app:bases/basis-MVTO»` | abbrev | *Application-specific commitments*: |
 
-### Appendix D: Proofs and details for composition
+### Appendix D: Proofs and Details for Composition
 
 File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 

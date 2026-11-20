@@ -19,7 +19,7 @@ import CoordCriterion.Instances.QueryRefinements
 Covers `sections/distributed-histories.tex` (§4.1 Distributed histories, §4.2
 Distributed consistency, with the paragraph *Message data*) and
 `sections/distributed.tex` §4.3 Systems and canonical runs (it stops before
-§4.4 The Complete CAP Theorem).  The paragraph *Exchanging outputs* and the
+§4.4 The Complete CAP theorem).  The paragraph *Exchanging outputs* and the
 proofs of §4 are in Appendix B
 (`Paper/AppB_ProofsDistributed.lean`).
 

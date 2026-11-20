@@ -3,7 +3,7 @@ import CoordCriterion.Figures
 import CoordCriterion.Appendix.TransactionBases.NoReads
 
 /-!
-# Paper Appendix C: Output events and commitment bases (statement layer)
+# Paper Appendix C: Output Events and Commitment Bases (statement layer)
 
 This file mirrors `appendices/commitment-bases-general.tex`.  A ruled-out row is
 `Subsumed` when a surviving row at the same input extends it, and `Excluded`
