@@ -622,7 +622,7 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«app:iconfluence/history»` | abbrev | "A transaction history `h` … is a finite partial order of transaction events, each labeled by a transaction in `T`. |
+| `«app:iconfluence/history»` | abbrev | "A transaction history `h` … is a finite partial order of transaction events, each labeled by a transaction in `T`, where `e' < e` means that `e` ran on a st… |
 | `«app:iconfluence/expansion-order»` | theorem | "History `h'` extends `h` when `h` is a closed sub-history of `h'`. |
 | `«app:iconfluence/eval»` | theorem | "The state of a history is computed event by event. |
 | `«app:iconfluence/sub-keeps-pre-post»` | theorem | "A closed sub-history keeps each event's predecessors, so it also keeps each event's `pre` and `post`." |
@@ -724,12 +724,12 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/all-monotone»` | theorem | "Suppose every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the empty basis. |
 | `«app:composition/joint-monotone»` | theorem | Proof of Proposition `prop:joint-monotone`: |
 | `«app:composition/reach»` | theorem | "The reach of case (3). |
-| `«app:composition/capped-counter»` | theorem | "For the capped counter of Section `sec:composite-calm`, let `𝒮₁` be the table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the test `… |
-| `«app:composition/boolean-toggle»` | theorem | "For the boolean toggle, let `I`, `M`, and `O` be the booleans with `false` below `true`, and let both stages be negation. |
-| `«app:composition/components-commit»` | theorem | "Let `𝒮₁` have one input `*` and possibility relation `{(*,x),(*,y)}` with `x,y` incomparable, and let `𝒮₂` be the functional spec induced by a function `f`… |
+| `«app:composition/capped-counter»` | theorem | "The capped counter of Section `sec:composite-calm` is an instance of case (2). |
+| `«app:composition/boolean-toggle»` | theorem | "The boolean toggle is an instance of case (3). |
+| `«app:composition/components-commit»` | theorem | "A monotone composite can also leave a non-monotone upstream unable to emit. |
 | `«app:composition/image-canon»` | theorem | "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write `R ⋈ T = {(k,x) : |
 | `«app:composition/pipeline-run»` | theorem | "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of `𝒮₂\|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`. |
-| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts about a proper pipeline. |
+| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts about a proper pipeline, in which `𝒮₂\|_{𝒮₁}` satisfies the common-extension condition (Propositions `prop:exposure-boun… |
 | `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:proper-coordination`(2): |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
 | `«app:composition/properness-needed»` | theorem | "Properness is needed in (3). |
@@ -738,9 +738,9 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
 | `«cor:pipelines»` | theorem | **Corollary `cor:pipelines`** (Pipelines): |
 | `«app:composition/pipelines»` | theorem | Proof of Corollary `cor:pipelines`: |
-| `«app:composition/mutex-store»` | theorem | "Let `𝒮₁` be the log spec of Example `ex:committed-log-composition`, under its canonical basis with a strategy that allows every event. |
+| `«app:composition/mutex-store»` | theorem | "The converse fails, as locks in the store behind the log show. |
 | `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
-| `«app:composition/coverage»` | theorem | The covering argument: |
+| `«app:composition/coverage»` | theorem | The covering argument, in the proof of Proposition `prop:invisible-coordination`: |
 | `«app:composition/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order. |
 | `«app:composition/no-pushforward»` | theorem | "The image under `f` of a commitment of `𝒮₁` need not be a commitment of the composite. |
 | `«app:composition/monotone-needed»` | theorem | "Monotonicity of `f` is needed. |
@@ -752,13 +752,13 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:intersection/example»` | theorem | "In the example of Section `sec:intersection`, both specs satisfy Lifted Monotonicity: |
 | `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run). |
 | `«def:implementation-form»` | abbrev | **Definition `def:implementation-form`** (Implementation form). |
-| `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once we choose its boundary observations. |
+| `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component. |
 | `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision discussed after Proposition `prop:commitment-conflict` can take either form. |
 | `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Feed, typed pipeline, external observation). |
 | `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (Contract-proper, implementation-proper). |
 | `«app:components/feed-is-input»` | theorem | "The value `m` is the downstream run's initial input, so receiving it is not a commitment of `C₂`." Lean: |
 | `«prop:typed-pipelines»` | theorem | **Proposition `prop:typed-pipelines`** (Typed pipelines): |
-| `«app:components/follows»` | theorem | "Item (5) covers one boundary output. |
+| `«app:components/follows»` | theorem | "Item (5) covers one upstream output, while Theorem `thm:proper-coordination`(2) follows the entire emitted stream. |
 
 ### Appendix E: Deployment
 
@@ -819,13 +819,13 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:registers/serialization-extends»` | theorem | Proof step: |
 | `«app:registers/linear-extension»` | theorem | Supporting fact: |
 | `«app:registers/same-read-incompatible»` | theorem | "Two answers to the same read remain incompatible, but only the reading replica may emit either." The causal register is not monotone: |
-| `«app:rtc/mahajan»` | theorem | "[A] system can provide real-time causal consistency, but no stronger consistency, while staying always available … and one-way convergent … We recover both… |
+| `«app:rtc/mahajan»` | theorem | "[A] system can provide real-time causal consistency, but no stronger consistency, while staying always available and one-way convergent. |
 | `«app:rtc/mahajan-impl»` | theorem | The "no stronger consistency" part for an implementation that does not observe real time: |
 | `«thm:product-frontier»` | theorem | **Theorem `thm:product-frontier`** (Independent products). |
 | `«app:rtc/input»` | theorem | "Consider the histories of Appendix `app:registers` with a second strict partial order `≺`: |
 | `«app:rtc/views»` | theorem | "A *real-time causal view* of replica `p` assigns to every read `r` of `p` a source `s(r)` such that (1) `s(r)` is a write visible to `r`, or `v₀` if none is… |
-| `«app:rtc/mahajan-checks»` | theorem | "Intuitively, these items are Mahajan et al.'s checks for the order that `p`'s reads expose. |
-| `«app:rtc/one-source»` | theorem | "Their reads return all concurrent latest writes, while ours return one. |
+| `«app:rtc/mahajan-checks»` | theorem | "Intuitively, these items are Mahajan et al.'s checks for the order that `p`'s reads expose, in which each visible write precedes the read and each overwritt… |
+| `«app:rtc/one-source»` | theorem | "Their reads return all concurrent latest writes, while ours return one, so a view matches their check when that write is the only latest one." Lean: |
 | `«app:rtc/monotone-across»` | theorem | "Views exist. |
 | `«app:rtc/blind»` | theorem | "A strengthening is *real-time blind* when a tuple it selects at an input stays selected at the same history with fewer real-time edges, provided its views a… |
 | `«prop:rtc-maximal»` | theorem | **Proposition `prop:rtc-maximal`** (Real-time causal maximality). |
