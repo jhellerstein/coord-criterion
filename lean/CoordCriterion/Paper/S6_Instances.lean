@@ -72,9 +72,10 @@ a node's view (`Instances/Placement.lean`); the transducer runs of those
 papers are cited, not formalized. -/
 
 /-- Sec. `sec:query-instance`: "Ameloot et al. characterized these queries by
-weaker forms of monotonicity, which require `Q(I) ⊆ Q(I ∪ J)` only when each
-new fact in `J` contains a value not in `I` (domain-distinct-monotone), or uses
-only such values (domain-disjoint-monotone). … Under these orders, functional
+weaker forms of monotonicity.  A query is domain-distinct-monotone when
+`Q(I) ⊆ Q(I ∪ J)` whenever each new fact in `J` contains a value not in `I`,
+and domain-disjoint-monotone when this holds whenever each new fact uses only
+such values. … Under these orders, functional
 monotonicity is exactly domain-distinct- and domain-disjoint-monotonicity, so
 Functional CALM gives their characterizations."  (Ameloot et al., PODS 2014
 version of the cited TODS paper, Definition 1.)  Lean: facts carry values
