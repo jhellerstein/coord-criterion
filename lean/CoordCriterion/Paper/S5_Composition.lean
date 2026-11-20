@@ -324,7 +324,7 @@ outputs `false` for values up through `9` and `true` from `10` on. … Suppose
 instead that every answer must be final: unchanging in the face of more input.  Then the output order is equality,
 and the test cannot emit `false` without a commitment, since a later count of
 `10` would contradict it.  Yet when composed after the capped counter, the pair
-of components needs no commitment."
+of stages needs no commitment."
 Lean: `Joint.threshold`
 (the test is not Lifted-Monotone, the composite is).  Lean also proves the
 Appendix D treatment of the test: it cannot emit under the empty basis below
