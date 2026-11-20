@@ -416,7 +416,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/locks-overhead»` | theorem | "This answers the opening puzzle. |
 | `«sec:proper-coordination/nesting»` | theorem | "Longer pipelines nest: |
-| `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, seen only through its boundary, a component. |
+| `«sec:proper-coordination/components»` | theorem | "A downstream implementation may still take commitments the specs do not require, as a store that takes locks behind a log would. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |

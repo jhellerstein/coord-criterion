@@ -2275,26 +2275,10 @@ it.\color{black}
 itself guard a third stage, and the theorem applies again
 (Appendix~\ref{app:composition}).\color{black}
 
-\color{black}\cxtag{composition:15}{N/M}\cxbar{composition-15}{0.4 0.4 1}{s}Theorem~\ref{thm:proper-coordination} looks inside a pipeline: each stage is a
-system, and the theorem tracks every event of both.  A stage can also be
-treated as a black box that exposes only its inputs and outputs.  Stages
-treated this way may have different specs and run on different participants,
-and they compose without merging their histories into one.  We call a system for one spec, seen only
-through its boundary, a \emph{component}.  A component may run as one process
-or as a replicated cluster.  The stages around it observe only its
-\emph{admitted runs}, each pairing an input with an emitted output that its
-spec permits.  Components with different specs form \emph{typed pipelines}
-(Appendix~\ref{app:components}).  A typed pipeline hides the intermediate
-value and both components' runs, and every input--output pair it shows is a
-row of $P_2\circ P_1$.  Properness then has two forms.  A typed pipeline is
-\emph{contract-proper} when the pipeline of its specs is proper
-(Definition~\ref{def:proper-coordination}), which concerns the specs alone.
-\emph{Implementation properness} also depends on the runs that the chosen
-downstream component admits: it holds when no downstream run that follows
-an upstream output applies a \commitment.  A contract-proper downstream component may still take
-locks, or admit too few runs to follow its upstream.  The maximally
-permissive empty-basis component for $\Spec_2|_{\Spec_1}$, which admits every
-run under the empty basis, does neither.\cxbar{composition-15}{0.4 0.4 1}{e}\color{black}
+\color{black}\cxtag{composition:15}{N/S}A downstream implementation may still take \commitments the specs do not
+require, as a store that takes locks behind a log would.  An implementation of
+$\Spec_2$ alone, rather than of $\Spec_2|_{\Spec_1}$, may also fail to answer
+some upstream outputs (Appendix~\ref{app:components}).\color{black}
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
@@ -4621,10 +4605,10 @@ state reachable without \commitment is not legal.\cxbar{composition-52}{0.4 0.4 
 \subsection{Components and typed pipelines}
 \label{app:components}
 
-\color{black}\cxtag{composition:53}{N/M}\cxbar{composition-53}{0.4 0.4 1}{s}Theorem~\ref{thm:proper-coordination} fixes a system for each stage and
-follows the pipeline event by event.  Here each stage is seen from outside,
-through a typed boundary, so that stages with different specs,
-bases, and participants compose without one shared history.\cxbar{composition-53}{0.4 0.4 1}{e}\color{black}
+\color{black}\cxtag{composition:53}{N/M}\cxbar{composition-53}{0.4 0.4 1}{s}Theorem~\ref{thm:proper-coordination} concerns specs, with a system fixed only
+for the upstream stage.  Here each stage is seen from outside, through a typed
+boundary, so that a particular implementation of each stage, with its own basis
+and participants, can be examined.\cxbar{composition-53}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{definition}[Component, admitted run]
 \label{def:component}

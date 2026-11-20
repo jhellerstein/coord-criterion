@@ -227,21 +227,12 @@ theorem «sec:proper-coordination/nesting» {I M O Q : Type} [PO I] [PO M] [PO O
     (Guard.Proper (Comp.seq s1 s2) s3 ↔ Joint.CEOn s3 (Joint.Img (Comp.seq s1 s2))) :=
   ⟨fun _ h => Guard.proper_pipeline_step h12 h, Guard.proper_iff⟩
 
-/-- "We call a system for one spec, seen only through its boundary, a
-component.  A component may run as one process or as a replicated cluster.
-The stages around it observe only its admitted runs, each pairing an input
-with an emitted output that its spec permits.  Components with different specs
-form typed pipelines (Appendix `app:components`).  A typed pipeline hides the
-intermediate value and both components' runs, and every input–output pair it
-shows is a row of `P₂ ∘ P₁`.  Properness then has two forms.  A typed pipeline
-is contract-proper when the pipeline of its specs is proper (Definition
-`def:proper-coordination`), which concerns the specs alone.  Implementation
-properness also depends on the runs that the chosen downstream component
-admits: it holds when no downstream run that follows an upstream output
-applies a commitment.  A contract-proper downstream component may still take
-locks, or admit too few runs to follow its upstream.  The maximally permissive
-empty-basis component for `𝒮₂|_{𝒮₁}`, which admits every run under the empty
-basis, does neither."
+/-- "A downstream implementation may still take commitments the specs do not
+require, as a store that takes locks behind a log would.  An implementation of
+`𝒮₂` alone, rather than of `𝒮₂|_{𝒮₁}`, may also fail to answer some upstream
+outputs (Appendix `app:components`)."  The components vocabulary (component,
+admitted run, typed pipeline, contract- and implementation-properness) is
+defined only in Appendix `app:components`.
 Lean: `Components.Component` (Def. `def:component`; systems as components are
 `«app:components/system-is-component»`), `Components.Pipeline.sound` for the
 rows; contract properness is `Components.Pipeline.ContractProper`, equivalent
