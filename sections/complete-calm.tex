@@ -207,7 +207,7 @@ next, asks that $\fiber{i}\LiftedOrd\fiber{j}$ whenever $i\InputOrd j$.
 \begin{definition}[Lifted Monotonicity]
 \label{def:lifted-monotonicity}
 An \spectype satisfies \emph{Lifted Monotonicity}, and
-is called \emph{monotone}, when, for every $i\InputOrd j$ and every nonempty
+is called \emph{lifted monotone}, or just \emph{monotone}, when, for every $i\InputOrd j$ and every nonempty
 finite $X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$;
 that is, $i\mapsto\fiber{i}$ is monotone under the joint refinement lift:
         \begin{equation}
@@ -363,6 +363,13 @@ assume Lifted Monotonicity.  Every output at every state reachable without
 induction on its length every run is \commitment-free, and consistency
 follows.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
+
+Complete CALM also changes how consistency can be checked.  Its definition
+asks whether runs can be continued to a common state.  Lifted
+Monotonicity is checked on the table itself, and pairs of rows suffice: if every
+two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
+so does every finite family of such rows, by replacing two rows at a time with
+one row at $j$ that \outrel both.
 
 The condition that characterizes consistency of runs is a property of the spec
 alone: Lifted Monotonicity, which for a function is ordinary monotonicity.

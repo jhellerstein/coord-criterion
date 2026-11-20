@@ -69,18 +69,6 @@ means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-releva
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.
 
-An I/O automaton projects onto an \spectype[] that captures the observable
-behavior of all executions of the automaton
-(Section~\ref{sec:operational-models}).  The projection drops the order in
-which an execution passes through the spec's rows, so the spec may also allow
-behaviors the automaton cannot produce.  Modeling the automaton itself bridges
-this gap and separates two questions: does any implementation of the spec need
-coordination, and does this automaton need more, because of decisions the spec
-does not require?
-Despite its simplicity, our model captures not only application invariants,
-but also general-purpose consistency definitions (Appendix~\ref{app:registers},
-Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
-
 As a system runs, possibilities narrow: the spec's table loses rows.  When new
 input arrives, the world has moved on, and rows that cannot be reached by
 extending that input are lost.  When the system decides among possibilities, it
@@ -92,29 +80,45 @@ ruling out every row with a later ballot.  We call a fateful decision a
 \emph{\commitment}: an irrevocable decision, enforceable by coordination
 mechanisms such as locks and consensus.
 
-\subsection{The criterion: Lifted Monotonicity}
-The model provides clean definitions for the key ingredients of CALM:
-Consistency and Monotonicity.  A spec's possible executions, its runs, are
-\emph{consistent} when they are \emph{confluent}: states reached along different paths can be
-brought to a common state.  We will see that this definition is general.  The spec is a parameter:
-specs and confluence together capture a range of classical consistency models,
-from linearizability, through serializability and other transactional isolation
-levels, to the eventual consistency guarantees of replicated data.
+An I/O automaton projects onto an \spectype[] that captures the observable
+behavior of all executions of the automaton
+(Section~\ref{sec:operational-models}).  The projection drops the order in
+which an execution passes through the spec's rows, so the spec may also allow
+behaviors the automaton cannot produce.  Modeling the automaton itself bridges
+this gap and separates two questions: does any implementation of the spec need
+coordination, and does this automaton need more, because of decisions the spec
+does not require?
+Despite its simplicity, our model supports not only application invariants,
+but also general-purpose consistency definitions (Appendix~\ref{app:registers},
+Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
-For a spec that permits exactly one output per input, the possibility table is a
-function, and monotonicity is standard: $i\InputOrd j$ implies
-$f(i)\OutputOrd f(j)$.  \emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem})
-proves that in this setting the runs are consistent exactly when the spec is
-monotone, which
-covers prior CALM work and CRDT state.  Many specs are nondeterministic: leader
-election and transaction scheduling permit several outputs for one input.
-These need a second invariant: whatever outputs different runs choose at the
-same input, some permitted output must \outrelbase them all.  Together, the two
-invariants make every output decision incidental, and we call the pair
-\emph{Lifted Monotonicity}.  \emph{Complete CALM} (Section~\ref{sec:complete-calm-theorem})
-proves that the runs are consistent exactly when the spec satisfies Lifted
-Monotonicity: Consistency As Lifted Monotonicity, a new reading of the CALM
-acronym.
+\subsection{The criterion: Lifted Monotonicity}
+The model provides clean definitions for the two sides of CALM: Consistency
+and Monotonicity.  Consistency is a property of all the runs the spec allows.
+Monotonicity, by contrast, is a static property of the spec's table: it can be
+checked on pairs of rows, without exploring runs.
+
+Our Consistency definition is general: the runs of a spec are
+\emph{consistent} when they are \emph{confluent}, so that states reached along
+different paths can be brought to a common state.  Applied to different specs,
+this one definition captures classical consistency models, from
+linearizability, through serializability and other isolation levels, to the
+eventual consistency of replicated data.
+
+For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
+implies $f(i)\OutputOrd f(j)$.  Nondeterministic specs, such as leader election
+and transaction scheduling, need a richer monotonicity property that ensures
+not only that output grows as inputs grow, but also that different output
+choices for the same input can grow by $\OutputOrd$ to a common permitted
+output.  We call this property \emph{Lifted Monotonicity}, and a spec that has
+it \emph{lifted monotone}.  It reduces to standard monotonicity for specs that
+are deterministic functions.
+
+\emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem}) and \emph{Complete CALM} (Section~\ref{sec:complete-calm-theorem}) show that the two
+sides coincide: the runs a spec allows are consistent exactly when the spec is
+lifted monotone.  Hence Consistency As Lifted Monotonicity, a new reading of the
+CALM acronym.
+Functional CALM covers prior CALM work and CRDT state.
 
 \subsection{Coordination is for \commitment}
 What of coordination?  A \commitment isolates the contract a coordination
