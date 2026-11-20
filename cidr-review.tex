@@ -118,9 +118,8 @@ outputs.  Its runs are \emph{consistent} when they are confluent.
 between ordered domains: the runs are consistent exactly when the function is
 monotone.  \emph{Complete CALM}
 extends this to nondeterministic specs, where the test is
-\emph{Lifted Monotonicity}, and \emph{Complete CAP} follows as a corollary.
-Highly Available Transactions, Invariant Confluence, and later refinements of
-CALM map into the same framework.
+\emph{Lifted Monotonicity}; \emph{Complete CAP} follows as a corollary.
+Highly Available Transactions, Invariant Confluence, and later CALM refinements map into the same framework.
 
 Prior CALM results stop at monotonicity: for non-monotone
 specs, they say only that coordination is needed somewhere.  Our
@@ -155,8 +154,8 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 88 & 8235\\
-signposting & 7 & 2863\\
+unclassified & 89 & 8290\\
+signposting & 7 & 2808\\
 explanation & 4 & 344\\
 formal caution & 1 & 188\\
 formal definition/notation & 6 & 116\\
@@ -247,12 +246,7 @@ is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment. On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
-a spec to be faithful. \removednote{\textbf{unclassified}, 77 words, rank 33; \textit{An I/O automaton projects onto an that captures the observable behavior of all executions of the ...}}
-
-\textcolor{newblue}{Traditionally, automata are often used to formally specify distributed
-protocols; we show how an automaton can be projected onto an \spectype[] that
-captures only observable behavior (\S\ref{sec:scope}).} \textcolor{newblue}{Despite its simplicity, our model captures not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
-\S\ref{sec:hat-instance}).}
+a spec to be faithful.
 
 As a system runs, possibilities narrow: the spec's table loses rows. When new
 input arrives, the world has moved on, and rows that cannot be reached by
@@ -263,30 +257,39 @@ not. Choosing between two candidates in a leader election is fateful: nothing
 remaining covers the loser's possibility of a win. So is closing the polls early,
 ruling out every row with a later ballot. We call a fateful decision a
 \emph{\commitment}: an irrevocable decision, enforceable by coordination
-mechanisms such as locks and consensus.
+mechanisms such as locks and consensus. \removednote{\textbf{unclassified}, 77 words, rank 33; \textit{An I/O automaton projects onto an that captures the observable behavior of all executions of the ...}}
+
+\textcolor{newblue}{Automata have often been used to formally specify distributed
+protocols; we show how an automaton can be projected onto an \spectype[] that
+captures only observable behavior (\S\ref{sec:scope}).} \textcolor{newblue}{Despite its simplicity, our model supports not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
+\S\ref{sec:hat-instance}).}
 
 \paragraph{The criterion: Lifted Monotonicity.}
-The model provides clean definitions for the key ingredients of CALM:
-Consistency and Monotonicity. A spec's possible executions, its runs, are
-\emph{consistent} when they are \emph{confluent}: states reached along different paths can be
-brought to a common state. We will see that this definition is general. The spec is a parameter:
-specs and confluence together capture a range of classical consistency models,
-from linearizability, through serializability and other transactional isolation
-levels, to the eventual consistency guarantees of replicated data.
+The model provides clean definitions for the two sides of CALM: Consistency
+and Monotonicity. Consistency is a property of all the runs the spec allows. Monotonicity, by contrast, is a static property of the spec's table: it can be
+checked on pairs of rows, without exploring runs.
 
-For a spec that permits exactly one output per input, the possibility table is a
-function, and monotonicity is standard: $i\InputOrd j$ implies
-$f(i)\OutputOrd f(j)$. \textcolor{newblue}{\emph{Functional CALM} (\S\ref{sec:functional-calm-theorem})
-proves that in this setting the runs are consistent exactly when the spec is
-monotone, which
-covers prior CALM work and CRDT state.} Many specs are nondeterministic: leader
-election and transaction scheduling permit several outputs for one input. These need a second invariant: whatever outputs different runs choose at the
-same input, some permitted output must \outrelbase them all. Together, the two
-invariants make every output decision incidental, and we call the pair
-\emph{Lifted Monotonicity}. \textcolor{newblue}{\emph{Complete CALM} (\S\ref{sec:complete-calm-theorem})
-proves that the runs are consistent exactly when the spec satisfies Lifted
-Monotonicity: Consistency As Lifted Monotonicity, a new reading of the CALM
-acronym.}
+Our Consistency definition is general: the runs of a spec are
+\emph{consistent} when they are \emph{confluent}, so that states reached along
+different paths can be brought to a common state. Applied to different specs,
+this one definition captures classical consistency models, from
+linearizability, through serializability and other isolation levels, to the
+eventual consistency of replicated data.
+
+For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
+implies $f(i)\OutputOrd f(j)$. Nondeterministic specs, such as leader election
+and transaction scheduling, need a richer monotonicity property that ensures
+not only that output grows as inputs grow, but also that different output
+choices for the same input can grow by $\OutputOrd$ to a common permitted
+output. We call this property \emph{Lifted Monotonicity}, and a spec that has
+it \emph{lifted monotone}. It reduces to standard monotonicity for specs that
+are deterministic functions.
+
+\textcolor{newblue}{\emph{Functional CALM} (\S\ref{sec:functional-calm-theorem}) and \emph{Complete CALM} (\S\ref{sec:complete-calm-theorem}) show that the two
+sides coincide: the runs a spec allows are consistent exactly when the spec is
+lifted monotone.} Hence Consistency As Lifted Monotonicity, a new reading of the
+CALM acronym. For a finite table, the theorems turn a search through
+exponentially many run states into a polynomial check on pairs of spec rows. Functional CALM covers prior CALM work and CRDT state.
 
 \textcolor{newblue}{Distributed histories are captured under the same consistency criteria as
 centralized ones (\S\ref{sec:distributed-execution}).} \textcolor{newblue}{Complete CAP
@@ -650,7 +653,7 @@ $o$.} \removednote{\textbf{unclassified}, 145 words, rank 17; \textit{Emitting a
 \label{def:output-event}
 At a state $(i,R)$ with current output $o$, the \emph{output event}
 $\mathsf{output}(o)$ atomically keeps only the rows whose outputs \outrelbase $o$,
-and then emits $o$: \removednote{\textbf{unclassified}, 0 words, rank 103; labels def:canonical-commitment-functional}
+and then emits $o$: \removednote{\textbf{unclassified}, 0 words, rank 104; labels def:canonical-commitment-functional}
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
@@ -798,7 +801,7 @@ rather than inside a particular programming language. Classical CALM fits, with 
 inclusion and output views $Q(J)$ ordered by inclusion. \textcolor{newblue}{Functional
 monotonicity becomes $J\subseteq J'\Rightarrow Q(J)\subseteq Q(J')$,
 the standard definition of a monotone query~\cite{abiteboul1995foundations};
-positive Datalog satisfies it, and negation may not.} \removednote{\textbf{formal definition/notation}, 0 words, rank 104; labels eq:query-monotonicity} Functional CALM
+positive Datalog satisfies it, and negation may not.} \removednote{\textbf{formal definition/notation}, 0 words, rank 105; labels eq:query-monotonicity} Functional CALM
 generalizes the statement to arbitrary input and
 output orders, whatever formalism expresses the spec. \textcolor{newblue}{CRDT state specs have the same functional shape,
 with received payloads ordered by inclusion and states by the semilattice
@@ -911,7 +914,7 @@ $\{\texttt{s},\texttt{t}\}$, and every route set permitted at
 $\{\texttt{s}\}$ is still permitted there, so Relational Monotonicity holds.} \textcolor{newblue}{Relational Monotonicity treats each output separately.} For a set
 $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
-\emph{incompatible in $F$} otherwise. \removednote{\textbf{unclassified}, 0 words, rank 105; labels def:directed-outputs}
+\emph{incompatible in $F$} otherwise. \removednote{\textbf{unclassified}, 0 words, rank 106; labels def:directed-outputs}
 
 
 
@@ -939,8 +942,8 @@ criterion.}
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
 \textcolor{newblue}{An \spectype satisfies \emph{Lifted Monotonicity}, and is called
-\emph{monotone}, when, for every $i\InputOrd j$ and every nonempty finite
-$X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.} \removednote{\textbf{unclassified}, 0 words, rank 106; labels eq:lifted-monotonicity}
+\emph{lifted monotone}, or just \emph{monotone}, when, for every $i\InputOrd j$ and every nonempty finite
+$X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.} \removednote{\textbf{unclassified}, 0 words, rank 107; labels eq:lifted-monotonicity}
 \end{definition}
 
 \textcolor{newblue}{With singleton fibers it is functional monotonicity
@@ -1052,12 +1055,21 @@ Monotonicity follows (Proposition~\ref{prop:exposure-boundary}).} Now assume
 Lifted Monotonicity. Every output at every state reachable without
 \commitment is then legal (Proposition~\ref{prop:exposure-boundary}), so by
 induction on its length every run is \commitment-free, and consistency
-follows. \removednote{\textbf{signposting}, 59 words, rank 44; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+follows. \removednote{\textbf{signposting}, 4 words, rank 101; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{So the runs of the traceroute spec in Figure~\ref{fig:ambiguity-frames} are
 consistent, while transaction runs that emit $[A,B]$ and $[B,A]$ are not, since
 that fiber is not directed.}
+
+Complete CALM also changes how consistency can be checked. Its definition
+asks whether runs can be continued to a common state, and the states are
+subtables of $P$: a finite table with $n$ rows has up to $2^n$ of them. Lifted
+Monotonicity is checked on the table itself, and pairs of rows suffice: if every
+two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
+so does every finite family of such rows, by replacing two rows at a time with
+one row at $j$ that \outrel both. For a finite table and finite orders, this
+check takes time polynomial in their size. \removednote{\textbf{unclassified}, 55 words, rank 45; \textit{The condition that characterizes consistency of runs is a property of the spec alone: Lifted Monotonicity, ...}}
 
 
 \section{Distributed Execution}
@@ -1281,7 +1293,7 @@ input and emit outputs.
 We consider a system whose participants each follow a strategy that depends
 only on their local history, and an environment that may send any legal input
 to any participant. Availability asks that, during a partition, each
-participant can still emit every explicit output its state permits. \removednote{\textbf{unclassified}, 0 words, rank 107; labels def:local-continuation}
+participant can still emit every explicit output its state permits. \removednote{\textbf{unclassified}, 0 words, rank 108; labels def:local-continuation}
 
 \begin{definition}[Availability]
 \label{def:partition-notions}
@@ -1338,7 +1350,7 @@ canonical system never waits, so it has Availability for $E$.} \textcolor{newblu
 sides have a common \outnoun $u$ in $\fiber{j}$, and every participant keeps
 $(j,u)$, since it makes no \commitments of its own
 (Lemma~\ref{lem:run-residual}).} \textcolor{newblue}{So all can continue to a common state at $j$,
-and Partition Consistency follows.} \removednote{\textbf{signposting}, 4 words, rank 101; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+and Partition Consistency follows.} \removednote{\textbf{signposting}, 4 words, rank 102; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \textcolor{newblue}{\Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.}
@@ -1412,7 +1424,7 @@ can reason about which stage actually makes \commitments under composition. When
 upstream stage makes every \commitment the composition needs, and the
 downstream needs none on the inputs the upstream offers, we say the pipeline's
 coordination is \emph{proper}
-(\S\ref{sec:proper-coordination}). \removednote{\textbf{signposting}, 4 words, rank 102; \textit{Proofs are in Appendix .}}
+(\S\ref{sec:proper-coordination}). \removednote{\textbf{signposting}, 4 words, rank 103; \textit{Proofs are in Appendix .}}
 \label{sec:sequential-composition}
 
 Formally, consider two \spectype[s]
@@ -1563,7 +1575,7 @@ and output orders. \textcolor{newblue}{The CALM Theorem of Ameloot et al.\ is st
 particular operational model: a query can be evaluated on a network of
 relational transducers without coordination exactly when it is monotone, under
 that model's assumptions about data placement and
-execution~\cite{ameloot2013relational,ameloot2015weaker}.} \removednote{\textbf{unclassified}, 1054 words, rank 2; \textit{Functional CALM restates the result as a property of a spec, so that it can be ...}} \removednote{\textbf{unclassified}, 56 words, rank 45; \textit{A CRDT uses join semilattices to guarantee that replicas that have received the same updates converge ...}} \textcolor{newblue}{Functional CALM
+execution~\cite{ameloot2013relational,ameloot2015weaker}.} \removednote{\textbf{unclassified}, 1054 words, rank 2; \textit{Functional CALM restates the result as a property of a spec, so that it can be ...}} \removednote{\textbf{unclassified}, 56 words, rank 44; \textit{A CRDT uses join semilattices to guarantee that replicas that have received the same updates converge ...}} \textcolor{newblue}{Functional CALM
 restates it as a property of a spec but does not replace those operational
 details.} \textcolor{newblue}{When transducers know how data is placed, more queries become
 coordination-free; Ameloot et al.\ characterized these classes by
