@@ -155,7 +155,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 86 & 8658\\
+unclassified & 86 & 8704\\
 signposting & 4 & 2543\\
 explanation & 4 & 309\\
 formal caution & 1 & 188\\
@@ -247,7 +247,7 @@ is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment. On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
-a spec to be faithful. \removednote{\textbf{unclassified}, 77 words, rank 33; \textit{An I/O automaton projects onto an that captures the observable behavior of all executions of the ...}}
+a spec to be faithful. \removednote{\textbf{unclassified}, 77 words, rank 35; \textit{An I/O automaton projects onto an that captures the observable behavior of all executions of the ...}}
 
 \textcolor{newblue}{Traditionally, automata are often used to formally specify distributed
 protocols; we show how an automaton can be projected onto an \spectype[] that
@@ -676,7 +676,7 @@ with the same output.}
 \label{def:run}
 \textcolor{newblue}{Input and output events are \emph{specification events}, or just \emph{events}.} \textcolor{newblue}{A \emph{canonical run}, or just \emph{run}, is a
 finite sequence of events from the
-canonical state $\sigma_P(i)$ at some input $i$.} \removednote{\textbf{unclassified}, 73 words, rank 35; \textit{Runs range over every behavior the spec permits, not only the behaviors a particular system happens ...}} \removednote{\textbf{unclassified}, 27 words, rank 66; \textit{If a run ends at current input [math] after emitting [math], its remainder table is}; labels eq:run-residual} \textcolor{newblue}{It is
+canonical state $\sigma_P(i)$ at some input $i$.} \removednote{\textbf{unclassified}, 73 words, rank 36; \textit{Runs range over every behavior the spec permits, not only the behaviors a particular system happens ...}} \removednote{\textbf{unclassified}, 27 words, rank 66; \textit{If a run ends at current input [math] after emitting [math], its remainder table is}; labels eq:run-residual} \textcolor{newblue}{It is
 \emph{\commitment-free} when no output event in it applies a \commitment; the
 states such runs reach are \emph{reachable without \commitment}.}
 \end{definition}
@@ -728,7 +728,7 @@ $\bigl(j,\ P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 
 \begin{proof}[Proof sketch]
 Rows are never added, so a row of a common state at $j$ was already in every
-$R_r$. Conversely, the two events above reach a common state. \removednote{\textbf{explanation}, 138 words, rank 23; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+$R_r$. Conversely, the two events above reach a common state. \removednote{\textbf{explanation}, 138 words, rank 24; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{Consistency thus ensures that runs never diverge irreparably: there is no
@@ -740,7 +740,7 @@ it describes no protocol and promises no delivery or termination.}
 \begin{lemma}[Confluence and legality]
 \label{lem:confluence-legality}
 The runs of an \spectype are consistent if and only if no output event of any
-run applies a \commitment. \removednote{\textbf{unclassified}, 127 words, rank 25; \textit{If a run's output event [math] applies [math], it removes some row [math] such that no ...}}
+run applies a \commitment. \removednote{\textbf{unclassified}, 127 words, rank 26; \textit{If a run's output event [math] applies [math], it removes some row [math] such that no ...}}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -1017,18 +1017,18 @@ at every state a run can reach.}
 \begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
 An \spectype satisfies Lifted Monotonicity if and only
-if every output at every state reachable without \commitment is legal.
+if every output at every state reachable without \commitment is legal. \removednote{\textbf{unclassified}, 84 words, rank 34; \textit{By Proposition , Lifted Monotonicity holds if and only if the common-extension condition holds.}}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-\textcolor{newblue}{By Proposition~\ref{prop:common-expansion-form}, we can compare legality with
-the common-extension condition.} \removednote{\textbf{unclassified}, 71 words, rank 37; \textit{Suppose it does, and take a state [math] reachable without , an output [math], a legal ...}} \removednote{\textbf{unclassified}, 76 words, rank 34; \textit{Let finitely many rows [math] of [math] have a common [math].}} \textcolor{newblue}{An output $o$ is legal at $(i,R)$ exactly
-when, at every legal \indesc $j$ of $i$, $o$ and each output remaining at $j$
-have a common \outnoun at $j$.} \textcolor{newblue}{If the condition holds, these common \outnouns
-exist at every state reachable without \commitment, so every output there is
-legal.} \textcolor{newblue}{Conversely, canonical states are reachable without \commitment, and
-legality at them, checked row by row, yields the common \outnouns the
-condition requires.} \textcolor{newblue}{\fullproof}
+\textcolor{newblue}{First assume Lifted Monotonicity, in its common-extension form
+(Proposition~\ref{prop:common-expansion-form}).} \textcolor{newblue}{At a state reachable without
+\commitment, an output $o$ and each output remaining at a legal \indesc $j$
+have a common \outnoun at $j$, which the state keeps
+(Lemma~\ref{lem:run-residual}), so $o$ is legal.} \textcolor{newblue}{Now assume every such output
+is legal, and take rows $(i_r,o_r)$ with a common \indesc $j$.} \textcolor{newblue}{Each $o_r$ is
+legal at $\sigma_P(i_r)$, so, taking the rows one at a time, some $u\in P(j)$
+\outrel every $o_r$, and Lifted Monotonicity follows.} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \begin{theorem}[Complete CALM]
@@ -1178,7 +1178,7 @@ $\mathsf{output}(o)$.} \textcolor{newblue}{A \emph{\commitment event} $\mathsf{a
 applies a sequence $\gamma$ of \commitments and emits nothing, and systems may
 choose to apply \commitments this way, independent of inputs or outputs.} \textcolor{newblue}{When
 a \commitment event precedes an output event, the output event has less left to
-remove.} \removednote{\textbf{unclassified}, 215 words, rank 9; \textit{The environment observes nothing from a event.}; labels def:commitment-basis, def:run-under-basis} \removednote{\textbf{unclassified}, 139 words, rank 22; \textit{A local history of participant [math] is a finite sequence of [math]'s history events, including the ...}; labels def:local-history, def:strategy, def:system, def:produced-history}
+remove.} \removednote{\textbf{unclassified}, 215 words, rank 9; \textit{The environment observes nothing from a event.}; labels def:commitment-basis, def:run-under-basis} \removednote{\textbf{unclassified}, 139 words, rank 23; \textit{A local history of participant [math] is a finite sequence of [math]'s history events, including the ...}; labels def:local-history, def:strategy, def:system, def:produced-history}
 
 \textcolor{newblue}{A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ and a
 possibly nondeterministic \emph{strategy} per participant that picks its next output,
@@ -1255,7 +1255,7 @@ $i$.
 \end{definition}
 
 Outputs in $P\setminus E$ are not emitted by participants; they remain
-permitted in $P$ to capture implicit combinations of emitted outputs. \removednote{\textbf{unclassified}, 72 words, rank 36; \textit{The emitted rows of a run are the pairs [math] such that the run emits [math] ...}; labels def:emitted-rows} \textcolor{newblue}{In the
+permitted in $P$ to capture implicit combinations of emitted outputs. \removednote{\textbf{unclassified}, 72 words, rank 37; \textit{The emitted rows of a run are the pairs [math] such that the run emits [math] ...}; labels def:emitted-rows} \textcolor{newblue}{In the
 register, $E$ holds $p$'s acknowledgment and $q$'s answer $v_0$; their combined
 pair is in $P\setminus E$.}
 
@@ -1315,22 +1315,21 @@ a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 \textcolor{newblue}{A spec escapes CAP for explicit relation $E$ if and only if it satisfies Lifted Monotonicity for
-$E$.}
+$E$.} \removednote{\textbf{unclassified}, 142 words, rank 21; \textit{The canonical system's participants never wait: each can emit any output of [math] that its state ...}}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-\textcolor{newblue}{The canonical system never waits: each participant can emit any output of $E$
-its state allows, so it has Availability for $E$.} \removednote{\textbf{unclassified}, 118 words, rank 27; \textit{Suppose Lifted Monotonicity for [math] holds, and let [math] be a common of the participants' current ...}} \textcolor{newblue}{It remains to show that it
-has Partition Consistency exactly when Lifted Monotonicity for $E$ holds.} \textcolor{newblue}{If
-it holds, the outputs emitted on all sides have a common \outnoun $u$ in
-$\fiber{j}$ at any common \indesc $j$ of the participants' current inputs.} \textcolor{newblue}{Every participant still has the row $(j,u)$, since it makes no \commitments of
-its own (Lemma~\ref{lem:run-residual}), so all can continue to a common state
-at $j$.} \textcolor{newblue}{Conversely, suppose the canonical system has Partition Consistency,
-and take finitely many rows of $E$ with a common \indesc $j$.} \textcolor{newblue}{Place one
-participant per row on its own side, with its row's input; Availability lets
-each emit its row's output.} \textcolor{newblue}{Partition Consistency then gives a row $(j,u)$
-that every participant keeps (Proposition~\ref{prop:confluence}), and $u$
-\outrel each of those outputs (Lemma~\ref{lem:run-residual}).} \textcolor{newblue}{\fullproof}
+\textcolor{newblue}{First assume the spec escapes CAP for $E$, and take rows $(i_r,o_r)$ of $E$
+with a common \indesc $j$.} \textcolor{newblue}{Put participant $r$ alone on a side with input
+$i_r$; Availability lets it emit $o_r$, and Partition Consistency leaves some
+row $(j,u)$ in every participant's state (Proposition~\ref{prop:confluence}).} \textcolor{newblue}{That $u$ \outrel every $o_r$ (Lemma~\ref{lem:run-residual}), so Lifted
+Monotonicity for $E$ follows.} \textcolor{newblue}{Now assume Lifted Monotonicity for $E$.} \textcolor{newblue}{The
+canonical system never waits, so it has Availability for $E$.} \textcolor{newblue}{At a common
+\indesc $j$ of the participants' current inputs, the outputs emitted on all
+sides have a common \outnoun $u$ in $\fiber{j}$, and every participant keeps
+$(j,u)$, since it makes no \commitments of its own
+(Lemma~\ref{lem:run-residual}).} \textcolor{newblue}{So all can continue to a common state at $j$,
+and Partition Consistency follows.} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \textcolor{newblue}{\Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.}
@@ -1367,7 +1366,7 @@ every system, not only the canonical one, so it needs one more step.
 \begin{corollary}
 \label{cor:complete-cap-any-system}
 If some system for a spec has Availability for $E$ and Partition Consistency,
-then so does the spec's canonical system for $E$. \removednote{\textbf{unclassified}, 142 words, rank 21; \textit{By Theorem , it suffices to show that if Lifted Monotonicity for [math] fails, the system ...}}
+then so does the spec's canonical system for $E$. \removednote{\textbf{unclassified}, 142 words, rank 22; \textit{By Theorem , it suffices to show that if Lifted Monotonicity for [math] fails, the system ...}}
 \end{corollary}
 
 \begin{proof}[Proof sketch]
@@ -1431,7 +1430,7 @@ responses.}
 \begin{lemma}[Composition]
 \label{lem:composition}
 If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the
-\spectype with table $P_2\circ P_1$.
+\spectype with table $P_2\circ P_1$. \removednote{\textbf{unclassified}, 85 words, rank 33; \textit{By Proposition , it suffices to check the common-extension condition.}}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -1625,7 +1624,7 @@ proscribes~\cite{adya1999weakconsistency}.} A history is \emph{complete} when it
 timestamp. \textcolor{newblue}{The table $P_L$ of $\Spec_L$ contains an output at an input when
 the input extends to a complete history that includes the output and exhibits
 none of the phenomena that $L$ proscribes.} \textcolor{newblue}{The explicit relation $E$
-contains, at each input, the output that the read rule gives.} \removednote{\textbf{unclassified}, 124 words, rank 26; \textit{The store specification [math] has the inputs and outputs of Definition .}; labels def:store-spec}
+contains, at each input, the output that the read rule gives.} \removednote{\textbf{unclassified}, 124 words, rank 27; \textit{The store specification [math] has the inputs and outputs of Definition .}; labels def:store-spec}
 \end{definition}
 
 \begin{theorem}[HAT levels]
@@ -1633,7 +1632,7 @@ contains, at each input, the output that the read rule gives.} \removednote{\tex
 Suppose each transaction's timestamp exceeds that of every version it reads. \textcolor{newblue}{For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
 Availability for $E$ and Partition Consistency.} \textcolor{newblue}{For any level that proscribes
-Lost Update, such as snapshot isolation, repeatable read, and serializability, $\Spec_L$ does not satisfy Lifted Monotonicity for any explicit relation $E$ answering every read; hence no system has Availability for such an $E$ and Partition Consistency.} \removednote{\textbf{unclassified}, 128 words, rank 24; \textit{For read uncommitted and read committed, the timestamp condition rules out the dependency cycles of G0 ...}}
+Lost Update, such as snapshot isolation, repeatable read, and serializability, $\Spec_L$ does not satisfy Lifted Monotonicity for any explicit relation $E$ answering every read; hence no system has Availability for such an $E$ and Partition Consistency.} \removednote{\textbf{unclassified}, 128 words, rank 25; \textit{For read uncommitted and read committed, the timestamp condition rules out the dependency cycles of G0 ...}}
 \end{theorem}
 \textcolor{newblue}{\proofinfull}
 

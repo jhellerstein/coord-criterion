@@ -1010,14 +1010,14 @@ if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-By Proposition~\ref{prop:common-expansion-form}, we can compare legality with
-the common-extension condition.  An output $o$ is legal at $(i,R)$ exactly
-when, at every legal \indesc $j$ of $i$, $o$ and each output remaining at $j$
-have a common \outnoun at $j$.  If the condition holds, these common \outnouns
-exist at every state reachable without \commitment, so every output there is
-legal.  Conversely, canonical states are reachable without \commitment, and
-legality at them, checked row by row, yields the common \outnouns the
-condition requires.  \fullproof
+First assume Lifted Monotonicity, in its common-extension form
+(Proposition~\ref{prop:common-expansion-form}).  At a state reachable without
+\commitment, an output $o$ and each output remaining at a legal \indesc $j$
+have a common \outnoun at $j$, which the state keeps
+(Lemma~\ref{lem:run-residual}), so $o$ is legal.  Now assume every such output
+is legal, and take rows $(i_r,o_r)$ with a common \indesc $j$.  Each $o_r$ is
+legal at $\sigma_P(i_r)$, so, taking the rows one at a time, some $u\in P(j)$
+\outrel every $o_r$, and Lifted Monotonicity follows.  \fullproof
 \end{proof}
 
 \begin{theorem}[Complete CALM]
@@ -1314,19 +1314,18 @@ $E$.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-The canonical system never waits: each participant can emit any output of $E$
-its state allows, so it has Availability for $E$.  It remains to show that it
-has Partition Consistency exactly when Lifted Monotonicity for $E$ holds.  If
-it holds, the outputs emitted on all sides have a common \outnoun $u$ in
-$\fiber{j}$ at any common \indesc $j$ of the participants' current inputs.
-Every participant still has the row $(j,u)$, since it makes no \commitments of
-its own (Lemma~\ref{lem:run-residual}), so all can continue to a common state
-at $j$.  Conversely, suppose the canonical system has Partition Consistency,
-and take finitely many rows of $E$ with a common \indesc $j$.  Place one
-participant per row on its own side, with its row's input; Availability lets
-each emit its row's output.  Partition Consistency then gives a row $(j,u)$
-that every participant keeps (Proposition~\ref{prop:confluence}), and $u$
-\outrel each of those outputs (Lemma~\ref{lem:run-residual}).  \fullproof
+First assume the spec escapes CAP for $E$, and take rows $(i_r,o_r)$ of $E$
+with a common \indesc $j$.  Put participant $r$ alone on a side with input
+$i_r$; Availability lets it emit $o_r$, and Partition Consistency leaves some
+row $(j,u)$ in every participant's state (Proposition~\ref{prop:confluence}).
+That $u$ \outrel every $o_r$ (Lemma~\ref{lem:run-residual}), so Lifted
+Monotonicity for $E$ follows.  Now assume Lifted Monotonicity for $E$.  The
+canonical system never waits, so it has Availability for $E$.  At a common
+\indesc $j$ of the participants' current inputs, the outputs emitted on all
+sides have a common \outnoun $u$ in $\fiber{j}$, and every participant keeps
+$(j,u)$, since it makes no \commitments of its own
+(Lemma~\ref{lem:run-residual}).  So all can continue to a common state at $j$,
+and Partition Consistency follows.  \fullproof
 \end{proof}
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.
