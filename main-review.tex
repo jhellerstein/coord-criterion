@@ -2399,7 +2399,7 @@ queries~\cite{baccaert2023dcbq,baccaert2026spectrum}. Their running example
 is leader election, which permits many outputs for one input. They also
 changed how data placement is modeled. Ameloot et al.\ require a query to be
 computed correctly however its input is distributed across nodes. Baccaert
-and Ketsman make placement part of the problem instead: each fact names the
+and Ketsman make placement part of the problem instead. Each fact names the
 node that holds it, as in Dedalus and declarative
 networking~\cite{alvaro2010dedalus,loo2009declarative}, and a
 \emph{behavior} maps such located inputs to sets of permitted located outputs.
@@ -2472,17 +2472,19 @@ together with nondeterministic outputs, for Baccaert and Ketsman.
 
 A CRDT uses join semilattices to guarantee that replicas that have received the
 same updates converge to equivalent states, whatever the order of delivery and
-merge~\cite{shapiro2011crdt}. That guarantee, Strong Eventual Consistency, is the convergence of
-Corollary~\ref{cor:convergence}, which every monotone functional spec has,
-so a semilattice merge suffices for it but is not needed. It says nothing
-about what a
-client observes when it queries a replica that has not yet received every
-update. Such a query risks Lamport's ``anomalous
-behavior''~\cite{lamport1978time} (\S\ref{sec:functional-events}). \textcolor{reviewed}{Laddad et al.\
-proposed monotonicity as the right test for safe observation from CRDT
-state~\cite{laddad2022keep}.} Their example of an unsafe query uses a two-phase set, whose state
+merge~\cite{shapiro2011crdt}. That guarantee, Strong Eventual Consistency, is
+the convergence of Corollary~\ref{cor:convergence}. The corollary assumes only
+that the spec is monotone, not that its input or output order is a join
+semilattice.
+
+\textcolor{reviewed}{Strong Eventual Consistency says nothing about what a client observes when it
+queries a replica that has not yet received every update.} Such a query risks
+Lamport's ``anomalous behavior''~\cite{lamport1978time}
+(\S\ref{sec:functional-events}). \textcolor{reviewed}{Laddad et al.\ proposed monotonicity as the
+right test for safe observation from CRDT state~\cite{laddad2022keep}.} Their
+example of an unsafe query uses a two-phase set, whose state
 $(\mathit{Add},\mathit{Del})$ merges by componentwise union. The query
-$\mathit{Add}\setminus\mathit{Del}$ can expose added items that are subsequently
+$\mathit{Add}\setminus\mathit{Del}$ can expose added items that are later
 deleted. We make the proposed test precise with Functional CALM.
 
 Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice. The input is the
