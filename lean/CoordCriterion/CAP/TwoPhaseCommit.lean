@@ -36,8 +36,9 @@ The voters' section supports the example of the Complete CAP subsection that
 returns to the election of Section `sec:election-story`: the voters' spec and
 its explicit relation.  The last section, a majority decision over the voters'
 responses (`decideMajority`, monotone), is library material no longer cited by
-the paper; the registrar's spec of that example is the election spec
-`CALM.elec`, monotone by `CALM.elec_monotone`.
+the paper.  (The registrar's spec of that example is the election spec
+`CALM.elec`, monotone by `CALM.elec_monotone`; the paper no longer states this
+in the example.)
 -/
 
 namespace CC

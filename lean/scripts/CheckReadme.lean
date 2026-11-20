@@ -186,7 +186,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:partitioned-history/unfolded»
 #check @CC.Paper.«def:explicit-relation»
 #check @CC.Paper.«def:explicit-relation/election-voters»
-#check @CC.Paper.«def:explicit-relation/election-registrar»
 #check @CC.Paper.«def:emitted-rows»
 #check @CC.Paper.«def:emitted-rows/availability»
 #check @CC.Paper.«sec:complete-cap/system»

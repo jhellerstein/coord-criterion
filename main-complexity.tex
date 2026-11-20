@@ -1951,7 +1951,7 @@ needs to keep available---are not enough to judge consistency. The spec
 must also model what an observer (e.g., a client) can eventually conclude by collecting
 outputs from multiple participants.\color{black}
 
-\color{black!45}\cxtag{distributed:39}{C}Like Gilbert and Lynch, we use a replicated register as an example.
+\color{black}\cxtag{distributed:39}{N/M}\cxbar{distributed-39}{0.4 0.4 1}{s}Like Gilbert and Lynch, we use a replicated register as an example.
 A register is a key-value store with a single key, which is enough to reason
 about one object.  The register starts at $v_0$, and a read and a write race at
 different participants.  Participant $p$ receives write $w(v)$ and emits its
@@ -1963,7 +1963,7 @@ linearization may place the concurrent read before the write.  No participant
 emits this combined output, and availability does not need it.  Still, it
 \outrel both local outputs, which shows that the two are compatible, so the
 spec must contain it.  Had the write finished before the read began, no such
-combined output would exist.\color{black}
+combined output would exist.\cxbar{distributed-39}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\cxtag{distributed:40}{C}We therefore pair a spec with an explicit possibility relation $E\subseteq P$,
 or explicit relation for short.\color{black}
@@ -2087,10 +2087,7 @@ communication, so the voter can make it and produce output during a partition.
 Each ballot is cast by a different voter, so ballots emitted on different
 sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this
 placement as a deployment), and every set of ballots an
-observer may collect is compatible.  The registrar's spec is the election spec
-of Section~\ref{sec:election-story}, which is monotone under its original
-output order: it collects ballots and announces whichever candidate has two
-ballots.\cxbar{distributed-59}{0.4 0.4 1}{e}\color{black}
+observer may collect is compatible.\cxbar{distributed-59}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\cxtag{distributed:60}{C}A partition does not change the intrinsic \commitments a spec needs; it
 prevents separated participants from jointly enforcing them through
@@ -2223,11 +2220,11 @@ monotone (\S\ref{sec:lifted-monotonicity}).\color{black}
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
 
-\color{black!45}\cxtag{composition:8}{C}We return to the replicated store of the opening.  The key-value store is not
+\color{black}\cxtag{composition:8}{N/M}\cxbar{composition-8}{0.4 0.4 1}{s}We return to the replicated store of the opening.  The key-value store is not
 monotone on its own, but it is monotone on what the log offers: a log fixes
 the order of commands, and a longer log only extends the responses.  The log
 issues a \commitment to offer only such inputs, so the store need make no
-\commitments.\color{black}
+\commitments.\cxbar{composition-8}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\cxtag{composition:9}{C}More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of

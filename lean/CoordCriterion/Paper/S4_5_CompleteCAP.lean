@@ -148,23 +148,6 @@ theorem «def:explicit-relation/election-voters» (n : Nat) :
       ∀ w : CAP.Votes n, (∀ p b, u p = some b → CAP.single p b ≼ w) → u ≼ w) :=
   CAP.voters_explicit n
 
-/-- Last sentence of the election-voters example: "The registrar's spec is the
-election spec of Section `sec:election-story`, which is monotone under its
-original output order: it collects ballots and announces whichever candidate
-has two ballots."
-
-Lean (`CALM.elec`, `CALM.winner`): the election spec's rows pair the ballots
-received with `winner`, which announces a candidate once it has two ballots
-(`CALM.cnt`), and `⊥` before then; under the output-extension order it is
-monotone (`CALM.elec_monotone`, the fact behind `«sec:election-story/monotone»`)
-and hence consistent. -/
-theorem «def:explicit-relation/election-registrar» :
-    (∀ i o, CALM.elec.P i o ↔ o = CALM.winner i) ∧
-    (∀ i, CALM.winner i =
-      if 2 ≤ CALM.cnt .a i then .win .a else if 2 ≤ CALM.cnt .b i then .win .b else .bot) ∧
-    CALM.elec.MonotoneF ∧ CALM.elec.Consistent :=
-  ⟨fun _ _ => Iff.rfl, fun _ => rfl, CALM.elec_monotone, CALM.elec_consistent⟩
-
 /-! ### Definition `def:emitted-rows` (Emitted rows) -/
 
 /-- **Def. `def:emitted-rows`** (Emitted rows).  "The *emitted rows* of a run

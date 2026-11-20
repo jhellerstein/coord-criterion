@@ -1118,11 +1118,7 @@ state still contains, where $j$ is a common \indesc of all participants' current
 inputs; by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have
 emitted.  Each participant can then perform $\mathsf{input}(j)$ and
 $\mathsf{output}(u)$ and reach the same state without \commitment
-(Proposition~\ref{prop:exposure-boundary}).  In the traceroute spec, a
-participant that traced from \texttt{s} and emitted $\{\texttt{s}{\to}\texttt{s1}\}$
-and one that traced from \texttt{t} and emitted $\{\texttt{t}{\to}\texttt{s2}\}$
-reconcile at $\{\texttt{s},\texttt{t}\}$ by emitting the union of their route
-sets.  The spec guarantees only that such
+(Proposition~\ref{prop:exposure-boundary}).  In the traceroute spec, the runs of Section~\ref{sec:lifted-monotonicity} that traced from \texttt{s} and from \texttt{t} may be at different participants; they reconcile at $\{\texttt{s},\texttt{t}\}$ by emitting the union of their route sets.  The spec guarantees only that such
 a $u$ exists; choosing it, communicating it, and scheduling the events are up
 to the system (\S\ref{sec:systems}).
 
@@ -1240,21 +1236,17 @@ needs to keep available---are not enough to judge consistency. The spec
 must also model what an observer (e.g., a client) can eventually conclude by collecting
 outputs from multiple participants.
 
-Like Gilbert and Lynch, we use a replicated register as an example.
-A register is a key-value store with a single key, which is enough to reason
-about one object.  The register starts at $v_0$, and a read and a write race at
-different participants.  Participant $p$ receives write $w(v)$ and emits its
-acknowledgment; concurrently, participant $q$ receives the read $r$ and emits
-$v_0$.  A client may later collect both responses.  A linearizable register
-spec has a row for this situation: its input is the pair of requests, and its
-output is the pair of responses.  The spec permits the row because a
-linearization may place the concurrent read before the write.  No participant
-emits this combined output, and availability does not need it.  Still, it
-\outrel both local outputs, which shows that the two are compatible, so the
-spec must contain it.  But linearizability respects real-time
-order~\cite{herlihy1990linearizability}: had the write finished before the read
-began, every linearization would put the write first, the read would have to
-return $v$, and no combined output would \outrelbase both responses.
+Like Gilbert and Lynch, we use a replicated register, a key-value store with a
+single key, as an example.  The register starts at $v_0$, and a read and a
+write race at different participants.  Participant $p$ receives write $w(v)$
+and emits its acknowledgment; concurrently, participant $q$ receives the read
+$r$ and emits $v_0$.  A client may later collect both responses.  A
+linearizable register spec has a row for this situation: its input is the pair
+of requests, its output the pair of responses, and the spec permits it because
+a linearization may place the concurrent read before the write.  No
+participant emits this combined output, and availability does not need it.
+Still, it \outrel both local outputs, which shows that the two are compatible,
+so the spec must contain it.
 
 We therefore pair a spec with an explicit possibility relation $E\subseteq P$,
 or explicit relation for short.
@@ -1358,9 +1350,7 @@ and $b$ is a \commitment: voting $a$ rules out every set of ballots in which it
 votes $b$.  But it is a single-voter \commitment involving no communication, so
 the voter can make it and emit its ballot during a partition.  Ballots on
 different sides never conflict, since each is cast by a different voter (the
-full paper formalizes this placement as a deployment~\extended), so every set
-of ballots an observer may collect is compatible.  The registrar's spec, the
-election spec, is monotone under its original output order.
+full paper formalizes this placement as a deployment~\extended), so every set of ballots an observer may collect is compatible.
 
 A partition does not change the intrinsic \commitments a spec needs; it
 prevents separated participants from jointly enforcing them through
@@ -1370,13 +1360,16 @@ $E$ instead waits for another side, sacrificing Availability, or is emitted
 anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
-Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted Monotonicity for $E$ fails. We show the failure for the register example, then extend the conclusion from the canonical system to every system.  Suppose the
-write finishes before the read begins.  Each of $p$ and $q$ still sees only its
-own request, and Availability requires $p$ to acknowledge the write and $q$ to
-answer $v_0$.  As in the register example, no output for the two requests
-together \outrel both answers, so the spec does not satisfy Lifted Monotonicity
-for them.  Their theorem
-concerns every system, not only the canonical one, so it needs one more step.
+Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted
+Monotonicity for $E$ fails.  We show the failure for the register example, then
+extend the conclusion from the canonical system to every system.  Linearizability
+respects real-time order~\cite{herlihy1990linearizability}, so suppose the write
+finishes before the read begins.  Every linearization then puts the write
+first, and the read must return $v$.  But each of $p$ and $q$ sees only its own
+request, and Availability requires $p$ to acknowledge the write and $q$ to
+answer $v_0$.  No output for the two requests together \outrel both answers, so
+the spec does not satisfy Lifted Monotonicity for them.  Their theorem concerns
+every system, not only the canonical one, so it needs one more step.
 
 \begin{corollary}
 \label{cor:complete-cap-any-system}
@@ -1467,7 +1460,7 @@ By associativity the lemma extends to finite pipelines.
 \label{sec:proper-coordination}
 
 The key-value store is not
-monotone on its own, but it is monotone on what the log offers: a fixed order of commands 
+monotone on its own, but it is monotone on what the log offers: a fixed order of commands
 that grows by sequence extension.  The log
 issues a \commitment to offer only such inputs, so the store need make no
 \commitments.
