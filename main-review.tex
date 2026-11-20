@@ -2977,13 +2977,14 @@ initially and are preserved by every step, so they are checked one step at a
 time and never by enumerating executions. They appear as forward
 simulations~\cite{lynch1995forward} and refinement
 mappings~\cite{abadi1991refinement}, and are mechanized for practical
-distributed systems~\cite{hawblitzel2015ironfleet}. Our use adds one
-obligation. A \emph{declared} spec $D$ gives, for each receive sequence, a set
-of reply sequences by a rule; it does not enumerate executions. To check
-Lifted Monotonicity on $D$ instead of on the projected spec, two things must be shown,
-and both are needed: if $D$ omits a reply sequence the automaton can produce,
-it may hide an incompatibility, and if $D$ adds one the automaton cannot
-produce, it may create an incompatibility the automaton does not have.
+distributed systems~\cite{hawblitzel2015ironfleet}.
+
+A \emph{declared} spec $D$ gives, for each receive sequence, a set of reply
+sequences by a rule; it does not enumerate executions. To check Lifted
+Monotonicity on $D$ instead of on the projected spec, $D$ must satisfy two
+properties, and both are needed: if $D$ omits a reply sequence the automaton
+can produce, it may hide an incompatibility, and if $D$ adds one the automaton
+cannot produce, it may create an incompatibility the automaton does not have.
 \begin{itemize}
 \item
 \emph{Realizability.}  Every reply sequence that $D$ allows at a
@@ -2994,9 +2995,9 @@ produce, it may create an incompatibility the automaton does not have.
         one that $D$ allows at its receive sequence.
 \end{itemize}
 Domination is the counterpart, for receive and reply sequences, of the
-refinement obligation above. Realizability is its converse, that $D$ allows
-nothing the automaton cannot produce; it too is proved once for all inputs,
-typically by induction on the input. $D$ need not match the automaton
+refinement obligation above. Realizability is the obligation our use adds:
+$D$ allows nothing the automaton cannot produce. It too is proved once for all
+inputs, typically by induction on the input. $D$ need not match the automaton
 exactly: it may leave out reply sequences that others extend. For the
 recording counter, the rule ``after $n$ arrivals, the reports $1,\ldots,n$''
 satisfies both obligations.

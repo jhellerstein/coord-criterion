@@ -3069,20 +3069,21 @@ row, and confirming that they have none means exploring all of their
 continuations to that receive sequence.  Testing cannot show that Lifted
 Monotonicity holds, since that is a claim about every input.\cxbar{instances-58}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:59}{N/L}\cxbar{instances-59}{0.9 0.45 0}{s}The second approach is proof.  Verification work routinely proves that an
+\color{black}\cxtag{instances:59}{N/M}\cxbar{instances-59}{0.4 0.4 1}{s}The second approach is proof.  Verification work routinely proves that an
 automaton refines a spec: every trace of the automaton is allowed by the spec.
 Such proofs use invariants, properties of the automaton's state that hold
 initially and are preserved by every step, so they are checked one step at a
 time and never by enumerating executions.  They appear as forward
 simulations~\cite{lynch1995forward} and refinement
 mappings~\cite{abadi1991refinement}, and are mechanized for practical
-distributed systems~\cite{hawblitzel2015ironfleet}.  Our use adds one
-obligation.  A \emph{declared} spec $D$ gives, for each receive sequence, a set
-of reply sequences by a rule; it does not enumerate executions.  To check
-Lifted Monotonicity on $D$ instead of on the projected spec, two things must be shown,
-and both are needed: if $D$ omits a reply sequence the automaton can produce,
-it may hide an incompatibility, and if $D$ adds one the automaton cannot
-produce, it may create an incompatibility the automaton does not have.
+distributed systems~\cite{hawblitzel2015ironfleet}.\cxbar{instances-59}{0.4 0.4 1}{e}\color{black}
+
+\color{black}\cxtag{instances:60}{N/M}\cxbar{instances-60}{0.4 0.4 1}{s}A \emph{declared} spec $D$ gives, for each receive sequence, a set of reply
+sequences by a rule; it does not enumerate executions.  To check Lifted
+Monotonicity on $D$ instead of on the projected spec, $D$ must satisfy two
+properties, and both are needed: if $D$ omits a reply sequence the automaton
+can produce, it may hide an incompatibility, and if $D$ adds one the automaton
+cannot produce, it may create an incompatibility the automaton does not have.
 \begin{itemize}
   \item \emph{Realizability.}  Every reply sequence that $D$ allows at a
         receive sequence is the reply sequence of some execution with that
@@ -3091,29 +3092,29 @@ produce, it may create an incompatibility the automaton does not have.
         one that $D$ allows at its receive sequence.
 \end{itemize}
 Domination is the counterpart, for receive and reply sequences, of the
-refinement obligation above.  Realizability is its converse, that $D$ allows
-nothing the automaton cannot produce; it too is proved once for all inputs,
-typically by induction on the input.  $D$ need not match the automaton
+refinement obligation above.  Realizability is the obligation our use adds:
+$D$ allows nothing the automaton cannot produce.  It too is proved once for all
+inputs, typically by induction on the input.  $D$ need not match the automaton
 exactly: it may leave out reply sequences that others extend.  For the
 recording counter, the rule ``after $n$ arrivals, the reports $1,\ldots,n$''
-satisfies both obligations.\cxbar{instances-59}{0.9 0.45 0}{e}\color{black}
+satisfies both obligations.\cxbar{instances-60}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Declared specifications]
 \label{prop:declared-specification}
-\cxtag{instances:60}{N/M}\cxbar{instances-60}{0.4 0.4 1}{s}Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
+\cxtag{instances:61}{N/M}\cxbar{instances-61}{0.4 0.4 1}{s}Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
 correspond, by an order isomorphism, to receive sequences.  If $D$ satisfies
 realizability and domination, then $D$ satisfies Lifted Monotonicity exactly
-when the projected spec does.\cxbar{instances-60}{0.4 0.4 1}{e}\color{black}
+when the projected spec does.\cxbar{instances-61}{0.4 0.4 1}{e}\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:61}{N/M}\cxbar{instances-61}{0.4 0.4 1}{s}We use the common-extension form.  Given rows of the projected spec, we
+\cxtag{instances:62}{N/M}\cxbar{instances-62}{0.4 0.4 1}{s}We use the common-extension form.  Given rows of the projected spec, we
 dominate each by a row of $D$, take their common \outnoun in $D$, and realize
 it.  Conversely, rows of $D$ are rows of the projected spec, and their common
-\outnoun there is dominated back into $D$.\cxbar{instances-61}{0.4 0.4 1}{e}\color{black}
+\outnoun there is dominated back into $D$.\cxbar{instances-62}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:62}{N/S}Together, the two obligations let $D$ stand in for the projected spec:
+\color{black}\cxtag{instances:63}{N/S}Together, the two obligations let $D$ stand in for the projected spec:
 Lifted Monotonicity is checked on $D$ exactly as everywhere else in this paper.
 Whether the automaton itself is confluent is a question about its executions
 (Proposition~\ref{prop:automaton-confluence}).\color{black}

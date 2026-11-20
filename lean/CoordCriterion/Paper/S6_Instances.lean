@@ -1360,10 +1360,10 @@ theorem «sec:operational-models/testing-cannot-show» (X : List Testing.Stage) 
 
 /-- "The second approach is proof.  Verification work routinely proves that
 an automaton refines a spec: every trace of the automaton is allowed by the
-spec. … Our use adds one obligation.  A *declared* spec `D` gives, for each
-receive sequence, a set of reply sequences by a rule; it does not enumerate
-executions.  To check Lifted Monotonicity on `D` instead of on the projected spec, two
-things must be shown, and both are needed: if `D` omits a reply sequence the
+spec. …"  Next paragraph: "A *declared* spec `D` gives, for each receive
+sequence, a set of reply sequences by a rule; it does not enumerate
+executions.  To check Lifted Monotonicity on `D` instead of on the projected
+spec, `D` must satisfy two properties, and both are needed: if `D` omits a reply sequence the
 automaton can produce, it may hide an incompatibility, and if `D` adds one the
 automaton cannot produce, it may create an incompatibility the automaton does
 not have."  The description of verification work (invariants, forward
@@ -1386,8 +1386,9 @@ theorem «sec:operational-models/both-halves» :
   ⟨IOT.Ctr.realizability_alone, IOT.Ctr.domination_alone⟩
 
 /-- "Domination is the counterpart, for receive and reply sequences, of the
-refinement obligation above.  Realizability is its converse, that `D` allows
-nothing the automaton cannot produce; it too is proved once for all inputs,
+refinement obligation above.  Realizability is the obligation our use adds:
+`D` allows nothing the automaton cannot produce.  It too is proved once for all
+inputs,
 typically by induction on the input.  `D` need not match the automaton
 exactly: it may leave out reply sequences that others extend.  For the
 recording counter, the rule "after `n` arrivals, the reports `1,…,n`"
