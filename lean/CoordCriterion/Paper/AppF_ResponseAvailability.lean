@@ -198,9 +198,9 @@ theorem «def:response-partition-consistency» (Sys : System sp D) :
     (ResponsePC Sys ↔ CommonRefinementAtEnd Sys) :=
   ⟨Iff.rfl, responsePC_iff_commonRefinement Sys⟩
 
-/-- "Response Partition Consistency is the part of Partition Consistency that
-the converse of Theorem `thm:complete-cap` and Corollary
-`cor:complete-cap-any-system` use.  So both also hold with Response Partition Consistency in place of Partition
+/-- "The converse of Theorem `thm:complete-cap` and Corollary
+`cor:complete-cap-any-system` use only this part of Partition Consistency, so
+both also hold with Response Partition Consistency in place of Partition
 Consistency."  Lean: Partition Consistency implies it, and the existential
 form of Theorem `thm:complete-cap` with Corollary
 `cor:complete-cap-any-system` (some system has Availability for `A` and it
@@ -220,9 +220,9 @@ theorem «def:response-partition-consistency/of-confluent» {init : Fin n → I}
     RPCAt H c j :=
   rpc_of_confluent h
 
-/-- "The two coincide for a system with basis `ℬ_P` and no commitment events.
-Its participant runs are then canonical runs, and Lemma `lem:reconciliation`
-applies to them."
+/-- "The two coincide for a system with basis `ℬ_P` and no commitment events,
+whose participant runs are canonical runs, to which Lemma `lem:reconciliation`
+applies."
 Lean, at any cut, in particular the final one. -/
 theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     (hS : CanonicalSystem Sys) {init : Fin n → I} {H : History sp D n} (hwf : WF init H)
@@ -231,7 +231,7 @@ theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     RPCAt H c j ↔ ConfluentCut init H c j :=
   canonical_rpc_iff_confluent hS hwf hp hcut hj
 
-/-- "With other commitments the converse can fail.  Participants may prune
+/-- "With other commitments they can differ: participants may prune
 their states so that they cannot be reconciled, while their emitted outputs
 still have a common output extension."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
 system `rnSys` whose basis is a commitment emptying the fiber at `hi`; in the history `rnH`
@@ -338,8 +338,7 @@ theorem «def:response-interface/confluence» (T : Table I O) (hTS : ∀ i o, T 
         ∀ j, (∀ x ∈ fam, x.2.2.cur ≼ j) → ConfluentAt (fam.map (fun x => x.2.2)) j :=
   consistentOn_iff_confluent T hTS
 
-/-- "A response interface is an explicit relation that a system can always
-serve.  Consider the canonical system for `T` (Section `sec:complete-cap`) … So every participant's fiber intersects `T`, and Availability for
+/-- "A system can always serve a response interface.  Consider the canonical system for `T` (Section `sec:complete-cap`) … So every participant's fiber intersects `T`, and Availability for
 `T` gives Answering.  The same argument at an input `k ⪰ i` leaves a row at `k`,
 which gives Input acceptance."  Lean: `respSystem T` has Availability for
 `T`; at the end of every history it produces, each participant's current
@@ -773,10 +772,11 @@ theorem «prop:gl-async/non-vacuity» {N : Nat} {M : Type} :
 /-! ### Final paragraph (fair executions)
 
 "Gilbert and Lynch require availability and atomicity in all fair executions,
-… Both imply the forms in the proposition. … So a finite execution extends to a
-fair execution with no new request in which every message is lost. …
-Atomicity of the fair extension gives atomicity of the finite execution.
-Atomicity is a safety property …"
+… Both imply the forms in the proposition.  In their model any message may be
+lost and client requests are inputs, so a finite execution extends to a fair
+execution with no new request in which every message is lost, as in their own
+proofs. … Atomicity of the fair extension gives atomicity of the finite
+execution, since atomicity is a safety property …"
 
 Lean (`CAP/AsyncGLFair.lean`): an infinite execution is a chain of finite
 executions with node states (`AsyncGL.IExec`); it is fair when each node, from

@@ -29,11 +29,10 @@ set_option linter.unusedSectionVars false
 
 /-- Opening paragraph: "Bailis et al. classify transactional guarantees by what a system can
 provide while every client that can reach a replica keeps getting answers.  The
-extended paper defines each guarantee by the anomaly it rules out, a pattern of
-dependencies between transactions, and gives algorithms for the guarantees that
-can be provided.  We use those definitions and algorithms as written.  Where a
-definition disagrees with its own example, we follow the example and list the
-differences at the end of this subsection."
+extended paper defines each guarantee by the anomaly it rules out and gives
+algorithms for the guarantees that can be provided.  We use those definitions
+and algorithms as written, except that where a definition disagrees with its
+own example, we follow the example."
 
 Paragraph "Inputs and outputs": "The inputs extend the histories of Definition
 `def:hat-spec`.  Each item has a fixed set of replicas, and a read is served by
@@ -60,9 +59,9 @@ writes rules out a transaction that reads a version of `x` older than one that
 an earlier transaction of the same client wrote.  The extended paper gives no
 formal definition of recency.  We take it to require that a read return a
 version at least as new as every write by another transaction whose commit
-happens before the read.  A replica can return only versions it holds.  So the
-*visibility store* permits an answer only if its version is the initial one or
-arrived at the reading replica before the read."
+happens before the read.  Because a replica can return only versions it
+holds, the *visibility store* permits an answer only if its version is the
+initial one or arrived at the reading replica before the read."
 
 Lean: the edges are `HATSpec.wwI`, `HATTax.wr2`, `HATTax.rw2` and `HATTax.sess`;
 each guarantee's anomaly is `HATTax.Phen g`; read your writes is `HATTax.MYR`,
@@ -124,11 +123,11 @@ theorem «app:hat-taxonomy/complete-cap» {reps : Nat → List Nat} {lam : Bool}
 
 /-- Paragraph "Reveal rules": "A transaction is *pending stable* before a read
 when every replica of every item it wrote has received its write before the
-read. … We combine these into one *reveal rule*.  A write is revealed at a read
+read. … The *reveal rule* combines the three.  A write is revealed at a read
 once its transaction and every transaction whose commit happens before its
 commit are pending stable.  A transaction reads, for each item, the highest
 version revealed at every one of its reads so far.  The *sticky reveal rule*
-answers only sticky reads and also reveals the client's own earlier writes,
+answers only sticky reads, and it also reveals the client's own earlier writes,
 which a sticky read's replica holds."  (The elided sentences quote Bailis et
 al.'s algorithms.)
 
@@ -200,11 +199,11 @@ it, and the rule is monotone.  A monotone relation inside the spec satisfies
 Lifted Monotonicity for itself: rows below `j` have the relation's own answer at
 `j` as a common output extension.  The rule returns only versions the replica
 holds, and its answers have none of the anomalies these guarantees rule out.
-Consider monotonic reads.  An earlier transaction of a client read some
-version of `x`, which was then revealed.  A revealed version has reached every
-replica of its item, so it stays revealed at every later read at any replica.
-The client's later transaction reads after the earlier one commits, so it reads
-that version of `x` or a newer one.  For read committed and monotonic atomic view, the
+Consider monotonic reads.  If an earlier transaction of a client read a
+version of `x`, that version was revealed.  It had then reached every replica
+of `x`, so it stays revealed at every later read.  The client's later
+transaction reads after the earlier one commits, so it reads that version of
+`x` or a newer one.  For read committed and monotonic atomic view, the
 timestamp condition rules out G1c, as in Theorem `thm:hat-levels`."
 
 Lean: the rule's complete history `HATTax.ruleHist` has none of the anomalies
@@ -270,8 +269,8 @@ its highest good version of `x`.  With one, it returns a good version at least
 as new, or else the pending write with exactly that timestamp.  After each
 read, the client raises the required timestamp of every item that the returned
 write's transaction also wrote, and it clears these timestamps when the
-transaction ends.  Which acknowledgments a replica has received is not fixed by
-the input.  So we let each replica's good set be any set of pending stable
+transaction ends.  The input does not fix which acknowledgments a replica has
+received, so each replica's good set may be any set of pending stable
 transactions that depends only on the read's past.  The pending case returns
 only a write whose transaction an earlier read of the same transaction found
 good, so every answer is a version the replica holds."
@@ -310,24 +309,20 @@ theorem «prop:hat-mav-algorithm» {reps : Nat → List Nat} (K : AckK reps) (D 
 
 /-! ## Differences in form -/
 
-/-- Paragraph "Differences in form": "Our classification matches theirs, and it
+/-- Paragraph "Differences in form": "Our classification matches theirs and
 differs in form in three ways.  First, our framework separates two reasons a
 guarantee can be unavailable.  The unavailable isolation levels fail Lifted
 Monotonicity: answers that the two sides give have no common extension.  Read
-your writes without stickiness, and recency in every case, fail earlier,
-because some read has no permitted answer at all.  When a client's write has
-not reached the replica that serves its next read, every version that replica
-holds, the initial version included, violates read your writes.  Recency fails
-the same way when the missing write comes from another client, so stickiness
-does not help.  No explicit relation inside the spec answers such a read, so
-the question of Lifted Monotonicity never arises.  Second, monotonic writes
-needs the version order to follow each session's order.  Bailis et al. obtain
-this from client timestamps, and our inputs assume it: a client's commit
-timestamps increase along its session.  Third, we model a predicate as a fixed
-range of items; general predicates, whose items depend on the data, are not
-modeled.  Bailis et al. list several recency guarantees without formal
-definitions, among them bounds on staleness and safe, regular, and linearizable
-register semantics; we model the one recency guarantee defined above."
+your writes without stickiness, and recency in every case, fail earlier.  Some
+read has no permitted answer at all (items (2) and (3) of the proof of Theorem
+`thm:hat-taxonomy`), so the question of Lifted Monotonicity never arises.
+Second, monotonic writes needs the version order to follow each session's
+order.  Bailis et al. obtain this from client timestamps, and our inputs assume
+it.  Third, we model a predicate as a fixed range of items, and general
+predicates, whose items depend on the data, are not modeled.  Bailis et al.
+also list several recency guarantees without formal definitions, among them
+bounds on staleness and safe, regular, and linearizable register semantics.  We
+model only the recency guarantee defined above."
 (The statements about Bailis et al.'s paper are prose-only.)
 
 Lean: (1) on `HATTax.w1`, client 1's read of `x` is not sticky

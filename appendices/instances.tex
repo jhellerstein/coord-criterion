@@ -6,12 +6,11 @@ This appendix supplies the details behind the mappings of Section~\ref{sec:insta
 \subsection{Invariant confluence (\S\ref{sec:iconfluence-instance})}
 \label{app:iconfluence}
 
-The input records which transactions ran and whose writes each one ran on.
 A \emph{transaction history} $h$ (here simply \emph{history}) is a finite
-partial order of transaction events, each labeled by a transaction in $T$.
-Here $e'<e$ means that $e$ ran on a state that included the writes of $e'$.
-A sub-history is \emph{closed} when it contains every event that precedes one
-of its own events, that is, when it is a downward-closed sub-order.  History
+partial order of transaction events, each labeled by a transaction in $T$,
+where $e'<e$ means that $e$ ran on a state that included the writes of $e'$.
+A sub-history is \emph{closed} when it is downward closed: it contains every
+event that precedes one of its own.  History
 $h'$ \inrel $h$ when $h$ is a closed sub-history of $h'$.  Then the events
 that $h'$ adds precede no event of $h$, and each event of $h$ keeps exactly
 the predecessors it had.
@@ -45,14 +44,12 @@ output:
   P_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a valid closed
   sub-history of }h\}.
 \]
-An output may therefore leave out some of the input's transactions, but what
-it includes must be closed and valid.  Taking $g$ empty gives
-$s_0$, so the spec is total.
+Taking $g$ empty gives $s_0$, so the spec is total.
 
 \begin{proof}[Proof of Proposition~\ref{prop:iconfluence-lm}]
 We use the common-extension form of Lifted Monotonicity
-(Proposition~\ref{prop:common-expansion-form}).  First, the state of every
-valid history $g$ is reachable.  The proof is by induction on $g$.  Let $e$ be
+(Proposition~\ref{prop:common-expansion-form}).  We first show, by induction
+on $g$, that the state of every valid history $g$ is reachable.  Let $e$ be
 maximal in $g$.  Then $g\setminus\{e\}$ and the sub-history strictly below $e$
 are closed, hence valid.  By induction their states
 $\mathrm{eval}(g\setminus\{e\})$ and $\mathrm{pre}(e)$ are reachable.  The
@@ -60,33 +57,36 @@ state $\mathrm{post}(e)$ is a valid transaction step from $\mathrm{pre}(e)$,
 and $\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
 valid merge.
 
-($\Rightarrow$) Let rows $(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a
-common \indesc $j$.  Then each $g_r$ is a closed sub-history of $j$.  Let
+First assume that $T$ is invariant confluent.  Let rows
+$(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a common \indesc $j$.  Then each $g_r$ is a closed sub-history of $j$.  Let
 $g=g_1\cup\cdots\cup g_k$; we show that $g$ is valid.  Every closed
 sub-history $c$ of $g$ is the union of the pieces $c\cap g_r$.  Each piece is
-a closed sub-history of the valid $g_r$, so its state is reachable by the
-first step.  Thus $\mathrm{eval}(c)$ is a union of reachable states.
+a closed sub-history of the valid $g_r$, so its state is reachable.  Thus
+$\mathrm{eval}(c)$ is a union of reachable states.
 Invariant confluence makes each successive union valid, and a valid merge of
 reachable states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Hence $g$
 is valid, and $\mathrm{eval}(g)\in P_{\mathcal I}(j)$ \outrel every
-$\mathrm{eval}(g_r)$.  For $k=0$, take $g$ empty.
+$\mathrm{eval}(g_r)$.  For $k=0$, take $g$ empty.  Lifted Monotonicity
+follows.
 
-($\Leftarrow$) Only the property of having directed fibers is needed.  We
-first show that valid histories are closed under disjoint union.  Let $g_1$
-and $g_2$ be valid histories.  Let $j$ be their disjoint union, with events
-renamed apart and no order between the two parts.  Each event keeps its
+Now assume that $\Spec_{\mathcal I}$ satisfies Lifted Monotonicity.  Only its
+directed fibers are used.  We first show that valid histories are closed under
+disjoint union.  Let $g_1$ and $g_2$ be valid histories, and let $j$ be their
+disjoint union, with events renamed apart and no order between the two
+parts.  Each event keeps its
 predecessors, so its $\mathrm{pre}$ and $\mathrm{post}$ are states of closed
 sub-histories of a valid $g_r$.  So $j$ is locally valid, and
-$\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$.  Because the
-spec has directed fibers, there is a valid sub-history $g$ of $j$ with
+$\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$.  Directed
+fibers give a valid sub-history $g$ of $j$ with
 $\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$.
 So $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Every closed
 $c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap g_2$, both
-valid.  The same argument gives $\mathcal I(\mathrm{eval}(c))$, so $j$ is
+valid, and the same argument gives $\mathcal I(\mathrm{eval}(c))$.  So $j$ is
 valid.  Valid histories are also closed under adding an event above all
 others when its transaction step is valid.  By induction on derivations, every
 reachable state is therefore the state of a valid history.  The pairwise
 argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
+Invariant confluence follows.
 \end{proof}
 
 \subsection{The HAT taxonomy (\S\ref{sec:hat-instance})}
@@ -95,11 +95,10 @@ argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
 Bailis et al.\ classify transactional guarantees by what a system can provide
 while every client that can reach a replica keeps getting
 answers~\cite{bailis2013hat}.  The extended paper defines each guarantee by
-the anomaly it rules out, a pattern of dependencies between transactions, and
-gives algorithms for the guarantees that can be
+the anomaly it rules out and gives algorithms for the guarantees that can be
 provided~\cite{bailis2013hatextended}.  We use those definitions and
-algorithms as written.  Where a definition disagrees with its own example, we
-follow the example.
+algorithms as written, except that where a definition disagrees with its own
+example, we follow the example.
 
 \paragraph{Inputs and outputs.}
 The inputs extend the histories of Definition~\ref{def:hat-spec}.  Each item
@@ -119,9 +118,10 @@ read your writes rules out a transaction that reads a version of $x$ older
 than one that an earlier transaction of the same client wrote.  The extended
 paper gives no formal definition of recency.  We take it to require that a
 read return a version at least as new as every write by another transaction
-whose commit happens before the read.  A replica can return only versions it
-holds.  So the \emph{visibility store} permits an answer only if its version is the initial
-one or arrived at the reading replica before the read.
+whose commit happens before the read.  Because a replica can return only
+versions it holds, the \emph{visibility store} permits an answer only if its
+version is the initial one or arrived at the reading replica before the
+read.
 
 \begin{definition}[Guarantee spec, high availability, sticky read, sticky availability]
 \label{def:hat-availability}
@@ -145,19 +145,17 @@ answers every read, and likewise for sticky availability.
 
 \paragraph{Reveal rules.}
 A transaction is \emph{pending stable} before a read when every replica of
-every item it wrote has received its write before the read.  The algorithm of
-Bailis et al.\ for monotonic atomic view reveals a write only once its
-transaction is pending stable.  For the session guarantees they also wait
-until every transaction committed before it is pending stable: they ``wait to
-reveal new writes \ldots\ until each write's respective dependencies are
-visible on all replicas.''  Their cut isolation algorithm keeps the versions a
-transaction has read in a client-side cache.  We combine these into one
-\emph{reveal rule}.  A write is revealed at a read once its transaction and
-every transaction whose commit happens before its commit are pending stable.
-A transaction reads, for each item, the highest version revealed at every one
-of its reads so far.  The \emph{sticky reveal rule} answers only sticky reads
-and also reveals the client's own earlier writes, which a sticky read's
-replica holds.
+every item it wrote has received its write before the read.  Bailis et al.'s
+algorithm for monotonic atomic view reveals a write once its transaction is
+pending stable.  For the session guarantees they also ``wait to reveal new
+writes \ldots\ until each write's respective dependencies are visible on all
+replicas.''  For cut isolation, a client caches the versions its transaction
+has read.  The \emph{reveal rule} combines the three.  A write is revealed at
+a read once its transaction and every transaction whose commit happens before
+its commit are pending stable.  A transaction reads, for each item, the
+highest version revealed at every one of its reads so far.  The \emph{sticky
+reveal rule} answers only sticky reads, and it also reveals the client's own
+earlier writes, which a sticky read's replica holds.
 
 \begin{theorem}[HAT taxonomy]
 \label{thm:hat-taxonomy}
@@ -186,12 +184,11 @@ past, so later input never changes it, and the rule is monotone.  A monotone
 relation inside the spec satisfies Lifted Monotonicity for itself: rows below
 $j$ have the relation's own answer at $j$ as a common \outnoun.  The rule
 returns only versions the replica holds, and its answers have none of the
-anomalies these guarantees rule out.  Consider monotonic reads.  An earlier
-transaction of a client read some version of $x$, which was then revealed.
-A revealed version has reached every replica of its item, so it stays
-revealed at every later read at any replica.  The client's later transaction
-reads after the earlier one commits, so it reads that version of $x$ or a newer
-one.
+anomalies these guarantees rule out.  Consider monotonic reads.  If an earlier
+transaction of a client read a version of $x$, that version was revealed.  It
+had then reached every replica of $x$, so it stays revealed at every later
+read.  The client's later transaction reads after the earlier one commits, so
+it reads that version of $x$ or a newer one.
 For read committed and monotonic atomic view, the timestamp condition rules
 out G1c, as in Theorem~\ref{thm:hat-levels}.  By
 Theorem~\ref{thm:complete-cap}, each guarantee is highly available.
@@ -223,8 +220,8 @@ its highest good version of $x$.  With one, it returns a good version at least
 as new, or else the pending write with exactly that timestamp.  After each
 read, the client raises the required timestamp of every item that the
 returned write's transaction also wrote, and it clears these timestamps when
-the transaction ends.  Which acknowledgments a replica has received is not
-fixed by the input.  So we let each replica's good set be any set of pending
+the transaction ends.  The input does not fix which acknowledgments a
+replica has received, so each replica's good set may be any set of pending
 stable transactions that depends only on the read's past.  The pending case
 returns only a write whose transaction an earlier read of the same transaction
 found good, so every answer is a version the replica holds.
@@ -248,24 +245,20 @@ gives the system.
 \end{proof}
 
 \paragraph{Differences in form.}
-Our classification matches theirs, and it differs in form in three ways.
+Our classification matches theirs and differs in form in three ways.
 First, our framework separates two reasons a guarantee can be unavailable.
 The unavailable isolation levels fail Lifted Monotonicity: answers that the two
 sides give have no common extension.  Read your writes without stickiness, and
-recency in every case, fail earlier, because some read has no permitted answer
-at all.  When a client's write has not reached the replica that serves its next
-read, every version that replica holds, the initial version included, violates
-read your writes.  Recency fails the same way when the missing write comes from
-another client, so stickiness does not help.  No explicit relation inside the
-spec answers such a read, so the question of Lifted Monotonicity never arises.
-Second, monotonic writes needs the version order to follow each session's
-order.  Bailis et al.\ obtain this from client timestamps, and our inputs
-assume it: a client's commit timestamps increase along its session.  Third, we
-model a predicate as a fixed range of items; general predicates, whose items
-depend on the data, are not modeled.  Bailis et al.\ list several recency
-guarantees without formal definitions, among them bounds on staleness and safe,
-regular, and linearizable register semantics; we model the one recency
-guarantee defined above.
+recency in every case, fail earlier.  Some read has no permitted answer at all
+(items (2) and (3) of the proof of Theorem~\ref{thm:hat-taxonomy}), so the
+question of Lifted Monotonicity never arises.  Second, monotonic writes needs
+the version order to follow each session's order.  Bailis et al.\ obtain this
+from client timestamps, and our inputs assume it.  Third, we model a predicate
+as a fixed range of items, and general predicates, whose items depend on the
+data, are not modeled.  Bailis et al.\ also list several recency guarantees
+without formal definitions, among them bounds on staleness and safe, regular,
+and linearizable register semantics.  We model only the recency guarantee
+defined above.
 
 \subsection{Registers}
 \label{app:registers}
@@ -276,10 +269,10 @@ The example here differs: two concurrent writes reach both replicas before the
 partition.
 
 \paragraph{The causal register.}
-This register records causal precedence rather than real-time precedence.
-Its outputs record the write that supplies each read rather than the value
-returned.  Otherwise it is the register of Appendix~\ref{app:cap-response}.
-An input is a finite operation history $h$: a set of reads and writes of one
+The causal register differs from the register of
+Appendix~\ref{app:cap-response} in two ways.  Its input records causal
+precedence instead of real-time precedence, and its output records the write
+that supplies each read instead of the value returned.  An input is a finite operation history $h$: a set of reads and writes of one
 register $x$ at replicas, with a strict partial order $\to$ of causal
 precedence.  Causal precedence is program order at each replica, plus an edge
 from each write to the operations a replica invokes after receiving it,
@@ -319,14 +312,14 @@ $w_p(x,\dog)$.  More generally, consider the deployment in which each replica
 answers only its own reads ($E_p$ holds the rows whose source map is defined
 only on reads of $p$).  Under it the causal register is monotone across
 partitions, for every history.  For each participant $p$ whose run emits, let
-$\rho_p$ be the last source map it emits, at input $i_p$.  Then $\rho_p$
-\outrel every output $p$ emitted.  Let $j$ be a common \indesc.  We take a
-serialization $L_p$ of $i_p$ explaining $\rho_p$.  We extend it to $j$ by
-appending the new operations of $p$ and the new writes in any order extending
-$\to$.  No new operation causally precedes an old one, so the result extends
-$\to$ and explains the same reads.  We use these serializations for the
-replicas that emitted and arbitrary ones for the others.  With them, the union
-of the $\rho_p$ lies in $\fiber{j}$ and \outrel every emitted output.
+$\rho_p$ be the last source map it emits, at input $i_p$; then $\rho_p$
+\outrel every output $p$ emitted.  Let $j$ be a common \indesc.  We extend a
+serialization $L_p$ of $i_p$ explaining $\rho_p$ to $j$ by appending the new
+operations of $p$ and the new writes in any order extending $\to$.  No new
+operation causally precedes an old one, so the result extends $\to$ and
+explains the same reads.  With these serializations for the replicas that
+emitted, and arbitrary ones for the others, the union of the $\rho_p$ lies in
+$\fiber{j}$ and \outrel every emitted output.
 Separability is not used.  Two answers to the same read remain incompatible,
 but only the reading replica may emit either.
 
@@ -334,16 +327,15 @@ but only the reading replica may emit either.
 \label{app:rtc}
 
 Mahajan et al.\ showed that a system can provide real-time causal consistency,
-but no stronger consistency, while staying always available (every read and
-write completes whatever messages are lost) and one-way convergent (a node that can receive from another eventually reflects the updates the other
-knows)~\cite{mahajan2011consistency}.  We recover both parts with real-time
+but no stronger consistency, while staying always available and one-way
+convergent~\cite{mahajan2011consistency}.  We recover both parts with real-time
 precedence recorded in the input.  The argument rests on a property of
 products of independent views.
 
 \paragraph{Independent products.}
-In the real-time causal register below, each replica exposes a view of its
-own reads, and the replicas choose their views independently.  We first state
-the facts we need for any such product of independent views.  Fix participants
+In the real-time causal register below, each replica independently chooses
+a view of its own reads.  The facts we need hold for any such product of
+independent views.  Fix participants
 $\mathcal N$ with $|\mathcal N|\ge2$.  For each $p$ let $(W_p,\le_p)$ be a poset
 and, for each input $i$, let $V_p(i)\subseteq W_p$ be a nonempty antichain, the
 \emph{views} $p$ may expose at $i$.  A \emph{partial tuple} $x$ assigns to each
@@ -401,11 +393,11 @@ source $s(r)$ such that
         $s(r')=s(r)$.
 \end{enumerate}
 Intuitively, these items are Mahajan et al.'s checks for the order that $p$'s
-reads expose.  In that order each visible write precedes the read, and each
+reads expose, in which each visible write precedes the read and each
 overwritten write precedes the source.  Item~(1) says a replica returns only
 writes it has received.  Item~(2) is their real-time check ``time doesn't
 travel backward.''  Item~(3) keeps one replica's overwrites consistent.  Their
-reads return all concurrent latest writes, while ours return one.  So a view
+reads return all concurrent latest writes, while ours return one, so a view
 matches their check when that write is the only latest one.
 
 Views exist.  As each read's source we can take the visible write that comes

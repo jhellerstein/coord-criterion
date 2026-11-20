@@ -210,9 +210,8 @@ noncomputable abbrev «app:cc-bases/read» {T K : Type} {af : Bool} (A : T) (n :
 
 /-- "Each is a commitment (Definition `def:commitment`).  In particular, no
 removed row is extended by a kept one, as Equation `eq:commitment-unsubsumed`
-requires.  To see this, suppose a kept row extends another row at the same
-input.  The complete row that keeps the first also extends the second, so the
-second is kept too."  Every closure commitment, for
+requires: if a kept row extends another row at the same input, the complete
+row that keeps the first also extends the second, so the second is kept too."  Every closure commitment, for
 every guard and condition, is a `Commitment` (`closeC`); this states
 Eq. `commitment-unsubsumed` for it. -/
 theorem «app:cc-bases/each-is-commitment» {T K : Type} {af : Bool}
@@ -221,7 +220,7 @@ theorem «app:cc-bases/each-is-commitment» {T K : Type} {af : Bool}
     ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) :=
   (closeC G Q).unsubsumed σ τ h
 
-/-- "… For them a complete row is kept exactly when it satisfies the condition,
+/-- "… and for them a complete row is kept exactly when it satisfies the condition,
 since two permitted complete outputs at one input, one extending the other, have
 the same serial order and abort set."  (In both specifications.) -/
 theorem «app:cc-bases/complete-kept-iff» {T K : Type} {af : Bool}
@@ -267,9 +266,8 @@ theorem «app:cc-bases/run-states» {T K : Type} {af : Bool} {i : Inp T K}
   let hg : Good τ := h.elim good_run.1 good_run.2
   ⟨hg.2, hg.1⟩
 
-/-- "Because of these properties, a scheduler reports a read by first applying
-`read(A,k,v)` in a commitment event; emitting the result is then a legal
-output."   Precisely: after `read(A,k,v)`, adding the
+/-- "So a scheduler can report a read by first applying `read(A,k,v)` in a
+commitment event, after which emitting the result is a legal output."   Precisely: after `read(A,k,v)`, adding the
 result to a row that every remaining row extends gives a row, and emitting it is
 a legal output.  (At any state with the two properties above.) -/
 theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v : Option T}
@@ -281,8 +279,8 @@ theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v
 
 /-! ## 2PL -/
 
-/-- "If `A` holds that lock in a conflicting mode, `B` waits.  The scheduler
-then applies `order(A,B)` in a commitment event and reports nothing. … On complete
+/-- "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler
+applies `order(A,B)` in a commitment event and reports nothing. … On complete
 rows without aborts, `order(A,B)` keeps exactly those with `A` before `B`
 (Figure `fig:cc-commitments`(h))."  The omitted sentences, on when
 `order(A,B)` would remove nothing and is therefore not applied, are
@@ -294,8 +292,8 @@ theorem «app:cc-bases/fig-h» {T K : Type} {A B : T}
     τ.R k c ↔ σ.R k c ∧ c.o.lt A B :=
   fig_h h hp hX hA hB
 
-/-- "Sometimes every remaining complete row that commits both already places `A`
-before `B`.  Then `order(A,B)` would remove nothing, so it is undefined and the
+/-- "If every remaining complete row that commits both already places `A`
+before `B`, then `order(A,B)` would remove nothing, so it is undefined and the
 scheduler applies nothing.  This happens when an earlier wait has applied
 `order(A,B)`, or when a reported read result fixes the order, as when `A` has
 read the initial version of the key that `B` writes."
@@ -335,8 +333,8 @@ theorem «app:cc-bases/order-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h 
 
 /-- "A deadlock between `A` and `B` arises when `B` waits for a lock that `A`
 holds and an operation of `A` then waits for a lock that `B` holds.  The
-scheduler has then applied `order(A,B)` and later `order(B,A)`.  No remaining
-row, at any input, commits both `A` and `B`.  So every remaining complete row
+scheduler has then applied `order(A,B)` and later `order(B,A)`, so no remaining
+row, at any input, commits both `A` and `B`.  Every remaining complete row
 aborts one of them, and resolving the deadlock means aborting one."
 "Remaining" is: in any table contained in the one after `order(B,A)`. -/
 theorem «app:cc-bases/deadlock» {T K : Type} {A B : T}
@@ -413,8 +411,8 @@ theorem «app:cc-bases/mvto-row» {T K : Type} {k : Inp T K} {c : Partial.ROut T
     ¬ (c.o.dom A ∧ c.o.dom B) :=
   fun ⟨hA, hB⟩ => stamps_row hc hsA hsB hAB hBB hwA hop hv hρ hA hB
 
-/-- "Hence, after the two stamps, no row that reports the read and is at an
-input in which `A` writes `x` commits both `A` and `B`.  Once `read` has been
+/-- "Hence, after the two stamps, no row at an input in which `A` writes `x`
+both reports the read and commits `A` and `B`.  Once `read` has been
 applied, no remaining row at such an input commits both, whether it reports the
 read or not.  Reporting the read therefore rules out one possibility: that `A`
 writes `x` and both `A` and `B` commit."   The two stamps are
@@ -475,12 +473,12 @@ theorem «app:cc-bases/abort-entailed» {T K : Type} {A B : T} {ZA ZB : T → Pr
 operation, a read of `x`, arrives, then `B`'s read of `x`, and then `A`'s write
 of `x`, with further transactions free to arrive.  The scheduler applies
 `stamp(A)` and `stamp(B)` in commitment events and reports that `B` read the
-initial version of `x`.  Reporting the read is not a legal output on its own.
-At an input in which `A` writes `x`, the row that commits `A` and then `B`
-cannot be completed with it.  Once the scheduler applies `read` in a
+initial version of `x`.  Reporting the read is not a legal output on its own,
+since at an input in which `A` writes `x`, the row that commits `A` and then
+`B` cannot be completed with it.  Once the scheduler applies `read` in a
 commitment event, reporting the read is a legal output.  After `A`'s write
 arrives, two completions remain at the input in which both then request
-commit.  One commits `B` and aborts `A`, and the other commits `A` and aborts
+commit: one commits `B` and aborts `A`, and the other commits `A` and aborts
 `B`.  Emitting `A`'s abort is then not a legal output, and `abort(A)` and `abort(B)` are both defined
 and keep different completions.  MVTO's write rule aborts `A` at once: the
 scheduler applies `abort(A)` in a commitment event, after which reporting the
@@ -521,11 +519,11 @@ theorem «app:cc-bases/abort-is-commitment» {T K : Type} {A B C : T} (h : Disti
 
 /-! ## Comparison -/
 
-/-- "Under MVTO, suppose `B` reads a version of a key older than `A`, which is
-stamped before `B`.  Reporting the read is then a commitment: if `A` writes
-that key, `A` and `B` do not both commit.  The write rule settles this by
-aborting `A` when its write arrives, and the spec forces that abort only after
-`B` commits."   The first part is `«app:cc-bases/read-commits»`; the second is
+/-- "Under MVTO, reporting a read can itself rule out that two transactions
+both commit, and the write rule settles this by an abort that the spec forces
+only after the reader commits."  (The two transactions are a transaction `A`
+and a reader `B` stamped after it that read a version of a key older than `A`;
+if `A` writes that key, `A` and `B` do not both commit.)   The first part is `«app:cc-bases/read-commits»`; the second is
 `«app:cc-bases/abort-entailed»` together with the run of
 `«app:cc-bases/abort-is-commitment»`, restated here: after the write arrives,
 `A`'s abort is not a legal output while `B` is undecided, the write rule's

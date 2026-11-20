@@ -138,7 +138,7 @@ theorem «app:deployment/lm-implies-mono-across» (hlm : sp.LiftedMono)
     (Dp : Deployment sp n) : MonoAcrossPartitions Dp :=
   monoAcrossPartitions_of_liftedMono hlm Dp
 
-/-- "Rows authorized only to `p` can be emitted only by `p`'s run.  The
+/-- "Rows authorized only to `p` can be emitted only by `p`'s run, and the
 outputs that run emits form a chain, since each output event keeps only rows
 whose outputs extend it."  The chain is in emission order; its last row extends every emitted
 output. -/
@@ -209,9 +209,8 @@ theorem «app:deployment/sufficient-condition» (Dp : Deployment sp n)
 
 end Deployment2
 
-/-- "The causal register of Appendix `app:registers` is a further example of
-monotonicity across partitions without Lifted Monotonicity, with no single
-authority."
+/-- "The causal register of Appendix `app:registers` is monotone across
+partitions without Lifted Monotonicity and has no single authority."
 
 Lean: the two-write history signature `G2` with the replica deployment. -/
 theorem «app:deployment/further-examples» :
@@ -314,7 +313,7 @@ theorem «app:deployment/single-authority/shape» (Dp : Deployment sp n) (p₀ :
       ∃ q, Silent F q ∧ comp q ≠ comp p₀ :=
   single_authority_shape Dp p₀ hSA F hA comp hs
 
-/-- "Monotonicity across partitions then says only that each such row has an
+/-- "… and monotonicity across partitions says only that each such row has an
 output extension at every input extension of its input."  (With `|𝒩| ≥ 2`, so that some
 partition exists.) -/
 theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n) (p₀ : Fin n)
@@ -322,7 +321,7 @@ theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n
     MonoAcrossPartitions Dp ↔ ∀ i o, Dp.A p₀ i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u :=
   single_authority_iff hn Dp p₀ hSA
 
-/-- "The deployment keeps the conflicting choice from being made at another
+/-- "A deployment keeps the conflicting choice from being made at another
 participant …"  Lean: if only participant `0` may perform output events,
 no row that an output event removes by its canonical commitment is emitted, at
 the same input, by another participant of the same history. -/
@@ -331,7 +330,7 @@ theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CA
     RowRemovalsNotDistributed Sys :=
   sole_emitter_rowRemovals Sys hsole
 
-/-- "… It does not change the semantic conflict: a canonical run still
+/-- "… but it does not remove the semantic conflict: a canonical run still
 conflicts with the authority's commitment.  For example, another canonical run
 of the spec conflicts with a lock manager's choice even when only the manager
 is authorized to emit the result."  Lean: the owner system's row-removing event is
@@ -375,8 +374,8 @@ theorem «thm:complete-cap-deployment/proof» (Dp : Deployment sp n) :
   ⟨fun F _ hj => survivor_iff_compatible F hj, partition_compatibility Dp⟩
 
 /-- "The proposition concerns canonical runs and does not use Deployment
-Availability.  It also applies to the runs of a system.  By Lemma
-`lem:canonical-equivalent`, each such run is observably equivalent to a
+Availability.  It also applies to the runs of a system, since by Lemma
+`lem:canonical-equivalent` each such run is observably equivalent to a
 canonical run with the same emitted rows, which therefore lie in `E_p`."
 
 Lean: a system participant run (`SRun`: a `CAP` local run from a canonical
@@ -420,19 +419,20 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 families).  "Fix a deployment with `|𝒩| ≥ 2`.  Then `P` is monotone across
 partitions if and only if, for every participant run family and every common
 input extension `j` of its participants' current inputs, some `u ∈ P(j)`
-extends every emitted output."  (Introduced by: "Proposition
-`thm:complete-cap-deployment` concerns runs.  For systems, a deployment has its
-own form of Complete CAP.  It rests on one more fact about families: with two
-or more participants, monotonicity across partitions already covers every
-family, separable or not.")
+extends every emitted output."  (Introduced by: "For systems, a deployment
+has its own form of Complete CAP, which rests on one more fact about families:
+with two or more participants, monotonicity across partitions already covers
+every family, separable or not.")
 
-Proof sketch: "If participants `p` and `q` both emit, a partition with `p` on
+Proof sketch: "The condition covers every family, separable or not, so it
+implies monotonicity across partitions.  For the other direction, assume `P`
+is monotone across partitions.  If participants `p` and `q` both emit, a partition with `p` on
 one side and `q` on the other makes the family separable, and the separable
 case applies.  If no participant emits, any `u ∈ P(j)` will do.  Otherwise
 exactly one participant `p` emits.  Its outputs form a chain, so the last of
 them extends the rest.  Consider `p`'s last row beside one other participant,
 placed on another side and kept silent.  This is a separable family at the
-same `j`.  The common output extension for that row extends every output of
+same `j`, and the common output extension for that row extends every output of
 `p`."  Lean: `Deploy.monoAcrossPartitions_iff_compatible` (the hard
 direction is `Deploy.compatible_of_monoAcrossPartitions`). -/
 theorem «lem:deployment-compatible» (hn : 2 ≤ n) (Dp : Deployment sp n) :
@@ -468,10 +468,10 @@ theorem «prop:deployment-complete-cap» (D : Type) (hn : 2 ≤ n) (Dp : Deploym
 /-- Proof of Prop. `prop:deployment-complete-cap`, sufficiency: "The canonical
 system has Deployment Availability, since each participant can emit any
 authorized output that its state allows.  Its participants' runs in a
-partitioned history form a participant run family.  So by Lemma
+partitioned history form a participant run family, so by Lemma
 `lem:deployment-compatible` their emitted outputs have a common output
 extension in `P(j)`.  By Lemma `lem:reconciliation` the runs are then confluent
-at `j`, which is Partition Consistency."  Lean:
+at `j`, so Partition Consistency follows."  Lean:
 `Deploy.depSystem_availability` (for every deployment) and
 `Deploy.depSystem_pc`. -/
 theorem «prop:deployment-complete-cap/proof-sufficiency» (D : Type) (hn : 2 ≤ n)
@@ -500,7 +500,7 @@ theorem «prop:deployment-complete-cap/proof-necessity» {D : Type} (hn : 2 ≤ 
 
 end DeploymentCAP
 
-/-- "It does not follow that the deployment authorizes any participant to emit
+/-- "The deployment need not authorize any participant to emit
 `u`.  Confluence through authorized output events would also require that
 authority, a condition we do not impose."
 
@@ -641,10 +641,10 @@ theorem «app:registers/causal-monotone-across» (G : OpSig α n) :
   ⟨fun _ _ _ => Iff.rfl, fun F hA j hj => causal_common G F hA j hj,
    causal_monoAcross G, causal_confluent G⟩
 
-/-- Proof step: "We take a serialization `L_p` of `i_p` explaining `ρ_p`, and
-extend it to `j` by appending the new operations of `p` and the new writes in
-any order extending `→`.  Since no new operation causally precedes an old one,
-the result extends `→` and explains the same reads."  (The appended order is
+/-- Proof step: "We extend a serialization `L_p` of `i_p` explaining `ρ_p` to
+`j` by appending the new operations of `p` and the new writes in any order
+extending `→`.  No new operation causally precedes an old one, so the result
+extends `→` and explains the same reads."  (The appended order is
 built from a linear extension of a finite strict partial order, `linExt`.) -/
 theorem «app:registers/serialization-extends» (G : OpSig α n) {h j : Hist α} (hle : h ≼ j)
     {p : Fin n} {lt : α → α → Prop} (hs : Ser G h p lt) :
@@ -674,7 +674,7 @@ section RTC
 variable {α : Type} {n : Nat}
 
 /-- "[A] system can provide real-time causal consistency, but no stronger
-consistency, while staying always available … and one-way convergent …  We
+consistency, while staying always available and one-way convergent.  We
 recover both parts with real-time precedence recorded in the input."  (First
 paragraph of `app:rtc`, on the theorem of Mahajan et al.)
 
@@ -761,8 +761,8 @@ theorem «app:rtc/views» (G : OpSig α n) (p : Fin n) (i : RHist G) (v : SMap �
   Iff.rfl
 
 /-- "Intuitively, these items are Mahajan et al.'s checks for the order that
-`p`'s reads expose.  In that order each visible write precedes the read, and
-each overwritten write precedes the source.  Item (1) says a replica returns
+`p`'s reads expose, in which each visible write precedes the read and each
+overwritten write precedes the source.  Item (1) says a replica returns
 only writes it has received.  Item (2) is their real-time check 'time doesn't
 travel backward.'  Item (3) keeps one replica's overwrites consistent."
 
@@ -781,8 +781,8 @@ theorem «app:rtc/mahajan-checks» (G : OpSig α n) (p : Fin n) (i : RHist G) (v
     (RView G p i v → HBCheck i p v (Kv G (hbRt i) v)) :=
   ⟨rview_iff_check G p i v, rview_check⟩
 
-/-- "Their reads return all concurrent latest writes, while ours return one.
-So a view matches their check when that write is the only latest one."
+/-- "Their reads return all concurrent latest writes, while ours return one,
+so a view matches their check when that write is the only latest one."
 
 Lean: the match is with a singleton writeList (`«app:rtc/mahajan-checks»`),
 not with one element of theirs.  At the
