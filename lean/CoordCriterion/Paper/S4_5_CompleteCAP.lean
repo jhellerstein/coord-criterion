@@ -15,7 +15,7 @@ import CoordCriterion.CALM.Examples
 
 Statement layer for Section `sec:complete-cap`, from the subsection header to
 the end of `sections/distributed.tex`: Definitions `def:partitioned-history`,
-`def:explicit-relation`, `def:emitted-rows`, `def:local-continuation`, `def:partition-notions`,
+`def:explicit-relation`, `def:local-continuation`, `def:partition-notions`,
 `def:partition-consistency`, `def:lm-for-A`, and `def:escapes-cap`, the
 canonical system for `E`, Theorem `thm:complete-cap` and Corollary
 `cor:complete-cap-any-system`, the remarks after them, and the claims of the paragraph "Gilbert and Lynch".  The proofs
@@ -150,10 +150,12 @@ theorem «def:explicit-relation/election-voters» (n : Nat) :
 
 /-! ### Definition `def:emitted-rows` (Emitted rows) -/
 
-/-- **Def. `def:emitted-rows`** (Emitted rows).  "The *emitted rows* of a run
-are the pairs `(i,o)` such that the run emits `o` at current input `i`.  The
-emitted rows of a system are the emitted rows of its participants' runs in the
-histories it produces."
+/-- **Def. `def:emitted-rows`** (Emitted rows), now stated inside Def.
+`def:deployment` (Appendix `app:deployment`): "The *emitted rows* of a run are
+the pairs `(i,o)` such that the run emits `o` at current input `i`; the emitted
+rows of a system are those of its participants' runs in the histories it
+produces."  The entry stays in this file because Availability for `E` below is
+stated with it.
 
 Lean: for a canonical run the emitted rows are `emRows` (Appendix F) or
 `Deploy.emitted` (Appendix E); for a system, `SysEmits Sys k x`: some
@@ -161,9 +163,9 @@ participant of some well-formed history the system produces emits `x` at
 current input `k`. -/
 abbrev «def:emitted-rows» (Sys : System sp D) : Table I O := SysEmits Sys
 
-/-- After Def. `def:emitted-rows`: "An explicit relation is declared with the
-spec; the emitted rows depend on the system.  Availability for `E` asks that
-every row of `E` at a participant's state can become an emitted row."
+/-- Not quoted from the paper (the body no longer defines emitted rows):
+under Availability for `E`, every row of `E` at a participant's state can
+become an emitted row of the system.
 
 Lean: under Availability for `E` (`AvailabilityFor`, at the end of a
 partitioned history the system produces), every output of `E` in the fiber

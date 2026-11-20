@@ -362,7 +362,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:explicit-relation»` | abbrev | **Def. |
 | `«def:explicit-relation/election-voters»` | theorem | Example after Theorem `thm:complete-cap`, introduced by "Commitments and availability can still coexist when each commitment is made by a single participant,… |
 | `«def:emitted-rows»` | abbrev | **Def. |
-| `«def:emitted-rows/availability»` | theorem | After Def. |
+| `«def:emitted-rows/availability»` | theorem | Not quoted from the paper (the body no longer defines emitted rows): |
 | `«sec:complete-cap/system»` | abbrev | Paragraph after Def. |
 | `«sec:complete-cap/system-produced»` | theorem | "We consider a system …": |
 | `«sec:complete-cap/environment»` | theorem | "… and an environment that may send any legal input to any participant." Lean: |
