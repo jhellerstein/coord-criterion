@@ -262,9 +262,12 @@ theorem «def:run-under-basis/canonical-runs-are-runs» {sp : Spec I O} :
       CanonExec σ es τ → SysExec (canonCommitmentBasis sp) σ es τ) :=
   ⟨canonExec_exec, exec_canonExec, canonExec_sysExec⟩
 
-/-- "Call two runs observably equivalent when they start at the same canonical
-state and agree once commitment events are dropped: wherever one has
-`input(j)` the other does, and wherever one has `output(o)` the other does."
+/-- Not quoted from the paper: Appendix `app:bases` no longer restates
+observable equivalence, which Lemma `lem:canonical-equivalent` defines ("the
+two accept the same inputs and emit the same outputs, and after each event the
+canonical run keeps every row that `ρ` keeps").  This is the event-list part of
+that definition: two runs from the same canonical state agree once commitment
+events are dropped.
 
 Lean: the event lists agree after `filterMap SEvent.erase`, which drops
 commitment events (`SEvent.erase (.commitment γ) = none`); the common start
@@ -335,11 +338,15 @@ theorem «app:bases/converse-fails» :
           ∀ σ ∈ fam, ∃ es, SysExec Dist.noCommitmentBasis σ es τ) :=
   ⟨Dist.converse_fails, Dist.system_runs_hide_nonmonotonicity⟩
 
-/-! ## Application-specific commitments -/
+/-! ## The 2PL and MVTO bases (formerly *Application-specific commitments*) -/
 
-/-- *Application-specific commitments.*  "Locks and timestamps are examples:
-two-phase locking applies a commitment that fixes an order among some
-transactions, and timestamp assignment places one transaction relative to all others."
+/-- Not in the paper: the paragraph *Application-specific commitments*, which
+said that two-phase locking fixes an order among some transactions and
+timestamp assignment places one transaction relative to all others, was
+removed from Appendix `app:bases`.  The bases themselves are given in
+Appendix `app:cc-bases` ("The bases are `ℬ_2PL = {order, TxCommit, abort,
+read}` and `ℬ_MVTO = {stamp, TxCommit, abort, read}`"; see
+`AppG_TransactionBases.lean`).
 
 Lean: for any transaction specification whose fibers are antichains, the 2PL
 basis `{order, commit, abort}`; the commitments are `Txn.orderC`,
