@@ -536,8 +536,10 @@ abbrev «def:run/reachable-without-commitment» {I O : Type} [PO I] [PO O] {sp :
 
 /-- **Lemma `lem:run-residual`** (Rows remaining after a run).  "If a run ends
 at current input `i` after emitting `o₁,…,oₘ`, its remainder table is
-`P[in ⪰ i, out ⪰ o₁, …, out ⪰ oₘ]`."  `outs es` lists the outputs emitted by
-the event list `es`. -/
+`P[in ⪰ i, out ⪰ o₁, …, out ⪰ oₘ]`."  Proof sketch: "Input and output events
+are both relational selections, and selections commute; successive input
+selections reduce to the last, since each input extends the one before."
+`outs es` lists the outputs emitted by the event list `es`. -/
 theorem «lem:run-residual» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     {i : I} {es : List (Event I O)} {τ : State sp} (hx : Exec (canon sp i) es τ) :
     ∀ k u, τ.R k u ↔ (sp.P k u ∧ τ.cur ≼ k ∧ ∀ o ∈ outs es, o ≼ u) :=
@@ -627,19 +629,16 @@ theorem «sec:executions/safety-of-runs» {I O : Type} [PO I] [PO O] (sp : Spec 
 
 /-- **Lemma `lem:confluence-legality`** (Confluence and legality).  "The runs
 of an I/O specification are consistent if and only if no output event of any
-run applies a commitment."  Proof sketch: "If an output event `output(o)` of a
-run applies `x_o`, it removes some row `(k,x)` such that no row at `k` extends
-both `x` and `o`.  One continuation of the run
-emits `o`; another takes `input(k)` and then emits `x`.  The two share no row
+run applies a commitment."  Proof sketch: "If a run's output event
+`output(o)` applies `x_o`, it removes some row `(k,x)` such that no row at `k`
+extends both `x` and `o`.  Compare that run with one from the state before that
+event that instead takes `input(k)` and then emits `x`: the two share no row
 at `k`, so by the Survivor test they are not confluent at `k`.  Conversely,
-suppose no output event applies a commitment, so every output a run can emit is
-legal before its event, and take a family of runs and a common input extension
-`j`.  Pick for each run a row `(i_r,u_r)` remaining at its current
-input; `u_r` extends everything that run emitted (Lemma `lem:run-residual`).
-Each `u_r` is legal at `σ_P(i_r)`, the canonical state of its input, so every
-output at an input extension of `i_r` has an output extension there that also
-extends `u_r`.  Taking the runs one at a time gives `u ∈ P(j)` that extends
-every `u_r`.  The row `(j,u)` remains in every run, and the Survivor test gives
+suppose no output event applies a commitment, and take a family of runs and a
+common input extension `j`.  Each run keeps a row `(i_r,u_r)` at its current
+input whose output extends everything it emitted (Lemma `lem:run-residual`),
+and `u_r` is legal at `σ_P(i_r)`.  Applying that legality one run at a time
+gives `u ∈ P(j)` that extends every `u_r`, and the Survivor test gives
 confluence."
 
 Lean: the event form is `consistent_iff_noOutputCommitment` (no output event
@@ -662,14 +661,14 @@ theorem «lem:confluence-legality» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- **Theorem `thm:functional-calm`** (Functional CALM).  "The runs of a
 functional I/O specification are consistent if and only if the spec is
 monotone."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs are
-consistent exactly when no output event of a run applies a commitment.  If every output
-at every state reachable without commitment is legal, every run is reachable
-without commitment, so this is the condition of Proposition
-`prop:functional-exposure-boundary`, which holds exactly when the spec is
-monotone."  Section opening: "Monotonicity is defined by a spec's table and
-orders alone, consistency by its runs.  Functional CALM shows that one holds
-exactly when the other does.  By Lemma `lem:confluence-legality`, the question
-is when no output event of a run applies a commitment."
+consistent exactly when no output event of a run applies a commitment.  A
+monotone spec can emit every current output without commitment (Proposition
+`prop:functional-exposure-boundary`), so by induction on its length every run
+is commitment-free.  If the spec is not monotone, then `f(i) ⋠ f(k)` for some
+`i ≼ k`, and at `σ_P(i)` the event `output(f(i))` applies `x_{f(i)}` and rules
+out input `k`."  Section opening: "Monotonicity is defined by a spec's table
+and orders alone, consistency by its runs.  Functional CALM shows that one
+holds exactly when the other does."
 
 Lean: `functional_calm_via_legality`, which follows the paper's order
 (Lemma `lem:confluence-legality`, the bridge, Prop.
@@ -720,10 +719,11 @@ theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : S
     sp.MonotoneF ↔ ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   functional_exposure_boundary hf
 
-/-- After Prop. `prop:functional-exposure-boundary`: "A monotone spec can
-thus emit every current output without commitment. If a spec is non-monotone,
-then for some `i ≼ k`, `f(i) ⋠ f(k)`, so at `σ_P(i)` the event `output(f(i))`
-applies `x_{f(i)}` and rules out input `k`." -/
+/-- From the proof sketch of Theorem `thm:functional-calm`: "If the spec is
+not monotone, then `f(i) ⋠ f(k)` for some `i ≼ k`, and at `σ_P(i)` the event
+`output(f(i))` applies `x_{f(i)}` and rules out input `k`."  ("A monotone spec
+can emit every current output without commitment" is the forward direction of
+Prop. `prop:functional-exposure-boundary`.) -/
 theorem «prop:functional-exposure-boundary/nonmonotone-excludes» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :

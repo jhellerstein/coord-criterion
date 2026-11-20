@@ -438,10 +438,11 @@ theorem «sec:complete-calm-theorem/lift-unchanged» {I O : Type} [PO I] [PO O]
 specification are consistent if and only if the spec satisfies Lifted
 Monotonicity."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs
 are consistent exactly when no output event of a run applies a commitment.
-If every output at every state reachable without commitment is legal, every run is
-reachable without commitment, so this is the condition of Proposition
-`prop:exposure-boundary`, which holds exactly when the spec satisfies Lifted
-Monotonicity."  After the theorem: "The condition that characterizes
+If the spec satisfies Lifted Monotonicity, every output at every state reachable
+without commitment is legal (Proposition `prop:exposure-boundary`), so by
+induction on its length every run is commitment-free.  If it does not, some
+output at a state reachable without commitment is not legal, and emitting it
+applies a commitment."  After the theorem: "The condition that characterizes
 consistency of runs is a property of the spec alone: Lifted Monotonicity,
 which for a function is ordinary monotonicity."
 

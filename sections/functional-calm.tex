@@ -459,10 +459,6 @@ A run is \emph{\commitment-free} when none of its output events applies a
 \commitment.  A state is \emph{reachable without \commitment} when
 some \commitment-free run reaches it.
 
-Input and output events are both relational selections, and selections
-commute, so a run's remainder table depends only on its last input and the
-outputs it emitted:
-
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
 If a run ends at current input $i$ after emitting
@@ -475,8 +471,10 @@ $o_1,\ldots,o_m$, its remainder table is
 the rows whose input \inrel $i$ and whose output \outrel each $o_r$.
 \end{lemma}
 
-\begin{proof}
-See Appendix~\ref{app:proofs-sec2}.
+\begin{proof}[Proof sketch]
+Input and output events are both relational selections, and selections
+commute; successive input selections reduce to the last, since each input
+extends the one before.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 For example, in the equality-order variant of
@@ -550,29 +548,25 @@ run applies a \commitment.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-If an output event $\mathsf{output}(o)$ of a run applies $x_o$, it removes
-some row $(k,x)$ such that no row at $k$ \outrel both $x$ and $o$.  One
-continuation of the run emits $o$; another takes $\mathsf{input}(k)$ and then
-emits $x$.  The two share no row at $k$, so by the Survivor test they are not
-confluent at $k$.  Conversely, suppose no output event applies a \commitment, so every output a
-run can emit is legal before its event, and take a family of runs and a common
-\indesc $j$.  Pick for each run a row $(i_r,u_r)$ remaining at its
-current input; $u_r$ \outrel everything that run emitted
-(Lemma~\ref{lem:run-residual}).  Each $u_r$ is legal at $\sigma_P(i_r)$, the
-canonical state of its input, so every output at an \indesc of $i_r$ has an
-\outnoun there that also \outrel $u_r$.  Taking the runs one at a time gives
-$u\in P(j)$ that \outrel every $u_r$.  The row $(j,u)$ remains in every run,
-and the Survivor test gives confluence.  Full proof in
-Appendix~\ref{app:proofs-sec2}.
+If a run's output event $\mathsf{output}(o)$ applies $x_o$, it removes some
+row $(k,x)$ such that no row at $k$ \outrel both $x$ and $o$.  Compare that run
+with one from the state before that event that instead takes
+$\mathsf{input}(k)$ and then emits $x$: the two share no row at $k$, so by the
+Survivor test they are not confluent at $k$.  Conversely, suppose no output
+event applies a \commitment, and take a family of runs and a common \indesc
+$j$.  Each run keeps a row $(i_r,u_r)$ at its current input whose output
+\outrel everything it emitted (Lemma~\ref{lem:run-residual}), and $u_r$ is
+legal at $\sigma_P(i_r)$.  Applying that legality one run at a time gives
+$u\in P(j)$ that \outrel every $u_r$, and the Survivor test gives confluence.
+Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
 Monotonicity is defined by a spec's table and orders alone, consistency by its
-runs.  Functional CALM shows that one holds exactly when the other does.  By
-Lemma~\ref{lem:confluence-legality}, the question is when no output event of a
-run applies a \commitment.  In the functional case, monotonicity has a strong
+runs.  Functional CALM shows that one holds exactly when the other does.  In
+the functional case, monotonicity has a strong
 consequence: emitting outputs never changes the state, which depends only on
 the input.
 
@@ -607,11 +601,6 @@ states. At $\sigma_P(i)$, which input alone reaches, $f(i)$ is legal exactly
 when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-A monotone spec can thus emit every current output without \commitment. If a
-spec is non-monotone, then for some $i\InputOrd k$,
-$f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
-$\mathsf{output}(f(i))$ applies $x_{f(i)}$ and rules out input $k$.
-
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
 The runs of a functional \spectype are consistent if and only if the spec is
@@ -620,11 +609,13 @@ monotone.
 
 \begin{proof}[Proof sketch]
 By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-no output event of a run applies a \commitment.  If every output at every state reachable
-without \commitment is legal, every run is reachable without \commitment, so
-this is the condition of Proposition~\ref{prop:functional-exposure-boundary},
-which holds exactly when the spec is monotone.  Full proof in
-Appendix~\ref{app:proofs-sec2}.
+no output event of a run applies a \commitment.  A monotone spec can emit every
+current output without \commitment
+(Proposition~\ref{prop:functional-exposure-boundary}), so by induction on its
+length every run is \commitment-free.  If the spec is not monotone, then
+$f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$, and at $\sigma_P(i)$ the
+event $\mathsf{output}(f(i))$ applies $x_{f(i)}$ and rules out input $k$.  Full
+proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 Functional CALM restates the familiar CALM dichotomy at the level of the spec

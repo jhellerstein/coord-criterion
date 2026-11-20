@@ -360,13 +360,12 @@ abbrev «def:escapes-cap» (sp : Spec I O) (D : Type) (E : Table I O) : Prop :=
   «def:partition-notions/for» E («sec:complete-cap/canonical-system» sp D E) ∧
     «def:partition-consistency» («sec:complete-cap/canonical-system» sp D E)
 
-/-- "The canonical system's participants never wait: each can emit any output
-of `E` that its state allows, so it always has Availability for `E`.  The
-question is whether their answers stay compatible across sides.  Complete CAP
-says they do exactly when outputs of `E` emitted on different sides have a
-common output extension in the spec at every common input extension of their
-inputs."  This entry checks the first sentence, for every spec and every `E`;
-the last is Theorem `thm:complete-cap`. -/
+/-- From the proof sketch of Theorem `thm:complete-cap`: "The canonical
+system's participants never wait: each can emit any output of `E` that its
+state allows, so it always has Availability for `E`."  This entry checks that
+sentence, for every spec and every `E`.  The connective sentence before Def.
+`def:lm-for-A`, "Whether the canonical system's answers stay compatible across
+sides depends on one condition", is made precise by Theorem `thm:complete-cap`. -/
 theorem «sec:complete-cap/canonical-never-waits» (sp : Spec I O) (D : Type) (E : Table I O) :
     «def:partition-notions/for» E («sec:complete-cap/canonical-system» sp D E) :=
   availabilityFor_resp E

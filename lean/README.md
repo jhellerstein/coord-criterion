@@ -224,7 +224,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«cor:state-by-input»` | theorem | **Corollary `cor:state-by-input`** (State is fixed by input). |
 | `«cor:state-by-input/input-suffices»` | theorem | After Cor. |
 | `«prop:functional-exposure-boundary»` | theorem | **Prop. |
-| `«prop:functional-exposure-boundary/nonmonotone-excludes»` | theorem | After Prop. |
+| `«prop:functional-exposure-boundary/nonmonotone-excludes»` | theorem | From the proof sketch of Theorem `thm:functional-calm`: |
 | `«eq:query-monotonicity»` | theorem | **Eq. |
 
 ### §3 Complete CALM
@@ -379,7 +379,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/canonical-system-canonical»` | theorem | The canonical system for `E` "follow[s] canonical runs": |
 | `«def:lm-for-A»` | abbrev | **Def. |
 | `«def:escapes-cap»` | abbrev | **Def. |
-| `«sec:complete-cap/canonical-never-waits»` | theorem | "The canonical system's participants never wait: |
+| `«sec:complete-cap/canonical-never-waits»` | theorem | From the proof sketch of Theorem `thm:complete-cap`: |
 | `«sec:complete-cap/lm-for-S»` | theorem | Supporting step for `«thm:complete-cap/E-eq-P»`: |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "A spec escapes CAP for `E` if and only if it satisfies Lifted Monotonicity for `E`." Lean: |
 | `«thm:complete-cap/E-eq-P»` | theorem | "For `E=P`, a spec escapes CAP exactly when Lifted Monotonicity holds" (first half). |

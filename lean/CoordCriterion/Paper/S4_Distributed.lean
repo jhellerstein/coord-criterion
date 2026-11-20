@@ -781,10 +781,11 @@ commitment event.  (2) As in the Survivor test (Proposition confluence), a
 common state at `k` has a row at `k`, and since rows are never added, that row
 lies in every `R_r`.  Conversely, if `(k,u)` lies in every `R_r`, each run
 reaches the state whose only row is `(k,u)` by `input(k)`, then `output(u)`,
-then a commitment event that removes every other row.  After `output(u)`, every
-other row at `k` extends `u` and differs from it, so none of them is extended
-by `(k,u)` and the removal is a commitment.  Part (1) turns the condition on
-the `R_r` into the one stated."
+then a commitment event that removes every other row.  Part (1) turns the
+condition on the `R_r` into the one stated."  (The final event is a commitment:
+after `output(u)` every other row at `k` extends `u` and differs from it, so
+none is extended by `(k,u)`; this is checked in Lean, not stated in the
+sketch.)
 
 Lean: the Survivor test for states reached under any bases (no assumption that
 they are runs): states whose current inputs lie below `k` reach a common state
@@ -922,8 +923,11 @@ proposition: "Let a run under some commitment basis
 from `σ_P(i)` apply a commitment that removes the row `(k,x)`, and let a run
 under any commitment basis from `σ_P(i)` issue `input(k)` followed by
 `output(x)`.  These two runs *conflict*: they are not confluent at `k`."  Proof
-sketch: "A canonical run is one such second run: events only remove rows, so
-`(k,x)` is present at `σ_P(i)`."
+sketch: "After `output(x)`, every row at `k` in the second run extends `x`.
+The commitment removed `(k,x)` and left no row at `k` in the first run's table
+that extends `x` (Definition `def:commitment`), and later events only remove
+rows, so no row at `k` survives in both runs.  By Proposition
+`prop:system-confluence` they are not confluent at `k`."
 
 Lean: the first run is a run under any basis `B` reaching `σ`, where the
 commitment `c` takes `σ` to `σc` and removes `(k,x)`.  The first run's final
