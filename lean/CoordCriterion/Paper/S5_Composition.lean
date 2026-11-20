@@ -360,10 +360,12 @@ theorem «sec:composite-calm/output-orders» :
   Joint.twoDigit_orders
 
 /-- "Third, a different order on `M` can make two non-monotone stages
-monotone.  We order the booleans with false below true for `I`, `O`, and `M`.
-In a double toggle, two stages that each negate a boolean compose to the
-identity.  Neither stage is monotone, but under the reversed order on `M`,
-both are (Appendix `app:composition`)."  Lean: `Joint.bool_toggle`
+monotone.  Consider two stages that each negate a boolean, so that their
+composite is the identity.  We order the booleans with false below true for
+`I`, `O`, and `M`.  Neither stage is monotone, since each maps true, the larger
+value, to false.  Reversing the order on `M`, so that true lies below false,
+makes both stages monotone, and the composite is the identity either way
+(Appendix `app:composition`)."  Lean: `Joint.bool_toggle`
 (`Bool` ordered by `Joint.boolPO`, `false ≼ true`; `Joint.Rev` is the reversed
 order; the composite is the identity, and is unchanged by the reversal).  The
 appendix's empty-basis behaviour of the first stage is
