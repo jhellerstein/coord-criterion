@@ -1137,8 +1137,8 @@ since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least
 common \outnoun: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal.}
 
 \paragraph{Lifted Monotonicity.}
-To state both requirements at once, we lift $\OutputOrd$ from outputs to a
-relation on sets of outputs. For nonempty
+To state both requirements at once, we lift $\OutputOrd$ from outputs to sets
+of outputs. For nonempty
 $A,B\subseteq O$, define
         \begin{equation}
   A\LiftedOrd B
@@ -1146,12 +1146,8 @@ $A,B\subseteq O$, define
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint refinement lift} of $\OutputOrd$. The lift compares two sets
-of outputs; Lifted Monotonicity, defined next, is the property that fibers rise
-in this relation as input \ingrows. We apply it with $A=\fiber{i}$ and
-$B=\fiber{j}$ for $i\InputOrd j$. When $X$ is a single output $o$, it asks
-that $o$ have an \outnoun in $\fiber{j}$, which is Relational Monotonicity. When $X$ holds several outputs, it asks that they have a common \outnoun in
-$\fiber{j}$; with $j=i$, this is directedness.
+the \emph{joint refinement lift} of $\OutputOrd$. Lifted Monotonicity, defined
+next, asks that $\fiber{i}\LiftedOrd\fiber{j}$ whenever $i\InputOrd j$.
 
 \begin{definition}[Lifted Monotonicity]
 \label{def:lifted-monotonicity}
@@ -1280,17 +1276,14 @@ if every output at every state reachable without \commitment is legal.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-By Proposition~\ref{prop:common-expansion-form}, we may use the
-common-extension condition in place of Lifted Monotonicity. First assume the
-condition, and take a state $(i,R)$ reachable without \commitment, an output
-$o\in R(i)$, a legal \indesc $j$ of $i$, and $x\in R(j)$. The condition gives
-$u\in P(j)$ that \outrel both $o$ and $x$, and $(j,u)\in R$ by
-Lemma~\ref{lem:run-residual}, so $o$ is legal
-(Proposition~\ref{prop:exposability}). Now assume every output at every state
-reachable without \commitment is legal, and take rows $(i_r,o_r)$ with a common
-\indesc $j$. Each $o_r$ is legal at the canonical state $\sigma_P(i_r)$, and
-applying Proposition~\ref{prop:exposability} there, one row at a time, gives
-$u\in P(j)$ that \outrel every $o_r$, so the condition holds. Full proof in
+\textcolor{reviewed}{First assume Lifted Monotonicity, in its common-extension form
+(Proposition~\ref{prop:common-expansion-form}).} \textcolor{reviewed}{At a state reachable without
+\commitment, an output $o$ and each output remaining at a legal \indesc $j$
+have a common \outnoun at $j$, which the state keeps
+(Lemma~\ref{lem:run-residual}), so $o$ is legal.} \textcolor{reviewed}{Now assume every such output
+is legal, and take rows $(i_r,o_r)$ with a common \indesc $j$.} \textcolor{reviewed}{Each $o_r$ is
+legal at $\sigma_P(i_r)$, so, taking the rows one at a time, some $u\in P(j)$
+\outrel every $o_r$, and Lifted Monotonicity follows.} Full proof in
 Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 

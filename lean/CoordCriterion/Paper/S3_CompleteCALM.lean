@@ -265,11 +265,10 @@ theorem «sec:lifted-monotonicity/figure-fibers» :
   ⟨Figures.Trace.union_mem, Figures.Trace.directed.1, Figures.Txn.not_monotone.1⟩
 
 /-- **Eq. `eq:joint-output-order`** (joint refinement lift).  "To state both
-requirements at once, we lift `≼` from outputs to a relation on sets of
-outputs.  For nonempty `A,B ⊆ O`, `A ⊑ B ⟺ every nonempty finite X ⊆ A is
-compatible in B` … The lift compares two sets of outputs; Lifted Monotonicity,
-defined next, is the property that fibers rise in this relation as input
-grows."  Lean:
+requirements at once, we lift `≼` from outputs to sets of outputs.  For
+nonempty `A,B ⊆ O`, `A ⊑ B ⟺ every nonempty finite X ⊆ A is compatible in B`
+… the joint refinement lift of `≼`.  Lifted Monotonicity, defined next, asks
+that `P(i) ⊑ P(j)` whenever `i ≼ j`."  Lean:
 `JointLift A B`, with `X` a nonempty list. -/
 abbrev «eq:joint-output-order» {O : Type} [PO O] (A B : O → Prop) : Prop :=
   JointLift A B
@@ -465,17 +464,16 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
 
-/-- Prop. `prop:exposure-boundary`, proof sketch: "By Proposition
-`prop:common-expansion-form`, we may use the common-extension condition in
-place of Lifted Monotonicity.  First assume the condition, and take a state
-`(i,R)` reachable without commitment, an output `o ∈ R(i)`, a legal input
-extension `j` of `i`, and `x ∈ R(j)`.  The condition gives `u ∈ P(j)` that
-extends both `o` and `x`, and `(j,u) ∈ R` by Lemma `lem:run-residual`, so `o`
-is legal (Proposition `prop:exposability`).  Now assume every output at every
-state reachable without commitment is legal, and take rows `(i_r,o_r)` with a
-common input extension `j`.  Each `o_r` is legal at the canonical state
-`σ_P(i_r)`, and applying Proposition `prop:exposability` there, one row at a
-time, gives `u ∈ P(j)` that extends every `o_r`, so the condition holds."
+/-- Prop. `prop:exposure-boundary`, proof sketch: "First assume Lifted
+Monotonicity, in its common-extension form (Proposition
+`prop:common-expansion-form`).  At a state reachable without commitment, an
+output `o` and each output remaining at a legal input extension `j` have a
+common output extension at `j`, which the state keeps (Lemma
+`lem:run-residual`), so `o` is legal.  Now assume every such output is legal,
+and take rows `(i_r,o_r)` with a common input extension `j`.  Each `o_r` is
+legal at `σ_P(i_r)`, so, taking the rows one at a time, some `u ∈ P(j)` extends
+every `o_r`, and Lifted Monotonicity follows."  (The legal-output test, Prop.
+`prop:exposability`, is the step "so `o` is legal".)
 The common-extension form of the proposition; its forward direction
 (`commonExpansion_exposable`) uses the rows-remaining lemma directly, not
 Complete CALM. -/
