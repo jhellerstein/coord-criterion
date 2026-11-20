@@ -727,11 +727,12 @@ answers every read, together with Partition Consistency, so by Theorem
 `thm:complete-cap` it holds exactly when `𝒮_G` satisfies Lifted Monotonicity
 for such a relation.  Their sticky availability, in which each client is
 served by a replica that already holds its earlier writes, becomes Deployment
-Availability for a deployment that assigns clients to replicas (Proposition
-`prop:deployment-complete-cap`).  Their algorithms supply the explicit
+Availability for a deployment that assigns clients to replicas (Appendix
+`app:deployment`).  Their algorithms supply the explicit
 relations.  Our mapping recovers their classification of every guarantee, each
-as an instance of Complete CAP or its deployment form (Theorem
-`thm:hat-taxonomy`, Appendix `app:hat-taxonomy`)."
+as an instance of Complete CAP or its deployment form (Appendix
+`app:hat-taxonomy`)."  The appendix results are Prop.
+`prop:deployment-complete-cap` and Theorem `thm:hat-taxonomy`.
 
 Lean: Bailis et al.'s classification (VLDB 2014, Table 3; guarantees as the
 phenomena of the extended paper's App. A), in the model of

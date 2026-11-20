@@ -212,8 +212,9 @@ theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt 
   ⟨h.2.2.2.1, h.2.2.2.2.1, h.2.1, h.2.2.2.2.2⟩
 
 /-- "Longer pipelines nest: the composite `P₂ ∘ P₁` of a proper pipeline can
-itself guard a third stage, and the theorem applies again (Corollary
-`cor:pipelines`)."  (Full paper only; in the CIDR version this is folded into
+itself guard a third stage, and the theorem applies again (Appendix
+`app:composition`)."  The appendix result is Corollary `cor:pipelines`.  (Full
+paper only; in the CIDR version this is folded into
 the closing pointer to the full paper.)  Lean: the pipeline of a proper guard
 emits only canonical runs of `P₂ ∘ P₁` (`Guard.proper_pipeline_step`), so the
 composite is again a guard, and the theorem's item (1) applies to the next
@@ -270,7 +271,7 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 commitment at any stage?  If every stage is monotone, the answer is immediate:
 by Lemma `lem:composition` the composite is monotone too, and no stage needs a
 commitment."  And, from the first case: "First, every stage is monotone, as
-noted above (Corollary `cor:pipelines`)."
+noted above."
 Lean:
 `Guard.pipeline_coordination_free` (the base case of the pipeline induction):
 the composite is Lifted-Monotone, and the pipeline of an empty-basis upstream
@@ -310,10 +311,8 @@ theorem «sec:composite-calm/middle-order» {I M O : Type} [PO I] [instM : PO M]
 
 /-- "The CRDT observations of Section `sec:crdt-instance` have this shape.  A
 client query `q` over the replica state `s` is the composition `q ∘ s`, and
-compositions of monotone functions are monotone (Corollary
-`cor:functional-composition`), so monotonicity of `q` on the whole state domain
-suffices."  Lean: the
-corollary applied to `s = Inst.st s₀` (monotone by
+compositions of monotone functions are monotone, so monotonicity of `q` on
+the whole state domain suffices."  Lean: Corollary `cor:functional-composition` applied to `s = Inst.st s₀` (monotone by
 `«sec:crdt-instance/state-monotone»`) and a monotone `q`. -/
 theorem «sec:composite-calm/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D)
     {q : D → Y} (hq : Monotone q) : Monotone (q ∘ (Inst.st s0 : Inst.FSet D → D)) :=
