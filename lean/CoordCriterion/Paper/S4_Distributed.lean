@@ -781,14 +781,13 @@ theorem «prop:system-confluence» {sp : Spec I O} {m : Nat} (B : Fin m → Comm
   Dist.system_confluence B i es ρ ρh hrun hcan
 
 /-- Prop. `prop:system-confluence`, proof sketch: "(1) A row of `R̂_r` passes
-every input and output event of `ρ_r`, so it can leave `R_r` only through a
-commitment event.  (2) By part (1), the stated condition says some row at `k`
-lies in every `R_r`.  First assume the runs are confluent at `k`.  As in the
-Survivor test (Proposition confluence), a common state at `k` has a row at `k`,
-and since rows are never added, that row lies in every `R_r`.  Now assume
-`(k,u)` lies in every `R_r`.  Each run reaches the state whose only row is
-`(k,u)` by `input(k)`, then `output(u)`, then a commitment event that removes
-every other row."  (The final event is a commitment:
+every input and output event of `ρ_r`, so only a commitment event can remove
+it.  (2) By part (1), the condition says some row at `k` lies in every `R_r`.
+First assume the runs are confluent at `k`.  A common state at `k` has a row at
+`k`, and since rows are never added, that row lies in every `R_r`.  Now assume
+`(k,u)` lies in every `R_r`.  Then `input(k)`, `output(u)`, and a commitment
+event that removes every other row bring each run to the state whose only row
+is `(k,u)`, so the runs are confluent at `k`."  (The final event is a commitment:
 after `output(u)` every other row at `k` extends `u` and differs from it, so
 none is extended by `(k,u)`; this is checked in Lean, not stated in the
 sketch.)
@@ -858,11 +857,10 @@ theorem «sec:commitment-conflict/registrar» (B : CommitmentBasis CALM.elec)
   exact h2 u (hx.sub _ u hu)
 
 /-- §`sec:commitment-conflict`, the system's own continuations: "Proposition
-system-confluence establishes confluence via continuations that the system
-itself might not take.  It asks whether a common state can be reached at all,
-not whether the system's strategy would reach it.  The two agree when, from
-each final state, the system's strategy can accept `k` and then emit any
-output whose row at `k` remains in its table."
+system-confluence asks whether a common state can be reached by any
+continuations, not whether the system's own strategy would reach it.  The two
+agree when, from each final state, the strategy can accept `k` and then emit
+any output whose row at `k` remains in its table."
 
 Lean: `Can σ u` says that the system can continue from `σ` to input `k` and
 emit `u` there; any such continuation is a run under some basis that ends with
@@ -881,14 +879,13 @@ theorem «sec:commitment-conflict/own» {sp : Spec I O} (fam : List (State sp)) 
         ∀ o ∈ outs (es.filterMap SEvent.erase), o ≼ u :=
   ⟨Dist.own_iff fam k Can hsound hcomplete, fun h _ hu => Dist.surviving_row_extends h hu⟩
 
-/-- §`sec:commitment-conflict`: "Without that condition, a strategy can refuse
-to emit an output whose row remains in its table.  Suppose the registrar,
-instead of applying the poll-closing commitment when it emits `⊥` at `ab·`,
-employs a strategy that will never announce a winner after input `ab·`,
-despite the spec allowing it.  Its table still has the row `(aba,a)` and its
+/-- §`sec:commitment-conflict`: "A strategy that refuses such an output breaks
+this agreement.  Suppose the registrar, instead of applying the poll-closing
+commitment when it emits `⊥` at `ab·`, never announces a winner after `ab·`,
+although the spec allows it.  Its table still has the row `(aba,a)` and its
 `Δ` is empty, so the test finds a row it shares with a canonical run that
-accepts `aba` and emits `a`.  The registrar's strategy never emits `a`, so its
-own continuations cannot reach that state."
+accepts `aba` and emits `a`.  But the registrar never emits `a`, so its own
+continuations cannot reach that state."
 
 Lean: the registrar's run from `σ_P(ab·)` that emits `⊥` with no commitment
 event removes no row by commitment and keeps `(aba, a)`; a canonical run from

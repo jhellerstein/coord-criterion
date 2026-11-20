@@ -247,15 +247,13 @@ ends at $(i_r,R_r)$ and its canonical run ends at $(i_r,\widehat R_r)$.
 
 \begin{proof}[Proof sketch]
 (1) A row of $\widehat R_r$ passes every input and output event of $\rho_r$,
-so it can leave $R_r$ only through a \commitment event.  (2) By part~(1), the
-stated condition says some row at $k$ lies in every $R_r$.  First assume the
-runs are confluent at $k$.  As in the Survivor test
-(Proposition~\ref{prop:confluence}), a common state at $k$ has a row at $k$,
-and since rows are never added, that row lies in every $R_r$.  Now assume
-$(k,u)$ lies in every $R_r$.  Each run reaches the state whose only row is
-$(k,u)$ by $\mathsf{input}(k)$, then $\mathsf{output}(u)$, then a \commitment
-event that removes every other row.  Full proof in
-Appendix~\ref{app:proofs-sec4}.
+so only a \commitment event can remove it.  (2) By part~(1), the condition says
+some row at $k$ lies in every $R_r$.  First assume the runs are confluent at
+$k$.  A common state at $k$ has a row at $k$, and since rows are never added,
+that row lies in every $R_r$.  Now assume $(k,u)$ lies in every $R_r$.  Then
+$\mathsf{input}(k)$, $\mathsf{output}(u)$, and a \commitment event that removes
+every other row bring each run to the state whose only row is $(k,u)$, so the
+runs are confluent at $k$.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 The same test applies to a consistent cut of a history, with one run per
@@ -267,19 +265,18 @@ For the registrar, closing the polls at $ab\cdot$ puts in $\Delta$ every row
 with a late ballot, such as $(aba,a)$ and $(abb,b)$.  Its table then has no row
 at $aba$, so no family of runs that includes it is confluent at $aba$.
 
-Proposition~\ref{prop:system-confluence} establishes confluence via
-continuations that the system itself might not take.  It asks whether a common
-state can be reached at all, not whether the system's strategy would reach it.
-The two agree when, from each final state, the system's strategy can accept
-$k$ and then emit any output whose row at $k$ remains in its table.  Without
-that condition, a strategy can refuse to emit an output whose row remains in
-its table.  Suppose the registrar, instead of applying the poll-closing
-\commitment when it emits $\bot$ at $ab\cdot$, employs a strategy that will
-never announce a winner after input $ab\cdot$, despite the spec allowing it.
-Its table still has the row $(aba,a)$ and its $\Delta$ is empty, so the test
-finds a row it shares with a canonical run that accepts $aba$ and emits $a$.
-The registrar's strategy never emits $a$, so its own continuations cannot reach
-that state.
+Proposition~\ref{prop:system-confluence} asks whether a common state can be
+reached by any continuations, not whether the system's own strategy would reach
+it.  The two agree when, from each final state, the strategy can accept $k$ and
+then emit any output whose row at $k$ remains in its table.
+
+A strategy that refuses such an output breaks this agreement.  Suppose the
+registrar, instead of applying the poll-closing \commitment when it emits
+$\bot$ at $ab\cdot$, never announces a winner after $ab\cdot$, although the
+spec allows it.  Its table still has the row $(aba,a)$ and its $\Delta$ is
+empty, so the test finds a row it shares with a canonical run that accepts
+$aba$ and emits $a$.  But the registrar never emits $a$, so its own
+continuations cannot reach that state.
 
 Proposition~\ref{prop:system-confluence} has a simple special case: two runs,
 one of which removes a row by a \commitment while the other emits that row's
