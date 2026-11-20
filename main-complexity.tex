@@ -3209,8 +3209,8 @@ analysis and synthesis of properly coordinated systems in practical programming 
 \section{Notation and Terms}
 \label{app:notation}
 
-\color{black}\cxtag{notation:2}{N/S}The table collects the paper's notation and defined terms, in the order the
-sections introduce them, with a pointer to each definition.\color{black}
+\color{black}\cxtag{notation:2}{N/S}The tables collect the paper's notation and defined terms, one per row, in the
+order the sections introduce them, with a pointer to each definition.\color{black}
 
 \paragraph{Relational notation.}
 \color{black}\cxtag{notation:3}{N/M}\cxbar{notation-3}{0.4 0.4 1}{s}To describe how execution narrows $P$, we use a compact relational notation.
@@ -3232,98 +3232,155 @@ rows at $k$.\cxbar{notation-3}{0.4 0.4 1}{e}\color{black}
 \renewcommand{\arraystretch}{1.15}
 
 \color{black}\noindent
-\cxtag{notation:4}{N/M}\cxbar{notation-4}{0.4 0.4 1}{s}\begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
+\cxtag{notation:4}{N/M}\cxbar{notation-4}{0.4 0.4 1}{s}\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.33\columnwidth}>{\raggedright\arraybackslash}p{.5\columnwidth}>{\raggedright\arraybackslash}p{.11\columnwidth}@{}}
   \toprule
   \multicolumn{3}{@{}l}{\textbf{Functional CALM (\S\ref{sec:functional-calm})}}\\
   \midrule
-  spec & $\Spec=(I,\InputOrd,O,\OutputOrd,P)$, total on $I$, one output per input; induced $f$ & Def.~\ref{def:functional-specification}\\
-  \inrel; \indesc & $i\InputOrd j$: $j$ contains the input information in $i$ & Sec.~\ref{sec:functional-specifications}\\
-  \outrel; \outnoun & $o\OutputOrd u$: $u$ preserves every visible claim in $o$ & Sec.~\ref{sec:functional-specifications}\\
-  common \indesc; common \outnoun & an input that \inrel each; an output that \outrel each & Sec.~\ref{sec:functional-specifications}\\
+  functional \spectype & $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P$ total on $I$ and one output per input; the induced function $f$ & Def.~\ref{def:functional-specification}\\
+  possibility relation $P$ & the spec's table of permitted rows $(i,o)$ & Def.~\ref{def:functional-specification}\\
+  $i\InputOrd j$; $j$ \inrel $i$ & $j$ contains at least the input information in $i$; $j$ is an \indesc of $i$ & Sec.~\ref{sec:functional-specifications}\\
+  $o\OutputOrd u$; $u$ \outrel $o$ & $u$ subsumes every externally visible claim in $o$; $u$ is an \outnoun of $o$ & Sec.~\ref{sec:functional-specifications}\\
+  common \indesc & an input that \inrel each given input & Sec.~\ref{sec:functional-specifications}\\
+  common \outnoun & an output that \outrel each given output & Sec.~\ref{sec:functional-specifications}\\
+  $(k,u)$ \outrelpast by $(k,w)$ & $w$ \outrel $u$, for two rows at the same input & Sec.~\ref{sec:functional-specifications}\\
   monotone (functional) & $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity}\\
-  selection; $\pi_{\mathrm{in}}(R)$, $\pi_{\mathrm{out}}(R)$ & $R[\text{predicate on }\mathrm{in},\mathrm{out}]$; inputs and outputs in $R$ & Sec.~\ref{sec:functional-specifications}\\
-  row at $k$; fiber $R(k)$ & a row $(k,u)$; $\pi_{\mathrm{out}}(R[\mathrm{in}=k])$ & Sec.~\ref{sec:functional-specifications}, Def.~\ref{def:fiber}\\
-  upper fiber & $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe k])$ & Def.~\ref{def:fiber}\\
-  state $(i,R)$; legal input & current input and remainder table, every row at an \indesc of $i$; an input with a row in $R$ & Def.~\ref{def:residual-state}\\
-  canonical state & $\sigma_P(i)=(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
-  input event; input loss & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
-  output event; \commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; when it removes rows, that removal is a \commitment & Def.~\ref{def:output-event}\\
-  legal output & every row $\mathsf{output}(o)$ would remove is subsumed ($\Excluded_o$ empty), so $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
-  determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
-  canonical run (run); \commitment-free & finite sequence of specification events from a canonical state; no output event issues a \commitment & Def.~\ref{def:run}\\
-  consistent runs; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
+  selection $R[\ldots]$ & the rows of $R$ that satisfy a predicate on $\mathrm{in}$ and $\mathrm{out}$; commas separate conjuncts & Sec.~\ref{sec:functional-specifications}\\
+  projection $\pi_{\mathrm{in}}(R)$ & the set of inputs that appear in $R$ & Sec.~\ref{sec:functional-specifications}\\
+  projection $\pi_{\mathrm{out}}(R)$ & the set of outputs that appear in $R$ & Sec.~\ref{sec:functional-specifications}\\
+  row at $k$ & a row $(k,u)$ & Sec.~\ref{sec:functional-specifications}\\
+  specification state $(i,R)$ & current input $i$ and remainder table $R\subseteq P$, with a row at $i$ and only rows at \indescs of $i$ & Def.~\ref{def:residual-state}\\
+  legal input & an input $k$ at which $R$ has a row & Def.~\ref{def:legal-input}\\
+  canonical state $\sigma_P(i)$ & $(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
+  fiber $R(k)$ & $\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$ & Def.~\ref{def:fiber}\\
+  upper fiber at $k$ & $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe k])$ & Def.~\ref{def:fiber}\\
+  input event $\mathsf{input}(j)$ & keeps $R[\mathrm{in}\InputGe j]$ and makes $j$ the current input & Eq.~\ref{eq:input-event}\\
+  input loss & the rows an input event removes & Sec.~\ref{sec:functional-events}\\
+  legal output & an output $o$ at $(i,R)$ that every output in the upper fiber \outrel & Def.~\ref{def:exposable}\\
+  \commitment & a partial function on states that removes a nonempty set of rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
+  output event $\mathsf{output}(o)$ & keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$ & Def.~\ref{def:output-event}\\
+  canonical \commitment $x_o$ & the removal an output event makes when $o$ is not legal & Def.~\ref{def:canonical-commitment-functional}\\
+  determined state & a state whose upper fiber has one element & Sec.~\ref{sec:functional-events}\\
+  determination & reaching a determined state & Sec.~\ref{sec:functional-events}\\
+  specification event (event) & an input or output event; from Section~\ref{sec:systems} on, also a \commitment event & Def.~\ref{def:specification-event}\\
+  canonical run (run) & a finite sequence of specification events from a canonical state & Def.~\ref{def:run}\\
+  \commitment-free run & a run none of whose output events applies a \commitment & Sec.~\ref{sec:executions}\\
+  reachable without \commitment & reached by some \commitment-free run & Sec.~\ref{sec:executions}\\
+  confluent at $j$ & each run of a finite family can be continued to one common state with current input $j$ & Def.~\ref{def:confluence}\\
+  consistent (runs) & every finite family of runs is confluent at every common \indesc of their current inputs & Def.~\ref{def:consistency}\\
   \bottomrule
 \end{tabular}\cxbar{notation-4}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{notation:5}{N/M}\cxbar{notation-5}{0.4 0.4 1}{s}\medskip
 \noindent
-\begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.33\columnwidth}>{\raggedright\arraybackslash}p{.5\columnwidth}>{\raggedright\arraybackslash}p{.11\columnwidth}@{}}
   \toprule
   \multicolumn{3}{@{}l}{\textbf{Complete CALM (\S\ref{sec:complete-calm})}}\\
   \midrule
-  \spectype; nondeterministic & $P\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
+  \spectype & $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$ total on $I$ & Def.~\ref{def:relational-specification}\\
+  nondeterministic & some fiber has more than one output & Def.~\ref{def:nondeterministic}\\
   Relational Monotonicity & every output keeps an \outnoun as input \ingrows & Def.~\ref{def:relational-monotonicity}\\
-  compatible in $F$; directed; directed fibers & some $u\in F$ \outrel all; every finite subset compatible; every fiber directed & Def.~\ref{def:fiber-directedness}\\
+  compatible in $F$ & outputs that some $u\in F$ \outrel all at once & Sec.~\ref{sec:lifted-monotonicity}\\
+  directed fiber & every nonempty finite subset is compatible in the fiber & Def.~\ref{def:fiber-directedness}\\
+  directed fibers & every fiber of the spec is directed & Def.~\ref{def:fiber-directedness}\\
   joint refinement lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ is compatible in $B$ & Eq.~\ref{eq:joint-output-order}\\
-  Lifted Monotonicity & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
+  Lifted Monotonicity (monotone) & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
   common-extension condition & rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$ & Def.~\ref{def:common-expansion-condition}\\
   ruled out by $o$ & a row whose output does not \outrelbase $o$ & App.~\ref{app:lifted-output-events}\\
-  $\Subsumed_o$; $\Excluded_o$ & removed rows $(k,x)$ for which some output at $k$ \outrel both $x$ and $o$; all other removed rows & Eq.~\ref{eq:output-subsumptions}--\ref{eq:commitment-removals}\\
-  output subsumption; canonical \commitment $x_o$ & remove $\Subsumed_o$, not a \commitment; remove $\Excluded_o$ & Defs.~\ref{def:lifted-output-event}, \ref{def:canonical-commitment}\\
+  $\Subsumed_o$ & removed rows $(k,x)$ for which some output at $k$ \outrel both $x$ and $o$ & Eq.~\ref{eq:output-subsumptions}\\
+  $\Excluded_o$ & all other removed rows & Eq.~\ref{eq:commitment-removals}\\
+  output subsumption & removing the rows of $\Subsumed_o$, which is not a \commitment & Def.~\ref{def:lifted-output-event}\\
+  canonical \commitment $x_o$ (general) & removes the rows of $\Excluded_o$ & Def.~\ref{def:canonical-commitment}\\
+  legal output (general) & an output $o$ with $\Excluded_o$ empty & Sec.~\ref{sec:lifted-output-events}\\
   \bottomrule
 \end{tabular}\cxbar{notation-5}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{notation:6}{N/M}\cxbar{notation-6}{0.4 0.4 1}{s}\medskip
 \noindent
-\begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.33\columnwidth}>{\raggedright\arraybackslash}p{.5\columnwidth}>{\raggedright\arraybackslash}p{.11\columnwidth}@{}}
   \toprule
   \multicolumn{3}{@{}l}{\textbf{Distributed execution (\S\ref{sec:distributed-execution})}}\\
   \midrule
-  participant; message & holds a specification state; $m=(j,d)$, a cumulative input $j$ (or $\varnothing$) and other data $d$ & Sec.~\ref{sec:histories}\\
-  specification event & an input or output event; in Section~\ref{sec:systems}, also a \commitment event & Defs.~\ref{def:run}, \ref{def:commitment-event}\\
-  distributed history; history event & locally ordered specification, send, and receive events & Def.~\ref{def:distributed-history}\\
-  happens-before; consistent cut & closure of local orders and send-before-receive; a set of history events closed under it & Def.~\ref{def:distributed-history}\\
-  participant run; endpoint & $p$'s specification events at $C$; $(\sigma_p(C))_{p\in\mathcal N}$ & Def.~\ref{def:participant-run}\\
-  continuation; cut confluent at $j$ & a history extending $C$; some continuation brings every participant to one state $(j,R)$ & Sec.~\ref{sec:distributed-consistency}\\
-  consistent distributed histories & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
-  \commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
-  local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, \commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
-    system; history of a system & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
-  \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
-    \commitment basis; run under a basis & a set $\mathcal B$ of \commitments; input, output, and \commitment events whose \commitments, including the $x_o$ of each output event whose output is not already legal, come from $\mathcal B$ & Def.~\ref{def:run-under-basis}\\
-  observably equivalent & same input and output events, \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
-  $\Delta(\rho)$ & rows of the final table of $\rho$'s canonical run that a \commitment event of $\rho$ removed; $\rho$ keeps the rest & Prop.~\ref{prop:system-confluence}\\
-  conflicting runs & a run applies a \commitment removing $(k,x)$; another, under any basis, issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\
-  partitioned history; side; explicit possibility relation $E$ & participants divided into two or more sides, no message crosses sides; $E\subseteq P$, the rows whose outputs participants actually emit & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
+  participant & holds a specification state and exchanges messages & Sec.~\ref{sec:histories}\\
+  message $m=(j,d)$ & a cumulative input $j$, or $\varnothing$, and other data $d$ & Sec.~\ref{sec:histories}\\
+  distributed history & history events with a total local order at each participant and a matching send for each receive & Def.~\ref{def:distributed-history}\\
+  history event & a specification, send, or receive event at one participant & Def.~\ref{def:distributed-history}\\
+  happens-before & transitive closure of the local orders and of send before receive & Def.~\ref{def:happens-before}\\
+  consistent cut & a set of history events closed under happens-before & Def.~\ref{def:consistent-cut}\\
+  participant run & $p$'s specification events at a cut $C$, in local order, ending at $\sigma_p(C)$ & Def.~\ref{def:participant-run}\\
+  endpoint & $(\sigma_p(C))_{p\in\mathcal N}$ & Def.~\ref{def:endpoint}\\
+  continuation & a history that extends the events of a cut with later events & Sec.~\ref{sec:distributed-consistency}\\
+  final cut & all of a history, as a consistent cut & Sec.~\ref{sec:distributed-consistency}\\
+  cut confluent at $j$ & some continuation brings every participant to one state $(j,R)$ & Sec.~\ref{sec:distributed-consistency}\\
+  consistent (distributed histories) & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
+  \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments and emits nothing & Def.~\ref{def:commitment-event}\\
+  \commitment basis $\mathcal B$ & a set of \commitments & Def.~\ref{def:commitment-basis}\\
+  run under $\mathcal B$ & input, output, and \commitment events from a canonical state, applying only \commitments in $\mathcal B$ & Def.~\ref{def:run-under-basis}\\
+  local history & $p$'s history events in order & Def.~\ref{def:local-history}\\
+  strategy $\theta_p$ & maps a local history to the output, \commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
+  system & a \commitment basis and a strategy per participant & Def.~\ref{def:system}\\
+  history of a system & a history whose output, \commitment, and send events its strategies choose & Def.~\ref{def:produced-history}\\
+  observably equivalent & same inputs and outputs, and the canonical run keeps every row the run keeps & Lem.~\ref{lem:canonical-equivalent}\\
+  $\Delta(\rho)$ & rows of the final table of $\rho$'s canonical run that a \commitment event of $\rho$ removed & Sec.~\ref{sec:commitment-conflict}\\
+  explicit possibility relation $E$ & $E\subseteq P$, the rows whose outputs participants actually emit & Def.~\ref{def:explicit-relation}\\
+  partitioned history & participants divided into two or more sides, with no message across sides & Def.~\ref{def:partitioned-history}\\
   same-side continuation for $p$ & extends a partitioned history with events on $p$'s side alone, with no new input and no message from another side & Def.~\ref{def:local-continuation}\\
-  Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable in a same-side continuation; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
-  canonical system for $E$ & participants follow canonical runs and emit only outputs of $E$ & \S\ref{sec:complete-cap}\\
-  Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
+  Availability for $E$ & each participant can emit every output in $R(i)\cap E(i)$ in a same-side continuation & Def.~\ref{def:partition-notions}\\
+  Partition Consistency & the final cut of every partitioned history is confluent at every common \indesc & Def.~\ref{def:partition-consistency}\\
+  canonical system for $E$ & participants follow canonical runs and emit only outputs of $E$ & Sec.~\ref{sec:complete-cap}\\
   escapes CAP for $E$ & the canonical system for $E$ has Availability for $E$ and Partition Consistency & Def.~\ref{def:escapes-cap}\\
+  Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
+  emitted rows & the pairs $(i,o)$ such that a run emits $o$ at current input $i$ & Def.~\ref{def:emitted-rows}\\
   deployment & one explicit relation $E_p$ per participant & Def.~\ref{def:deployment}\\
-    response obligation; response interface & per participant, the outputs that count as answers, upward closed within fibers; a total, self-continuing explicit relation $T\subseteq Q$ & Defs.~\ref{def:response-obligation}, \ref{def:response-interface}\\
+  response obligation & per participant, the outputs that count as answers, upward closed within fibers & Def.~\ref{def:response-obligation}\\
+  response interface & a total, self-continuing explicit relation $T\subseteq Q$ & Def.~\ref{def:response-interface}\\
   \bottomrule
 \end{tabular}\cxbar{notation-6}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{notation:7}{N/M}\cxbar{notation-7}{0.4 0.4 1}{s}\medskip
 \noindent
-\begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.33\columnwidth}>{\raggedright\arraybackslash}p{.5\columnwidth}>{\raggedright\arraybackslash}p{.11\columnwidth}@{}}
   \toprule
   \multicolumn{3}{@{}l}{\textbf{Composition (\S\ref{sec:composition})}}\\
   \midrule
   sequential composition $P_2\circ P_1$ & $\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\}$, for stages sharing $(M,\preceq_M)$ & Eq.~\ref{eq:spec-composition}\\
   $\Spec_1$ guards $\Spec_2$ & $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs & Sec.~\ref{sec:sequential-composition}\\
-  Lifted Monotonicity on $D$ & the common-extension condition for rows with inputs in $D$, at \indescs in $D$ & Sec.~\ref{sec:proper-coordination}\\
   restriction $\Spec_2|_{\Spec_1}$ & $\Spec_2$ restricted to the outputs of $\Spec_1$ & Sec.~\ref{sec:proper-coordination}\\
-  proper & $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state reached without \commitment is legal & Def.~\ref{def:proper-coordination}\\
-  component; admitted run & a \commitment basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in P$ & Def.~\ref{def:component}\\
-  typed pipeline; feed; external observation & components $C_1,C_2$ joined by feeds, an admitted run of $C_1$ ending at $m$ and one of $C_2$ from $\sigma(m)$; the pair $(i,o)$ a feed shows & Def.~\ref{def:typed-pipeline}\\
-  contract-proper; implementation-proper & the pipeline of $\Spec_1$ and $\Spec_2$ is proper; no downstream run of a feed applies a \commitment & Def.~\ref{def:typed-pipeline}\\
+  Lifted Monotonicity on $D$ & the restriction of $P_2$ to inputs in $D$ satisfies Lifted Monotonicity & Sec.~\ref{sec:proper-coordination}\\
+  proper & $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it reaches without \commitment is legal & Def.~\ref{def:proper-coordination}\\
   intersection $\Spec_1\cap\Spec_2$ & table $P_1\cap P_2$, for specs sharing their ordered domains & Def.~\ref{def:intersection}\\
-  store specification $\Spec_{\mathrm{st}}$ & any subset of the HAT read rule's answers & Def.~\ref{def:store-spec}\\
+  component & a \commitment basis and a set of admitted runs & Def.~\ref{def:component}\\
+  admitted run & a run under the basis from $\sigma(i)$, with an output $o$ it emits and $(i,o)\in P$ & Def.~\ref{def:component}\\
+  typed pipeline & two components joined by feeds & Def.~\ref{def:typed-pipeline}\\
+  feed & an admitted run of $C_1$ with output $m$, paired with an admitted run of $C_2$ from $\sigma(m)$ & Def.~\ref{def:typed-pipeline}\\
+  external observation & the pair $(i,o)$ that a feed shows & Def.~\ref{def:typed-pipeline}\\
+  contract-proper & the pipeline of $\Spec_1$ and $\Spec_2$ is proper & Def.~\ref{def:proper-pipeline}\\
+  implementation-proper & no downstream run of a feed applies a \commitment & Def.~\ref{def:proper-pipeline}\\
+  \bottomrule
+\end{tabular}\cxbar{notation-7}{0.4 0.4 1}{e}\color{black}
+
+\color{black}\cxtag{notation:8}{?/?}\medskip
+\noindent
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.33\columnwidth}>{\raggedright\arraybackslash}p{.5\columnwidth}>{\raggedright\arraybackslash}p{.11\columnwidth}@{}}
+  \toprule
+  \multicolumn{3}{@{}l}{\textbf{Related work and mappings (\S\ref{sec:instances})}}\\
+  \midrule
+  read rule & a replica answers a read with the highest-timestamped committed write of the item that it has received & Sec.~\ref{sec:hat-instance}\\
+  HAT specification $\Spec_L$ & table $P_L$: rows $(i,o)$ for which some complete history extends $i$, includes $o$, and exhibits none of the phenomena that $L$ proscribes & Def.~\ref{def:hat-spec}\\
+  store specification $\Spec_{\mathrm{st}}$ & any subset of the read rule's answers & Def.~\ref{def:store-spec}\\
+  invariant confluent & the merge of any two reachable states satisfies $\mathcal I$ & Sec.~\ref{sec:iconfluence-instance}\\
+  $\Spec_{\mathcal I}$ & transaction histories as inputs; the states of valid closed sub-histories as outputs & Sec.~\ref{sec:iconfluence-instance}\\
+  receive sequence & an execution's input actions in order, ordered by prefix & Sec.~\ref{sec:operational-models}\\
+  reply sequence & an execution's output actions in order, ordered by prefix & Sec.~\ref{sec:operational-models}\\
+  projection $P_M$ & rows $(w,t)$ for which some finite execution of $M$ has receive sequence $w$ and reply sequence $t$ & Def.~\ref{def:projection}\\
+  reachable rows & the rows of $P_M$ that a finite execution can still reach & Sec.~\ref{sec:operational-models}\\
+  system of $M$ & one participant over $P_M$; its basis adds, for each execution, the \commitment that keeps only that execution's reachable rows & Def.~\ref{def:automaton-system}\\
+  confluent automaton & any finitely many executions can continue to executions with one common receive sequence $j$ and one common reply sequence & Def.~\ref{def:confluent-automaton}\\
+  declared spec $D$ & reply sequences given by a rule for each receive sequence & Sec.~\ref{sec:operational-models}\\
+  realizability & every reply sequence $D$ allows at a receive sequence is that of some execution with that receive sequence & Sec.~\ref{sec:operational-models}\\
+  domination & every execution's reply sequence is a prefix of one that $D$ allows at its receive sequence & Sec.~\ref{sec:operational-models}\\
   \bottomrule
 \end{tabular}
-}\cxbar{notation-7}{0.4 0.4 1}{e}\color{black}
+}\color{black}
 
 \section{Deferred Proofs}
 \label{app:proofs}
