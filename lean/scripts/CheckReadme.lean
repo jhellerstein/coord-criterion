@@ -304,10 +304,12 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:operational-models/recording-rule»
 #check @CC.Paper.«prop:declared-specification»
 #check @CC.Paper.«app:notation/functional-specification»
+#check @CC.Paper.«app:notation/possibility-relation»
 #check @CC.Paper.«app:notation/expands»
 #check @CC.Paper.«app:notation/refines»
 #check @CC.Paper.«app:notation/common-expansion»
 #check @CC.Paper.«app:notation/common-refinement»
+#check @CC.Paper.«app:notation/extended-by»
 #check @CC.Paper.«app:notation/monotone-functional»
 #check @CC.Paper.«app:notation/selection-in»
 #check @CC.Paper.«app:notation/selection-out»
@@ -324,8 +326,10 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/output-event-excludes»
 #check @CC.Paper.«app:notation/exposable»
 #check @CC.Paper.«app:notation/determined»
+#check @CC.Paper.«app:notation/specification-event»
 #check @CC.Paper.«app:notation/run»
 #check @CC.Paper.«app:notation/commitment-free»
+#check @CC.Paper.«app:notation/reachable-cf»
 #check @CC.Paper.«app:notation/consistent»
 #check @CC.Paper.«app:notation/confluent-at»
 #check @CC.Paper.«app:notation/relational-specification»
@@ -342,6 +346,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/Excluded»
 #check @CC.Paper.«app:notation/canonical-commitment»
 #check @CC.Paper.«app:notation/output-subsumption»
+#check @CC.Paper.«app:notation/legal-output-general»
 #check @CC.Paper.«app:notation/participant»
 #check @CC.Paper.«app:notation/message»
 #check @CC.Paper.«app:notation/distributed-history»
@@ -370,6 +375,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/canonical-system»
 #check @CC.Paper.«app:notation/lm-for-A»
 #check @CC.Paper.«app:notation/escapes-cap»
+#check @CC.Paper.«app:notation/emitted-rows»
 #check @CC.Paper.«app:notation/deployment»
 #check @CC.Paper.«app:notation/partition-consistency»
 #check @CC.Paper.«app:notation/response-obligation»

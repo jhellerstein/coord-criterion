@@ -149,7 +149,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-700 entries.
+706 entries.
 
 ### §2 Functional CALM
 
@@ -499,76 +499,82 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«app:notation/functional-specification»` | abbrev | *spec* — `Spec = (I,≼,O,≼,P)`, total on `I`, one output per input; induced `f` (Def. |
-| `«app:notation/expands»` | abbrev | *extends; input extension* — `i ≼ j`: |
-| `«app:notation/refines»` | abbrev | *extends; output extension* — `o ≼ u`: |
-| `«app:notation/common-expansion»` | abbrev | *common input extension* — an input that extends each (Sec. |
-| `«app:notation/common-refinement»` | abbrev | *common output extension* — an output that extends each (Sec. |
+| `«app:notation/functional-specification»` | abbrev | *functional I/O specification* — `Spec = (I,≼,O,≼,P)` with `P` total on `I` and one output per input; the induced function `f` (Def. |
+| `«app:notation/possibility-relation»` | abbrev | *possibility relation `P`* — the spec's table of permitted rows `(i,o)` (Def. |
+| `«app:notation/expands»` | abbrev | *`i ≼ j`; `j` extends `i`* — `j` contains at least the input information in `i`; `j` is an input extension of `i` (Sec. |
+| `«app:notation/refines»` | abbrev | *`o ≼ u`; `u` extends `o`* — `u` subsumes every externally visible claim in `o`; `u` is an output extension of `o` (Sec. |
+| `«app:notation/common-expansion»` | abbrev | *common input extension* — an input that extends each given input (Sec. |
+| `«app:notation/common-refinement»` | abbrev | *common output extension* — an output that extends each given output (Sec. |
+| `«app:notation/extended-by»` | abbrev | *`(k,u)` extended by `(k,w)`* — `w` extends `u`, for two rows at the same input (Sec. |
 | `«app:notation/monotone-functional»` | abbrev | *monotone (functional)* — `i ≼ j ⇒ f(i) ≼ f(j)` (Def. |
-| `«app:notation/selection-in»` | abbrev | *selection* — `R[predicate on in, out]` (Sec. |
+| `«app:notation/selection-in»` | abbrev | *selection `R[…]`* — the rows of `R` that satisfy a predicate on `in` and `out`; commas separate conjuncts (Sec. |
 | `«app:notation/selection-out»` | abbrev | *selection* `R[out ⪰ o]` (see `«app:notation/selection-in»`). |
-| `«app:notation/in»` | abbrev | *`π_in(R)`* — the inputs in `R` (Sec. |
-| `«app:notation/out»` | abbrev | *`π_out(R)`* — the outputs in `R` (Sec. |
+| `«app:notation/in»` | abbrev | *projection `π_in(R)`* — the set of inputs that appear in `R` (Sec. |
+| `«app:notation/out»` | abbrev | *projection `π_out(R)`* — the set of outputs that appear in `R` (Sec. |
 | `«app:notation/fiber»` | abbrev | *row at `k`* — a row `(k,u)` (Sec. |
-| `«app:notation/upper-fiber»` | abbrev | *upper fiber* — `π_out(R[in ⪰ k])` (Def. |
-| `«app:notation/state»` | abbrev | *state `(i,R)`* — current input and remainder table, every row at an input extension of `i` (Def. |
-| `«app:notation/legal»` | abbrev | *legal input* — an input with a row in `R` (Def. |
-| `«app:notation/canonical-state»` | abbrev | *canonical state* — `σ_P(i) = (i, P[in ⪰ i])` (Eq. |
-| `«app:notation/input-event»` | abbrev | *input event* — `input(j)` keeps `R[in ⪰ j]` (Eq. |
-| `«app:notation/input-loss»` | abbrev | *input loss* — the rows `input(j)` removes (Eq. |
-| `«app:notation/output-event»` | abbrev | *output event* — `output(o)` keeps `R[out ⪰ o]` and emits `o` (Def. |
-| `«app:notation/output-event-excludes»` | abbrev | *commitment* (§2 sense) — an output event that removes rows (Def. |
-| `«app:notation/exposable»` | abbrev | *legal output* — every row `output(o)` would remove is subsumed (`Excluded_o` empty), so `output(o)` applies no commitment (Def. |
-| `«app:notation/determined»` | abbrev | *determined* — the upper fiber has one element; *determination* — reaching such a state (Sec. |
-| `«app:notation/run»` | abbrev | *canonical run* (*run*) — finite sequence of specification events from a canonical state (Def. |
-| `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
-| `«app:notation/consistent»` | abbrev | *consistent runs* — every finite family of runs can reach one common state at each common input extension `j` (Def. |
-| `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
-| `«app:notation/relational-specification»` | abbrev | *I/O specification* — `P ⊆ I × O` total on `I` (Def. |
-| `«app:notation/nondeterministic»` | abbrev | *nondeterministic* — some fiber has several outputs (Def. |
+| `«app:notation/upper-fiber»` | abbrev | *upper fiber at `k`* — `π_out(R[in ⪰ k])` (Def. |
+| `«app:notation/state»` | abbrev | *specification state `(i,R)`* — current input `i` and remainder table `R ⊆ P`, with a row at `i` and only rows at input extensions of `i` (Def. |
+| `«app:notation/legal»` | abbrev | *legal input* — an input `k` at which `R` has a row (Def. |
+| `«app:notation/canonical-state»` | abbrev | *canonical state `σ_P(i)`* — `(i, P[in ⪰ i])` (Eq. |
+| `«app:notation/input-event»` | abbrev | *input event `input(j)`* — keeps `R[in ⪰ j]` and makes `j` the current input (Eq. |
+| `«app:notation/input-loss»` | abbrev | *input loss* — the rows an input event removes (Sec. |
+| `«app:notation/output-event»` | abbrev | *output event `output(o)`* — keeps `R[out ⪰ o]` and emits `o` (Def. |
+| `«app:notation/output-event-excludes»` | abbrev | *canonical commitment `x_o`* — the removal an output event makes when `o` is not legal (Def. |
+| `«app:notation/exposable»` | abbrev | *legal output* — an output `o` at `(i,R)` that every output in the upper fiber extends (Def. |
+| `«app:notation/determined»` | abbrev | *determined state* — a state whose upper fiber has one element; *determination* — reaching a determined state (Sec. |
+| `«app:notation/specification-event»` | abbrev | *specification event* (*event*) — an input or output event; from Section `sec:systems` on, also a commitment event (Def. |
+| `«app:notation/run»` | abbrev | *canonical run* (*run*) — a finite sequence of specification events from a canonical state (Def. |
+| `«app:notation/commitment-free»` | abbrev | *commitment-free run* — a run none of whose output events applies a commitment (Sec. |
+| `«app:notation/reachable-cf»` | abbrev | *reachable without commitment* — reached by some commitment-free run (Sec. |
+| `«app:notation/consistent»` | abbrev | *consistent (runs)* — every finite family of runs is confluent at every common input extension of their current inputs (Def. |
+| `«app:notation/confluent-at»` | abbrev | *confluent at `j`* — each run of a finite family can be continued to one common state with current input `j` (Def. |
+| `«app:notation/relational-specification»` | abbrev | *I/O specification* — `Spec = (I,≼,O,≼,P)` with `P ⊆ I × O` total on `I` (Def. |
+| `«app:notation/nondeterministic»` | abbrev | *nondeterministic* — some fiber has more than one output (Def. |
 | `«app:notation/relational-monotonicity»` | abbrev | *Relational Monotonicity* — every output keeps an output extension as input grows (Def. |
-| `«app:notation/compatible-in»` | abbrev | *compatible in `F`* — some `u ∈ F` extends all (Def. |
-| `«app:notation/directed»` | abbrev | *directed* — every (nonempty) finite subset compatible (Def. |
-| `«app:notation/directed-outputs»` | abbrev | *directed fibers* — every fiber directed (Def. |
+| `«app:notation/compatible-in»` | abbrev | *compatible in `F`* — outputs that some `u ∈ F` extends all at once (Sec. |
+| `«app:notation/directed»` | abbrev | *directed fiber* — every nonempty finite subset is compatible in the fiber (Def. |
+| `«app:notation/directed-outputs»` | abbrev | *directed fibers* — every fiber of the spec is directed (Def. |
 | `«app:notation/joint-lift»` | abbrev | *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` is compatible in `B` (Eq. |
-| `«app:notation/lifted-monotonicity»` | abbrev | *Lifted Monotonicity* — `i ≼ j ⇒ P(i) ⊑ P(j)` (Def. |
+| `«app:notation/lifted-monotonicity»` | abbrev | *Lifted Monotonicity* (*monotone*) — `i ≼ j ⇒ P(i) ⊑ P(j)` (Def. |
 | `«app:notation/common-expansion-condition»` | abbrev | *common-extension condition* — rows with a common input extension `j` have a common output extension in `P(j)` (Def. |
-| `«app:notation/ruled-out»` | abbrev | *ruled out by `o`* — a row whose output does not extend `o` (Sec. |
+| `«app:notation/ruled-out»` | abbrev | *ruled out by `o`* — a row whose output does not extend `o` (App. |
 | `«app:notation/Subsumed»` | abbrev | *`Subsumed_o`* — removed rows `(k,x)` for which some output at `k` extends both `x` and `o` (Eq. |
-| `«app:notation/Excluded»` | abbrev | *`Excluded_o`* — every ruled-out row not in `Subsumed_o`. |
-| `«app:notation/canonical-commitment»` | abbrev | *canonical commitment* — remove `Excluded_o`. |
-| `«app:notation/output-subsumption»` | abbrev | *output subsumption* — remove `Subsumed_o`, not a commitment (Def. |
-| `«app:notation/participant»` | abbrev | *participant* — holds a specification state (Sec. |
-| `«app:notation/message»` | abbrev | *message* — `m = (j,d)`, a cumulative input `j` (or `∅`) and other data `d` (Sec. |
-| `«app:notation/distributed-history»` | abbrev | *distributed history* — locally ordered input, output, send and receive events (Def. |
-| `«app:notation/history-event»` | abbrev | *history event* — (Def. |
-| `«app:notation/happens-before»` | abbrev | *happens-before* — closure of local orders and send-before-receive (Def. |
+| `«app:notation/Excluded»` | abbrev | *`Excluded_o`* — all other removed rows (Eq. |
+| `«app:notation/canonical-commitment»` | abbrev | *canonical commitment `x_o`* (general) — removes the rows of `Excluded_o` (Def. |
+| `«app:notation/output-subsumption»` | abbrev | *output subsumption* — removing the rows of `Subsumed_o`, which is not a commitment (Def. |
+| `«app:notation/legal-output-general»` | abbrev | *legal output* (general) — an output `o` with `Excluded_o` empty (Sec. |
+| `«app:notation/participant»` | abbrev | *participant* — holds a specification state and exchanges messages (Sec. |
+| `«app:notation/message»` | abbrev | *message `m = (j,d)`* — a cumulative input `j`, or `∅`, and other data `d` (Sec. |
+| `«app:notation/distributed-history»` | abbrev | *distributed history* — history events with a total local order at each participant and a matching send for each receive (Def. |
+| `«app:notation/history-event»` | abbrev | *history event* — a specification, send, or receive event at one participant (Def. |
+| `«app:notation/happens-before»` | abbrev | *happens-before* — transitive closure of the local orders and of send before receive (Def. |
 | `«app:notation/consistent-cut»` | abbrev | *consistent cut* — a set of history events closed under happens-before (Def. |
-| `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input, output, and commitment events at `C`; `(σ_p(C))_{p ∈ 𝒩}` (Def. |
-| `«app:notation/continuation»` | abbrev | *continuation* — a history extending `C` (Sec. |
+| `«app:notation/endpoint»` | abbrev | *participant run* — `p`'s specification events at a cut `C`, in local order, ending at `σ_p(C)` (Def. |
+| `«app:notation/continuation»` | abbrev | *continuation* — a history that extends the events of a cut with later events (Sec. |
 | `«app:notation/cut-confluent-at»` | abbrev | *cut confluent at `j`* — some continuation brings every participant to one state `(j,R)` (Sec. |
-| `«app:notation/distributed-consistency»` | abbrev | *consistent distributed histories* — every consistent cut of every history is confluent at every common input extension (Def. |
-| `«app:notation/commitment»` | abbrev | *commitment* — partial function on states removing rows, none extended by a remaining row at the same input (Def. |
-| `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, commitment, and send events `p` may perform next (Def. |
-| `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
+| `«app:notation/distributed-consistency»` | abbrev | *consistent (distributed histories)* — every consistent cut of every history is confluent at every common input extension (Def. |
+| `«app:notation/commitment»` | abbrev | *commitment* — a partial function on states that removes a nonempty set of rows, none extended by a remaining row at the same input (Def. |
+| `«app:notation/strategy»` | abbrev | *local history* — `p`'s history events in order (Def. |
+| `«app:notation/system»` | abbrev | *system* — a commitment basis and a strategy per participant (Def. |
 | `«app:notation/basis»` | abbrev | *commitment basis* (Def. |
-| `«app:notation/produced»` | abbrev | *history of a system* — every event other than an input or receive permitted by its strategy and using only commitments from `𝓑` (Defs. |
-| `«app:notation/commitment-event»` | abbrev | *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of commitments, emits nothing (Def. |
-| `«app:notation/run-under-basis»` | abbrev | *commitment basis; run under a basis* — a set `ℬ` of commitments; input, output, and commitment events whose commitments, including the `x_o` of each output… |
+| `«app:notation/produced»` | abbrev | *history of a system* — a history whose output, commitment, and send events its strategies choose (Def. |
+| `«app:notation/commitment-event»` | abbrev | *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of commitments and emits nothing (Def. |
+| `«app:notation/run-under-basis»` | abbrev | *run under `ℬ`* — input, output, and commitment events from a canonical state, applying only commitments in `ℬ` (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run (Def. |
-| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
-| `«app:notation/delta»` | def | *`Δ(ρ)`* — rows of the final table of `ρ`'s canonical run that a commitment event of `ρ` removed; `ρ` keeps the rest (Prop. |
-| `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, no message crosses sides (Def. |
+| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same inputs and outputs, and the canonical run keeps every row the run keeps (Lem. |
+| `«app:notation/delta»` | def | *`Δ(ρ)`* — rows of the final table of `ρ`'s canonical run that a commitment event of `ρ` removed (Sec. |
+| `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, with no message across sides (Def. |
 | `«app:notation/side»` | abbrev | *side* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs participants actually emit (Def. |
 | `«app:notation/same-side-continuation»` | abbrev | *same-side continuation for `p`* — extends a partitioned history with events on `p`'s side alone, with no new input and no message from another side (Def. |
-| `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable in a same-side continuation (Def. |
+| `«app:notation/availability»` | abbrev | *Availability for `E`* — each participant can emit every output in `R(i) ∩ E(i)` in a same-side continuation (Def. |
 | `«app:notation/canonical-system»` | abbrev | *canonical system for `E`* — participants follow canonical runs and emit only outputs of `E` (Section `sec:complete-cap`). |
 | `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a common input extension `j` has a common output extension in `P(j)` (Def. |
 | `«app:notation/escapes-cap»` | abbrev | *escapes CAP for `E`* — the canonical system for `E` has Availability for `E` and Partition Consistency (Def. |
+| `«app:notation/emitted-rows»` | abbrev | *emitted rows* — the pairs `(i,o)` such that a run emits `o` at current input `i` (Def. |
 | `«app:notation/deployment»` | abbrev | *deployment* — one explicit relation `E_p` per participant (Def. |
-| `«app:notation/partition-consistency»` | abbrev | *Partition Consistency* — final cuts of partitioned histories confluent (Def. |
-| `«app:notation/response-obligation»` | abbrev | *response obligation* — per participant, the outputs that count as answers; upward closed within fibers (Def. |
+| `«app:notation/partition-consistency»` | abbrev | *Partition Consistency* — the final cut of every partitioned history is confluent at every common input extension (Def. |
+| `«app:notation/response-obligation»` | abbrev | *response obligation* — per participant, the outputs that count as answers, upward closed within fibers (Def. |
 | `«app:notation/response-interface»` | abbrev | *response interface* — a total, self-continuing explicit relation `T ⊆ Q` (Def. |
 
 ### Appendix B: Deferred Proofs
