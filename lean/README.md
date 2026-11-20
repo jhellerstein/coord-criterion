@@ -149,7 +149,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-706 entries.
+728 entries.
 
 ### §2 Functional CALM
 
@@ -945,35 +945,57 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/abort-is-commitment»` | theorem | "While `B` is undecided, the spec does not entail it. |
 | `«app:cc-bases/comparison»` | theorem | "Under MVTO, reporting a read can itself rule out that two transactions both commit, and the write rule settles this by an abort that the spec forces only af… |
 
-### Appendix H: Additional applications
+### Appendix G: Classical problems in distributed computing
 
-File `Paper/AppH_Applications.lean`; paper source `appendices/additional-applications.tex`.
+File `Paper/AppH_Applications.lean`; paper source `appendices/classical-problems.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
+| `«lem:accumulating»` | theorem | **Lemma `lem:accumulating`** (Accumulating outputs). |
+| `«app:additional-applications/accumulating-join»` | theorem | "The proof uses only that each fiber contains, with any two outputs, a common output extension of both. |
+| `«lem:order-commitment»` | theorem | **Lemma `lem:order-commitment`** (Ordering concurrent events). |
+| `«lem:bounded-values»` | theorem | **Lemma `lem:bounded-values`** (Bounded number of values). |
+| `«app:additional-applications/pattern-consequences»` | theorem | "When Lemma `lem:order-commitment` or Lemma `lem:bounded-values` applies, Complete CALM (Theorem `thm:complete-calm`) says that the runs of the spec are not… |
+| `«tab:classical-problems/reliable-broadcast»` | theorem | Table row "Reliable broadcast \| delivered messages (⊆) \| yes"; see `«app:additional-applications/reliable-broadcast»`. |
+| `«tab:classical-problems/causal-broadcast»` | theorem | Table row "Causal broadcast \| causally closed set of delivered messages (⊆) \| yes"; see `«app:additional-applications/causal-broadcast»`. |
+| `«tab:classical-problems/counter»` | theorem | Table row "Grow-only counter \| count (≤) \| yes"; see `«app:additional-applications/counter»`. |
+| `«tab:classical-problems/total-order-broadcast»` | theorem | Table row "Total-order broadcast \| delivery sequence (prefix) \| no"; see `«app:additional-applications/total-order-broadcast»`. |
+| `«tab:classical-problems/consensus-kset»` | theorem | Table row "Consensus, `k`-set agreement \| decision map (extension) \| no"; see `«app:additional-applications/consensus»` and `«app:additional-applications/kse… |
+| `«tab:classical-problems/leader-listed»` | theorem | Table row "Leader election, participants listed \| leader or `⊥` (`⊥` lowest) \| yes"; see `«app:additional-applications/leader-listed»`. |
+| `«tab:classical-problems/leader-unlisted»` | theorem | Table row "Leader election, participants unlisted \| leader or `⊥` (`⊥` lowest) \| no"; see `«app:additional-applications/leader-unlisted»`. |
+| `«tab:classical-problems/global-snapshot»` | theorem | Table row "Global snapshot \| a cut per scan (extension) \| yes*", with the caption: |
+| `«tab:classical-problems/atomic-snapshot»` | theorem | Table row "Atomic snapshot \| a view per scan (extension) \| no*"; see Proposition `prop:snapshots`(2). |
+| `«tab:classical-problems/causal-queue»` | theorem | Table row "Causal queue \| dequeue history (prefix) \| yes"; see Proposition `prop:causal-queue`(1). |
+| `«tab:classical-problems/forward-lookup»` | theorem | Table row "Forward-reachability lookup \| valid claims (⊆) \| yes": |
+| `«app:additional-applications/reliable-broadcast»` | theorem | "In reliable broadcast, an input is a finite set of broadcast messages, and an output is a set of delivered messages. |
+| `«app:additional-applications/history-order»` | theorem | "An input is a finite causal history of broadcasts: |
+| `«app:additional-applications/causal-broadcast»` | theorem | "An output is a set of delivered messages, permitted when it is causally closed in the input. |
+| `«app:additional-applications/counter»` | theorem | "A grow-only counter takes as input a finite set of increments and outputs a count, ordered by `≤`. |
+| `«app:additional-applications/total-order-broadcast»` | theorem | "Total-order broadcast has the inputs of reliable broadcast, but an output is a delivery sequence of distinct broadcast messages, ordered by prefix. |
+| `«app:additional-applications/consensus»` | theorem | "In consensus, inputs are finite sets of proposals, at most one per participant, ordered by inclusion. |
+| `«app:additional-applications/kset»` | theorem | "The same holds for `k`-set agreement, which allows up to `k` decided values: |
 | `«app:additional-applications/authority-output»` | abbrev | "An output is a triple `(E,V,D)`: |
 | `«eq:authority-refinement»` | theorem | Eq. |
-| `«app:additional-applications/safety-exposable»` | theorem | "Protocol safety guarantees that every output permitted at the current or any later input extends the certified evidence already emitted. |
-| `«app:additional-applications/slot-conflict»` | theorem | "Competing proposals for an undecided slot have incompatible extensions of `D`, so certifying one is a commitment." Two current outputs deciding different va… |
+| `«app:additional-applications/evidence-spec»` | theorem | "Write `c(i)` for the certified evidence at input `i` … The evidence spec permits at `i` exactly the outputs that `c(i)` extends." Generic in the input and o… |
+| `«prop:monotone-evidence»` | theorem | **Prop. |
+| `«app:additional-applications/safety-exposable»` | theorem | "The same reasoning applies at a single state. |
+| `«app:additional-applications/slot-conflict»` | theorem | "Competing proposals for an undecided slot have incompatible extensions of `D`, since a permitted output decides at most one value per epoch and slot. |
 | `«app:additional-applications/epoch-conflict»` | theorem | "If the succession rule were not fixed, choosing among competing next epochs would require a commitment as well." Two current outputs extending the chain `e`… |
-| `«app:additional-applications/kset-input»` | abbrev | "An input is a finite set of proposals `(p,v)`, at most one per participant, ordered by inclusion." |
-| `«app:additional-applications/pmap-order»` | theorem | "Outputs are partial decision maps `m : |
-| `«app:additional-applications/kset-permitted»` | theorem | "At input `I`, `m` is permitted when three conditions hold: |
-| `«app:additional-applications/kset-proposal-row»` | theorem | "At `p_r`'s proposal input, `{p_r ↦ v_r}` is permitted" (`k ≥ 1`). |
-| `«app:additional-applications/kset-union»` | theorem | "… and the union of the proposal inputs is a common input extension" (an input because the `p_r` are distinct). |
-| `«app:additional-applications/kset-any-k»` | theorem | "Any `k` of these `k+1` rows have a common output extension there": |
-| `«app:additional-applications/kset-all-fail»` | theorem | "All `k+1` do not, since such an output would have `k+1` values." |
-| `«app:additional-applications/kset-not-monotone»` | theorem | "So the common-extension condition fails, and the spec is not monotone (Proposition `prop:common-expansion-form`). |
-| `«app:additional-applications/consensus»` | theorem | "Consensus is `k = 1`": |
-| `«eq:tight-renaming»` | theorem | Eq. |
-| `«app:additional-applications/renaming-singletons»` | theorem | "At `{p}` the only output is `p ↦ 1`, and at `{q}` it is `q ↦ 1`." |
-| `«app:additional-applications/renaming-each-extends»` | theorem | "Each has an output extension at `{p,q}`, so Relational Monotonicity does not fail here, but no injective map extends both." |
-| `«app:additional-applications/renaming-not-monotone»` | theorem | "Directed fibers also fail at `{p,q}`: |
-| `«app:additional-applications/history-order»` | theorem | "Inputs are finite causal histories, that is, finite sets of environment events with a causal partial order; `h ⊑ h'` when `h` is a downward-closed subset of… |
-| `«app:additional-applications/prefix-spec»` | theorem | "The *prefix* spec permits at `h` any downward-closed subset of `h`, with outputs ordered by inclusion." |
-| `«app:additional-applications/prefix-monotone»` | theorem | "Old prefixes stay legal as history grows, and finite unions of prefixes are prefixes, so it satisfies Lifted Monotonicity." |
-| `«app:additional-applications/prefix-empty»` | theorem | "… it guarantees neither freshness nor completeness": |
-| `«app:additional-applications/complete-history»` | theorem | "A spec that requires the complete history, with output `h` at `h` and outputs ordered by equality, is functional and not monotone: |
-| `«app:additional-applications/complete-history-commitment»` | theorem | "By Proposition `prop:functional-exposure-boundary`, some output can then be emitted only after a commitment that rules out larger inputs." At some state rea… |
+| `«app:additional-applications/shared-memory»` | theorem | Paragraph "Shared memory": |
+| `«app:additional-applications/leader-order»` | theorem | "In both, an output is a leader or `⊥`, for no leader yet, ordered with `⊥` below every leader and leaders incomparable." |
+| `«app:additional-applications/leader-listed»` | theorem | "In the first, the input includes the list of all participants, the `All` relation of Section `sec:systems`, in every row. |
+| `«app:additional-applications/leader-unlisted»` | theorem | "In the second spec the input is only the set of candidates heard so far, ordered by inclusion, and an output is `⊥` or a candidate heard. |
+| `«app:additional-applications/cut»` | theorem | "For a scan `s` of a history `h`, a cut for `s` is a set `C` of updates of `h` that is causally closed among updates, contains every update causally before `… |
+| `«app:additional-applications/global-snapshot-spec»` | theorem | "A view of participant `p` at `h` assigns a cut to each scan of `p` in `h`, and views are ordered by extension. |
+| `«prop:snapshots»` | theorem | **Prop. |
+| `«app:additional-applications/snapshot-cap»` | theorem | "By Proposition `prop:deployment-complete-cap`, the owner deployment's canonical system for the global-snapshot spec has Deployment Availability and Partitio… |
+| `«app:additional-applications/dequeue-report»` | theorem | "An output is a dequeue history `(D,<)`, a partially ordered history of dequeue events: |
+| `«app:additional-applications/causal-queue-spec»` | theorem | "The causal queue permits at `h` the dequeue histories `(D,→)` in which `D` is a causally closed set of items of `h` and `→` is causal precedence restricted… |
+| `«prop:causal-queue»` | theorem | **Prop. |
+| `«app:additional-applications/queue-total»` | theorem | "Under it, a spec that guarantees any order between two concurrent items has a fiber that is not directed, so it is not monotone. |
+| `«prop:persistent-forwarding»` | theorem | **Prop. |
+| `«app:additional-applications/bounded-spec»` | theorem | "For a map `V` that gives a set `V(h)` of claims at each input, the spec bounded by `V` permits at `h` every set of claims contained in `V(h)`, ordered by in… |
+| `«prop:remembered-claims»` | theorem | **Prop. |
+| `«app:additional-applications/forwarding-frontier»` | theorem | "Forward-reachability lookup is the strongest lookup that depends only on the structure and needs no commitment exactly when every valid claim was exact at s… |
 
 <!-- END PAPER INDEX -->

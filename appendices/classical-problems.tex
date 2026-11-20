@@ -109,7 +109,7 @@ canonical system for $P$ needs no \commitment and escapes CAP for $P$.
     Leader election, participants unlisted & leader or $\bot$ ($\bot$ lowest) & no \\
     Global snapshot & a cut per scan (extension) & yes$^*$ \\
     Atomic snapshot & a view per scan (extension) & no$^*$ \\
-    Causal queue & dequeue report (extension) & yes \\
+    Causal queue & dequeue history (prefix) & yes \\
     Forward-reachability lookup & valid claims ($\subseteq$) & yes \\
     \bottomrule
   \end{tabular}
@@ -187,9 +187,10 @@ deterministic asynchronous protocol solves consensus if one process may crash.
 That result concerns termination, which the spec does not express.
 
 Practical consensus protocols such as Paxos~\cite{lamport2001paxos} and
-Raft~\cite{ongaro2014raft} still make this \commitment, and their structure
-determines who makes it.  Each epoch, a ballot in Paxos or a term in Raft, has
-an authority, such as a leader, and a rule fixes which epoch succeeds which.
+Raft~\cite{ongaro2014raft} still make a \commitment for every slot, and their
+structure determines who makes it.  Each epoch, a ballot in Paxos or a term in
+Raft, has an authority, such as a leader, and a rule fixes which epoch succeeds
+which.
 Within an epoch, the authority chooses the value proposed for each slot of a
 replicated log, and voters certify it.  Once the authority and the succession
 rule are fixed, what remains to report is evidence: certified epochs, votes,
@@ -243,12 +244,17 @@ emitting it needs no further \commitment.
 The \commitments lie in the choices that the evidence spec takes as given.
 Competing proposals for an undecided slot have incompatible extensions of $D$,
 since a permitted output decides at most one value per epoch and slot.  So
-certifying one of them is a \commitment.  If the succession rule were not
-fixed, choosing among competing next epochs would require a \commitment as
-well.  Protocols place these \commitments differently.  In Multi-Paxos and
-Raft, the leader of the current epoch chooses the value for each slot.
+choosing the value for a slot is a \commitment, and every slot needs one.  Once
+the authority of an epoch is fixed, only that authority may choose values for
+the epoch's slots.  Each choice is then a \commitment that one participant
+makes locally, like a voter's ballot in Section~\ref{sec:election-story}, and
+it needs no coordination with the other participants.  If the succession rule
+were not fixed, choosing among competing next epochs would require a
+\commitment as well.  Protocols place the per-slot \commitments differently.
+In Multi-Paxos and Raft, the leader of the current epoch makes them.
 Mencius~\cite{mao2008mencius} instead assigns each slot to a fixed replica in
-advance, and that replica chooses the slot's value, possibly a no-op.
+advance, and that replica makes the slot's \commitment, possibly choosing a
+no-op.
 
 \paragraph{Shared memory.}
 These specs do not say which agreement problems can be solved wait-free from
@@ -394,14 +400,16 @@ it have been.
 
 An input is a finite causal history of enqueues, ordered as in
 Section~\ref{app:broadcast}.  Each enqueue adds a distinct item, which we
-identify with the event.  An output is a \emph{dequeue report} $(D,<)$: a set
-$D$ of dequeued items with a strict order $<$ on $D$ that the queue
-guarantees among them.  Reports are ordered by extension:
+identify with the event.  An output is a \emph{dequeue history} $(D,<)$, a
+partially ordered history of dequeue events: a set $D$ of the enqueued items
+dequeued so far, with a strict order $<$ on $D$ that the queue guarantees
+among them.  Dequeue histories are ordered by prefix:
 $(D,<)\OutputOrd(D',<')$ when $D\subseteq D'$, the order $<'$ agrees with $<$
 on $D$, and no item of $D'\setminus D$ comes before an item of $D$ under
-$<'$.  On total orders this is the prefix order.  The \emph{causal queue}
-permits at $h$ the reports $(D,\to)$ in which $D$ is a causally closed set of
-items of $h$ and $\to$ is causal precedence restricted to $D$.
+$<'$.  On totally ordered histories this is the usual prefix order.  The
+\emph{causal queue} permits at $h$ the dequeue histories $(D,\to)$ in which $D$
+is a causally closed set of items of $h$ and $\to$ is causal precedence
+restricted to $D$.
 
 \begin{proposition}[Causal queue]
 \label{prop:causal-queue}
@@ -409,16 +417,17 @@ items of $h$ and $\to$ is causal precedence restricted to $D$.
 \begin{enumerate}
   \item The causal queue satisfies Lifted Monotonicity.
   \item Consider any spec with these inputs and outputs whose fiber at $h$ is
-        directed, and which permits at $h$, for each item $b$ of $h$, a report
-        whose set consists of $b$ and the items causally before it.  Every
-        order that a report it permits at $h$ guarantees between two distinct
-        items of $h$ is causal precedence.
+        directed, and which permits at $h$, for each item $b$ of $h$, a
+        dequeue history whose set consists of $b$ and the items causally
+        before it.  Every order that a dequeue history it permits at $h$
+        guarantees between two distinct items of $h$ is causal precedence.
   \item Consider a spec that satisfies Lifted Monotonicity.  Suppose that its
-        reports list only items of the input, contain every item causally
-        before a listed one, order every causally ordered pair of listed items
-        causally, and never place an item before itself, and that every
-        causally closed set of items is the set of some report it permits.
-        Then it permits exactly the reports of the causal queue.
+        dequeue histories list only items of the input, contain every item
+        causally before a listed one, order every causally ordered pair of
+        listed items causally, and never place an item before itself, and that
+        every causally closed set of items is the set of some dequeue history
+        it permits.  Then it permits exactly the dequeue histories of the
+        causal queue.
 \end{enumerate}
 \end{proposition}
 
@@ -429,26 +438,27 @@ $j$, and $(D,\to)$ \outrel each $(D_r,\to)$: causal precedence on $D_r$ is the
 same in $h_r$ and $j$, and an item causally before an item of $D_r$ lies in
 $D_r$.
 
-(2) Suppose a permitted report $(D,<)$ has $a<b$ with $a\neq b$, and $a$ is
-not causally before $b$.  Let $(D_b,<_b)$ be a permitted report whose set
-consists of $b$ and the items causally before it, so $a\notin D_b$.  A common
-\outnoun $(D'',<'')$ in the fiber has $a<''b$ with $b\in D_b$, so $a$ comes
-before an item of $D_b$, and the order on reports forces $a\in D_b$, a
-contradiction.
+(2) Suppose a permitted dequeue history $(D,<)$ has $a<b$ with $a\neq b$, and
+$a$ is not causally before $b$.  Let $(D_b,<_b)$ be a permitted dequeue history
+whose set consists of $b$ and the items causally before it, so
+$a\notin D_b$.  A common \outnoun $(D'',<'')$ in the fiber has $a<''b$ with
+$b\in D_b$, so $a$ comes before an item of $D_b$, and the prefix order forces
+$a\in D_b$, a contradiction.
 
 (3) A spec that satisfies Lifted Monotonicity has directed fibers, and the set
 consisting of an item and the items causally before it is causally closed.
-So by~(2) and the remaining hypotheses, each permitted report orders exactly
-the causally ordered pairs of its causally closed set, and is a report of the
-causal queue.  Conversely, a report $(D,\to)$ of the causal queue has the same
-set as some permitted report, which by the same argument is $(D,\to)$.
+So by~(2) and the remaining hypotheses, each permitted dequeue history orders
+exactly the causally ordered pairs of its causally closed set, and is a dequeue
+history of the causal queue.  Conversely, a dequeue history $(D,\to)$ of the
+causal queue has the same set as some permitted dequeue history, which by the
+same argument is $(D,\to)$.
 \end{proof}
 
 The hypothesis of~(2) says that an item can be dequeued as soon as the items
 causally before it have been.  It is the counterpart of local conservativity
 in Theorem~\ref{thm:product-frontier}(2).  Under it, a spec that guarantees any
 order between two concurrent items has a fiber that is not directed, so it is
-not monotone.  A queue that reports total dequeue orders is one example.
+not monotone.  A queue that guarantees a total dequeue order is one example.
 
 \subsection{Search structures}
 \label{app:search}

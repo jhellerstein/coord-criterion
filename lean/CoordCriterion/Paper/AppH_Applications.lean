@@ -196,7 +196,7 @@ theorem «tab:classical-problems/atomic-snapshot» {Ev : Type} {proc : Ev → Fi
     ¬ Deploy.MonoAcrossPartitions (Deploy.ownerD (atSpec proc scan)) :=
   atomic_not_monoAcross w
 
-/-- Table row "Causal queue | dequeue report (extension) | yes"; see
+/-- Table row "Causal queue | dequeue history (prefix) | yes"; see
 Proposition `prop:causal-queue`(1). -/
 theorem «tab:classical-problems/causal-queue» {Ev : Type} : (cqSpec Ev).LiftedMono :=
   cqSpec_liftedMono
@@ -372,7 +372,7 @@ theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO
 
 /-- "Competing proposals for an undecided slot have incompatible extensions of
 `D`, since a permitted output decides at most one value per epoch and slot.  So
-certifying one of them is a commitment."  Two current outputs deciding
+choosing the value for a slot is a commitment, and every slot needs one."  Two current outputs deciding
 different values `d ≠ d'` for the same epoch and slot (`slot d = slot d'`), in
 a specification whose permitted outputs decide at most one value per epoch and
 slot (`SlotUnique`): emitting one rejects the other, is not a legal output, and
@@ -391,8 +391,9 @@ theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO
 would require a commitment as well."   Two current outputs extending the chain `e` by
 different next epochs `a ≠ b`: as for slots, emitting one is not a legal
 output, and its output event applies `x_o`, which the basis must contain.  The
-paragraph's remarks on how Multi-Paxos, Raft, and Mencius place these
-commitments describe the protocols and are not formalized. -/
+paragraph's remarks that a fixed authority makes each per-slot commitment
+locally, like a voter's ballot, and on how Multi-Paxos, Raft, and Mencius place
+the per-slot commitments, describe the protocols and are not formalized. -/
 theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I]
     {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
@@ -557,17 +558,18 @@ theorem «app:additional-applications/snapshot-cap» {Ev : Type} (D : Type) :
 
 /-! ## Queues -/
 
-/-- "An output is a dequeue report `(D,<)`: a set `D` of dequeued items with a
-strict order `<` on `D` that the queue guarantees among them.  Reports are
-ordered by extension: `(D,<) ⪯ (D',<')` when `D ⊆ D'`, the order `<'` agrees
+/-- "An output is a dequeue history `(D,<)`, a partially ordered
+history of dequeue events: a set `D` of the enqueued items dequeued so far,
+with a strict order `<` on `D` that the queue guarantees among them.  Dequeue
+histories are ordered by prefix: `(D,<) ⪯ (D',<')` when `D ⊆ D'`, the order `<'` agrees
 with `<` on `D`, and no item of `D' ∖ D` comes before an item of `D` under
-`<'`."  (Strictness is a hypothesis where it is used.) -/
+`<'`.  On totally ordered histories this is the usual prefix order."  (Strictness is a hypothesis where it is used.) -/
 theorem «app:additional-applications/dequeue-report» {Ev : Type} (x y : DReport Ev) :
     x ≼ y ↔ (∀ a, x.D a → y.D a) ∧ (∀ a b, x.D a → x.D b → (x.lt a b ↔ y.lt a b)) ∧
       ∀ a b, x.D b → y.lt a b → x.D a :=
   Iff.rfl
 
-/-- "The causal queue permits at `h` the reports `(D,→)` in which `D` is a
+/-- "The causal queue permits at `h` the dequeue histories `(D,→)` in which `D` is a
 causally closed set of items of `h` and `→` is causal precedence restricted to
 `D`." -/
 theorem «app:additional-applications/causal-queue-spec» {Ev : Type} (h : Hist Ev)
@@ -579,29 +581,29 @@ theorem «app:additional-applications/causal-queue-spec» {Ev : Type} (h : Hist 
 /-- **Prop. `prop:causal-queue`** (Causal queue).  "(1) The causal queue
 satisfies Lifted Monotonicity.  (2) Consider any spec with these inputs and
 outputs whose fiber at `h` is directed, and which permits at `h`, for each
-item `b` of `h`, a report whose set consists of `b` and the items causally
-before it.  Every order that a report it permits at `h` guarantees between
+item `b` of `h`, a dequeue history whose set consists of `b` and the items causally
+before it.  Every order that a dequeue history it permits at `h` guarantees between
 two distinct items of `h` is causal precedence.  (3) Consider a spec that satisfies Lifted
-Monotonicity.  Suppose that its reports list only items of the input, contain
+Monotonicity.  Suppose that its dequeue histories list only items of the input, contain
 every item causally before a listed one, order every causally ordered pair of
 listed items causally, and never place an item before itself, and that every
-causally closed set of items is the set of some report it permits.  Then it
-permits exactly the reports of the causal queue."  Proof: "(1) We check the
+causally closed set of items is the set of some dequeue history it permits.  Then it
+permits exactly the dequeue histories of the causal queue."  Proof: "(1) We check the
 common-extension condition.  Given rows `(h_r,(D_r,→))` with a common input
 extension `j`, the union `D` of the `D_r` is causally closed in `j`, and
 `(D,→)` extends each `(D_r,→)`: causal precedence on `D_r` is the same in
 `h_r` and `j`, and an item causally before an item of `D_r` lies in `D_r`.
-(2) Suppose a permitted report `(D,<)` has `a<b` with `a ≠ b`, and `a` is not
-causally before `b`.  Let `(D_b,<_b)` be a permitted report whose set consists
+(2) Suppose a permitted dequeue history `(D,<)` has `a<b` with `a ≠ b`, and `a` is not
+causally before `b`.  Let `(D_b,<_b)` be a permitted dequeue history whose set consists
 of `b` and the items causally before it, so `a ∉ D_b`.  A common output
 extension `(D'',<'')` in the fiber has `a <'' b` with `b ∈ D_b`, so `a` comes
-before an item of `D_b`, and the order on reports forces `a ∈ D_b`, a
+before an item of `D_b`, and the prefix order forces `a ∈ D_b`, a
 contradiction.  (3) A spec that satisfies Lifted Monotonicity has directed
 fibers, and the set consisting of an item and the items causally before it is
 causally closed.  So by (2) and the remaining hypotheses, each permitted
-report orders exactly the causally ordered pairs of its causally closed set,
-and is a report of the causal queue.  Conversely, a report `(D,→)` of the
-causal queue has the same set as some permitted report, which by the same
+dequeue history orders exactly the causally ordered pairs of its causally closed set,
+and is a dequeue history of the causal queue.  Conversely, a dequeue history `(D,→)` of the
+causal queue has the same set as some permitted dequeue history, which by the same
 argument is `(D,→)`."  In (2), `below h b` is `b` with its causal past. -/
 theorem «prop:causal-queue» {Ev : Type} :
     (cqSpec Ev).LiftedMono ∧
@@ -621,8 +623,8 @@ theorem «prop:causal-queue» {Ev : Type} :
    fun T hT hs hc hf hi ha => cq_unique T hT hs hc hf hi ha⟩
 
 /-- "Under it, a spec that guarantees any order between two concurrent items
-has a fiber that is not directed, so it is not monotone.  A queue that reports
-total dequeue orders is one example." -/
+has a fiber that is not directed, so it is not monotone.  A queue that guarantees
+a total dequeue order is one example." -/
 theorem «app:additional-applications/queue-total» {Ev : Type} (T : Spec (Hist Ev) (DReport Ev))
     (h : Hist Ev) (hdown : ∀ b, h.s.1 b → ∃ x, T.P h x ∧ x.D = below h b)
     {a b : Ev} (ha : h.s.1 a) (hb : h.s.1 b) (hne : a ≠ b)

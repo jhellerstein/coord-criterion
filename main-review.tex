@@ -5497,84 +5497,557 @@ overlap in real time.
 \section{Classical Problems in Distributed Computing}
 \label{app:additional-applications}
 
-Each example below identifies an obstruction in a spec. None
-replaces model-specific results about failures, computability, or
-termination.
+This appendix applies Lifted Monotonicity to classical problems of
+distributed computing. For each problem we give an \spectype: its inputs and
+outputs, their orders, and its table. We then find where Lifted Monotonicity
+holds or fails, usually through the common-extension condition
+(Proposition~\ref{prop:common-expansion-form}), and read off what Complete
+CALM and Complete CAP say about it. For queues and search structures we also
+ask how much a monotone spec can promise, and identify the strongest one under
+stated hypotheses. Classical results about failures, computability, and
+termination depend on a model of computation, and none of them follows from
+these specs. We cite them where they bear on an example.
 
-\subsection{Committed authority, then monotone evidence}
+\subsection{Three patterns}
+\label{app:classical-patterns}
 
-Suppose a \commitment fixes an initial authority and a rule that determines
-each certified successor. Inputs are finite sets of protocol messages (proposals,
-votes, certificates), ordered by inclusion. An output is a triple $(E,V,D)$:
-a certified epoch chain $E$, which is a finite sequence of epochs, each
-certified under the authority of its predecessor; a set $V$ of votes or certificates; and a set
-$D$ of decisions, at most one value per epoch and slot, each certified for
-that epoch and slot. Outputs are
-ordered by
+Many classical specs follow one of three patterns. In the first, outputs
+report facts that only accumulate, and two reports permitted at one input can
+be merged. In the second, an output orders two concurrent events, and the
+spec permits either order. In the third, outputs decide values, and the spec
+bounds how many distinct values may be decided. The first pattern gives
+Lifted Monotonicity, and each of the other two gives a witness to its failure.
+
+\begin{lemma}[Accumulating outputs]
+\label{lem:accumulating}
+Suppose the outputs of an \spectype are sets of facts ordered by inclusion. If
+every output permitted at an input is still permitted at each \indesc of that
+input, and the union of two outputs permitted at one input is permitted there,
+then the spec is monotone.
+\end{lemma}
+
+\begin{proof}
+Take $i\InputOrd j$ and a nonempty finite $X\subseteq\fiber{i}$. Each member
+of $X$ is permitted at $j$, so by induction on the size of $X$ their union is
+permitted at $j$, and it \outrel every member of $X$.
+\end{proof}
+
+The proof uses only that each fiber contains, with any two outputs, a common
+\outnoun of both. The lemma therefore holds for any output order and any
+binary operation with that property, such as the maximum of two counter
+values under $\leq$.
+
+Two events are \emph{concurrent} in an input when neither is causally before
+the other, so the input does not order them. If the spec lets an output order
+them either way, two runs can choose opposite orders, and no later output
+reconciles the two.
+
+\begin{lemma}[Ordering concurrent events]
+\label{lem:order-commitment}
+Suppose that each output $o$ of an \spectype determines, for each pair of
+events $a$ and $b$, whether $o$ \emph{places $a$ before $b$}; that if
+$o\OutputOrd u$ and $o$ places $a$ before $b$, so does $u$; and that no output
+permitted at an input $j$ places two events in both orders. If rows
+$(i_1,o_1)$ and $(i_2,o_2)$ have $j$ as a common \indesc, $o_1$ places $a$
+before $b$, and $o_2$ places $b$ before $a$, then the spec is not monotone. If
+$i_1=i_2=j$, the fiber at $j$ is not directed.
+\end{lemma}
+
+\begin{proof}
+A common \outnoun of $o_1$ and $o_2$ in $\fiber{j}$ would place $a$ before $b$
+and $b$ before $a$. So the common-extension condition fails, and by
+Proposition~\ref{prop:common-expansion-form} so does Lifted Monotonicity. When
+$i_1=i_2=j$, the same argument shows that $o_1$ and $o_2$ are incompatible in
+$\fiber{j}$.
+\end{proof}
+
+\begin{lemma}[Bounded number of values]
+\label{lem:bounded-values}
+Suppose that each output $o$ of an \spectype determines a set of values that
+$o$ \emph{decides}; that if $o\OutputOrd u$, then $u$ decides every value that
+$o$ decides; and that every output permitted at an input $j$ decides at most
+$k$ values. If $k+1$ rows have $j$ as a common \indesc and decide $k+1$
+distinct values, one per row, then the spec is not monotone.
+\end{lemma}
+
+\begin{proof}
+A common \outnoun of the $k+1$ outputs in $\fiber{j}$ would decide all $k+1$
+values. So the common-extension condition fails, and
+Proposition~\ref{prop:common-expansion-form} applies.
+\end{proof}
+
+When Lemma~\ref{lem:order-commitment} or Lemma~\ref{lem:bounded-values}
+applies, Complete CALM (Theorem~\ref{thm:complete-calm}) says that the runs of
+the spec are not consistent. The No-\commitment test
+(Proposition~\ref{prop:exposure-boundary}) adds that some output, at some
+state reachable without \commitment, is not legal, so emitting it applies a
+\commitment. With $E=P$, Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system} add that no system for the spec
+has Availability for $P$ and Partition Consistency. The witness rows, each
+placed on its own side of a partition, show why. When
+Lemma~\ref{lem:accumulating} applies, the runs are consistent, and the
+canonical system for $P$ needs no \commitment and escapes CAP for $P$.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{.36\columnwidth}>{\raggedright\arraybackslash}p{.44\columnwidth}l@{}}
+    \toprule
+    Problem & Output (order) & Monotone \\
+    \midrule
+    Reliable broadcast & delivered messages ($\subseteq$) & yes \\
+    Causal broadcast & causally closed set of delivered messages ($\subseteq$) & yes \\
+    Grow-only counter & count ($\leq$) & yes \\
+    Total-order broadcast & delivery sequence (prefix) & no \\
+    Consensus, $k$-set agreement & decision map (extension) & no \\
+    Leader election, participants listed & leader or $\bot$ ($\bot$ lowest) & yes \\
+    Leader election, participants unlisted & leader or $\bot$ ($\bot$ lowest) & no \\
+    Global snapshot & a cut per scan (extension) & yes$^*$ \\
+    Atomic snapshot & a view per scan (extension) & no$^*$ \\
+    Causal queue & dequeue history (prefix) & yes \\
+    Forward-reachability lookup & valid claims ($\subseteq$) & yes \\
+    \bottomrule
+  \end{tabular}
+  \caption{Classical problems in this appendix.  Each row names the spec's
+  outputs with their order and says whether the spec is monotone.
+  $^*$Monotone across partitions when each process answers its own scans
+  (Section~\ref{app:snapshots}).}
+  \label{tab:classical-problems}
+\end{table}
+
+Table~\ref{tab:classical-problems} lists the problems treated below.
+
+\subsection{Broadcast}
+\label{app:broadcast}
+
+In \emph{reliable broadcast}, an input is a finite set of broadcast messages,
+and an output is a set of delivered messages. An output is permitted when it
+contains only broadcast messages, so Lemma~\ref{lem:accumulating} applies. Gossip and anti-entropy protocols~\cite{demers1987epidemic} propagate sets of
+updates in the same way. Reliable broadcast also requires that a message
+delivered by one correct process is eventually delivered by every correct
+process~\cite{hadzilacos1994modular}. That requirement concerns termination,
+and the spec does not express it.
+
+In \emph{causal broadcast}, a message is delivered only after every message
+causally before it. An input is a finite causal history of broadcasts: a
+finite set of events with a strict partial order of causal precedence. A
+history $h'$ \inrel $h$, $h\InputOrd h'$, when the events of $h$ form a
+causally closed subset of $h'$ that carries the restricted order, so an
+\indesc never adds an event to the causal past of an old one. An output is a
+set of delivered messages, permitted when it is causally closed in the input. Such a set stays causally closed as the history grows, and a union of causally
+closed sets is causally closed, so Lemma~\ref{lem:accumulating} applies.
+
+A \emph{grow-only counter}~\cite{shapiro2011crdt} takes as input a finite set
+of increments and outputs a count, ordered by $\leq$. A count is permitted
+when it is at most the number of increments. A permitted count stays
+permitted as increments arrive, and the larger of two permitted counts is
+permitted, so the maximum form of Lemma~\ref{lem:accumulating} applies.
+
+\emph{Total-order broadcast}~\cite{defago2004total} has the inputs of reliable
+broadcast, but an output is a delivery sequence of distinct broadcast
+messages, ordered by prefix. Two delivery sequences have a common \outnoun
+only when one is a prefix of the other, which is the agreement that
+total-order broadcast requires. A sequence places $a$ before $b$ when it lists
+$a$, and lists $b$, if at all, after $a$. An extension of the sequence keeps
+this placement, and no sequence places two messages in both orders. The rows
+$(\{a\},[a])$ and $(\{b\},[b])$ have the common \indesc $\{a,b\}$, so by
+Lemma~\ref{lem:order-commitment} the spec is not monotone: two processes that
+each deliver their own message first cannot be reconciled.
+
+The specs thus separate the broadcast problems as the classical results do. In asynchronous systems with crash failures, reliable and causal broadcast can
+be implemented without agreement~\cite{hadzilacos1994modular}, while
+total-order broadcast and consensus are equivalent
+problems~\cite{chandra1996unreliable}. Total-order broadcast needs a
+\commitment, and Section~\ref{app:consensus} shows where consensus protocols
+make it.
+
+\subsection{Consensus: committed authority, then monotone evidence}
+\label{app:consensus}
+
+In consensus, inputs are finite sets of proposals, at most one per
+participant, ordered by inclusion. Outputs are partial decision maps from
+participants to values, ordered by extension, and every permitted output
+decides at most one value, which some participant proposed. Two participants
+that propose different values and each decide their own give two rows with a
+common \indesc, so by Lemma~\ref{lem:bounded-values} with $k=1$ the spec is not
+monotone. The same holds for $k$-set agreement~\cite{chaudhuri1993more}, which
+allows up to $k$ decided values: $k+1$ participants that each decide their own
+proposal give the witness of Lemma~\ref{lem:bounded-values}. The
+impossibility result of Fischer, Lynch, and
+Paterson~\cite{fischer1985impossibility} is a different statement: no
+deterministic asynchronous protocol solves consensus if one process may crash. That result concerns termination, which the spec does not express.
+
+Practical consensus protocols such as Paxos~\cite{lamport2001paxos} and
+Raft~\cite{ongaro2014raft} still make a \commitment for every slot, and their
+structure determines who makes it. Each epoch, a ballot in Paxos or a term in
+Raft, has an authority, such as a leader, and a rule fixes which epoch succeeds
+which. Within an epoch, the authority chooses the value proposed for each slot of a
+replicated log, and voters certify it. Once the authority and the succession
+rule are fixed, what remains to report is evidence: certified epochs, votes,
+and certified decisions. We show that reporting this evidence needs no
+further \commitment.
+
+Inputs are finite sets of protocol messages (proposals, votes,
+certificates), ordered by inclusion. An output is a triple $(E,V,D)$: a
+certified epoch chain $E$, which is a finite sequence of epochs, each
+certified under the authority of its predecessor; a set $V$ of votes or
+certificates; and a set $D$ of decisions, at most one value per epoch and slot,
+each certified for that epoch and slot. Outputs are ordered by
 \begin{equation}
   (E,V,D)\OutputOrd(E',V',D')
   \quad\Longleftrightarrow\quad
   E\preceq_{\rm pref}E',\quad V\subseteq V',\quad D\subseteq D',
   \label{eq:authority-refinement}
 \end{equation}
-where $E\preceq_{\rm pref}E'$ means that $E$ is a prefix of $E'$. Protocol safety guarantees that every output permitted at the current or any
-later input \outrel the certified evidence already emitted. So an authority
-change or a certified decision is a legal output and needs no further
-\commitment. This covers following the succession rule, not choosing
-values: competing proposals for an undecided slot have incompatible extensions
-of $D$, so certifying one is a \commitment. If the succession rule were not
-fixed, choosing among competing next epochs would require a \commitment as
-well.
+where $E\preceq_{\rm pref}E'$ means that $E$ is a prefix of $E'$. Write $c(i)$
+for the certified evidence at input $i$: the epoch chain that the messages of
+$i$ certify under the succession rule, the votes and certificates in $i$, and
+the decisions certified in $i$. The \emph{evidence spec} permits at $i$
+exactly the outputs that $c(i)$ \outrel. Protocol safety is the assumption
+that $c(i)$ is defined at every input and grows with the input:
+$i\InputOrd j$ implies $c(i)\OutputOrd c(j)$. For Paxos, this is the
+property that quorum intersection provides: once a value is certified for a
+slot, no later certificate for that slot names another
+value~\cite{lamport2001paxos}.
 
-\subsection{$k$-set agreement: no $k$-wise test suffices}
+\begin{proposition}[Monotone evidence]
+\label{prop:monotone-evidence}
+If $i\InputOrd j$ implies $c(i)\OutputOrd c(j)$, the evidence spec is
+monotone, and every output at every state reachable without \commitment is
+legal.
+\end{proposition}
 
-Fix $k\geq1$, distinct participants $p_1,\ldots,p_{k+1}$ in the participant set $\mathcal N$
-(possibly among others), and distinct values $v_1,\ldots,v_{k+1}$ in a value
-set $\mathit{Val}$. An input is a finite set of proposals $(p,v)$, at most one
-per participant, ordered by inclusion. The \emph{proposal input} of $p_r$ is
-$\{(p_r,v_r)\}$. Outputs are partial decision maps
-$m:\mathcal N\rightharpoonup\mathit{Val}$ ordered by extension. At input $I$,
-$m$ is permitted when three conditions hold: it decides only participants that
-propose in $I$, every value in its range is proposed in $I$ (validity), and
-its range has at most $k$ values. At $p_r$'s proposal input,
-$\{p_r\mapsto v_r\}$ is permitted, and the union of the proposal inputs is a
-common \indesc. Any $k$ of these $k+1$ rows have a common \outnoun there. All $k+1$ do not, since such an output would have $k+1$ values. So the
-common-extension condition fails, and the spec is not monotone
-(Proposition~\ref{prop:common-expansion-form}). A partition separating the
-$p_r$ gives the negative side of Complete CAP. Consensus is $k=1$. Classical impossibility results additionally depend on the
-computation, failure, and progress model~\cite{saks2000set}.
+\begin{proof}
+Take rows $(i_r,o_r)$ with a common \indesc $j$. Each
+$o_r\OutputOrd c(i_r)\OutputOrd c(j)$, and $c(j)$ is permitted at $j$. So the
+common-extension condition holds, and
+Proposition~\ref{prop:common-expansion-form} gives Lifted Monotonicity. The
+second claim follows by Proposition~\ref{prop:exposure-boundary}.
+\end{proof}
 
-\subsection{Tight renaming}
+The same reasoning applies at a single state. If every row remaining at a
+state \outrel an output $o$ of the current input, emitting $o$ removes no row,
+so $o$ is a legal output. Under protocol safety, this is the case for an
+authority change or a certified decision once it is part of the evidence, so
+emitting it needs no further \commitment.
 
-Inputs are finite sets $N$ of participants, ordered by inclusion. Outputs are
-finite partial naming maps ordered by extension, and the outputs at $N$ are
-the injective maps
-\begin{equation}
-  m:N\longrightarrow\{1,\ldots,|N|\}.
-  \label{eq:tight-renaming}
-\end{equation}
-At $\{p\}$ the only output is $p\mapsto1$, and at $\{q\}$ it is $q\mapsto1$. Each has an \outnoun at $\{p,q\}$, so Relational Monotonicity does not fail
-here, but no injective map extends both. The spec also lacks directed
-fibers at
-$\{p,q\}$: $\{p\mapsto1,q\mapsto2\}$ and $\{p\mapsto2,q\mapsto1\}$ have no
-common \outnoun. The spec therefore fails Lifted Monotonicity, and
-by Theorem~\ref{thm:complete-cap} with $E=P$ and Corollary~\ref{cor:complete-cap-any-system} a partition separating $p$ and $q$ rules out
-Availability for $P$ with Partition Consistency. The renaming hierarchy adds
-wait-free and topological
-conclusions~\cite{herlihy1991waitfree,herlihy1999topological}.
+The \commitments lie in the choices that the evidence spec takes as given. Competing proposals for an undecided slot have incompatible extensions of $D$,
+since a permitted output decides at most one value per epoch and slot. So
+choosing the value for a slot is a \commitment, and every slot needs one. Once
+the authority of an epoch is fixed, only that authority may choose values for
+the epoch's slots. Each choice is then a \commitment that one participant
+makes locally, like a voter's ballot in Section~\ref{sec:election-story}, and
+it needs no coordination with the other participants. If the succession rule
+were not fixed, choosing among competing next epochs would require a
+\commitment as well. Protocols place the per-slot \commitments differently. In Multi-Paxos and Raft, the leader of the current epoch makes them. Mencius~\cite{mao2008mencius} instead assigns each slot to a fixed replica in
+advance, and that replica makes the slot's \commitment, possibly choosing a
+no-op.
+
+\paragraph{Shared memory.}
+These specs do not say which agreement problems can be solved wait-free from
+which shared objects, as in Herlihy's consensus
+hierarchy~\cite{herlihy1991waitfree} or the bounds on
+renaming~\cite{attiya1990renaming,herlihy1999topological}. To see why,
+consider shared memory as a single participant with a queue of requests, an
+automaton in the sense of Section~\ref{sec:operational-models}. The queue
+orders concurrent requests. From sets of requests to request sequences, it is
+the total-order broadcast spec of Section~\ref{app:broadcast}, so ordering
+them is a \commitment, made by one participant. The memory's responses
+follow from the queue. A process algorithm that never retracts a decision
+computes the decisions as a monotone function of the responses. Any stage that is a monotone function of its input needs no
+\commitment, whatever stage guards it, so by
+Theorem~\ref{thm:proper-coordination} every such pipeline is proper. This
+holds for every object type and every task, including consensus over
+read/write registers. For example, the algorithm in which every process waits
+until one designated process has written its proposal, and then decides it,
+never decides two values. It is not wait-free, since the other processes wait
+forever if the designated one crashes. The objects of the hierarchy differ in
+whether every process can decide after finitely many of its own steps,
+whatever the other processes do. That is a termination property, which the
+specs do not express.
+
+\subsection{Leader election}
+\label{app:leader}
+
+Leader election asks that exactly one participant become the leader. In
+asynchronous networks without failures, rings of processes with unique
+identifiers elect the largest identifier deterministically, as in the
+algorithms of Le Lann~\cite{lelann1977distributed}, Chang and
+Roberts~\cite{chang1979improved}, and Hirschberg and
+Sinclair~\cite{hirschberg1980decentralized}. In a ring of anonymous
+processes no deterministic algorithm elects a leader~\cite{angluin1980local}. With crash failures and a majority of correct processes, $\Omega$, which
+eventually names the same correct leader at every correct process, is the
+weakest failure detector for solving consensus~\cite{chandra1996weakest}.
+
+We compare two election specs that differ in what the input says about
+membership. In both, an output is a leader or $\bot$, for no leader yet,
+ordered with $\bot$ below every leader and leaders incomparable. In the
+first, the input includes the list of all participants, the $\mathsf{All}$
+relation of Section~\ref{sec:systems}, in every row. It also records, for
+some of the listed participants, whether each is a candidate, and inputs are
+ordered by extension of these records. The spec is functional. Its output is
+the largest candidate once every listed participant has reported, or $\bot$
+if there is none, and $\bot$ before that. The spec is monotone, since more
+input never changes a report already received, so once every participant has
+reported the output is fixed. By Functional CALM (Theorem~\ref{thm:functional-calm}), its runs are
+consistent. Electing the largest candidate therefore needs no \commitment: a
+participant that has not heard from everyone emits $\bot$ and waits. In the
+ring algorithms above, a message that returns to its sender has passed every
+process, which tells the sender what the list of participants would.
+
+In the second spec the input is only the set of candidates heard so far,
+ordered by inclusion, and an output is $\bot$ or a candidate heard. Two
+candidates, each elected at the input where only it has been heard, have no
+common \outnoun at the input where both have been heard. So the spec is not
+monotone, and by Theorem~\ref{thm:complete-cap} no system has Availability for
+$P$ and Partition Consistency. Electing a leader then needs a \commitment,
+such as closing the list of candidates, as the registrar closes the polls in
+Section~\ref{sec:election-story}. Without one, the two sides of a partition
+can each elect a leader.
 
 \subsection{Snapshots}
+\label{app:snapshots}
 
-Inputs are finite causal histories, that is, finite sets of environment events with a
-causal partial order; $h\InputOrd h'$ when $h$ is a downward-closed subset of
-$h'$ carrying the restricted order. The \emph{prefix} spec permits
-at $h$ any downward-closed subset of $h$, with outputs ordered by inclusion. Old prefixes stay legal as history grows, and finite unions of prefixes are
-prefixes, so it satisfies Lifted Monotonicity; it guarantees neither freshness
-nor completeness. A spec that requires the complete history, with
-output $h$ at $h$ and outputs ordered by equality, is functional and not
-monotone: its required output changes whenever an environment event arrives. By
-Proposition~\ref{prop:functional-exposure-boundary}, some output can then be
-emitted only after a \commitment that rules out larger inputs.
+Chandy and Lamport's algorithm records a consistent global state of a running
+message-passing system without stopping it~\cite{chandy1985distributed}. An
+atomic snapshot object answers each scan with a view of all components, and a
+single order of all scans and updates must explain every
+answer~\cite{afek1993atomic}. Both answer requests for a view of the system. The specs below show that the first is monotone across partitions when each
+process answers its own scans, and the second is not.
+
+An input is a finite causal history of updates and scans, each event at one
+participant, ordered as in Section~\ref{app:broadcast}. For a scan $s$ of a
+history $h$, a \emph{cut for $s$} is a set $C$ of updates of $h$ that is
+causally closed among updates, contains every update causally before $s$, and
+contains no update causally after $s$. A global snapshot records a
+consistent cut~\cite{chandy1985distributed}. The two further conditions tie
+the cut to the scan. A \emph{view} of participant $p$ at $h$ assigns a cut to
+each scan of $p$ in $h$, and views are ordered by extension. The
+\emph{global-snapshot spec} is the product interface of these views
+(Appendix~\ref{app:rtc}): its outputs are partial tuples with one view per
+participant. Under the owner deployment, each participant answers only its
+own scans.
+
+\begin{proposition}[Global and atomic snapshots]
+\label{prop:snapshots}
+\leavevmode
+\begin{enumerate}
+\item
+The global-snapshot spec is monotone across partitions under the owner
+        deployment.
+\item
+The atomic snapshot is the strengthening of the global-snapshot spec
+        that selects the tuples of views explained by one strict total order
+        $L$ of all events of the input that extends causal precedence: the
+        view of each scan is the set of updates before it in $L$. With two
+        participants that can each perform an update and then a scan, it is
+        not monotone across partitions under the owner deployment.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) The views of a participant at one input are defined on the same scans,
+so they form an antichain, and the updates causally before a scan form a cut
+for it, so views exist. By Theorem~\ref{thm:product-frontier}(1), it
+suffices that views continue. An \indesc adds nothing to the causal past of
+an old event, so the cut of an old scan is still a cut for it. A new scan can take as its cut the
+updates causally before it.
+
+(2) The updates before a scan in such an $L$ form a cut for it, since $L$
+extends causal precedence, so the selected tuples are tuples of views. Let
+participant $p$ perform update $u_p$ and then scan $s_p$, and let $q$
+perform $u_q$ and then $s_q$, with no messages between them. The answer
+$\{u_p\}$ to $s_p$ is explained by the order $u_p\,s_p\,u_q\,s_q$, and the
+answer $\{u_q\}$ to $s_q$ by $u_q\,s_q\,u_p\,s_p$. An order explaining both
+would place $u_p$ before $s_p$, $s_p$ before $u_q$, $u_q$ before $s_q$, and
+$s_q$ before $u_p$. So the two answers, emitted by $p$ and $q$ on two sides of
+a partition, have no common \outnoun.
+\end{proof}
+
+By Proposition~\ref{prop:deployment-complete-cap}, the owner deployment's
+canonical system for the global-snapshot spec has Deployment Availability and
+Partition Consistency, and no system for the atomic snapshot has both. The
+global-snapshot spec permits the two answers of the proof together: neither
+cut contains the other, which an atomic snapshot forbids. Atomic snapshots
+nonetheless have wait-free implementations from atomic
+registers~\cite{afek1993atomic}. In the model of
+Section~\ref{app:consensus}, the memory that serves those registers is a
+single participant, and its order of service makes the \commitments. In the
+proof, by contrast, each process answers its own scan.
+
+\subsection{Queues}
+\label{app:queue}
+
+A replicated queue cannot report a total dequeue order of two concurrent
+enqueues without a \commitment, by Lemma~\ref{lem:order-commitment}. We
+identify what a queue can report without one, and show that nothing more is
+possible when each item can be dequeued as soon as the items causally before
+it have been.
+
+An input is a finite causal history of enqueues, ordered as in
+Section~\ref{app:broadcast}. Each enqueue adds a distinct item, which we
+identify with the event. An output is a \emph{dequeue history} $(D,<)$, a
+partially ordered history of dequeue events: a set $D$ of the enqueued items
+dequeued so far, with a strict order $<$ on $D$ that the queue guarantees
+among them. Dequeue histories are ordered by prefix:
+$(D,<)\OutputOrd(D',<')$ when $D\subseteq D'$, the order $<'$ agrees with $<$
+on $D$, and no item of $D'\setminus D$ comes before an item of $D$ under
+$<'$. On totally ordered histories this is the usual prefix order. The
+\emph{causal queue} permits at $h$ the dequeue histories $(D,\to)$ in which $D$
+is a causally closed set of items of $h$ and $\to$ is causal precedence
+restricted to $D$.
+
+\begin{proposition}[Causal queue]
+\label{prop:causal-queue}
+\leavevmode
+\begin{enumerate}
+\item
+The causal queue satisfies Lifted Monotonicity.
+\item
+Consider any spec with these inputs and outputs whose fiber at $h$ is
+        directed, and which permits at $h$, for each item $b$ of $h$, a
+        dequeue history whose set consists of $b$ and the items causally
+        before it. Every order that a dequeue history it permits at $h$
+        guarantees between two distinct items of $h$ is causal precedence.
+\item
+Consider a spec that satisfies Lifted Monotonicity. Suppose that its
+        dequeue histories list only items of the input, contain every item
+        causally before a listed one, order every causally ordered pair of
+        listed items causally, and never place an item before itself, and that
+        every causally closed set of items is the set of some dequeue history
+        it permits. Then it permits exactly the dequeue histories of the
+        causal queue.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) We check the common-extension condition. Given rows $(h_r,(D_r,\to))$
+with a common \indesc $j$, the union $D$ of the $D_r$ is causally closed in
+$j$, and $(D,\to)$ \outrel each $(D_r,\to)$: causal precedence on $D_r$ is the
+same in $h_r$ and $j$, and an item causally before an item of $D_r$ lies in
+$D_r$.
+
+(2) Suppose a permitted dequeue history $(D,<)$ has $a<b$ with $a\neq b$, and
+$a$ is not causally before $b$. Let $(D_b,<_b)$ be a permitted dequeue history
+whose set consists of $b$ and the items causally before it, so
+$a\notin D_b$. A common \outnoun $(D'',<'')$ in the fiber has $a<''b$ with
+$b\in D_b$, so $a$ comes before an item of $D_b$, and the prefix order forces
+$a\in D_b$, a contradiction.
+
+(3) A spec that satisfies Lifted Monotonicity has directed fibers, and the set
+consisting of an item and the items causally before it is causally closed. So by~(2) and the remaining hypotheses, each permitted dequeue history orders
+exactly the causally ordered pairs of its causally closed set, and is a dequeue
+history of the causal queue. Conversely, a dequeue history $(D,\to)$ of the
+causal queue has the same set as some permitted dequeue history, which by the
+same argument is $(D,\to)$.
+\end{proof}
+
+The hypothesis of~(2) says that an item can be dequeued as soon as the items
+causally before it have been. It is the counterpart of local conservativity
+in Theorem~\ref{thm:product-frontier}(2). Under it, a spec that guarantees any
+order between two concurrent items has a fiber that is not directed, so it is
+not monotone. A queue that guarantees a total dequeue order is one example.
+
+\subsection{Search structures}
+\label{app:search}
+
+B-link trees keep a search starting at a split node correct by following a
+right link, so the parent can be repaired later~\cite{lehman1981efficient}. We
+show that the claims such searches support only accumulate, and compare them
+with the least monotone relaxation of exact lookup.
+
+Inputs are finite legal restructuring histories $h$, ordered by prefix. The
+structure after $h$ is a finite directed graph whose nodes are
+\emph{positions}; each edge is a \emph{child edge} or a \emph{link edge}, and
+some positions hold keys. For each key $k$, every position has at most one
+outgoing \emph{search edge for $k$}, the edge a search for $k$ follows there;
+the \emph{search for $k$ from $\pi$} follows search edges for $k$ from position
+$\pi$. An \emph{occurrence} of $k$ is a position holding $k$, and
+\emph{current} means present after $h$. The \emph{claim} $(k,\pi)$ is
+\emph{valid} at $h$ when the search for $k$ from $\pi$ reaches a current
+occurrence of $k$ after finitely many edges, and \emph{exact} when it does so
+by child edges alone. Each restructuring step must satisfy:
+\begin{enumerate}
+\item
+positions keep stable identities;
+\item
+if $\pi\to\pi'$ was the search edge for $k$ at $\pi$ before the step,
+        the search for $k$ from $\pi$ reaches $\pi'$ after it; and
+\item
+from every position that held $k$ before the step, the search for $k$
+        reaches a current occurrence of $k$ after it.
+\end{enumerate}
+Deletion and reclamation can violate (2) and (3) and are excluded.
+
+\begin{proposition}[Persistent forwarding]
+\label{prop:persistent-forwarding}
+Under (1)--(3), every claim valid at $h$ is valid at every \indesc of $h$.
+\end{proposition}
+
+\begin{proof}
+By induction it suffices to treat one step. Let the search for $k$ from $\pi$
+reach an occurrence before the step. After the step, by (2) the search from
+each position on that path reaches the next one, so the search from $\pi$
+reaches the old occurrence, and by (3) it continues to a current occurrence.
+\end{proof}
+
+A lookup spec reports sets of claims. For a map $V$ that gives a set $V(h)$
+of claims at each input, the spec \emph{bounded by $V$} permits at $h$ every
+set of claims contained in $V(h)$, ordered by inclusion. A spec bounded by a
+smaller map promises more. Exact lookup is bounded by the map $X$ of exact
+claims, and forward-reachability lookup by the map of valid claims.
+
+\begin{proposition}[Remembered claims]
+\label{prop:remembered-claims}
+\leavevmode
+\begin{enumerate}
+\item
+The spec bounded by $V$ satisfies Lifted Monotonicity if and only if
+        $h\InputOrd h'$ implies $V(h)\subseteq V(h')$.
+\item
+Let $\widehat X(h)$ be the set of claims exact at some input below
+        $h$. The spec bounded by $\widehat X$ satisfies Lifted Monotonicity,
+        and every map $V\supseteq X$ for which the spec bounded by $V$ does
+        has $\widehat X\subseteq V$.
+\item
+Let $\widetilde X(h)$ be the set of claims exact at some input below an
+        input whose current structure is that of $h$. The spec bounded by
+        $\widetilde X$ satisfies Lifted Monotonicity, and every map
+        $V\supseteq X$ that depends only on the current structure, and for
+        which the spec bounded by $V$ satisfies Lifted Monotonicity, has
+        $\widetilde X\subseteq V$.
+\item
+Valid claims contain $\widetilde X$, and they equal $\widetilde X$ at
+        every input if and only if every valid claim at every input is in
+        $\widetilde X$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\textcolor{reviewed}{(1) First assume Lifted Monotonicity.} A claim $c\in V(h)$ gives the row
+$(h,\{c\})$, which has an \outnoun at $h'$, so $c\in V(h')$. Now assume that
+$V$ grows. The union of finitely many sets permitted at inputs below $h'$ is
+contained in $V(h')$. (2) $\widehat X$ grows by construction. A claim exact
+at $h_0\InputOrd h$ lies in $V(h_0)$, and so in $V(h)$ by~(1). (3) Whether a
+history can be continued by a step depends only on its current structure. So
+if $h_0$ lies below an input $h'$ with the structure of $h$, and $h$ grows to
+$k$, then $h'$ grows to an input with the structure of $k$, and $h_0$ lies
+below it. Hence $\widetilde X$ grows. For $V$ as in~(3), a claim exact at
+$h_0\InputOrd h'$ lies in $V(h')$ by~(1), and $V(h')=V(h)$. (4) The valid
+claims depend only on the current structure, contain $X$, and grow by
+Proposition~\ref{prop:persistent-forwarding}, so~(3) applies.
+\end{proof}
+
+A lookup inspects the current structure, not the history, so~(3) gives the
+relevant comparison. Forward-reachability lookup is the strongest lookup that
+depends only on the structure and needs no \commitment exactly when every
+valid claim was exact at some earlier point of some history that reaches the
+same structure. For a key that a search from $\pi$ reaches through link
+edges, this asks that some history to the same structure first place the key
+where a search from $\pi$ finds it by child edges. Whether that holds depends
+on which restructuring steps a structure allows, and we do not settle it for
+Lehman and Yao's trees.
 
 \begin{acks}
 \textcolor{reviewed}{Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.} \textcolor{reviewed}{Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
