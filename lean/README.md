@@ -393,11 +393,11 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Linearizability respects real-time order: |
 | `«sec:complete-cap/gl-no-system»` | theorem | "By Corollary `cor:complete-cap-any-system`, no system can keep both outputs available and stay consistent across a partition, which is Gilbert and Lynch's t… |
-| `«sec:complete-cap/gl-two-row-forced»` | theorem | "In this example, the proof of Corollary `cor:complete-cap-any-system` uses only weaker forms of its hypotheses, and these weaker forms are Gilbert and Lynch… |
+| `«sec:complete-cap/gl-two-row-forced»` | theorem | "Two differences from Gilbert and Lynch's setting do not affect the conclusion. |
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted Monotonicity for `E` fails. |
-| `«sec:complete-cap/gl-realized»` | theorem | "In this section the real-time order of the write and the read is part of the input. |
-| `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
-| `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |
+| `«sec:complete-cap/gl-realized»` | theorem | "We also put the real-time order of the write and the read in the input, while their model takes it from the execution; the theorem holds in their model as w… |
+| `«sec:complete-cap/response-form»` | theorem | Appendix `app:cap-response` (pointed to from the body's "the theorem holds in their model as well") also extends Complete CAP to systems that choose their re… |
+| `«sec:complete-cap/gl-async»` | theorem | "the theorem holds in their model as well (Appendix `app:cap-response`)": |
 
 ### §5 Composition and Proper Coordination
 

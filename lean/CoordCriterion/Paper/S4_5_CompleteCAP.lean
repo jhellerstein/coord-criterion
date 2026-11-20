@@ -555,16 +555,12 @@ theorem «sec:complete-cap/gl-no-system» (Sys : System CC.GL.regFullSpec D) :
     ¬ («def:partition-notions» Sys ∧ «def:partition-consistency» Sys) :=
   CC.GL.gilbert_lynch_direct_cap Sys
 
-/-- "In this example, the proof of Corollary `cor:complete-cap-any-system`
-uses only weaker forms of its hypotheses, and these weaker forms are Gilbert
-and Lynch's, which is why it yields their theorem exactly.  We place `p` and
-`q` on separate sides.  Availability is used only to make `p` acknowledge the
-write and `q` answer the read.  Each of their fibers holds a single output, so
-requiring each to emit every permitted output is the same as requiring it to
-respond, which is Gilbert and Lynch's availability.  Partition Consistency is
-used only to demand a common output extension of the two answers.  Such an
-output extension is a single linearization that explains both answers, which
-is Gilbert and Lynch's consistency, and none exists."
+/-- "Two differences from Gilbert and Lynch's setting do not affect the
+conclusion.  In general our Availability and Partition Consistency are stronger
+than their availability and consistency, but in the register example they
+coincide.  Each fiber holds a single output, so emitting every permitted output
+is the same as responding, and a common output extension of the two answers is
+a single linearization that explains both."
 
 Lean: the two-row case of the proof, for outputs forced at their inputs, with
 Answering (each participant can emit *some* output) in place of Availability
@@ -597,17 +593,18 @@ theorem «sec:complete-cap/gilbert-lynch» (Sys : System CC.GL.regFullSpec D) :
     ¬ (AnsweringAtEnd Sys ∧ CommonRefinementAtEnd Sys) :=
   CC.GL.gilbert_lynch_direct Sys
 
-/-- "In this section the real-time order of the write and the read is part
-of the input.  Appendix `app:cap-response` instead takes that order from the
-execution itself" —
+/-- "We also put the real-time order of the write and the read in the input,
+while their model takes it from the execution; the theorem holds in their model
+as well (Appendix `app:cap-response`)." —
 Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of
 two-participant client histories, consistency at the realized history). -/
 theorem «sec:complete-cap/gl-realized» (Sys : System CC.GL.regSpec D) :
     ¬ (CC.AsyncGL.AnsweringC Sys ∧ CC.AsyncGL.RealizedRPCC Sys) :=
   CC.AsyncGL.gilbert_lynch_client Sys
 
-/-- "extends Complete CAP to systems that choose their responses when responses
-are not forced" — Theorem `thm:complete-cap-response` (see
+/-- Appendix `app:cap-response` (pointed to from the body's "the theorem holds in
+their model as well") also extends Complete CAP to systems that choose their
+responses when responses are not forced: Theorem `thm:complete-cap-response` (see
 `Paper/AppF_ResponseAvailability.lean`). -/
 theorem «sec:complete-cap/response-form» (sp : Spec I O) (D : Type) (Q : Obligation sp) :
     (∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
@@ -615,8 +612,8 @@ theorem «sec:complete-cap/response-form» (sp : Spec I O) (D : Type) (Q : Oblig
     ∃ T, ResponseInterface Q T ∧ ConsistentOn sp T :=
   complete_cap_response sp D Q
 
-/-- "and derives the theorem in Gilbert and Lynch's asynchronous model"
-(Proposition `prop:gl-async`). -/
+/-- "the theorem holds in their model as well (Appendix `app:cap-response`)":
+Gilbert and Lynch's asynchronous model, Proposition `prop:gl-async`. -/
 theorem «sec:complete-cap/gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N)
     (A : CC.AsyncGL.Alg N M) : ¬ (CC.AsyncGL.Available A ∧ CC.AsyncGL.Atomic A) :=
   CC.AsyncGL.gilbert_lynch_async hN A

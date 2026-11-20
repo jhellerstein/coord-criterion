@@ -2056,22 +2056,13 @@ every system, whether or not it issues \commitments.
 available and stay consistent across a partition, which is Gilbert and Lynch's
 theorem.}
 
-In this example, the proof of Corollary~\ref{cor:complete-cap-any-system}
-uses only weaker forms of its hypotheses, and these weaker forms are Gilbert
-and Lynch's, which is why it yields their theorem exactly. We place $p$ and
-$q$ on separate sides. Availability is used only to make $p$ acknowledge the
-write and $q$ answer the read. Each of their fibers holds a single output, so
-requiring each to emit every permitted output is the same as requiring it to
-respond, which is Gilbert and Lynch's availability. Partition Consistency is
-used only to demand a common \outnoun of the two answers. Such an \outnoun is
-a single linearization that explains both answers, which is Gilbert and Lynch's
-consistency, and none exists.
-
-In this section the real-time order of the write and the read is part of the
-input. Appendix~\ref{app:cap-response} instead takes that order from the
-execution itself, extends Complete CAP to systems that choose their responses
-when responses are not forced, and derives the theorem in Gilbert and Lynch's
-asynchronous model.
+Two differences from Gilbert and Lynch's setting do not affect the conclusion. In general our Availability and Partition Consistency are stronger than their
+availability and consistency, but in the register example they coincide. Each
+fiber holds a single output, so emitting every permitted output is the same as
+responding, and a common \outnoun of the two answers is a single linearization
+that explains both. We also put the real-time order of the write and the read
+in the input, while their model takes it from the execution; the theorem holds
+in their model as well (Appendix~\ref{app:cap-response}).
 
 
 \section{Composition and Proper Coordination}
