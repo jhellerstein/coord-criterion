@@ -2637,19 +2637,20 @@ Bailis et al.\ state.
 
 Mahajan et al.\ showed that real-time causal consistency can be enforced in a
 system that is always available and one-way convergent, and that no stronger
-consistency semantics can~\cite{mahajan2011consistency}. We recover both parts
-of their result in our framework, with real-time precedence recorded in the
-input (Appendix~\ref{app:rtc}). Their availability, that every request is
-eventually answered, is a response obligation in our terms
-(Appendix~\ref{app:cap-response}). Their one-way convergence, that a node able
-to receive from another eventually reflects the updates the other knows, needs
-no separate assumption, because our input records which writes each replica has
-received. The first part follows from Theorem~\ref{thm:product-frontier} and
-the second from Proposition~\ref{prop:rtc-maximal}: the spec in which each
-replica answers its own reads under real-time causal consistency can be
-implemented without a coordination mechanism, and no strict strengthening of it
-can, provided the strengthening, like Mahajan et al.'s implementations, does not
-consult real time.
+consistency semantics can~\cite{mahajan2011consistency}. Their availability,
+that every request is eventually answered, is a response obligation in our
+terms (Appendix~\ref{app:cap-response}). Their one-way convergence, that a
+node able to receive from another eventually reflects the updates the other
+knows, needs no separate assumption, because our input records which writes
+each replica has received.
+
+We recover both parts of their result, with real-time precedence recorded in
+the input (Appendix~\ref{app:rtc}). Consider the spec in which each replica
+answers its own reads under real-time causal consistency. By
+Theorem~\ref{thm:product-frontier}, it can be implemented without a
+coordination mechanism. By Proposition~\ref{prop:rtc-maximal}, no strict
+strengthening of it can, provided the strengthening, like Mahajan et al.'s
+implementations, does not consult real time.
 
 \paragraph{Application-aware isolation level selection.}
 In addition to being coordination-free, weak isolation levels can provide
@@ -2669,10 +2670,14 @@ of Bailis et al.~\cite{bailis2014coordination}. A database state is a set of
 versions, and replicas merge states by union. Each transaction $t\in T$ runs
 on the state of the replica that executes it and adds the versions it writes,
 so $t(s)\supseteq s$. An initial state $s_0$ satisfies the invariant
-$\mathcal I$. \textcolor{reviewed}{A state is \emph{reachable} when it can be derived from $s_0$ by
-applying transactions and merging states, with every state along the way
-satisfying $\mathcal I$.} Every reachable state descends from $s_0$, so $T$ is
-\emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
+$\mathcal I$.
+
+\textcolor{reviewed}{A state is \emph{reachable} when it can be derived from $s_0$ by applying
+transactions and merging states, with every state along the way satisfying
+$\mathcal I$.} Bailis et al.\ call $T$ \emph{invariant confluent} when any two
+reachable states with a common ancestor merge to a state that satisfies
+$\mathcal I$. Every reachable state descends from $s_0$, so $T$ is invariant
+confluent exactly when $\mathcal I(s_1\cup s_2)$ for all
 reachable $s_1$ and $s_2$.
 
 From an instance $(s_0,T,\mathcal I)$ of their model we construct a
