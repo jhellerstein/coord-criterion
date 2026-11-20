@@ -2820,15 +2820,16 @@ system must reserve IDs, reject one creation, or weaken the invariant.\cxbar{ins
 
 \subsection{General operational specification models}
 \label{sec:operational-models}
-\color{black}\cxtag{instances:37}{N/L}\cxbar{instances-37}{0.9 0.45 0}{s}Many systems are specified as state machines.  This subsection shows how to
+\color{black}\cxtag{instances:37}{N/M}\cxbar{instances-37}{0.4 0.4 1}{s}Many systems are specified as state machines.  This subsection shows how to
 project a state machine written as an I/O automaton~\cite{lynch1987io} onto a
 spec, and how to analyze the automaton with our results.  Each row of the
 projected spec is a pair the automaton can be observed in: the requests it has
 received and the replies it has sent, as they occur together in some trace.
 Every execution of the automaton is a run of this spec.  The projection drops
 the order in which an execution passes through these rows, however, so a run of
-the spec may combine rows that no single execution reaches in that order.  An
-automaton may make \commitments along the way, like the registrar that closes
+the spec may combine rows that no single execution reaches in that order.\cxbar{instances-37}{0.4 0.4 1}{e}\color{black}
+
+\color{black}\cxtag{instances:38}{N/M}\cxbar{instances-38}{0.4 0.4 1}{s}An automaton may make \commitments along the way, like the registrar that closes
 the polls early (Section~\ref{sec:systems}).  After such a \commitment, it can
 no longer reach some rows that other executions do reach.  We therefore also
 map the automaton into our system model, with its choices as \commitment
@@ -2836,10 +2837,10 @@ events.  Complete CALM tells whether the projected spec's runs are consistent.
 Comparing the automaton's runs with the spec's canonical runs tells whether the
 automaton itself is: it is confluent exactly when its \commitments never remove
 every row its canonical runs could still agree on.  We close with two ways to
-check these properties in practice: testing on bounded inputs, and proof.\cxbar{instances-37}{0.9 0.45 0}{e}\color{black}
+check these properties in practice: testing on bounded inputs, and proof.\cxbar{instances-38}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{The automaton model.}
-\color{black}\cxtag{instances:38}{N/M}\cxbar{instances-38}{0.4 0.4 1}{s}We use the standard I/O-automaton
+\color{black}\cxtag{instances:39}{N/M}\cxbar{instances-39}{0.4 0.4 1}{s}We use the standard I/O-automaton
 model~\cite{lynch1987io,lynch1996distributed}.  An automaton has input, output,
 and internal actions, a set of states with a nonempty set of start states, and
 a transition relation in which every input action is enabled in every state.
@@ -2853,51 +2854,51 @@ execution lists its input actions in order, and its \emph{reply sequence} lists
 its output actions in order.  We order both kinds of sequence by prefix.  This
 subsection treats a single automaton.  A server built from several
 communicating automata is a distributed system in the sense of
-Section~\ref{sec:distributed-execution}.\cxbar{instances-38}{0.4 0.4 1}{e}\color{black}
+Section~\ref{sec:distributed-execution}.\cxbar{instances-39}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{definition}[Projection of an automaton]
 \label{def:projection}
-\cxtag{instances:39}{N/M}\cxbar{instances-39}{0.4 0.4 1}{s}The \emph{projection} of an automaton $M$ is the \spectype $P_M$ whose inputs
+\cxtag{instances:40}{N/M}\cxbar{instances-40}{0.4 0.4 1}{s}The \emph{projection} of an automaton $M$ is the \spectype $P_M$ whose inputs
 are receive sequences and whose outputs are reply sequences, and whose rows
 are the pairs $(w,t)$ for which some finite execution of $M$ has receive
 sequence $w$ and reply sequence $t$.  We call $P_M$ the \emph{projected spec}
-of $M$.\cxbar{instances-39}{0.4 0.4 1}{e}\color{black}
+of $M$.\cxbar{instances-40}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
-\color{black}\cxtag{instances:40}{N/M}\cxbar{instances-40}{0.4 0.4 1}{s}Followed step by step, an execution is a run of $P_M$.  An arrival is an input
+\color{black}\cxtag{instances:41}{N/M}\cxbar{instances-41}{0.4 0.4 1}{s}Followed step by step, an execution is a run of $P_M$.  An arrival is an input
 event carrying the receive sequence so far, a reply is an output event carrying
 the reply sequence so far, and an internal step is no event.  What grows along
 the execution is the reply sequence, whatever the replies say: a counter's
 reports may go up, down, and up again, and its reply sequence still only
-grows.\cxbar{instances-40}{0.4 0.4 1}{e}\color{black}
+grows.\cxbar{instances-41}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Projection]
 \label{prop:projection}
-\cxtag{instances:41}{N/L}\cxbar{instances-41}{0.9 0.45 0}{s}Let $M$ be an automaton.
+\cxtag{instances:42}{N/L}\cxbar{instances-42}{0.9 0.45 0}{s}Let $M$ be an automaton.
 \begin{enumerate}
   \item $P_M$ is an \spectype, and every finite execution of $M$ is a run of
         $P_M$ from the canonical state at the empty receive sequence, with
         one input event per arrival and one output event per reply.
   \item $P_M$ satisfies Relational Monotonicity.  Its runs are consistent
         exactly when, at each receive sequence, any two reply sequences in its fiber
-        are one a prefix of the other.\cxbar{instances-41}{0.9 0.45 0}{e}\color{black}
+        are one a prefix of the other.\cxbar{instances-42}{0.9 0.45 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:42}{N/M}\cxbar{instances-42}{0.4 0.4 1}{s}(1) Every receive sequence has a row, since every input action is always
+\cxtag{instances:43}{N/M}\cxbar{instances-43}{0.4 0.4 1}{s}(1) Every receive sequence has a row, since every input action is always
 enabled.  Each event of the run is legal because the execution itself reaches
 the row the event needs.  (2) An execution can receive any further requests
 before it replies again, which gives Relational Monotonicity.  Finitely many
 reply sequences have a common extension exactly when any two of them are one
 a prefix of the other, and then the longest of them is one.  Complete CALM
-(Theorem~\ref{thm:complete-calm}) then gives the stated condition.\cxbar{instances-42}{0.4 0.4 1}{e}\color{black}
+(Theorem~\ref{thm:complete-calm}) then gives the stated condition.\cxbar{instances-43}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:43}{N/S}Since $P_M$ is an \spectype, the results of
+\color{black}\cxtag{instances:44}{N/S}Since $P_M$ is an \spectype, the results of
 Section~\ref{sec:distributed-execution} apply to it as to any other spec.\color{black}
 
-\color{black}\cxtag{instances:44}{N/M}\cxbar{instances-44}{0.4 0.4 1}{s}The converse of item~(1) fails.  Consider a registrar that receives ballots
+\color{black}\cxtag{instances:45}{N/M}\cxbar{instances-45}{0.4 0.4 1}{s}The converse of item~(1) fails.  Consider a registrar that receives ballots
 $p$.  After the first ballot it may reply $x$ at once and ignore later
 ballots, which closes the polls.  Or it may wait for a second ballot, reply
 $x$, and later reply $z$.  Its projected spec has a run that receives $p$,
@@ -2905,10 +2906,10 @@ replies $x$, receives a second $p$, and replies $z$: each row the run passes
 through occurs in some execution.  No execution has that trace, because a
 registrar that replied early never replies $z$.  Every reply sequence of the
 registrar is empty, $x$, or $xz$, so the runs of its projected spec are
-consistent.\cxbar{instances-44}{0.4 0.4 1}{e}\color{black}
+consistent.\cxbar{instances-45}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{The automaton as a system.}
-\color{black}\cxtag{instances:45}{N/L}\cxbar{instances-45}{0.9 0.45 0}{s}To recover what the projection drops, we map the automaton into our system
+\color{black}\cxtag{instances:46}{N/L}\cxbar{instances-46}{0.9 0.45 0}{s}To recover what the projection drops, we map the automaton into our system
 model (Definition~\ref{def:system}) with a single participant.  The rows of
 $P_M$ that a finite execution can still reach, by continuing from its final
 state, are its \emph{reachable rows}.  Removing every other row from a table
@@ -2916,11 +2917,11 @@ that contains them is a \commitment whenever it removes a row.  Suppose the
 execution can reach $(k,w)$, and $u$ is a prefix of $w$ that extends the
 execution's reply sequence.  The execution can stop replying once it has
 replied $u$ and then receive the rest of $k$, so it also reaches $(k,u)$.  No
-removed row is therefore \outrelpast by a kept row at the same input.\cxbar{instances-45}{0.9 0.45 0}{e}\color{black}
+removed row is therefore \outrelpast by a kept row at the same input.\cxbar{instances-46}{0.9 0.45 0}{e}\color{black}
 
 \color{black}\begin{definition}[System of an automaton]
 \label{def:automaton-system}
-\cxtag{instances:46}{N/L}\cxbar{instances-46}{0.9 0.45 0}{s}An execution of $M$ \emph{matches} a local history $\lambda$ when the input
+\cxtag{instances:47}{N/L}\cxbar{instances-47}{0.9 0.45 0}{s}An execution of $M$ \emph{matches} a local history $\lambda$ when the input
 and output events of $\lambda$ carry the execution's arrivals and replies in
 order, and the table after $\lambda$ keeps all of the execution's reachable
 rows.  An input event may carry several consecutive arrivals, or none.  The
@@ -2930,12 +2931,12 @@ contains the canonical \commitments and, for each finite execution, the
 history $\lambda$, its strategy allows the events that some execution matching
 $\lambda$ allows next: the output event that adds a reply the execution's
 final state can send, and the \commitment event that keeps only the
-execution's reachable rows.\cxbar{instances-46}{0.9 0.45 0}{e}\color{black}
+execution's reachable rows.\cxbar{instances-47}{0.9 0.45 0}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{proposition}[System of an automaton]
 \label{prop:automaton-system}
-\cxtag{instances:47}{N/L}\cxbar{instances-47}{0.9 0.45 0}{s}Let $M$ be an automaton.
+\cxtag{instances:48}{N/L}\cxbar{instances-48}{0.9 0.45 0}{s}Let $M$ be an automaton.
 \begin{enumerate}
   \item Every history of the system of $M$ is matched by some execution of
         $M$.
@@ -2945,47 +2946,47 @@ execution's reachable rows.\cxbar{instances-46}{0.9 0.45 0}{e}\color{black}
         reachable rows.
   \item After any history, one \commitment event brings the table down to
         exactly the reachable rows of a matching execution, unless the table
-        is already there.\cxbar{instances-47}{0.9 0.45 0}{e}\color{black}
+        is already there.\cxbar{instances-48}{0.9 0.45 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:48}{N/M}\cxbar{instances-48}{0.4 0.4 1}{s}(1) By induction on the history.  An input event extends the current receive
+\cxtag{instances:49}{N/M}\cxbar{instances-49}{0.4 0.4 1}{s}(1) By induction on the history.  An input event extends the current receive
 sequence, and the matching execution receives the added requests.  An output
 or \commitment event is chosen by the strategy for some matching execution,
 which then takes the corresponding step.  (2) By induction on the execution.
 After each step, internal steps included, the history adds the step's event,
 if any, and then, if the step lost reachable rows, the \commitment event
 of~(3).  (3) The \commitment of the basis for the matching execution applies
-by the argument above.\cxbar{instances-48}{0.4 0.4 1}{e}\color{black}
+by the argument above.\cxbar{instances-49}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:49}{N/M}\cxbar{instances-49}{0.4 0.4 1}{s}Item~(3) reflects the one difference between the two models.  In the
+\color{black}\cxtag{instances:50}{N/M}\cxbar{instances-50}{0.4 0.4 1}{s}Item~(3) reflects the one difference between the two models.  In the
 automaton, a reply and the loss of reachable rows it causes happen in one
 step.  In the system, the loss is a separate \commitment event, so an input
-may arrive in between, and the \commitment then applies after that input.\cxbar{instances-49}{0.4 0.4 1}{e}\color{black}
+may arrive in between, and the \commitment then applies after that input.\cxbar{instances-50}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:50}{N/M}\cxbar{instances-50}{0.4 0.4 1}{s}The \commitment events record choices that traces do not show.  Consider an
+\color{black}\cxtag{instances:51}{N/M}\cxbar{instances-51}{0.4 0.4 1}{s}The \commitment events record choices that traces do not show.  Consider an
 automaton that, after the first request, takes an internal step to one of two
 states.  Both reply $x$, but only the second can then reply $z$.  A second
 automaton has only the second state.  The two automata have the same traces,
 and therefore the same projected spec.  In the first, the internal step to the
 first state loses reachable rows, so its system removes the rows with reply
 sequence $xz$ in a \commitment event.  The system of the second automaton never
-does.\cxbar{instances-50}{0.4 0.4 1}{e}\color{black}
+does.\cxbar{instances-51}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{When the automaton itself is confluent.}
 \color{black}\begin{definition}[Confluent automaton]
 \label{def:confluent-automaton}
-\cxtag{instances:51}{N/M}\cxbar{instances-51}{0.4 0.4 1}{s}An automaton is \emph{confluent} when, for any finitely many finite executions
+\cxtag{instances:52}{N/M}\cxbar{instances-52}{0.4 0.4 1}{s}An automaton is \emph{confluent} when, for any finitely many finite executions
 and any receive sequence $j$ that \inrel the receive sequence of each, there
 is a reply sequence $u$ such that each of the executions can continue to an
-execution with receive sequence $j$ and reply sequence $u$.\cxbar{instances-51}{0.4 0.4 1}{e}\color{black}
+execution with receive sequence $j$ and reply sequence $u$.\cxbar{instances-52}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{proposition}[Confluent automata]
 \label{prop:automaton-confluence}
-\cxtag{instances:52}{N/XL}\cxbar{instances-52}{0.8 0 0}{s}Let $M$ be an automaton.
+\cxtag{instances:53}{N/XL}\cxbar{instances-53}{0.8 0 0}{s}Let $M$ be an automaton.
 \begin{enumerate}
   \item Every finite family of histories of the system of $M$ is confluent at
         every common \indesc of their current inputs, by continuations that
@@ -2999,12 +3000,12 @@ execution with receive sequence $j$ and reply sequence $u$.\cxbar{instances-51}{
         sequences, some row at $j$ lies in the canonical table of each and in
         none of the sets of removed rows.
   \item If $M$ is confluent, the runs of $P_M$ are consistent.  The converse
-        fails.\cxbar{instances-52}{0.8 0 0}{e}\color{black}
+        fails.\cxbar{instances-53}{0.8 0 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:53}{N/L}\cxbar{instances-53}{0.9 0.45 0}{s}(1) By Proposition~\ref{prop:automaton-system}, each history's table keeps the
+\cxtag{instances:54}{N/L}\cxbar{instances-54}{0.9 0.45 0}{s}(1) By Proposition~\ref{prop:automaton-system}, each history's table keeps the
 reachable rows of a matching execution, and each execution has a history whose
 table is exactly those rows.  By Proposition~\ref{prop:system-confluence},
 the histories are confluent at $j$ exactly when some row at $j$ survives in
@@ -3014,33 +3015,33 @@ histories of Proposition~\ref{prop:automaton-system}(2).  (3) A row at $j$
 reachable from executions with rows $(w_1,t_1),\ldots,(w_n,t_n)$ is a row of
 $P_M$ whose reply sequence extends each $t_r$, which is the common-extension
 condition (Proposition~\ref{prop:common-expansion-form}).  The registrar is a
-counterexample to the converse.\cxbar{instances-53}{0.9 0.45 0}{e}\color{black}
+counterexample to the converse.\cxbar{instances-54}{0.9 0.45 0}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:54}{N/M}\cxbar{instances-54}{0.4 0.4 1}{s}For the registrar, replying early loses every reachable row with reply
+\color{black}\cxtag{instances:55}{N/M}\cxbar{instances-55}{0.4 0.4 1}{s}For the registrar, replying early loses every reachable row with reply
 sequence $xz$, so its system removes them in a \commitment event.  An execution
 that replied early and one that waited and replied $xz$ then have no common
 reachable row at two ballots, and the registrar is not confluent, although the
 runs of its projected spec are consistent.  Closing the polls is a \commitment the projected
 spec does not require: a canonical run can emit $x$ after one ballot and still
-emit $xz$ after the second.\cxbar{instances-54}{0.4 0.4 1}{e}\color{black}
+emit $xz$ after the second.\cxbar{instances-55}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:55}{N/M}\cxbar{instances-55}{0.4 0.4 1}{s}A failure can also come from the projected spec itself.  Consider a counter
+\color{black}\cxtag{instances:56}{N/M}\cxbar{instances-56}{0.4 0.4 1}{s}A failure can also come from the projected spec itself.  Consider a counter
 whose report carries the count at the moment the report fires.  After two
 arrivals, one execution has reported $1$, before the second arrival, and
 another has reported $2$.  Neither reply sequence is a prefix of the other, so
 the projected spec does not satisfy Lifted Monotonicity.  A counter that records the count when each
 request arrives, and later reports from that record, sends the reports
 $1,2,\ldots,m$ in order.  Its projected spec satisfies Lifted Monotonicity, and the counter
-itself is confluent.\cxbar{instances-55}{0.4 0.4 1}{e}\color{black}
+itself is confluent.\cxbar{instances-56}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{Testing and proof.}
-\color{black}\cxtag{instances:56}{N/S}The projected spec and the system of an automaton are defined by every finite
+\color{black}\cxtag{instances:57}{N/S}The projected spec and the system of an automaton are defined by every finite
 execution of the automaton.  There are infinitely many such executions, so
 both are semantic objects: we can reason about them, but not list them.  Two
 standard approaches make that reasoning practical.\color{black}
 
-\color{black}\cxtag{instances:57}{N/M}\cxbar{instances-57}{0.4 0.4 1}{s}The first is testing.  A simulator or model checker runs the automaton on
+\color{black}\cxtag{instances:58}{N/M}\cxbar{instances-58}{0.4 0.4 1}{s}The first is testing.  A simulator or model checker runs the automaton on
 bounded inputs~\cite{misra1986des,flanagan2005dpor}; the pairs of receive and
 reply sequences it collects form a finite spec in our model, which can be
 checked for violations of Lifted Monotonicity.  This is routine engineering
@@ -3053,9 +3054,9 @@ the other.  A violation of the automaton's own confluence is shown by finitely
 many executions and a receive sequence at which they have no common reachable
 row, and confirming that they have none means exploring all of their
 continuations to that receive sequence.  Testing cannot show that Lifted
-Monotonicity holds, since that is a claim about every input.\cxbar{instances-57}{0.4 0.4 1}{e}\color{black}
+Monotonicity holds, since that is a claim about every input.\cxbar{instances-58}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:58}{N/L}\cxbar{instances-58}{0.9 0.45 0}{s}The second approach is proof.  Verification work routinely proves that an
+\color{black}\cxtag{instances:59}{N/L}\cxbar{instances-59}{0.9 0.45 0}{s}The second approach is proof.  Verification work routinely proves that an
 automaton refines a spec: every trace of the automaton is allowed by the spec.
 Such proofs use invariants, properties of the automaton's state that hold
 initially and are preserved by every step, so they are checked one step at a
@@ -3082,24 +3083,24 @@ nothing the automaton cannot produce; it too is proved once for all inputs,
 typically by induction on the input.  $D$ need not match the automaton
 exactly: it may leave out reply sequences that others extend.  For the
 recording counter, the rule ``after $n$ arrivals, the reports $1,\ldots,n$''
-satisfies both obligations.\cxbar{instances-58}{0.9 0.45 0}{e}\color{black}
+satisfies both obligations.\cxbar{instances-59}{0.9 0.45 0}{e}\color{black}
 
 \color{black}\begin{proposition}[Declared specifications]
 \label{prop:declared-specification}
-\cxtag{instances:59}{N/M}\cxbar{instances-59}{0.4 0.4 1}{s}Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
+\cxtag{instances:60}{N/M}\cxbar{instances-60}{0.4 0.4 1}{s}Let $D$ be an \spectype whose outputs are reply sequences and whose inputs
 correspond, by an order isomorphism, to receive sequences.  If $D$ satisfies
 realizability and domination, then $D$ satisfies Lifted Monotonicity exactly
-when the projected spec does.\cxbar{instances-59}{0.4 0.4 1}{e}\color{black}
+when the projected spec does.\cxbar{instances-60}{0.4 0.4 1}{e}\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{instances:60}{N/M}\cxbar{instances-60}{0.4 0.4 1}{s}We use the common-extension form.  Given rows of the projected spec, we
+\cxtag{instances:61}{N/M}\cxbar{instances-61}{0.4 0.4 1}{s}We use the common-extension form.  Given rows of the projected spec, we
 dominate each by a row of $D$, take their common \outnoun in $D$, and realize
 it.  Conversely, rows of $D$ are rows of the projected spec, and their common
-\outnoun there is dominated back into $D$.\cxbar{instances-60}{0.4 0.4 1}{e}\color{black}
+\outnoun there is dominated back into $D$.\cxbar{instances-61}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{instances:61}{N/S}Together, the two obligations let $D$ stand in for the projected spec:
+\color{black}\cxtag{instances:62}{N/S}Together, the two obligations let $D$ stand in for the projected spec:
 Lifted Monotonicity is checked on $D$ exactly as everywhere else in this paper.
 Whether the automaton itself is confluent is a question about its executions
 (Proposition~\ref{prop:automaton-confluence}).\color{black}
