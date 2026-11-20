@@ -981,16 +981,18 @@ $\mathsf{output}(o)$ emits $o$ and keeps the rows whose outputs \outrelbase $o$,
 ending at $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).
 
 Removing a row $(k,x)$ does not always lose the information in its output.  If
-some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
-nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
-would have.  We call this \emph{output subsumption} and put $(k,x)$ in
-$\Subsumed_o$.  Every other removed row goes in $\Excluded_o$.  With several
-outputs at an input, the canonical \commitment $x_o$ removes only the rows in $\Excluded_o$; the output event still removes the rows in
-$\Subsumed_o$, but that removal is not a \commitment.  If $x_o$ removes every
-row at $k$, it rules out the input $k$; otherwise it rules out only the
-excluded outputs at $k$.  In the functional case every removed row is
-excluded, so $x_o$ is as before.  An output $o$ is thus legal at a state when
-$\Excluded_o$ is empty, and $\mathsf{output}(o)$ then applies no \commitment.
+some output $u\in R(k)$ \outrel both $x$ and $o$, the row $(k,u)$ is kept, and
+a later output $u$ reports everything $x$ would have.  We call this
+\emph{output subsumption} and put $(k,x)$ in $\Subsumed_o$; every other removed
+row goes in $\Excluded_o$.
+
+The output event still removes both kinds of rows, but only removing the rows
+in $\Excluded_o$ is a \commitment: the canonical \commitment $x_o$ removes only
+those.  If $x_o$ removes every row at $k$, it rules out the input $k$;
+otherwise it rules out only the excluded outputs at $k$.  In the functional
+case every removed row is excluded, so $x_o$ is as before.  An output $o$ is
+thus legal at a state when $\Excluded_o$ is empty, and $\mathsf{output}(o)$
+then applies no \commitment.
 
 The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split.  Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.
 
