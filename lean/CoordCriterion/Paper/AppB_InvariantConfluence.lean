@@ -1,10 +1,10 @@
 import CoordCriterion.Instances.Examples
 
 /-!
-# Paper App. B, subsection "Invariant confluence" (`appendices/proof-machinery.tex`, `app:iconfluence`)
+# Paper App. F, subsection "Invariant confluence" (`appendices/instances.tex`, `app:iconfluence`)
 
 Statement layer for subsection `app:iconfluence` of
-`appendices/proof-machinery.tex` (the model behind Prop.
+`appendices/instances.tex` (the model behind Prop.
 `prop:iconfluence-lm` and its proof).  Read it side by side with the
 `.tex`: entries follow the paper's paragraphs in order; each quotes the
 claim it formalizes.  Unlabeled claims are named `«app:iconfluence/<slug>»`;

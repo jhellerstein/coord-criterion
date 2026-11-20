@@ -327,7 +327,7 @@ and the test cannot emit `false` without a commitment, since a later count of
 of stages needs no commitment."
 Lean: `Joint.threshold`
 (the test is not Lifted-Monotone, the composite is).  Lean also proves the
-Appendix D treatment of the test: it cannot emit under the empty basis below
+Appendix `app:composition` treatment of the test: it cannot emit under the empty basis below
 `10`, and the pipeline is proper (`Guard.Proper`). -/
 theorem «sec:composite-calm/filtering» :
     ¬ Joint.thr.LiftedMono ∧

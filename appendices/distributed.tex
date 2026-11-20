@@ -1,0 +1,953 @@
+\section{Distributed Execution: Proofs and Details}
+\label{app:proofs-sec4}
+
+This appendix proves the results of Section~\ref{sec:distributed-execution}, supplies the
+\commitment bases behind Section~\ref{sec:systems}, works out the bases of two-phase
+locking and multiversion timestamp ordering, and extends Complete CAP to deployments and
+to explicit relations that the system chooses.
+
+\subsection{Proofs}
+
+\begin{proof}[Proof of Proposition~\ref{prop:distributed-consistency}]
+A cut is confluent at $j$ exactly when its participant runs are
+(\S\ref{sec:distributed-consistency}).  The participant runs at any cut form a
+finite family of runs, so consistent runs give consistent histories.
+Conversely, every finite family of runs is the family of participant runs, at
+the final cut, of a message-free history with one participant per run, so
+consistent histories give consistent runs.
+\end{proof}
+
+\paragraph{Exchanging outputs.}
+\label{app:exchanging-outputs}
+Suppose participants share their \emph{outputs} in the data $d$ of messages
+(\S\ref{sec:distributed-consistency}).  A participant that receives an
+output $o$ its sender has emitted has two options, and may take both.  First,
+if $o\in R(i)$ at its own current input $i$, it can emit $o$ itself.  That is
+an ordinary output event, already covered by
+Definition~\ref{def:distributed-history}.  Second, it can silently honor $o$
+by restricting its table to $R[\mathrm{out}\OutputGe o]$.  The restricted
+table may have no row at the participant's current input, so it is a table
+but not always a specification state.  Silent honoring is therefore not a
+specification event, and we reason about it on tables.
+
+Silent honoring never changes whether a cut is confluent.  It cannot make a
+cut confluent, because it only removes rows, and confluence asks for a row
+that survives everywhere (Proposition~\ref{prop:confluence}).  It cannot make
+a cut non-confluent either.  A row that survives at a common \indesc already
+\outrel every output emitted in the cut (Lemma~\ref{lem:run-residual}).  That
+includes $o$, which was emitted earlier, so the restriction keeps the row.
+The confluence of a cut therefore depends on which outputs were emitted,
+not on who has heard about them.
+
+\begin{proof}[Proof of Proposition~\ref{prop:system-confluence}]
+(1) By Lemma~\ref{lem:canonical-equivalent}, $R_r\subseteq\widehat R_r$.
+Rows are never added, so a row that a \commitment event of $\rho_r$ removed is
+not in $R_r$; hence $R_r\subseteq\widehat R_r\setminus\Delta(\rho_r)$.
+Conversely, let $(k,u)\in\widehat R_r\setminus\Delta(\rho_r)$.  Both runs
+start at the same canonical state, which contains $(k,u)$.  Consider an event of
+$\rho_r$ at a state containing $(k,u)$.  If it is $\mathsf{input}(j)$, the
+canonical run also takes $\mathsf{input}(j)$ and keeps $(k,u)$, so
+$j\InputOrd k$ and the event keeps $(k,u)$.  If it is $\mathsf{output}(o)$,
+then likewise $o\OutputOrd u$ and the event keeps $(k,u)$.  If it is a
+\commitment event, it keeps $(k,u)$ because $(k,u)\notin\Delta(\rho_r)$.  By
+induction on the events, $(k,u)\in R_r$.
+
+(2) Suppose continuations bring every run to a common state $(k,R)$.  That
+state has a row $(k,u)$, and events never add rows, so $(k,u)\in R_r$ for every
+$r$.  Conversely, suppose $(k,u)\in R_r$ for every $r$.  Since
+$i_r\InputOrd k$, the event $\mathsf{input}(k)$ is legal at $(i_r,R_r)$ and
+keeps $(k,u)$, so $\mathsf{output}(u)$ is then enabled.  It ends at
+$(k,R'_r)$ with $R'_r=R_r[\mathrm{in}\InputGe k,\ \mathrm{out}\OutputGe u]$.
+If $R'_r$ has rows other than $(k,u)$, consider the partial function that maps
+each state with current input $k$ whose table contains $(k,u)$ and some other
+row, and whose rows at $k$ all \outrelbase $u$, to $(k,\{(k,u)\})$.  It keeps
+the current input and removes a nonempty set of rows.  A removed row at $k$ is some $(k,x)$ with
+$u\OutputOrd x$ and $x\neq u$, so $x\not\OutputOrd u$; a removed row at
+another input has no remaining row at its input.  So the function is a
+\commitment (Definition~\ref{def:commitment}), and a \commitment event that
+applies it ends at $(k,\{(k,u)\})$.  If $R'_r$ has no other row, the run is
+already there.  Every run therefore reaches $(k,\{(k,u)\})$.  By~(1),
+$(k,u)\in R_r$ exactly when $(k,u)\in\widehat R_r$ and
+$(k,u)\notin\Delta(\rho_r)$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:commitment-conflict}]
+Events only remove rows, so $(k,x)$ is present at $\sigma_P(i)$.  Thus $k$
+\inrel $i$ and $x\in\fiber{k}$, so $\mathsf{input}(k)$ and then
+$\mathsf{output}(x)$ are enabled from $\sigma_P(i)$, and a canonical second
+run exists.  Under any basis, after $\mathsf{output}(x)$ every row at $k$
+\outrel $x$.  The
+\commitment leaves no such row at $k$
+(Equation~\ref{eq:commitment-unsubsumed}); if it removed every row at $k$,
+there is none at all.  Later events only remove rows, so no row at $k$
+survives in both runs, and by Proposition~\ref{prop:system-confluence} the
+runs are not confluent at $k$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]
+The canonical system for $E$ has the canonical basis and no \commitment
+events.  Its strategies emit any output $o$ of $E$ in the current fiber, by
+the canonical output event $\mathsf{output}(o)$ of
+Section~\ref{sec:complete-calm}.  That event applies whatever \commitment $o$
+requires, namely $x_o$ from the canonical basis
+(Definition~\ref{def:run-under-basis}).  So the system has Availability for
+$E$ whatever the spec.
+
+Now suppose $\Spec$ satisfies Lifted Monotonicity for $E$.  Every output the
+canonical system emits is the output of a row of $E$ whose input lies below
+the current one.  So at a common \indesc $j$ of the current inputs, the
+emitted outputs have a common \outnoun in $\fiber{j}$.  The system emits only
+canonical output events, so Lemma~\ref{lem:reconciliation} makes this
+confluence at $j$.  This gives Partition Consistency.
+
+Conversely, suppose some system, such as the canonical system for $E$, has
+Availability for $E$ and Partition Consistency.  Let
+$(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common \indesc $j$.  We
+find some $u\in\fiber{j}$ that \outrel every $o_r$.  If $k=0$, then $j$
+appears in some row $(j,u)$, since $\Spec$ is total.  Otherwise, take one
+participant $p_r$ per row, starting at input $i_r$, each on its own side.  A
+partitioned history has at least two sides, so if $k=1$ we add a second
+participant for that row on another side.  Each participant runs without
+messages.  By Availability for $E$, each $p_r$ can emit $o_r$.  By Partition
+Consistency, the participants then reach one state $(j,R)$.  That state has
+some row $(j,u)$ (Definition~\ref{def:residual-state}), and this $u$ is the
+one we seek.  Rows are never added, so $(j,u)$ was already in each $p_r$'s
+table just after it emitted $o_r$.  Emitting an output keeps only rows whose
+output \outrel it (Definition~\ref{def:lifted-output-event}).  So $u$ \outrel
+every $o_r$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:complete-cap-any-system}]
+The converse argument in the proof of Theorem~\ref{thm:complete-cap} applies
+to any system with Availability for $E$ and Partition Consistency, so $\Spec$
+satisfies Lifted Monotonicity for $E$.  By Theorem~\ref{thm:complete-cap},
+$\Spec$ escapes CAP for $E$.
+\end{proof}
+
+\subsection{\Commitment bases}
+\label{app:bases}\label{app:commitment-bases}
+
+This subsection supplies the details behind Section~\ref{sec:systems}: the canonical
+\commitments of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} are
+\commitments (Definition~\ref{def:commitment}) and form a canonical basis, and every
+run under any basis has an observably equivalent canonical run that retains at least
+as many rows after each event.  Because \commitments are partial functions, a basis
+may offer a \commitment only at the states where its own precondition holds.
+
+\begin{definition}[Canonical basis]
+\label{def:canonical-commitment-basis}
+The \emph{canonical \commitment basis} collects the canonical \commitments of
+Definition~\ref{def:canonical-commitment},
+\begin{equation}
+  \mathcal B_P
+    =\{x_o:o\in O,\ \operatorname{dom}(x_o)\neq\varnothing\},
+  \label{eq:canonical-commitment-basis-relational}
+\end{equation}
+where $x_o$ is defined at the states with $o\in R(i)$ and $\Excluded_o\neq\varnothing$.
+\end{definition}
+
+\paragraph{The canonical \commitment is a \commitment.}
+Definition~\ref{def:commitment} asks that $x_o$ keep the current input, which
+it does, remove a nonempty set of rows, which $\Excluded_o\neq\varnothing$
+ensures, and remove no row that a kept row at the same input \outrel
+(Equation~\ref{eq:commitment-unsubsumed}).  Only the last needs an argument.
+Suppose a removed row $(k,x)\in\Excluded_o$ were \outrelpast by a row $(k,y)$
+that $x_o$ leaves.  Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
+\outrelpast by a row \outrelpart $o$.  By transitivity, $x$ is then
+\outrelpast by a row \outrelpart $o$, so $x\in\Subsumed_o$, a contradiction.
+
+Canonical runs (Definition~\ref{def:run}) are exactly the runs under the
+canonical basis $\mathcal B_P$ of Definition~\ref{def:canonical-commitment-basis}
+with no \commitment events.
+
+Two runs are \emph{observably equivalent} when they start at the same canonical
+state and agree once \commitment events are dropped.  They then accept the same
+inputs and emit the same outputs, in the same order, which is all the
+environment observes, although their remainder tables may differ.
+
+\begin{proof}[Proof of Lemma~\ref{lem:canonical-equivalent}]
+We drop the \commitment events from a run under $\mathcal B$.  By induction on
+the events, the result is a canonical run whose table $\widehat R$ contains
+the original's table $R$ after each event; both start at the same canonical
+state.  A \commitment event keeps the current input and only removes rows, so
+dropping it preserves $R\subseteq\widehat R$.  An input event
+$\mathsf{input}(j)$ legal at $R$ is legal at $\widehat R$, and keeps
+$R[\mathrm{in}\InputGe j]\subseteq\widehat R[\mathrm{in}\InputGe j]$.  An
+output event $\mathsf{output}(o)$ at $R$ can be issued at $\widehat R$, since
+$o\in R(i)\subseteq\widehat R(i)$, with $x_o$ from the canonical basis if it
+applies one, and keeps
+$R[\mathrm{out}\OutputGe o]\subseteq\widehat R[\mathrm{out}\OutputGe o]$.
+\end{proof}
+
+\begin{corollary}[Reconciliation under any basis]
+\label{cor:reconciliation-any-basis}
+Let runs under any \commitment bases end at $(i_r,R_r)$, and let $j$ be a
+common \indesc of the $i_r$.  If some continuations, whose output and \commitment events
+may apply any \commitments, bring them to a common state with current input $j$,
+then some $u\in\fiber{j}$ \outrel every output emitted on every run.
+\end{corollary}
+
+\begin{proof}
+The common state has a row $(j,u)$, and events never add rows, so
+$(j,u)\in R_r$.  By Lemma~\ref{lem:canonical-equivalent}, $R_r$ is contained in
+the table of a canonical run with the same inputs and outputs, and
+Lemma~\ref{lem:run-residual} makes $u$ \outrel the outputs of run $r$.
+\end{proof}
+
+The converse of Lemma~\ref{lem:canonical-equivalent} fails: a canonical run
+need not be observably equivalent to any run under a particular system's
+basis.  That basis may lack the \commitment that an output event requires,
+which disables that output.  Such a system still chooses only behaviors that
+$P$ permits, and the spec still permits the disabled canonical run.  Looking
+only at the runs that one system produces could therefore hide
+non-monotonicity, and hide a canonical run that conflicts with a \commitment.
+We instead judge consistency, and the effect of \commitments, against the
+canonical runs of the declared spec.  A behavioral restriction narrows that
+comparison only when it is part of the declared contract.
+
+\paragraph{Application-specific \commitments.}
+Locks and timestamps are examples: two-phase locking applies a \commitment
+that fixes an order among some transactions, and timestamp assignment places
+one transaction relative to all others.  Section~\ref{sec:systems} illustrates both, and
+Appendix~\ref{app:cc-bases} writes the two bases down.
+
+\subsection{\Commitment bases for two-phase locking and multiversion timestamp ordering}
+\label{app:cc-bases}
+
+This subsection gives the serializability spec of
+Sections~\ref{sec:ambiguity-story} and~\ref{sec:systems} in full, and the
+\commitment bases of two-phase locking (2PL) and multiversion timestamp ordering
+(MVTO).  Schedulers act as operations arrive, and they report results while
+transactions are still running, such as a read result before its reader
+commits, so an output may leave transactions undecided.
+
+\paragraph{Specification.}
+An input is a finite set of transactions, each given by the sequence of
+operations that its client has issued so far: reads and writes of keys,
+possibly followed by a request to commit.  One input precedes another when
+every transaction of the first is in the second and its sequence in the first
+is a prefix of its sequence in the second; once a transaction has requested
+commit, its sequence no longer grows.  An input does not order the operations
+of different transactions.  The order in which they arrive is the order of
+input events in a run, which the environment controls.
+
+An output has three parts: the committed transactions, in a serial order; the
+aborted transactions; and the read results reported so far.  A read result
+says which version the $k$-th operation of a transaction, a read of a key $x$,
+returned: the write of $x$ by some transaction, or the initial version.  The
+write of $x$ by a transaction is its last write of $x$.  A transaction that is
+neither committed nor aborted is \emph{undecided}, and its reads may already be
+reported.  One output \outrel another when it extends all three parts.
+
+An output is \emph{complete} at an input when it commits or aborts every
+transaction of the input, and not both, and commits only transactions whose
+commit request is in the input.  A complete output is permitted when it meets two
+conditions.  First, each reported read result is for a read in the input and
+returns the initial version or the write of its key by a transaction of the
+input.  Second, each read of a key $x$ by a committed transaction $T$ returns
+$T$'s own write of $x$ if $T$ writes $x$ earlier in its sequence.  Otherwise it
+returns the write of $x$ by the last transaction before $T$ in the serial order
+that writes $x$, or the initial version if none does.  Reads by aborted
+transactions are otherwise unconstrained.  Any output is permitted when some permitted complete output
+\outrel it, that is, when it can still be completed.  The figures of
+Sections~\ref{sec:ambiguity-story}--\ref{sec:systems} show only complete
+outputs without aborts or read results, as serial orders, at inputs in which
+every transaction has requested commit.
+
+We write an output as $(L,X,\rho)$.  Here $X$ is the set of aborted
+transactions, $L$ is the serial order, a total order on the set
+$\mathrm{dom}\,L$ of committed ones, and $\rho$ is the set of reported read
+results.  Then
+\[
+  \begin{aligned}
+  (L,X,\rho)\OutputOrd(L',X',\rho')
+  \iff{}& X\subseteq X',\ \ \mathrm{dom}\,L\subseteq\mathrm{dom}\,L',\\
+         & L'|_{\mathrm{dom}\,L}=L,\ \ \rho\subseteq\rho'.
+  \end{aligned}
+\]
+Every input has a permitted row: the one that aborts every transaction and
+reports nothing.  Let $\{A,B\}$ be an input in which $A$ and $B$ have each
+requested commit.  The rows $(\{A,B\},([A,B],\varnothing,\varnothing))$ and
+$(\{A,B\},([B,A],\varnothing,\varnothing))$ of
+Figure~\ref{fig:ambiguity-frames}(f) have no common \outnoun, since it would
+order $A$ both before and after $B$.  So the spec is not monotone.  The
+\emph{abort-free} spec permits a row when it can be completed with
+$X=\varnothing$.  For this spec, a complete output instead commits exactly the
+transactions whose commit request is in the input and leaves the others
+undecided.  The same two rows show that it is not monotone either.
+
+\paragraph{\Commitments.}
+Each \commitment is a condition on complete outputs.  Applied at a state
+$(i,R)$, it keeps the rows of $R$ that can still be completed, within $R$, by a
+complete row satisfying the condition, and removes the rest.  It is defined
+when it keeps some row at $i$ and removes some row.
+\begin{itemize}
+  \item $\mathsf{order}(A,B)$, for distinct $A,B\in i$: $B$ is not committed
+        before $A$, that is, not $B<_L A$.
+  \item $\mathsf{TxCommit}(A)$, for $A$ whose commit request is in $i$:
+        $A\notin X$.\quad
+        $\mathsf{abort}(A)$, for $A\in i$: $A\notin\mathrm{dom}\,L$.
+  \item $\mathsf{stamp}(A)$, for $A\in i\setminus Z$, given the set $Z\subseteq
+        i$ of transactions stamped before $A$: no committed transaction outside
+        $Z\cup\{A\}$ precedes $A$ in $L$, and no committed transaction of $Z$
+        follows $A$.
+  \item $\mathsf{read}(A,k,v)$, for $A\in i$ whose $k$-th operation in $i$ is a
+        read: the output reports that this read returned the version $v$.
+\end{itemize}
+Each is a \commitment (Definition~\ref{def:commitment}).  In particular, no
+removed row is \outrelpast by a kept one, as
+Equation~\ref{eq:commitment-unsubsumed} requires.  To see this, suppose a kept
+row \outrel another row at the same input.  The complete row that keeps the
+first also \outrel the second, so the second is kept too.  The first four
+conditions concern only $L$ and $X$.  For them a complete row is kept exactly
+when it satisfies the condition, since two permitted complete outputs at one
+input, one \outrelpart the other, have the same serial order and abort set.
+
+The bases are
+$\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{TxCommit},\mathsf{abort},\mathsf{read}\}$
+and
+$\mathcal B_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{TxCommit},\mathsf{abort},\mathsf{read}\}$,
+over all transactions, positions, and versions.  They share
+$\mathsf{TxCommit}$, $\mathsf{abort}$, and $\mathsf{read}$, and differ in how
+they order.  Let $\{A,B,C\}$ be an input in which $A$, $B$, and $C$ have each
+requested commit, after any operations.  At its canonical state, no \commitment
+of $\mathcal B_{\mathrm{MVTO}}$ has the effect of $\mathsf{order}(A,B)$, and no
+\commitment of $\mathcal B_{\mathrm{2PL}}$ has the effect of $\mathsf{stamp}(B)$
+with $Z=\varnothing$.
+
+A scheduler applies its \commitments in \commitment events
+$\mathsf{apply}(\gamma)$ (Definition~\ref{def:commitment-event}) and reports
+results by output events $\mathsf{output}(o)$
+(Definition~\ref{def:run-under-basis}).  Each protocol step below responds to
+the arrival of an operation, that is, to an input event, and says which
+\commitments it applies.  Every state that a run under either basis reaches
+has two properties: each row has a complete \outnoun in the table at its
+input, and any output between two rows of the table at one input is itself a
+row of the table.  Because of these properties, a scheduler reports a read by
+first applying $\mathsf{read}(A,k,v)$ in a \commitment event; emitting the
+result is then a legal output.
+
+\paragraph{2PL.}
+When an operation of $B$ arrives, 2PL requests a lock on its key, shared for a
+read and exclusive for a write.  If $A$ holds that lock in a conflicting mode,
+$B$ waits.  The scheduler then applies $\mathsf{order}(A,B)$ in a \commitment
+event and reports nothing.  Sometimes every remaining complete row that
+commits both already places $A$ before $B$.  Then $\mathsf{order}(A,B)$ would
+remove nothing, so it is undefined and the scheduler applies nothing.  This
+happens when an earlier wait has applied $\mathsf{order}(A,B)$, or when a
+reported read result fixes the order, as when $A$ has read the initial version
+of the key that $B$ writes.  On complete rows without aborts,
+$\mathsf{order}(A,B)$ keeps exactly those with $A$ before $B$
+(Figure~\ref{fig:cc-commitments}(h)).  At the canonical state of $\{A,B,C\}$
+it removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$.  So it is a
+\commitment, and it is not the canonical \commitment $x_o$ of any output $o$.
+When a read is granted its lock, the scheduler applies $\mathsf{read}$ and
+reports the result.  When a commit request arrives, the scheduler applies
+$\mathsf{TxCommit}$ and releases the transaction's locks.
+
+A deadlock between $A$ and $B$ arises when $B$ waits for a lock that $A$ holds
+and an operation of $A$ then waits for a lock that $B$ holds.  The scheduler
+has then applied $\mathsf{order}(A,B)$ and later $\mathsf{order}(B,A)$.  No
+remaining row, at any input, commits both $A$ and $B$.  So every remaining
+complete row aborts one of them, and resolving the deadlock means aborting
+one.  Once the scheduler applies $\mathsf{TxCommit}(A)$, every remaining
+complete row aborts $B$, and $\mathsf{TxCommit}(B)$ is never again defined.
+Under the abort-free spec, once both orderings have been applied, no remaining
+row is at an input in which both $A$ and $B$ have requested commit.  The
+system never accepts both requests, so at least one of $A$ and $B$ waits
+forever.  Whether a deadlock can be resolved thus depends on which of the two
+specs the system implements.
+
+\paragraph{MVTO.}
+We follow Bernstein and Goodman~\cite{bernstein1981concurrency}.  When the
+first operation of a transaction $A$ arrives, $A$ receives a timestamp above
+all issued ones.  The scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
+transactions stamped before $A$, in a \commitment event.  On complete rows
+without aborts, $\mathsf{stamp}(B)$ with $Z=\varnothing$ keeps exactly those
+with $B$ first (Figure~\ref{fig:cc-commitments}(i)).  At the canonical state
+of $\{A,B,C\}$ it is a \commitment, and it is not the canonical \commitment
+$x_o$ of any output.  When a read of $x$ by $A$ arrives, it returns $A$'s own
+write of $x$ if $A$ has written $x$.  Otherwise it returns the committed
+version of $x$ with the largest timestamp below $A$'s.  The scheduler applies
+$\mathsf{read}$ and reports the result.  When a write of $x$ by $A$ arrives,
+it is rejected, and $A$ aborted, if a transaction stamped after $A$ has
+already read a version of $x$ stamped before $A$.  The scheduler then applies
+$\mathsf{abort}(A)$ and reports the abort.  When the commit request of $A$
+arrives, the scheduler applies $\mathsf{TxCommit}(A)$.
+
+\emph{What reporting a read excludes.}  Suppose $B$ is stamped after $A$, and
+$B$'s read of $x$ returned the initial version or the write of $x$ by a
+transaction stamped before $A$.  Consider an input in which $A$ writes $x$.
+There, a complete row that satisfies both stamps and commits both $A$ and $B$
+places $A$ between that version and $B$.  In that row the read must return
+$A$'s write or a later one, so the row does not permit the reported read.
+Hence, after the two stamps, no row that reports the read and is at an input
+in which $A$ writes $x$ commits both $A$ and $B$.  Once $\mathsf{read}$ has
+been applied, no remaining row at such an input commits both, whether it
+reports the read or not.  Reporting the read therefore rules out one
+possibility: that $A$ writes $x$ and both $A$ and $B$ commit.  MVTO reports
+the read when it arrives, whether or not $A$'s write has arrived.
+
+The condition on the version, that $B$ read a version older than $A$, is
+needed.  Consider an input of three transactions $A$, $W$, $B$, stamped in
+that order, each having requested commit, with $A$ and $W$ writing $x$ and $B$
+only reading it.  The complete row that commits all three in stamp order and
+reports that $B$ read $W$'s write is permitted and satisfies every stamp.
+There $B$ read a version written after $A$, and all three commit.
+
+\emph{When the abort is entailed.}  Which of $A$ and $B$ aborts depends on
+whether $B$ is decided.  Suppose $A$'s write of $x$ has arrived.  If every
+remaining complete row commits $B$, for instance after $\mathsf{TxCommit}(B)$,
+then every remaining complete row aborts $A$.  An output that reports the read
+and that every remaining row \outrel, with $A$'s abort added, is then a legal
+output.  So the spec entails the abort.  While $B$ is undecided, the spec does
+not entail it.
+
+Consider a run in which $A$'s first operation, a read of $x$, arrives, then
+$B$'s read of $x$, and then $A$'s write of $x$, with further transactions free
+to arrive.  The scheduler applies $\mathsf{stamp}(A)$ and $\mathsf{stamp}(B)$
+in \commitment events and reports that $B$ read the initial version of $x$.
+Reporting the read is not a legal output on its own.  At an input in which $A$
+writes $x$, the row that commits $A$ and then $B$ cannot be completed with it.
+Once the scheduler applies $\mathsf{read}$ in a \commitment event, reporting
+the read is a legal output.  After $A$'s write arrives, two completions remain
+at the input in which both then request commit.  One commits $B$ and aborts
+$A$, and the other commits $A$ and aborts $B$.  Emitting $A$'s abort is then
+not a legal output, and $\mathsf{abort}(A)$ and $\mathsf{abort}(B)$ are both
+defined and keep different completions.  MVTO's write rule aborts $A$ at once:
+the scheduler applies $\mathsf{abort}(A)$ in a \commitment event, after which
+reporting the abort is a legal output.  That abort is the scheduler's choice
+between two outcomes the spec still permits.  If the scheduler instead waits
+until $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s
+abort becomes a legal output.
+
+\paragraph{Comparison.}
+As operations arrive, 2PL applies \commitments that fix the relative order of
+conflicting transactions only.  MVTO, when a transaction's first operation
+arrives, applies a \commitment that fixes its position against all present and
+future transactions.  Both report reads through $\mathsf{read}$.  Under MVTO,
+suppose $B$ reads a version of a key older than $A$, which is stamped before
+$B$.  Reporting the read is then a \commitment: if $A$ writes that key, $A$
+and $B$ do not both commit.  The write rule settles this by aborting $A$ when
+its write arrives, and the spec forces that abort only after $B$ commits.
+
+\subsection{Deployments: one explicit relation per participant}
+\label{app:deployment}
+
+Theorem~\ref{thm:complete-cap} fixes one explicit relation $E$ for all
+participants.  A deployment fixes one for each participant: the rows that
+participant may emit.  It models a system that assigns authority, such as a
+key owned by one participant or a replica that answers only its own reads.
+This subsection states Availability for a deployment and characterizes when the
+choices authorized at different participants remain compatible across a
+partition.  Assigning rows to participants removes no row from the spec, and
+\commitments are still compared with all of the spec's canonical runs.
+
+\begin{definition}[Deployment, emitted rows, partition]
+\label{def:deployment}\label{def:emitted-rows}
+A \emph{deployment} over a finite participant set $\mathcal N$ assigns to each $p\in\mathcal N$
+an explicit relation $E_p\subseteq P$, the rows $p$ may emit: $p$ performs an output event
+$\mathsf{output}(o)$ (Definition~\ref{def:run-under-basis}) at current input
+$i$ only if $(i,o)\in E_p$.  The \emph{emitted rows} of a run are the
+pairs $(i,o)$ such that the run emits $o$ at current input $i$; the emitted
+rows of a system are those of its participants' runs in the histories it
+produces.  A \emph{partition} $\Pi$ of $\mathcal N$ divides $\mathcal N$ into
+two or more nonempty sides, as in a partitioned history
+(Definition~\ref{def:partitioned-history}).
+\end{definition}
+
+\begin{definition}[Participant run family, silent participant, separable run family]
+\label{def:participant-run-family}
+A \emph{participant run family} assigns to each of finitely many participants
+$p\in\mathcal N$ an initial input and a canonical run whose emitted rows lie in $E_p$.
+A participant whose run emits no output is \emph{silent}.  The family is
+\emph{separable under $\Pi$} when either participants on at least two
+sides emit, or exactly one distinct row is emitted and some silent
+participant lies on another side.
+\end{definition}
+
+\begin{definition}[Monotone across partitions]
+\label{def:monotone-across-partitions}
+Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when, for
+every participant run family separable under $\Pi$ and every common \indesc $j$
+of its participants' current inputs, some $u\in\fiber{j}$ \outrel every
+emitted output.  It is \emph{monotone across partitions} when it is monotone
+across every partition of $\mathcal N$.
+\end{definition}
+
+Monotonicity across partitions plays the role of Lifted Monotonicity for $E$
+(Definition~\ref{def:lm-for-A}), restricted to the families that a partition
+can separate.  If $\Spec$ satisfies Lifted Monotonicity for a relation that
+contains every $E_p$, it is monotone across partitions, since the emitted rows
+of a family are rows of that relation at inputs below $j$.  So Lifted
+Monotonicity for $E$ suffices for the uniform deployment $E_p=E$, and Lifted
+Monotonicity suffices for every deployment.
+
+The converse can fail, because a deployment can keep conflicting rows at one
+participant.  Rows authorized only to $p$ can be emitted only by $p$'s run.
+The outputs that run emits form a chain, since each output event keeps only
+rows whose outputs extend it.  So a family whose emitted rows are all
+authorized only to $p$ is separable only when it emits a single row.  For
+example, let $\mathcal N=\{p,q\}$, let every fiber be $\{a,b\}$ ordered by
+equality, and let $E_p=P$ and $E_q=\varnothing$, so that $p$ alone names a
+leader.  A run of $p$ emits at most one distinct output, and $q$ never emits.
+Every separable family therefore consists of one row $(i,a)$ or $(i,b)$ beside
+a silent $q$.  That output lies in $\fiber{j}$ for every \indesc $j$ of $i$.
+So $\Spec$ is monotone across partitions.  Yet $(i,a)$ and $(i,b)$ have no
+common \outnoun, and Lifted Monotonicity fails.
+
+The same happens whenever two conditions hold.  First, each authorized row has
+an \outnoun at every \indesc of its input.  Second, every set of authorized
+rows that lacks a common \outnoun at some common \indesc is authorized only to
+a single participant.  The causal register of Appendix~\ref{app:registers} is
+a further example of monotonicity across partitions without Lifted
+Monotonicity, with no single authority.  It need not satisfy these conditions,
+since a set of rows lacking a common \outnoun may also contain rows of other
+participants.
+
+The converse does hold when every participant may emit every row.  Suppose
+$|\mathcal N|\ge2$ and $E_p=P$ for every $p$.  Then every pair of rows can be
+split across a partition, and every single row can be paired with a silent
+participant at the common \indesc.  Pairs of rows suffice for the
+common-extension condition (Appendix~\ref{app:pairs-suffice}), so
+monotonicity across partitions is then Lifted Monotonicity.
+
+\begin{definition}[Deployment Availability]
+\label{def:deployment-availability}
+Relative to a deployment, a system has \emph{Deployment Availability} when, in
+every partitioned history over $\mathcal N$ it produces, each participant $p$
+can emit every output in $R(i)\cap E_p(i)$, where $(i,R)$ is $p$'s final state
+(Definition~\ref{def:local-continuation}).
+\end{definition}
+
+This is Availability for $E_p$, one relation per participant.  For the uniform
+deployment $E_p=E$ it is Availability for $E$ on histories over $\mathcal N$.
+
+A deployment is \emph{single-authority} when $E_q=\varnothing$ for every
+participant $q$ but one, as in the leader example above.  Every separable
+family is then one row emitted by the single authority beside a silent
+participant.  Monotonicity across partitions then says only that each such row
+has an \outnoun at every \indesc of its input.  Placement-sensitive models
+such as relational-transducer CALM~\cite{ameloot2013relational,ameloot2015weaker}
+also cover this case.
+
+The deployment keeps the conflicting choice from being made at another
+participant.  It does not change the semantic conflict: a canonical run still
+conflicts with the authority's \commitment
+(Proposition~\ref{prop:commitment-conflict}).  For example, another canonical
+run of the spec conflicts with a lock manager's choice even when only the
+manager is authorized to emit the result.  So a deployment says whether
+conflicting choices can occur at different participants, but it does not
+remove the conflict or the \commitment.  Comparing \commitments with fewer
+canonical runs is appropriate only when the restriction is part of the
+declared contract.  A deployment also does not restrict which inputs a
+participant receives: the environment may deliver any input to any
+participant.
+
+\begin{proposition}[Partition compatibility under a deployment]
+\label{thm:complete-cap-deployment}
+Fix a deployment.  The following are equivalent.
+\begin{enumerate}
+  \item For every partition $\Pi$, every participant run family separable
+        under $\Pi$ is confluent at every common \indesc $j$ of its
+        participants' current inputs.
+  \item $\Spec$ is monotone across partitions.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Fix $\Pi$, a separable family, and $j$, and let $X$ be the set of emitted
+outputs.  By Lemma~\ref{lem:reconciliation}, the family is confluent at $j$ if
+and only if some $u\in\fiber{j}$ \outrel every output in $X$.  The two
+conditions thus agree family by family.
+\end{proof}
+
+The proposition concerns canonical runs and does not use Deployment
+Availability.  It also applies to the runs of a system.  By
+Lemma~\ref{lem:canonical-equivalent}, each such run is observably equivalent to
+a canonical run with the same emitted rows, which therefore lie in $E_p$.
+Suppose $\Spec$ is monotone across partitions, and consider a separable family
+of system runs in a partitioned history, emitting as Deployment Availability
+permits.  Their emitted outputs have a common \outnoun $u\in\fiber{j}$ at every
+common \indesc $j$.  It does not follow that the deployment authorizes any
+participant to emit $u$.  Confluence through authorized output events would
+also require that authority, a condition we do not impose.
+
+With $|\mathcal N|\ge2$ and $E_p=P$ for every $p$, item~(2) is Lifted
+Monotonicity.  The proposition is then the step behind
+Theorem~\ref{thm:complete-cap} with $E=P$: separable families are confluent at
+every common \indesc exactly when Lifted Monotonicity holds.
+
+Proposition~\ref{thm:complete-cap-deployment} concerns runs.  For systems, a
+deployment has its own form of Complete CAP.  It rests on one more fact about
+families: with two or more participants, monotonicity across partitions
+already covers every family, separable or not.
+
+\begin{lemma}[Compatibility of participant run families]
+\label{lem:deployment-compatible}
+Fix a deployment with $|\mathcal N|\ge2$.  Then $\Spec$ is monotone across
+partitions if and only if, for every participant run family and every common
+\indesc $j$ of its participants' current inputs, some $u\in\fiber{j}$
+\outrel every emitted output.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+The condition is stronger, so only one direction needs an argument.  If
+participants $p$ and $q$ both emit, a partition with $p$ on one side and $q$ on
+the other makes the family separable, and the separable case applies.  If no
+participant emits, any $u\in\fiber{j}$ will do.  Otherwise exactly one
+participant $p$ emits.  Its outputs form a chain, so the last of them \outrel
+the rest.  Consider $p$'s last row beside one other participant, placed on
+another side and kept silent.  This is a separable family at the same $j$.
+The common \outnoun for that row \outrel every output of $p$.
+\end{proof}
+
+The \emph{canonical system} of a deployment is the system whose participants
+follow canonical runs, each participant $p$ emitting any output of $E_p$ at
+its current input that extends its earlier outputs.
+
+\begin{proposition}[Complete CAP for a deployment]
+\label{prop:deployment-complete-cap}
+Fix a deployment with $|\mathcal N|\ge2$.  Some system has Deployment
+Availability and Partition Consistency on histories over $\mathcal N$ if and
+only if $\Spec$ is monotone across partitions.  When it is, the deployment's
+canonical system is such a system.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Suppose $\Spec$ is monotone across partitions.  The canonical system has
+Deployment Availability, since each participant can emit any authorized output
+that its state allows.  Its participants' runs in a partitioned history form a
+participant run family.  So by Lemma~\ref{lem:deployment-compatible} their
+emitted outputs have a common \outnoun in $\fiber{j}$.  By
+Lemma~\ref{lem:reconciliation} the runs are then confluent at $j$, which is
+Partition Consistency.
+
+Conversely, suppose some system has both properties.  Consider a participant
+run family and a common \indesc $j$.  Each participant's emitted outputs form
+a chain, so it suffices to reach each participant's last emitted row.  We
+start each participant alone on its own side, at the input of that row.
+Deployment Availability lets it emit the row's output.  Partition Consistency
+then gives the emitted outputs a common \outnoun in $\fiber{j}$.  So $\Spec$
+is monotone across partitions.
+\end{proof}
+
+\subsection{Choosing the explicit relation}
+\label{app:cap-response}
+
+Theorem~\ref{thm:complete-cap} fixes the explicit relation $E$ in advance.
+Gilbert and Lynch ask only that every request receive some
+response~\cite{gilbert2002cap}, and leave the system to choose which.  This
+appendix lets the system choose its explicit relation among declared
+acceptable responses, shows that the result is Theorem~\ref{thm:complete-cap}
+applied to the chosen relation, and derives the Gilbert--Lynch theorem with
+precedence taken from real time.  Throughout, we fix an \spectype $\Spec$ and the partitioned histories of
+Section~\ref{sec:complete-cap}; the environment supplies any input to any
+participant and resolves the strategies' nondeterministic choices.  Emitted
+rows are as in Definition~\ref{def:emitted-rows}.
+
+\subsubsection{Obligations, availability, and locality}
+
+\begin{definition}[Response obligation, answering]
+\label{def:response-obligation}
+A \emph{response obligation} assigns to each participant $p$ a relation
+$Q_p\subseteq P$ that is total on $I$ and upward closed within fibers: if
+$(i,o)\in Q_p$, $(i,u)\in P$, and $o\OutputOrd u$, then $(i,u)\in Q_p$.  An
+output in $Q_p(i)$ \emph{answers} at $i$ for $p$.
+\end{definition}
+
+\begin{definition}[Uniform obligation]
+\label{def:uniform-obligation}
+A response obligation is \emph{uniform} when every $Q_p$ is the same
+relation $Q$.
+\end{definition}
+
+The obligation is part of the declared spec.  Response Availability is only
+as strong as $Q_p$: if a single output answers at every input, every spec
+meets condition~(1) of Theorem~\ref{thm:complete-cap-response}.
+
+A continuation of a partitioned history is \emph{within $p$'s side} when
+the system produces it, it adds only history events of $p$'s side, and none of its
+receives takes a message sent from another side.  A same-side continuation
+for $p$ (Definition~\ref{def:local-continuation}) is one within $p$'s side
+that adds no input event.
+
+\begin{definition}[Response Availability]
+\label{def:response-availability}
+A system has \emph{Response Availability} for $(Q_p)_{p\in\mathcal N}$ when, in every
+partitioned history it produces, each participant $p$, ending with current
+input $i$, satisfies two conditions.
+\begin{enumerate}
+  \item \emph{Answering.}  In some continuation within $p$'s side that
+        adds no input event at $p$, $p$ emits some output in $Q_p(i)$.
+  \item \emph{Input acceptance.}  For every $j\InputGe i$, in some
+        continuation within $p$'s side, $p$ records $\mathsf{input}(j)$.
+\end{enumerate}
+\end{definition}
+
+Input acceptance says that $p$ never rules out an \indesc of its current
+input.  It excludes specs whose answers require ruling out such an input, such
+as the election under the equality order (Figure~\ref{fig:nonmonotone-frame}),
+and it matches Gilbert and Lynch's requirement that nodes accept every
+request.
+
+\begin{definition}[Response Partition Consistency]
+\label{def:response-partition-consistency}
+A system has \emph{Response Partition Consistency} when, in every partitioned
+history it produces and at every common \indesc $j$ of the participants'
+current inputs, some $u\in\fiber{j}$ \outrel every output emitted in the
+history.
+\end{definition}
+
+Response Partition Consistency is the part of Partition Consistency that the
+converse of Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system} use.  So both also hold with
+Response Partition Consistency in place of Partition Consistency.  Confluence
+at $j$ implies a common \outnoun at $j$
+(Corollary~\ref{cor:reconciliation-any-basis}).  The two coincide for a system
+with basis $\mathcal B_P$ and no \commitment events.  Its participant runs are
+then canonical runs, and Lemma~\ref{lem:reconciliation} applies to them
+(\S\ref{sec:distributed-consistency}).  With other \commitments the converse
+can fail.  Participants may prune their states so that they cannot be
+reconciled, while their emitted outputs still have a common \outnoun.
+
+A system is \emph{replicated} (SPMD) when its obligation is uniform and every
+participant runs the same strategy, which depends only on the participant's
+initial input and local history, not on its identity or the number of
+participants.
+
+\begin{lemma}[Locality]
+\label{lem:locality}
+For each participant $p$ in some set of participants, let $\ell_p$ be a local
+history that $p$'s
+strategy can produce from initial input $i_p$ and that contains no receive.
+Placing each $\ell_p$ on its own side, with at least two sides and
+any further participants
+idle, gives a partitioned history that the system produces.  If the system is
+replicated, a receive-free local history that the strategy can produce for one participant
+it can produce for any participant with the same initial input, in any
+participant set.
+\end{lemma}
+
+\begin{proof}
+Whether a history is produced is checked one history event at a time against each
+participant's own local prefix, as fixed before
+Definition~\ref{def:local-continuation},
+and there are no receives to match.
+Replication makes that check independent of the participant.
+\end{proof}
+
+\subsubsection{Response interfaces}
+
+\begin{definition}[Response interface, self-continuing]
+\label{def:response-interface}
+For a uniform obligation $Q$, a \emph{response interface} is an explicit
+relation $T\subseteq Q$ that is total on $I$ and \emph{self-continuing}: if
+$(i,o)\in T$ and $i\InputOrd j$, then some $u\in T(j)$ \outrel $o$.
+\end{definition}
+
+Lifted Monotonicity for $T$ is that of Definition~\ref{def:lm-for-A}, and
+the reconciling output may lie outside $T$.  With $T=P$ it is the
+common-extension condition of Proposition~\ref{prop:common-expansion-form}, and
+by Lemma~\ref{lem:reconciliation} it is confluence of the canonical runs whose
+emitted rows lie in $T$.
+
+A response interface is an explicit relation that a system can always serve.
+Consider the canonical system for $T$ (Section~\ref{sec:complete-cap}).  It
+emits, by the canonical output event, any output of $T$ in the current fiber.
+Each participant's emitted outputs form a chain
+$o_1\OutputOrd\cdots\OutputOrd o_m$.  So by Lemma~\ref{lem:run-residual} its
+table is $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$, or
+$P[\mathrm{in}\InputGe i]$ before any emission.  Self-continuation applied to
+the row of $o_m$, or totality of $T$, gives some $u\in T(i)$ in that table.
+So every participant's fiber intersects $T$, and Availability for $T$ gives
+Answering.  The same argument at an input $k\InputGe i$ leaves a row at $k$,
+which gives Input acceptance.
+
+\begin{theorem}[Complete CAP with chosen responses]
+\label{thm:complete-cap-response}
+For an \spectype $\Spec$ and a uniform obligation $Q$,
+the following are equivalent:
+\begin{enumerate}
+  \item some replicated system has Response Availability for $Q$ and
+        Response Partition Consistency;
+  \item $\Spec$ satisfies Lifted Monotonicity for some response interface $T\subseteq Q$;
+  \item for some response interface $T\subseteq Q$, some system has
+        Availability for $T$ and Partition Consistency.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(2$\Leftrightarrow$3) is Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system} with $E=T$.
+
+(2$\Rightarrow$1.)  We take the canonical system for $T$.  It is replicated, and by the
+paragraph above it has Answering and Input acceptance.  The outputs emitted in
+a history are rows of $T$ at inputs that every common \indesc $j$ of the
+current inputs \inrel, so Lifted Monotonicity for $T$ gives Response Partition
+Consistency.
+
+(1$\Rightarrow$2.)  We build $T$ from the outputs that participants emit
+before receiving any message.  We call such an emission \emph{isolated}.  Let
+$T$ be the set of
+rows $(i,o)$ with $o\in Q(i)$ emitted in an isolated emission in some
+partitioned history of the system.  Such a history and participant are a
+\emph{witness} for $(i,o)$.  Then $T\subseteq Q$.  Two facts about witnesses
+are used below.  First, consider a participant alone on its side.  Every
+continuation that Response Availability supplies adds only its own history
+events.  Since the history is partitioned, these include no receive, so the
+emission they yield is isolated.  Second, by Lemma~\ref{lem:locality}, a
+witness's local history up to the emission can be replayed by a participant
+alone on its side, with an idle participant forming a second side.
+
+\emph{Totality:} for each $i$, Answering in the empty history, for a
+participant with initial input $i$ alone on its side, gives a row of $T$ at
+$i$.  \emph{Self-continuation:} let $(i,o)\in T$ and $j\InputGe i$.  We replay
+the witness and record $\mathsf{input}(j)$ by Input acceptance, truncating
+just after it.  Answering then gives an emission of some $u\in Q(j)$.  By
+Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual}, the table
+before that emission is contained in $P[\mathrm{in}\InputGe j,\
+\mathrm{out}\OutputGe o]$.  So $o\OutputOrd u$ and $(j,u)\in T$.
+\emph{Lifted Monotonicity for $T$:} let rows $(i_r,o_r)$ of $T$ have a common
+\indesc $j$.  We replay each witness on its own participant, truncated after
+the emission, and add a participant with initial input $j$.  By
+Lemma~\ref{lem:locality} this is a partitioned history of the system.
+Response Partition Consistency, applied to that history, gives
+$u\in\fiber{j}$ \outrelpart every $o_r$.  If there are no rows, totality of
+$P$ gives some $u\in\fiber{j}$.
+\end{proof}
+
+\begin{remark}[Without replication]
+For a system that is not replicated, fix the participant set.  Let $T_p$ be
+the rows $p$ emits in histories where it is alone on its side.  The same proof
+gives one response interface $T_p\subseteq Q_p$ per participant.  Each
+strategy sees only its own participant's initial input, and each participant
+is replayed once.  So consistency is required only for families that draw on
+each $T_p$ at most once.
+\end{remark}
+
+\subsubsection{Gilbert--Lynch with real-time precedence}
+
+Section~\ref{sec:complete-cap} derives the Gilbert--Lynch theorem from
+Corollary~\ref{cor:complete-cap-any-system}, with real-time precedence supplied
+as input.  Here precedence comes from real time, and consistency is required
+only at the precedence an execution realizes.
+
+\begin{lemma}[Forced answer]
+\label{lem:forced-answer}
+Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has an \outnoun in
+$\fiber{j}$.  In a system with Answering for $(Q_p)$
+(Definition~\ref{def:response-availability}(1)), consider a partitioned
+history that the system produces, in which $q$ is alone on its side,
+$q$'s current input is $i$, and $j$ \inrel every participant's current input.
+Then some continuation within $q$'s side that adds only history events of $q$,
+and no input event, has emitted outputs with no common \outnoun in
+$\fiber{j}$.
+\end{lemma}
+
+\begin{proof}
+Answering gives such a continuation in which $q$ emits some $o\in Q_q(i)$.  No
+current input changes, so $j$ still \inrel all of them, and no output of
+$\fiber{j}$ \outrel $o$.
+\end{proof}
+
+\paragraph{The register.}
+An input is a finite operation history: a set of read and write invocations at
+replicas with a strict partial order of real-time precedence.  One history
+\inrel another when it contains all of its operations and precedence edges.
+An output is a response map assigning values to reads and acknowledgments to
+writes, ordered by extension.  A linearization of $h$ is a total order of its
+operations extending precedence~\cite{herlihy1990linearizability} in which
+each answered read returns the last preceding write, or the initial value
+$v_0$.  The fiber $\fiber{h}$ contains the maps explained by some
+linearization of $h$.  The obligation $Q_p(h)$ consists of the maps in
+$\fiber{h}$ that answer every read and acknowledge every write invoked at $p$.
+Every finite history has a linearization, so $Q_p$ is total, and it is upward
+closed within fibers.  Real-time precedence belongs to the input.  The
+environment invokes $b$ after seeing $a$'s response, so the edge from $a$ to
+$b$ is information it supplies (\S\ref{sec:election-story}).
+
+Real time is the order of history events in an execution.  An
+\emph{interleaving} $\lambda$ of a distributed history is a linear order of
+its history events consistent with happens-before.  No strategy observes it.
+The \emph{invocation} of an operation is the first input event at its replica
+whose input contains it.  Its \emph{response} is the first output event at
+that replica whose map answers it.  For a prefix $C$ of $\lambda$ (a
+consistent cut), the \emph{realized history} $h_C$ contains the operations
+invoked in $C$, with an edge from $a$ to $b$ when $a$'s response precedes
+$b$'s invocation in $\lambda$.  If $C'\subseteq C$ is also a prefix, $h_C$
+\inrel $h_{C'}$.  The realized history need not be a common \indesc of the
+participants' current inputs: an input event may introduce two operations with
+an edge between them before either responds.
+
+A \emph{client history} has two participants with empty initial inputs, and
+each of its input events adds one operation, invoked at its participant after
+all of that participant's earlier operations are answered.
+
+\begin{corollary}[Gilbert--Lynch]
+\label{cor:gilbert-lynch}
+No system for the linearizable register has Answering for $(Q_p)$ together
+with the following, both required only of client histories: for every
+partitioned client history it produces, interleaving $\lambda$, and prefix $C$
+of $\lambda$ such that $h_C$ is a common \indesc of the current inputs at $C$,
+the outputs emitted in $C$ have a common \outnoun in $\fiber{h_C}$.
+\end{corollary}
+
+\begin{proof}
+Let replicas $p$ and $q$ start with empty inputs on separate sides, and let
+the environment invoke a write of $\dog\neq v_0$ at $p$.  Answering gives a
+continuation in which $p$ acknowledges it.  The environment then invokes a read
+$r_q$ at $q$, after the acknowledgment in $\lambda$.  The history is a client
+history.  No message crosses the partition, so $q$'s current input is
+$i_q=\{r_q\}$.  The realized history $j=h_C$ contains the write, $r_q$, and an
+edge from the write to $r_q$, and it is a common \indesc of both current
+inputs.  Every map in $Q_q(i_q)$ answers $r_q$ with $v_0$, and every
+linearization of $j$ places the write first.  So no output in $Q_q(i_q)$ has
+an \outnoun in $\fiber{j}$.  Lemma~\ref{lem:forced-answer} gives a
+continuation adding no input event.  The realized history stays $j$, and the
+emitted outputs have no common \outnoun in $\fiber{j}$.
+\end{proof}
+
+A system with Response Availability, and with a common \outnoun at $h_C$ for
+every prefix $C$ of every partitioned history, satisfies these hypotheses, so
+the corollary excludes it too.  The register's obligation differs by replica, so
+Theorem~\ref{thm:complete-cap-response} does not apply as stated.  The
+corollary yields Gilbert and Lynch's theorem in their asynchronous network
+model~\cite{gilbert2002cap}.
+
+\begin{proposition}[Gilbert--Lynch, asynchronous model]
+\label{prop:gl-async}
+In the asynchronous network model with at least two nodes, no algorithm for a
+read/write register is both available (a request pending at a node is
+answered in some extension of the execution that adds no request and loses
+every message) and atomic (every execution with well-formed clients has a
+linearization).
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+We translate the algorithm into a system with the canonical basis.  Participant
+$p$ runs node $p$.  An invocation becomes the input event whose input is $p$'s
+view: the operations invoked at $p$, with no precedence.  A response becomes an
+output event emitting $p$'s response map, and $p$ may also re-emit its current
+map.  With every message lost, $p$'s history is node $p$'s run in the
+execution where it is alone.  Atomicity of that execution puts the map in the
+fiber at the view, so the system can perform its output events under the
+canonical basis.  Availability, applied to each unanswered operation of the
+view, gives Answering.  An interleaving of a client history is an execution of
+the algorithm whose real-time order is the precedence of $h_C$.  So atomicity
+gives a common \outnoun in $\fiber{h_C}$, and the corollary excludes the
+algorithm.
+\end{proof}
+
+Gilbert and Lynch require availability and atomicity in all fair executions,
+including those in which messages are lost, in Lynch's asynchronous network
+model~\cite[Theorem~1]{gilbert2002cap}\cite[Chapter~8]{lynch1996distributed}.
+Both imply the forms in the proposition.  In their model any message may be
+lost and client requests are inputs.  So a finite execution extends to a fair
+execution with no new request in which every message is lost.  Their own
+proofs extend executions fairly in this way.  Availability answers the pending
+request at some finite point of that extension, and the prefix up to that
+response is the extension the proposition requires.  Atomicity of the fair
+extension gives atomicity of the finite execution.  Atomicity is a safety
+property, so it holds of every prefix of an atomic
+execution~\cite[Chapter~13]{lynch1996distributed}.

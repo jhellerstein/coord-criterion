@@ -9,9 +9,10 @@ import CoordCriterion.Appendix.DeploymentFor
 import CoordCriterion.Appendix.DeploymentCAP
 
 /-!
-# Paper, Appendix E: Deployments: One Explicit Relation per Participant
+# Paper, Appendix D.4 (deployments) and Appendix F (registers, real-time causal consistency)
 
-Source: `appendices/deployment.tex` (Appendix `app:deployment`, including
+Source: `appendices/distributed.tex` (subsection `app:deployment`) and
+`appendices/instances.tex` (subsections `app:registers`, `app:rtc`); formerly one appendix, including
 subsections `app:registers` and `app:rtc`).
 
 How to read this file: open it beside the appendix.  Every numbered result
@@ -47,7 +48,7 @@ set_option linter.unusedSectionVars false
 section Deployment
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-! ## Appendix E: Deployments: One Explicit Relation per Participant -/
+/-! ## Subsection `app:deployment`: Deployments: One Explicit Relation per Participant -/
 
 /-- **Definition `def:deployment`** (Deployment, emitted rows, partition).
 "A *deployment* over a finite participant set `𝒩` assigns to each `p ∈ 𝒩` an
@@ -523,7 +524,7 @@ theorem «app:deployment/full-deployment-step» {I O : Type} [PO I] [PO O] {sp :
     PartitionConfluent Dp ↔ sp.LiftedMono :=
   (partition_compatibility_confluent Dp).trans (full_deployment_iff hn Dp hA)
 
-/-! ## Appendix E.1: Registers (`app:registers`) -/
+/-! ## Subsection `app:registers`: Registers (`app:registers`) -/
 
 /-! ### The causal register -/
 
@@ -667,7 +668,7 @@ theorem «app:registers/same-read-incompatible» :
     (causalSpec G2).P h2 ρa ∧ (causalSpec G2).P h2 ρ1 ∧ ¬ (causalSpec G2).LiftedMono :=
   ⟨causal_ρa, causal_ρ1, causal_not_liftedMono⟩
 
-/-! ## Appendix E.2: Real-time causal consistency (`app:rtc`) -/
+/-! ## Subsection `app:rtc`: Real-time causal consistency (`app:rtc`) -/
 
 section RTC
 variable {α : Type} {n : Nat}

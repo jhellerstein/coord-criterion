@@ -1,9 +1,9 @@
 import CoordCriterion.Appendix.TransactionBases.MVTO
 
 /-!
-# Paper, Appendix G: Commitment bases for 2PL and MVTO (`app:cc-bases`)
+# Paper, Appendix D, subsection: Commitment bases for 2PL and MVTO (`app:cc-bases`)
 
-Source: `appendices/commitment-bases.tex` (the whole appendix).
+Source: subsection `app:cc-bases` of `appendices/distributed.tex`.
 
 How to read this file: it follows the appendix paragraph by paragraph
 (Specification, Commitments, 2PL, MVTO, Comparison).  The appendix has no

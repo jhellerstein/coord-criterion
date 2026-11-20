@@ -6,10 +6,10 @@ import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.Coordination
 
 /-!
-# Paper Appendix B: deferred proofs for §4 (`appendices/proof-machinery.tex`)
+# Paper Appendix D: proofs for §4 (`appendices/distributed.tex`)
 
-Statement layer for the subsection *Proofs for Section 4* of Appendix
-`app:proofs`: the proofs of Prop. `prop:distributed-consistency`, the
+Statement layer for the subsection *Proofs* of Appendix
+`app:proofs-sec4`: the proofs of Prop. `prop:distributed-consistency`, the
 paragraph *Exchanging outputs* (`app:exchanging-outputs`), and the proofs of
 Prop. `prop:commitment-conflict`, Theorem `thm:complete-cap`, and
 Corollary `cor:complete-cap-any-system`.  The results themselves are stated in

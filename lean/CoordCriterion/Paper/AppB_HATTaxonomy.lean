@@ -2,10 +2,10 @@ import CoordCriterion.Instances.HATAppB
 import CoordCriterion.Instances.HATWriteSkew
 
 /-!
-# Paper App. B, subsection "The HAT taxonomy" (`appendices/proof-machinery.tex`, `app:hat-taxonomy`)
+# Paper App. F, subsection "The HAT taxonomy" (`appendices/instances.tex`, `app:hat-taxonomy`)
 
 Statement layer for subsection `app:hat-taxonomy` of
-`appendices/proof-machinery.tex`.  Read it side by side with the `.tex`:
+`appendices/instances.tex`.  Read it side by side with the `.tex`:
 entries follow the paper's paragraphs in order; each quotes the claim it
 formalizes.  Unlabeled claims are named `«app:hat-taxonomy/<slug>»`.
 
@@ -352,7 +352,10 @@ theorem «app:hat-taxonomy/form-choices» (reps : Nat → List Nat) (lam : Bool)
     fun _ ho v => HATTax.recency_no_answer h0 ho v,
     fun j => j.2.2.sess_ts⟩
 
-/-! ## Differences from the extended paper's text -/
+/-! ## Differences from the extended paper's text
+
+Not in the paper: this paragraph was removed from Appendix `app:hat-taxonomy`.
+The entries below record the differences, which Lean still checks. -/
 
 /-- Predicate cut isolation, read "for some": "Def. 24 (predicate cut isolation) says that a history has the
 anomaly if, *for all* pairs of overlapping predicate reads in a transaction,

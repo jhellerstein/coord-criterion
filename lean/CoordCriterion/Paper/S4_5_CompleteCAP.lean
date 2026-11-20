@@ -19,7 +19,7 @@ the end of `sections/distributed.tex`: Definitions `def:partitioned-history`,
 `def:partition-consistency`, `def:lm-for-A`, and `def:escapes-cap`, the
 canonical system for `E`, Theorem `thm:complete-cap` and Corollary
 `cor:complete-cap-any-system`, the remarks after them, and the claims of the paragraph "Gilbert and Lynch".  The proofs
-of the theorem and the corollary are in Appendix `app:proofs`; their entries
+of the theorem and the corollary are in Appendix `app:proofs-sec4`; their entries
 are in `Paper/AppB_ProofsDistributed.lean`.
 
 How to read this file: open it next to the `.tex` file.  The `/-! ## … -/`
@@ -157,8 +157,8 @@ rows of a system are those of its participants' runs in the histories it
 produces."  The entry stays in this file because Availability for `E` below is
 stated with it.
 
-Lean: for a canonical run the emitted rows are `emRows` (Appendix F) or
-`Deploy.emitted` (Appendix E); for a system, `SysEmits Sys k x`: some
+Lean: for a canonical run the emitted rows are `emRows` (`app:cap-response`) or
+`Deploy.emitted` (`app:deployment`); for a system, `SysEmits Sys k x`: some
 participant of some well-formed history the system produces emits `x` at
 current input `k`. -/
 abbrev «def:emitted-rows» (Sys : System sp D) : Table I O := SysEmits Sys

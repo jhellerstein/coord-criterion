@@ -1,9 +1,9 @@
 import CoordCriterion.Appendix.Applications
 
 /-!
-# Paper, Appendix H: Additional applications (`app:additional-applications`)
+# Paper, Appendix G: Classical problems in distributed computing (`app:additional-applications`)
 
-Source: `appendices/additional-applications.tex` (the whole appendix: committed
+Source: `appendices/classical-problems.tex` (the whole appendix: committed
 authority, `k`-set agreement, tight renaming, snapshots).
 
 How to read this file: one `/-! ## … -/` section per subsection of the
@@ -19,9 +19,9 @@ whole output type (stronger than among permitted outputs); "not monotone" is
 `¬ LiftedMono`; "the negative side of Complete CAP" is
 `¬ ∃ Sys, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys`, obtained from
 `CC.CAP.complete_cap`, whose proof builds the partition separating the rows'
-inputs.  The App. B version of `k`-set agreement (pairs suffice, with inputs
+inputs.  The App. C version of `k`-set agreement (pairs suffice, with inputs
 and outputs both partial maps on `Fin (k+1)`) is `CC.CALM.KSet` in
-`CALM/Examples.lean`; this file uses the general version of App. H.
+`CALM/Examples.lean`; this file uses the general version of App. G.
 -/
 
 namespace CC

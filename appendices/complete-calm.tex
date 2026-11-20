@@ -1,0 +1,152 @@
+\section{Complete CALM: Proofs and Details}
+\label{app:proofs-sec3}
+
+This appendix proves the results of Section~\ref{sec:complete-calm} and gives the formal
+definition of the lifted output events of Section~\ref{sec:lifted-output-events}.
+
+\subsection{Proofs}
+
+\begin{proof}[Proof of Proposition~\ref{prop:common-expansion-form}]
+Suppose the spec satisfies Lifted Monotonicity, and let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows
+with common \indesc $j$.  If $k=0$, any $u\in\fiber{j}$ will do, and since
+$\Spec$ is total, $j$ appears in some row $(j,u)$.  Otherwise, since $i_r\InputOrd j$, Relational Monotonicity gives, for each
+$r$, a $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ all lie in the
+one fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel
+every $u_r$, hence every $o_r$.  Conversely, let $i\InputOrd j$ and
+$X\subseteq\fiber{i}$ be nonempty and finite.  The rows $\{(i,x):x\in X\}$
+have common \indesc $j$, so some $u\in\fiber{j}$ \outrel all of $X$; that is
+$\fiber{i}\LiftedOrd\fiber{j}$.
+\end{proof}
+
+The Survivor test (Proposition~\ref{prop:confluence}) and
+Lemma~\ref{lem:run-residual} combine into the form that the later arguments
+use.
+
+\begin{lemma}[Reconciliation]
+\label{lem:reconciliation}
+Let runs end at $(i_r,R_r)$, $r=1,\ldots,m$, let $j$ be a common \indesc of
+the $i_r$, and let $X$ be the set of outputs emitted on any of them.  The runs
+are confluent at $j$ if and only if some $u\in\fiber{j}$ \outrel every output
+in $X$.
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ exactly when $u\in\fiber{j}$
+\outrel every output emitted on run $r$, and Proposition~\ref{prop:confluence}
+gives the claim.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
+By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
+common-extension condition.  Suppose it holds.  Let $(i,R)$ be reached by a run
+(\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
+$x\in R(j)$.  The rows $(i,o)$ and $(j,x)$ of $P$ have common \indesc $j$, so
+the condition supplies $u\in P(j)$ \outrelpart both $o$ and $x$.  By
+Lemma~\ref{lem:run-residual}, $(j,u)\in R$, since $j\InputGe i$ and $u$
+\outrel $o$, which \outrel every output emitted on the run.  So $u\in R(j)$
+\outrel $o$ and $x$, and the legal-output test
+(Proposition~\ref{prop:exposability}) makes $o$ a legal output.
+Conversely, suppose every such output is a legal output, and let rows
+$(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality there is some
+$u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the legal-output test for $o_r$ at
+$\sigma_P(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in P(j)$ \outrelpart both
+$o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
+The proof of Lemma~\ref{lem:confluence-legality} covers nondeterministic specs,
+so the runs are consistent exactly when no output event of a run applies a
+\commitment, that is, when every output that a run can emit is legal.  As in the proof of Theorem~\ref{thm:functional-calm}, this holds exactly
+when every output at every state reachable without \commitment is legal.  By
+Proposition~\ref{prop:exposure-boundary}, that holds exactly when the spec
+satisfies Lifted Monotonicity.
+\end{proof}
+
+\paragraph{Pairs suffice for the common-extension condition.}
+\label{app:pairs-suffice}
+Suppose every two rows with a common \indesc $j$ have a common \outnoun in
+$\fiber{j}$.  Then the condition holds for every finite family of rows with
+common \indesc $j$.  We replace the first two rows of the family by a row
+$(j,u)$ whose output $u$ \outrel both, and repeat until one row remains; a
+single row, paired with any row at $j$, has an \outnoun in $\fiber{j}$.  The
+pairwise hypothesis must cover all rows of $P$, including rows at $j$ itself,
+since the replacement rows are at $j$.  Checking only rows at single-proposal
+inputs does not suffice, even with families of up to $k$ rows: in the $k$-set agreement example of
+Appendix~\ref{app:additional-applications}, every family of at most $k$ rows
+at such inputs is compatible at each common \indesc, but the $k+1$ proposal
+rows are not.
+
+\subsection{Lifted output events}
+\label{app:lifted-output-events}
+
+Fix a state $(i,R)$ and an output $o\in R(i)$.  A row is \emph{ruled out by}
+$o$ when its output does not \outrelbase $o$.  The ruled-out rows fall into two
+disjoint sets:
+\begin{align}
+  \Subsumed_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:\notag\\
+    &\qquad\quad x\OutputOrd u\text{ for some }u\in R[\mathrm{out}\OutputGe o](k)\},
+      \label{eq:output-subsumptions}\\
+  \Excluded_o&=(R\setminus R[\mathrm{out}\OutputGe o])\setminus\Subsumed_o.
+      \label{eq:commitment-removals}
+\end{align}
+
+\begin{definition}[Lifted output event, output subsumption]
+\label{def:lifted-output-event}
+Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
+$\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
+emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
+Equation~\ref{eq:output-action}.  It removes each row $(k,x)$ in
+$\Subsumed_o$, for which some $u\in R(k)$ \outrel both $x$ and $o$, by
+\emph{output subsumption}, which is not a \commitment.
+\end{definition}
+
+\begin{definition}[Canonical \commitment]
+\label{def:canonical-commitment}
+When $\Excluded_o\neq\varnothing$, the output event applies the \emph{canonical
+\commitment} $x_o$:
+\begin{equation}
+  x_o(i,R)=\bigl(i,\ R\setminus\Excluded_o\bigr).
+  \label{eq:canonical-commitment-relational}
+\end{equation}
+  Thus $x_o$ removes exactly the rows in $\Excluded_o$.  At an input $k$, if
+  $\Excluded_o(k)=R(k)$, it rules out $k$; otherwise it rules out only the
+  outputs in $\Excluded_o(k)$.  A row in $\Subsumed_o(k)$ has a kept \outnoun
+  at $k$.  The output event removes that row separately by output subsumption,
+  and its kept \outnoun prevents the event from ruling out $k$.
+\end{definition}
+
+In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places the row for
+$[B,A]$ in $\Excluded_o$, so the event rules out that output at $\{A,B\}$.
+In panel~(g), the removed route sets, at both inputs, are in $\Subsumed_o$,
+each \outrelpast by a retained route set at its input, so the event subsumes them without
+\commitment.  With one row per input, $\Subsumed_o$ is empty, and $x_o$ rules
+out each input whose row is removed; this is the functional output event of
+Definition~\ref{def:output-event}.  Apart from output subsumption and
+\commitments, a row leaves the remainder table only by input loss
+(\S\ref{sec:functional-events}).
+
+Legality lifts with the event: $o$ is a legal output when $\Excluded_o$ is
+empty, and then $\mathsf{output}(o)$ applies no \commitment, though it may
+still subsume the rows in $\Subsumed_o$.  The legal-output test lifts as well:
+
+\begin{proposition}[Legal-output test]
+\label{prop:exposability}
+An output $o\in R(i)$ is legal at $(i,R)$ if and only if, for every legal
+$j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
+\begin{equation}
+  o\OutputOrd u
+  \qquad\text{and}\qquad
+  x\OutputOrd u.
+  \label{eq:safe-exposure}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+The output $o$ is legal exactly when $\Excluded_o$ is empty, that is, when every
+ruled-out row $(j,x)$ lies in $\Subsumed_o$, that is, is \outrelpast by some row
+$(j,u)$ \outrelpart $o$.  Rows that already \outrelbase $o$ satisfy the stated
+test with $u=x$, so this is exactly the stated test.
+\end{proof}
+
+This test marks the \commitment boundary: if it fails, emitting $o$ requires an
+\commitment.

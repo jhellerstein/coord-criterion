@@ -20,7 +20,7 @@ Covers `sections/distributed-histories.tex` (§4.1 Distributed histories, §4.2
 Distributed consistency, with the paragraph *Message data*) and
 `sections/distributed.tex` §4.3 Systems and canonical runs (it stops before
 §4.4 The Complete CAP theorem).  The paragraph *Exchanging outputs* and the
-proofs of §4 are in Appendix B
+proofs of §4 are in Appendix `app:proofs-sec4`
 (`Paper/AppB_ProofsDistributed.lean`).
 
 How to read this file.  Read it side by side with the paper.  Entries appear in
@@ -614,7 +614,7 @@ theorem «sec:systems/two-systems-two-commitments» {sp : Spec I O} (c : Commitm
 
 /-- "… and neither is the canonical commitment `x_o` of an output."
 At the canonical state of an input whose transactions `A`, `B`, `C` have each
-requested commit (Appendix G's specification), the results of
+requested commit (the specification of `app:cc-bases`), the results of
 `order(A,B)` and `stamp(B)` are not the result of `x_o` for any output `o`. -/
 theorem «sec:systems/neither-is-canonical-commitment» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
@@ -1091,7 +1091,7 @@ can no longer be emitted at its input) is the output event's precondition
 `σ.R σ.cur o` (`Step.output`); the third and fourth describe options and make
 no claim.
 
-Lean (`Deploy`, Appendix E).  First conjunct (every participant may emit every output): with
+Lean (`Deploy`, `app:deployment`).  First conjunct (every participant may emit every output): with
 at least two participants and the deployment that lets every participant emit
 every row, monotonicity across partitions is Lifted Monotonicity, so any two
 conflicting rows can be emitted by different participants.  Second conjunct

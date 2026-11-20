@@ -1,0 +1,461 @@
+\section{Related Work and Mappings: Details}
+\label{app:related}
+
+This appendix supplies the details behind the mappings of Section~\ref{sec:instances}.
+
+\subsection{Invariant confluence (\S\ref{sec:iconfluence-instance})}
+\label{app:iconfluence}
+
+The input records which transactions ran and whose writes each one ran on.
+A \emph{transaction history} $h$ (here simply \emph{history}) is a finite
+partial order of transaction events, each labeled by a transaction in $T$.
+Here $e'<e$ means that $e$ ran on a state that included the writes of $e'$.
+A sub-history is \emph{closed} when it contains every event that precedes one
+of its own events, that is, when it is a downward-closed sub-order.  History
+$h'$ \inrel $h$ when $h$ is a closed sub-history of $h'$.  Then the events
+that $h'$ adds precede no event of $h$, and each event of $h$ keeps exactly
+the predecessors it had.
+
+The state of a history is computed event by event.  An event $e$, labeled by
+the transaction $t_e$, runs on
+$\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
+$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$.  The state of $h$ is
+$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  Because $h$ is a
+partial order and transactions are inflationary ($t(s)\supseteq s$),
+$\mathrm{pre}(e)$ is the state of the sub-history strictly below $e$, and
+$\mathrm{post}(e)$ is the state of the sub-history at or below $e$.  A
+closed sub-history keeps each event's predecessors, so it also keeps each
+event's $\mathrm{pre}$ and $\mathrm{post}$.  Hence the state of a union of
+closed sub-histories is the union of their states.
+
+A history is \emph{locally valid} when every $\mathrm{pre}(e)$ and
+$\mathrm{post}(e)$ satisfies $\mathcal I$.  This is the case when replicas
+abort transactions that would violate the invariant on their own state.  A
+history is \emph{valid} when the state of each of its closed sub-histories
+satisfies $\mathcal I$, that is, $\mathcal I(\mathrm{eval}(c))$ for every
+closed sub-history $c$.
+
+The spec $\Spec_{\mathcal I}$ has the locally valid histories as inputs;
+a closed sub-history of a locally valid history is locally valid, so the
+inputs are closed under the order.
+An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
+each valid closed sub-history of $h$ contributes its state as a permitted
+output:
+\[
+  P_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a valid closed
+  sub-history of }h\}.
+\]
+An output may therefore leave out some of the input's transactions, but what
+it includes must be closed and valid.  Taking $g$ empty gives
+$s_0$, so the spec is total.
+
+\begin{proof}[Proof of Proposition~\ref{prop:iconfluence-lm}]
+We use the common-extension form of Lifted Monotonicity
+(Proposition~\ref{prop:common-expansion-form}).  First, the state of every
+valid history $g$ is reachable.  The proof is by induction on $g$.  Let $e$ be
+maximal in $g$.  Then $g\setminus\{e\}$ and the sub-history strictly below $e$
+are closed, hence valid.  By induction their states
+$\mathrm{eval}(g\setminus\{e\})$ and $\mathrm{pre}(e)$ are reachable.  The
+state $\mathrm{post}(e)$ is a valid transaction step from $\mathrm{pre}(e)$,
+and $\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
+valid merge.
+
+($\Rightarrow$) Let rows $(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a
+common \indesc $j$.  Then each $g_r$ is a closed sub-history of $j$.  Let
+$g=g_1\cup\cdots\cup g_k$; we show that $g$ is valid.  Every closed
+sub-history $c$ of $g$ is the union of the pieces $c\cap g_r$.  Each piece is
+a closed sub-history of the valid $g_r$, so its state is reachable by the
+first step.  Thus $\mathrm{eval}(c)$ is a union of reachable states.
+Invariant confluence makes each successive union valid, and a valid merge of
+reachable states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Hence $g$
+is valid, and $\mathrm{eval}(g)\in P_{\mathcal I}(j)$ \outrel every
+$\mathrm{eval}(g_r)$.  For $k=0$, take $g$ empty.
+
+($\Leftarrow$) Only the property of having directed fibers is needed.  We
+first show that valid histories are closed under disjoint union.  Let $g_1$
+and $g_2$ be valid histories.  Let $j$ be their disjoint union, with events
+renamed apart and no order between the two parts.  Each event keeps its
+predecessors, so its $\mathrm{pre}$ and $\mathrm{post}$ are states of closed
+sub-histories of a valid $g_r$.  So $j$ is locally valid, and
+$\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$.  Because the
+spec has directed fibers, there is a valid sub-history $g$ of $j$ with
+$\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$.
+So $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Every closed
+$c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap g_2$, both
+valid.  The same argument gives $\mathcal I(\mathrm{eval}(c))$, so $j$ is
+valid.  Valid histories are also closed under adding an event above all
+others when its transaction step is valid.  By induction on derivations, every
+reachable state is therefore the state of a valid history.  The pairwise
+argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
+\end{proof}
+
+\subsection{The HAT taxonomy (\S\ref{sec:hat-instance})}
+\label{app:hat-taxonomy}
+
+Bailis et al.\ classify transactional guarantees by what a system can provide
+while every client that can reach a replica keeps getting
+answers~\cite{bailis2013hat}.  The extended paper defines each guarantee by
+the anomaly it rules out, a pattern of dependencies between transactions, and
+gives algorithms for the guarantees that can be
+provided~\cite{bailis2013hatextended}.  We use those definitions and
+algorithms as written.  Where a definition disagrees with its own example, we
+follow the example.
+
+\paragraph{Inputs and outputs.}
+The inputs extend the histories of Definition~\ref{def:hat-spec}.  Each item
+has a fixed set of replicas, and a read is served by a replica of its item.  A
+\emph{predicate read} reads a fixed range of items at once and returns a
+version of each.  A transaction's reads are ordered.  A client runs one
+transaction at a time.  Its transactions form its \emph{session}, and its
+commit timestamps increase along the session.  Outputs are sets of read
+answers, as before.
+
+\paragraph{Guarantees.}
+Each guarantee rules out one anomaly of the extended paper: a pattern in a
+graph whose nodes are transactions.  The edges are the write-, read-, and
+anti-dependencies of Adya on each item~\cite{adya1999weakconsistency}, and
+session edges from each transaction to its client's later ones.  For example,
+read your writes rules out a transaction that reads a version of $x$ older
+than one that an earlier transaction of the same client wrote.  The extended
+paper gives no formal definition of recency.  We take it to require that a
+read return a version at least as new as every write by another transaction
+whose commit happens before the read.  A replica can return only versions it
+holds.  So the \emph{visibility store} permits an answer only if its version is the initial
+one or arrived at the reading replica before the read.
+
+\begin{definition}[Guarantee spec, high availability, sticky read, sticky availability]
+\label{def:hat-availability}
+For a guarantee $G$, the table of $\Spec_G$ contains an output at an input when
+the visibility store permits the output and the input extends to a complete
+history that includes the output and has no anomaly that $G$ rules out.  The
+guarantee $G$ is \emph{highly available} when some explicit relation
+$E\subseteq P_G$ answers every read and some system for $\Spec_G$ has
+Availability for $E$ and Partition Consistency.  A read is \emph{sticky} when
+its replica has received every write of the client's earlier transactions to
+the items that replica holds.  The guarantee $G$ is \emph{sticky available}
+when the same holds for an $E$ that answers every sticky read.
+\end{definition}
+
+Sticky availability follows Bailis et al.: a client gets answers whenever its
+transaction runs against a copy of the database that reflects all of its
+earlier operations.  By Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system}, $G$ is highly available exactly
+when $\Spec_G$ satisfies Lifted Monotonicity for some $E\subseteq P_G$ that
+answers every read, and likewise for sticky availability.
+
+\paragraph{Reveal rules.}
+A transaction is \emph{pending stable} before a read when every replica of
+every item it wrote has received its write before the read.  The algorithm of
+Bailis et al.\ for monotonic atomic view reveals a write only once its
+transaction is pending stable.  For the session guarantees they also wait
+until every transaction committed before it is pending stable: they ``wait to
+reveal new writes \ldots\ until each write's respective dependencies are
+visible on all replicas.''  Their cut isolation algorithm keeps the versions a
+transaction has read in a client-side cache.  We combine these into one
+\emph{reveal rule}.  A write is revealed at a read once its transaction and
+every transaction whose commit happens before its commit are pending stable.
+A transaction reads, for each item, the highest version revealed at every one
+of its reads so far.  The \emph{sticky reveal rule} answers only sticky reads
+and also reveals the client's own earlier writes, which a sticky read's
+replica holds.
+
+\begin{theorem}[HAT taxonomy]
+\label{thm:hat-taxonomy}
+\leavevmode
+\begin{enumerate}
+  \item Under the timestamp condition of Theorem~\ref{thm:hat-levels}, read
+        committed and monotonic atomic view are highly available.  Item cut
+        isolation, predicate cut isolation, monotonic reads, monotonic
+        writes, and writes follow reads are highly available.
+  \item Read your writes, PRAM, and causal consistency are sticky available
+        and not highly available.  Given at least two participants and any
+        assignment of clients to them, consider the deployment that lets each
+        client's participant give the sticky reveal rule's answers to that
+        client's reads.  Some system has Deployment Availability and Partition
+        Consistency for it.
+  \item Recency is neither highly available nor sticky available.  For any
+        level that rules out Lost Update or Write Skew, no system has
+        Availability for an explicit relation that answers every read and
+        Partition Consistency.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+(1) The reveal rule answers every read.  Each answer depends only on the read's
+past, so later input never changes it, and the rule is monotone.  A monotone
+relation inside the spec satisfies Lifted Monotonicity for itself: rows below
+$j$ have the relation's own answer at $j$ as a common \outnoun.  The rule
+returns only versions the replica holds, and its answers have none of the
+anomalies these guarantees rule out.  Consider monotonic reads.  An earlier
+transaction of a client read some version of $x$, which was then revealed.
+A revealed version has reached every replica of its item, so it stays
+revealed at every later read at any replica.  The client's later transaction
+reads after the earlier one commits, so it reads that version of $x$ or a newer
+one.
+For read committed and monotonic atomic view, the timestamp condition rules
+out G1c, as in Theorem~\ref{thm:hat-levels}.  By
+Theorem~\ref{thm:complete-cap}, each guarantee is highly available.
+
+(2) The sticky reveal rule does the same for every sticky read.  The deployment
+authorizes only answers of this one monotone relation inside the spec, so it
+is monotone across partitions, and Proposition~\ref{prop:deployment-complete-cap}
+gives the system.  Without stickiness, consider a client that writes $x$ at
+one replica and then reads $x$ at another replica that has not received the
+write.  That replica holds only the initial version of $x$, which read your
+writes rules out.  No explicit relation inside the spec answers the read.
+PRAM and causal consistency include read your writes.
+
+(3) For recency, another client's write of $x$ commits before a read but never
+reaches the reading replica, which again holds only the initial version.  The
+read is sticky, so stickiness does not help.  For Write Skew, two transactions
+at partitioned replicas each read the item the other writes.  Each replica can
+return only the initial version, and together the answers form the cycle that
+Write Skew names, as for Lost Update in Theorem~\ref{thm:hat-levels}.
+\end{proof}
+
+\paragraph{The algorithm for monotonic atomic view.}
+The extended paper also gives pseudocode for monotonic atomic
+view~\cite[App.~B]{bailis2013hatextended}.  A replica keeps a write in a
+\emph{pending} set until it has received acknowledgments from every replica of
+the items its transaction wrote, and then moves it to a \emph{good} set.  A
+read of $x$ may carry a required timestamp.  Without one, the replica returns
+its highest good version of $x$.  With one, it returns a good version at least
+as new, or else the pending write with exactly that timestamp.  After each
+read, the client raises the required timestamp of every item that the
+returned write's transaction also wrote, and it clears these timestamps when
+the transaction ends.  Which acknowledgments a replica has received is not
+fixed by the input.  So we let each replica's good set be any set of pending
+stable transactions that depends only on the read's past.  The pending case
+returns only a write whose transaction an earlier read of the same transaction
+found good, so every answer is a version the replica holds.
+
+\begin{proposition}[The algorithm provides monotonic atomic view]
+\label{prop:hat-mav-algorithm}
+For every choice of the replicas' good sets, and under the timestamp condition
+of Theorem~\ref{thm:hat-levels}, the answers of the algorithm for monotonic
+atomic view form an explicit relation inside $P_{\mathrm{MAV}}$ that answers
+every read and is monotone.  So monotonic atomic view is highly available.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Each answer depends only on the read's past, so the relation is monotone, and
+it answers every read.  The timestamp condition rules out G1c, as for read
+committed.  For the anomaly of monotonic atomic view, suppose a transaction
+reads $x$ from $T_j$ and later reads $y$, which $T_j$ also wrote.  The first
+read raised the required timestamp of $y$ to $T_j$'s, so the second read
+returns $T_j$'s version of $y$ or a newer one.  Theorem~\ref{thm:complete-cap}
+gives the system.
+\end{proof}
+
+\paragraph{Differences in form.}
+Our classification matches theirs, and it differs in form in three ways.
+First, our framework separates two reasons a guarantee can be unavailable.
+The unavailable isolation levels fail Lifted Monotonicity: answers that the two
+sides give have no common extension.  Read your writes without stickiness, and
+recency in every case, fail earlier, because some read has no permitted answer
+at all.  When a client's write has not reached the replica that serves its next
+read, every version that replica holds, the initial version included, violates
+read your writes.  Recency fails the same way when the missing write comes from
+another client, so stickiness does not help.  No explicit relation inside the
+spec answers such a read, so the question of Lifted Monotonicity never arises.
+Second, monotonic writes needs the version order to follow each session's
+order.  Bailis et al.\ obtain this from client timestamps, and our inputs
+assume it: a client's commit timestamps increase along its session.  Third, we
+model a predicate as a fixed range of items; general predicates, whose items
+depend on the data, are not modeled.  Bailis et al.\ list several recency
+guarantees without formal definitions, among them bounds on staleness and safe,
+regular, and linearizable register semantics; we model the one recency
+guarantee defined above.
+
+\subsection{Registers}
+\label{app:registers}
+
+Section~\ref{sec:complete-cap} derives the Gilbert--Lynch theorem from a
+replica that is cut off from a completed write and must still answer a read.
+The example here differs: two concurrent writes reach both replicas before the
+partition.
+
+\paragraph{The causal register.}
+This register records causal precedence rather than real-time precedence.
+Its outputs record the write that supplies each read rather than the value
+returned.  Otherwise it is the register of Appendix~\ref{app:cap-response}.
+An input is a finite operation history $h$: a set of reads and writes of one
+register $x$ at replicas, with a strict partial order $\to$ of causal
+precedence.  Causal precedence is program order at each replica, plus an edge
+from each write to the operations a replica invokes after receiving it,
+closed transitively.  A set of operations of $h'$ is \emph{causally closed}
+when it contains every operation that causally precedes one of its members.
+We set $h\InputOrd h'$ when the operations of $h$ form a causally closed
+subset of $h'$ and $\to$ restricted to them is the order of $h$.  Thus an
+\indesc never adds an operation to the causal past of an existing one.
+
+An output is a \emph{source map} $\rho$: a partial map assigning to some reads
+of $h$ a write of $h$ or the initial value $v_0$, ordered by extension.  A
+\emph{serialization} for replica $p$ is a total order of $p$'s operations and
+all writes of $h$ that extends $\to$.  It explains a read of $p$ with source
+$w$ when $w$ is the last write before the read, or $v_0$ if there is none.
+Under causal consistency~\cite{lamport1978time,ahamad1995causal},
+$\rho\in\fiber{h}$ when each replica has a serialization explaining every read
+of that replica in the domain of $\rho$.  Under linearizability, a single
+total order of all operations of $h$ extending $\to$ must explain every read
+in the domain~\cite{herlihy1990linearizability}.  Real-time edges beyond $\to$
+play no role in the example below.
+
+Two replicas start empty.  Participant $p$ completes $w_p(x,\dog)$ while $q$
+concurrently completes $w_q(x,\catv)$.  The replicas exchange both writes.
+Then a partition separates them, and each serves a local read, $r_p$ at $p$
+and $r_q$ at $q$.  Both writes causally precede both reads, and the writes are
+concurrent.
+
+Under linearizability, a source map that sends $r_p$ to $w_q(x,\catv)$ needs a
+linearization with $w_p(x,\dog)$ before $w_q(x,\catv)$.  One that sends $r_q$
+to $w_p(x,\dog)$ needs the opposite order.  No source map \outrel both, so the
+register is not monotone across the partition $\{\{p\},\{q\}\}$ under any
+deployment authorizing these two reads.
+
+Under causal consistency the two replicas may serialize the concurrent writes
+differently, so one source map sends $r_p$ to $w_q(x,\catv)$ and $r_q$ to
+$w_p(x,\dog)$.  More generally, consider the deployment in which each replica
+answers only its own reads ($E_p$ holds the rows whose source map is defined
+only on reads of $p$).  Under it the causal register is monotone across
+partitions, for every history.  For each participant $p$ whose run emits, let
+$\rho_p$ be the last source map it emits, at input $i_p$.  Then $\rho_p$
+\outrel every output $p$ emitted.  Let $j$ be a common \indesc.  We take a
+serialization $L_p$ of $i_p$ explaining $\rho_p$.  We extend it to $j$ by
+appending the new operations of $p$ and the new writes in any order extending
+$\to$.  No new operation causally precedes an old one, so the result extends
+$\to$ and explains the same reads.  We use these serializations for the
+replicas that emitted and arbitrary ones for the others.  With them, the union
+of the $\rho_p$ lies in $\fiber{j}$ and \outrel every emitted output.
+Separability is not used.  Two answers to the same read remain incompatible,
+but only the reading replica may emit either.
+
+\subsection{Real-time causal consistency}
+\label{app:rtc}
+
+Mahajan et al.\ showed that a system can provide real-time causal consistency,
+but no stronger consistency, while staying always available (every read and
+write completes whatever messages are lost) and one-way convergent (a node that can receive from another eventually reflects the updates the other
+knows)~\cite{mahajan2011consistency}.  We recover both parts with real-time
+precedence recorded in the input.  The argument rests on a property of
+products of independent views.
+
+\paragraph{Independent products.}
+In the real-time causal register below, each replica exposes a view of its
+own reads, and the replicas choose their views independently.  We first state
+the facts we need for any such product of independent views.  Fix participants
+$\mathcal N$ with $|\mathcal N|\ge2$.  For each $p$ let $(W_p,\le_p)$ be a poset
+and, for each input $i$, let $V_p(i)\subseteq W_p$ be a nonempty antichain, the
+\emph{views} $p$ may expose at $i$.  A \emph{partial tuple} $x$ assigns to each
+$p$ a value $x_p$ in $W_p$ or $\bot$, ordered coordinate-wise with $\bot$ below
+every value; $x$ is a \emph{restriction} of a tuple $y$ when each coordinate
+$x_p$ is $\bot$ or $y_p$.  The \emph{product interface} has a row
+$(i,x)$ for every restriction $x$ of every $y\in\prod_pV_p(i)$.  A
+\emph{strengthening} $T$ selects at each input a set of tuples in
+$\prod_pV_p(i)$, and its rows are their restrictions.  It is \emph{strict} when
+it omits a row of the product interface, and \emph{locally conservative} when
+every $v\in V_p(i)$ is the $p$-coordinate of a tuple it selects at $i$.  Under
+the \emph{owner deployment}, $p$ may emit exactly the rows whose tuple is
+$\bot$ outside coordinate $p$.
+
+\begin{theorem}[Independent products]
+\label{thm:product-frontier}
+\leavevmode
+\begin{enumerate}
+  \item If views continue (for $i\InputOrd j$ and $v\in V_p(i)$ some $w\in
+        V_p(j)$ has $v\le_p w$), the product interface is monotone across
+        partitions under the owner deployment.
+  \item No strict, locally conservative strengthening is monotone across
+        partitions under its owner deployment.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(1) Fix a participant run family and a common \indesc $j$.  If $p$ belongs to
+the family, the remainder table of $p$'s run has a row $(k_p,u)$, and $u$ \outrel every output $p$ emitted
+(Lemma~\ref{lem:run-residual}).  As $u$ is a restriction of some
+$y\in\prod_qV_q(k_p)$, continuation gives $w_p\in V_p(j)$ with $y_p\le_p w_p$.
+Otherwise pick any $w_p\in V_p(j)$.  Each output of $p$ is $\bot$ outside
+coordinate $p$, so $w$ \outrel every emitted output.
+(2) Strictness gives $y\in\prod_pV_p(i)$ that $T$ does not select at $i$.  By
+local conservativity, the tuple $e_p$ that is $y_p$ at $p$ and $\bot$
+elsewhere is a row of $T$ at $i$, authorized for $p$.  Let every participant
+emit $e_p$ at $i$; every partition separates two of them.  A common \outnoun
+at $i$ is a restriction of a selected $z$ with $y_p\le_p z_p$ for every $p$, so
+$y=z$ by the antichain property, a contradiction.
+\end{proof}
+
+\paragraph{Real-time causal views.}
+Consider the histories of Appendix~\ref{app:registers} with a second strict
+partial order $\prec$: $a\prec b$ when $a$ ended before $b$ began.  We assume
+that $a\to b$ implies $a\prec b$, so replicas propagate only completed writes.
+We also assume that $\to$ totally orders the operations of each replica.  One
+input \inrel another when it does so as a history and $\prec$ agrees on the
+old operations.  A write $w$ is \emph{visible} to a read $r$ when $w\to r$.  A
+\emph{real-time causal view} of replica $p$ assigns to every read $r$ of $p$ a
+source $s(r)$ such that
+\begin{enumerate}
+  \item $s(r)$ is a write visible to $r$, or $v_0$ if none is;
+  \item $s(r)\not\prec w$ for every write $w$ visible to $r$;
+  \item if $r'\to r$ is a read of $p$ to which $s(r)$ is visible, then
+        $s(r')=s(r)$.
+\end{enumerate}
+Intuitively, these items are Mahajan et al.'s checks for the order that $p$'s
+reads expose.  In that order each visible write precedes the read, and each
+overwritten write precedes the source.  Item~(1) says a replica returns only
+writes it has received.  Item~(2) is their real-time check ``time doesn't
+travel backward.''  Item~(3) keeps one replica's overwrites consistent.  Their
+reads return all concurrent latest writes, while ours return one.  So a view
+matches their check when that write is the only latest one.
+
+Views exist.  As each read's source we can take the visible write that comes
+latest in a linear extension of $\prec$.  Views also continue.  An \indesc
+changes neither a read's causal past nor $\prec$ on it, so an old read keeps
+its source.  A new read takes as source its latest visible write in a linear
+extension of $\prec$ together with the edges $x\prec s(r)$, one for each old
+read $r$ and each write $x\ne s(r)$ visible to $r$.  All views of $p$ at an
+input are defined on the same reads.  So no view extends a different one, and
+the views form an antichain.  In the real-time causal product interface, each
+replica answers its own reads.  By Theorem~\ref{thm:product-frontier}(1), this
+interface is monotone across partitions under the owner deployment.
+
+\paragraph{Maximality.}
+A strengthening is \emph{real-time blind} when a tuple it selects at an input
+stays selected at the same history with fewer real-time edges, provided its
+views are still real-time causal there.  Mahajan et al.'s implementations do
+not observe real time, so they return the same answers at both inputs.
+
+\begin{proposition}[Real-time causal maximality]
+\label{prop:rtc-maximal}
+No strict, real-time blind strengthening of the real-time causal product
+interface is monotone across partitions under its owner deployment.
+\end{proposition}
+
+\begin{proof}
+By Theorem~\ref{thm:product-frontier}(2) it suffices to show local
+conservativity.  Let $v$ be a view of $p$ at $(h,\prec)$.  We add real-time
+edges that leave $v$ as $p$'s only view: for each read $r$ of $p$ and each
+write $x\ne s(r)$ visible to $r$, we place $x$ before $s(r)$.  Formally, let
+$a\prec_v b$ when $a\prec b$, or when $a=x$ or $a\prec x$, and $s(r)=b$ or
+$s(r)\prec b$, for such $r$ and $x$.  Items~(2) and~(3) and program order make
+$\prec_v$ a strict partial order, and it contains $\to$.  At $(h,\prec_v)$,
+$v$ is $p$'s only view.  By~(1) a source is a visible write, and a visible
+$x\ne s(r)$ has $x\prec_v s(r)$, which~(2) forbids.  Every input has a row of
+the strengthening, and rows are restrictions of selected tuples.  So the
+strengthening selects some tuple at $(h,\prec_v)$, and that tuple's
+$p$-coordinate is $v$.  Real-time edges only exclude views, so the tuple's
+views are real-time causal at $(h,\prec)$.  Blindness then selects the tuple
+there.
+\end{proof}
+
+Each hypothesis has a counterpart in Mahajan et al.'s theorem.  Their always
+availability corresponds to two conditions here: $T$ selects a tuple at every
+input, so every replica can answer every read, and the system has Deployment
+Availability.  One-way convergence needs no separate hypothesis: the input
+records which writes each replica has received, the environment supplies that
+input, and views must respect $\to$.  Real-time blindness is their assumption
+that an implementation does not observe real time, which their proof uses to
+swap the real-time order of concurrent writes.  The proof of
+Proposition~\ref{prop:rtc-maximal} needs it too, since a strengthening may read
+real time from the input, for instance to break ties between writes that
+overlap in real time.

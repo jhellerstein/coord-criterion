@@ -1,0 +1,96 @@
+\section{Functional CALM: Proofs}
+\label{app:proofs-sec2}
+
+This appendix proves the results of Section~\ref{sec:functional-calm}.
+
+\begin{proof}[Proof of Lemma~\ref{lem:run-residual}]
+The run starts at the canonical state $\sigma_P(i_0)$, whose table is
+$P[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
+the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
+output event $\mathsf{output}(o)$ keeps only the rows with
+$\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
+conditions reduce to the last one, $\mathrm{in}\InputGe i$, because each later
+input is an extension of the earlier ones. One output condition remains for each
+emitted output.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:confluence}]
+A common state with current input $j$ has a row at $j$, and since rows are
+never added, that row belongs to every $R_r$.  Conversely, let $(j,u)$ belong
+to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$, and
+$\mathsf{output}(u)$ is defined at $(j,R_r[\mathrm{in}\InputGe j])$, since
+$u\in R_r(j)$.  By
+Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
+emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
+same lemma leaves exactly
+$P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
+starting run.
+\end{proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:confluence-legality}]
+We use legality in a form that covers both functional and nondeterministic
+specs: $o$ is legal at $(i,R)$ when, for every row $(k,x)\in R$, some
+$u\in R(k)$ \outrel both $o$ and $x$.  In a functional table the only row at
+$k$ is $(k,x)$, so this says $x$ \outrel $o$
+(Definition~\ref{def:exposable}); with several outputs per input it says that
+$\Excluded_o$ is empty (Section~\ref{sec:lifted-output-events}).  An output
+event $\mathsf{output}(o)$ from $(i,R)$ applies a \commitment exactly when $o$
+is not legal at $(i,R)$, so the lemma's condition says that every output a run
+can emit is legal at the state where it is emitted.
+
+($\Rightarrow$) Suppose an output event of some run applies a \commitment: the
+run ends at $(i,R)$ before it, and $o\in R(i)$ is not legal there.  Then some $(k,x)\in R$ has no $u\in R(k)$ \outrelpart both $o$ and
+$x$.  We extend the run in two ways: by $\mathsf{output}(o)$, and by
+$\mathsf{input}(k)$ followed by $\mathsf{output}(x)$, which is defined since
+$(k,x)$ remains after $\mathsf{input}(k)$.  The input $k$ is a common \indesc
+of the two current inputs.  A row at $k$ in both resulting tables would be a
+row $(k,u)\in R$ with $u$ \outrelpart both $o$ and $x$, and there is none.  By
+Proposition~\ref{prop:confluence}, the two runs are not confluent at $k$.
+
+($\Leftarrow$) Suppose no output event applies a \commitment, so every output
+that a run can emit is legal, and let runs
+end at $(i_r,R_r)$, $r=1,\ldots,m$, with common \indesc $j$.  Each $R_r$ keeps a
+row at its current input, say $(i_r,u_r)$, and by Lemma~\ref{lem:run-residual}
+$u_r$ \outrel every output emitted on run $r$.  The canonical state
+$\sigma_P(i_r)$ is reached by the empty run and has $u_r$ as an output, so $u_r$
+is legal there.  By totality there is some $v_0\in P(j)$.  For $r=1,\ldots,m$
+in turn, $(j,v_{r-1})$ is a row of $\sigma_P(i_r)$, since $j\InputGe i_r$, so
+legality of $u_r$ gives $v_r\in P(j)$ \outrelpart both $u_r$ and $v_{r-1}$.
+Then $v_m$ \outrel every $u_r$.  By Lemma~\ref{lem:run-residual},
+$(j,v_m)\in R_r$ for every $r$, since $j\InputGe i_r$ and $v_m$ \outrel every
+output emitted on run $r$.  Proposition~\ref{prop:confluence} gives
+confluence at $j$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:state-by-input}]
+By Lemma~\ref{lem:run-residual}, the run's remainder table is
+$P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
+\mathrm{out}\OutputGe o_m]$, where each $o_\ell=f(i_\ell)$ for some
+$i_\ell\InputOrd i$.  Every row whose input \inrel $i$ has the form $(k,f(k))$ with
+$i_\ell\InputOrd k$, so monotonicity gives $o_\ell\OutputOrd f(k)$, and the
+output conditions remove nothing.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:functional-exposure-boundary}]
+Suppose $f$ is monotone, and let a \commitment-free run reach $(i,R)$.  By Corollary~\ref{cor:state-by-input},
+$(i,R)=\sigma_P(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
+$i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each, so $f(i)$ is a
+legal output (Definition~\ref{def:exposable}).
+Conversely, if every such output is a legal output, then at $\sigma_P(i)$,
+which the empty run reaches, legality of $f(i)$ gives $f(i)\OutputOrd f(j)$
+for every \indesc $j$ of $i$, so $f$ is monotone.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:functional-calm}]
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+no output event of a run applies a \commitment, that is, when every output that
+a run can emit is legal.  This condition is equivalent to
+legality at every state reachable without \commitment.  One direction is
+immediate, since such states are reached by runs.  For the other, suppose every
+output at every state reachable without \commitment is legal.  Then, by
+induction along any run, each of its output events is legal, so the run is
+\commitment-free and every state it reaches is reachable without \commitment;
+hence every output it can emit is legal.  By
+Proposition~\ref{prop:functional-exposure-boundary}, legality at every state
+reachable without \commitment holds exactly when $f$ is monotone.
+\end{proof}

@@ -4,7 +4,7 @@ import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.CAP.ChosenAvailability
 
 /-!
-# Paper Appendix F, "Choosing the Explicit Relation" (`appendices/cap-response.tex`)
+# Paper Appendix D, subsection "Choosing the explicit relation" (`appendices/distributed.tex`, `app:cap-response`)
 
 Statement layer for Appendix `app:cap-response`, in paper order: the response
 obligation, continuations within a side, Response Availability, Response
@@ -41,7 +41,7 @@ open CC CC.CAP
 
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
-/-! ## Appendix F preamble -/
+/-! ## Subsection `app:cap-response` preamble -/
 
 /-- "Emitted rows are as in Definition `def:emitted-rows`" (the
 pairs `(i,o)` such that it emits `o` at current input `i`).  Lean: for a canonical execution `es` started at
@@ -419,7 +419,10 @@ theorem «app:cap-response/without-replication» (Sys : System sp D)
    fun hRPC A r hr j hj => without_replication Sys Q
      ((responsePC_iff_commonRefinement Sys).2 hRPC) (localInit_all Sys) h2 A r hr j hj⟩
 
-/-! ## Choosing versus requiring every output -/
+/-! ## Choosing versus requiring every output
+
+Not in the paper: this subsection was removed from `app:cap-response`.  The
+entries below keep its claims, which Lean still checks. -/
 
 /-- "Theorem `thm:complete-cap` with `E = P` requires every permitted output
 to stay available.  Theorem `thm:complete-cap-response` lets the system choose

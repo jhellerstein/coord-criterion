@@ -3,9 +3,10 @@ import CoordCriterion.Figures
 import CoordCriterion.Appendix.TransactionBases.NoReads
 
 /-!
-# Paper Appendix C: Output Events and Commitment Bases (statement layer)
+# Paper Appendices C and D: lifted output events (`app:lifted-output-events`) and commitment bases (`app:bases`) (statement layer)
 
-This file mirrors `appendices/commitment-bases-general.tex`.  A ruled-out row is
+This file mirrors subsection `app:lifted-output-events` of
+`appendices/complete-calm.tex` and subsection `app:bases` of `appendices/distributed.tex`.  A ruled-out row is
 `Subsumed` when a surviving row at the same input extends it, and `Excluded`
 otherwise.  The canonical event applies at most one `canonicalCommitment`.
 -/
@@ -342,7 +343,7 @@ transactions, and timestamp assignment places one transaction relative to all ot
 
 Lean: for any transaction specification whose fibers are antichains, the 2PL
 basis `{order, commit, abort}`; the commitments are `Txn.orderC`,
-`Txn.commitC`, `Txn.abortC` (Appendix G, `app:cc-bases`). -/
+`Txn.commitC`, `Txn.abortC` (Appendix `app:cc-bases`). -/
 abbrev «app:bases/basis-2PL» {T : Type} (sp : Spec (Txn.FinSet T) (Txn.Outcome T))
     (hA : Txn.Antichain sp) : CommitmentBasis sp :=
   Txn.basis2PL sp hA
