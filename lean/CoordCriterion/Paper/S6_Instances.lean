@@ -1027,8 +1027,8 @@ theorem «sec:operational-models/step-by-step» {A : Type} (M : IOA.Automaton A)
 of `P_M` from the canonical state at the empty receive sequence, with one
 input event per arrival and one output event per reply.  (2) `P_M` satisfies
 Relational Monotonicity.  Its runs are consistent exactly when, at each
-receive sequence, any two reply sequences in its fiber are one a prefix of the
-other."
+receive sequence, every reply sequence in its fiber is a prefix of every
+longer one."
 
 Lean: (1) every receive sequence has a row (`IOT.spec` is a `Spec`), and
 `IOT.exec_run`: the events `IOT.evs M β` run from `canon (spec M) (inW M [])`
@@ -1038,7 +1038,9 @@ legality of each event comes from the execution's own row
 (`IOT.inv_step`); Relational Monotonicity receives the added requests by
 input-enabledness; and pairwise comparable reply sequences have the longest
 as common extension (`IOT.max_of_comparable`), with Complete CALM in the form
-`liftedMono_iff_relMono_directed`. -/
+`liftedMono_iff_relMono_directed`.  Lean states the condition as pairwise
+prefix-comparability (`t ≼ t' ∨ t' ≼ t`), which is the paper's "every reply
+sequence … is a prefix of every longer one". -/
 theorem «prop:projection» {A : Type} (M : IOA.Automaton A) :
     ((∀ w, ∃ t, (IOT.spec M).P w t) ∧
       ∀ β s, IOA.Execution M β s → ∃ σ,
