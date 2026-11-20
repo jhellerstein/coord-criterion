@@ -473,7 +473,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:iconfluence-instance/spec»` | theorem | "From an instance `(s₀, T, 𝓘)` of their model we construct a spec `𝒮_𝓘` in ours as follows. |
 | `«prop:iconfluence-lm»` | theorem | **Proposition `prop:iconfluence-lm`** (Invariant confluence as Lifted Monotonicity): |
 | `«sec:iconfluence-instance/uniqueness»` | theorem | The uniqueness example: |
-| `«sec:iconfluence-instance/concurrency-decides»` | theorem | "Concurrency, not the transactions alone, decides the outcome: |
+| `«sec:iconfluence-instance/concurrency-decides»` | theorem | The uniqueness example: |
 | `«def:projection»` | theorem | **Def. |
 | `«sec:operational-models/step-by-step»` | theorem | "Followed step by step, an execution is a run of `P_M`. |
 | `«prop:projection»` | theorem | **Prop. |

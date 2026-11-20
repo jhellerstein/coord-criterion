@@ -371,14 +371,19 @@ See Appendix~\ref{app:iconfluence}.
 \end{proof}
 
 The uniqueness constraint in Bailis et al.'s payroll example is not invariant
-confluent, and $\Spec_{\mathcal I}$ shows where Lifted Monotonicity fails.  Two replicas each create an employee and assign ID~7, each running
-on a state in which ID~7 is unused.  The history in which neither creation ran
-on a state that included the other's writes is locally valid and \inrel both one-creation histories, but its state has two
-employees with ID~7, so no state it permits \outrel both.  The system must
-reserve IDs, reject one creation, or weaken the invariant.  Concurrency,
-not the transactions alone, decides the outcome: each creation preserves the
-invariant on the state it ran on, and only the merge of the two states violates
-it.
+confluent, and in $\Spec_{\mathcal I}$ the failure is a fiber that is not
+directed.  Let $c_1$ and $c_2$ be creations at two replicas that each assign
+ID~7, each running on a state in which ID~7 is unused, and let $h$ be the
+history in which neither ran on a state that included the other's writes.
+Each creation preserves $\mathcal I$ on the state it ran on, so $h$ is locally
+valid, and it \inrel both one-creation histories.  At $h$ the closed
+sub-histories are $\emptyset$, $\{c_1\}$, $\{c_2\}$, and $h$ itself.  The first
+three are valid, but $h$ is not, since its state has two employees with ID~7.
+So the outputs permitted at $h$ are $s_0$ and the states of $\{c_1\}$ and
+$\{c_2\}$.  None of them contains the employees created by both $c_1$ and
+$c_2$, so none \outrel both one-creation states.  The fiber at $h$ is therefore
+not directed, and $\Spec_{\mathcal I}$ fails Lifted Monotonicity at $h$.  A
+system must reserve IDs, reject one creation, or weaken the invariant.
 
 \subsection{General operational specification models}
 \label{sec:operational-models}

@@ -898,13 +898,19 @@ theorem «prop:iconfluence-lm» {V Tx : Type} (M : IConf.Model V Tx) :
   ⟨IConf.ic_iff_liftedMono M, (IConf.ic_iff_liftedMono M).trans (complete_calm _).symm⟩
 
 /-- The uniqueness example: "The uniqueness constraint in Bailis et al.'s
-payroll example is not invariant confluent, and `𝒮_𝓘` shows where Lifted
-Monotonicity fails.  Two replicas each create an
-employee and assign ID 7, each running on a state in which ID 7 is unused.
-The history in which neither creation ran on a state that included the
-other's writes is locally valid and extends both
-one-creation histories, but its state has two employees with ID 7, so no
-state it permits extends both."  Lean (library names from an earlier
+payroll example is not invariant confluent, and in `𝒮_𝓘` the failure is a
+fiber that is not directed.  Let `c₁` and `c₂` be creations at two replicas
+that each assign ID 7, each running on a state in which ID 7 is unused, and let
+`h` be the history in which neither ran on a state that included the other's
+writes. … `h` is locally valid, and it extends both one-creation histories.
+At `h` the closed sub-histories are `∅`, `{c₁}`, `{c₂}`, and `h` itself.  The
+first three are valid, but `h` is not, since its state has two employees with
+ID 7.  So the outputs permitted at `h` are `s₀` and the states of `{c₁}` and
+`{c₂}`.  None of them contains the employees created by both `c₁` and `c₂`, so
+none extends both one-creation states.  The fiber at `h` is therefore not
+directed, and `𝒮_𝓘` fails Lifted Monotonicity at `h`."  The entry checks that
+no output permitted at `h` extends both one-creation states, the step the
+enumeration of sub-histories justifies.  Lean (library names from an earlier
 username version of the example): versions are the employees holding ID 7;
 `alloc a` creates employee `a` with ID 7 if ID 7 is unused in the state it runs on;
 the invariant `uModel.Inv` is "at most one employee has ID 7"; `jU` has the
@@ -920,9 +926,8 @@ theorem «sec:iconfluence-instance/uniqueness» :
       ¬ (IConf.SI Inst.uModel).LiftedMono ∧ ¬ Inst.uModel.IConfluent :=
   Inst.uniqueness_example
 
-/-- "Concurrency, not the transactions alone, decides the outcome: each
-creation preserves the invariant on the state it ran on, and only the merge of
-the two states violates it."  Lean: `alloc 1` and `alloc 2`, each run from
+/-- The uniqueness example: "Each creation preserves `𝓘` on the state it ran
+on" (from `s₀`), while the merge of the two states violates it.  Lean: `alloc 1` and `alloc 2`, each run from
 `s₀`, give states satisfying the invariant, but the merge of the two states is
 invalid. -/
 theorem «sec:iconfluence-instance/concurrency-decides» :
