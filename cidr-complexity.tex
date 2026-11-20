@@ -758,8 +758,10 @@ $\bigl(j,\ P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.\cxbar{54}{
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{55}{N/S}Rows are never added, so a row of a common state at $j$ was already in every
-$R_r$.  Conversely, the two events above reach a common state.  \fullproof
+\cxtag{55}{N/S}First assume the runs are confluent at $j$.  Rows are never added, so a row of
+the common state at $j$ was already in every $R_r$.  Now assume $(j,u)$ is in
+every $R_r$.  Then $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ brings
+each run to the stated state.  \fullproof
 \end{proof}
 
 \color{black}\cxtag{56}{N/M}\cxbar{56}{0.4 0.4 1}{s}Consistency thus ensures that runs never diverge irreparably: there is no
@@ -775,12 +777,13 @@ run applies a \commitment.\cxbar{57}{0.4 0.4 1}{e}
 \end{lemma}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{58}{N/S}If a run's output event applies $x_o$, it removes some row $(k,x)$, and a run
-from the state before that event that instead takes $\mathsf{input}(k)$ and
-emits $x$ shares no row at $k$ with it, hence they are not consistent.  By
-contrast, if no output event applies a \commitment, every output is legal
-where it is emitted, and the rows the runs keep at their current inputs have
-a common \outnoun at any common \indesc $j$, which survives in every run.
+\cxtag{58}{N/S}First assume the runs are consistent, and suppose some output event applies
+$x_o$, removing a row $(k,x)$.  A run from the state before that event that
+instead takes $\mathsf{input}(k)$ and emits $x$ shares no row at $k$ with it,
+so the two are not confluent at $k$, a contradiction.  Now assume no output
+event applies a \commitment.  Every output is then legal where it is emitted,
+so the rows the runs keep at their current inputs have a common \outnoun at any
+common \indesc $j$, which survives in every run, and consistency follows.
 \fullproof
 \end{proof}
 
@@ -815,13 +818,13 @@ monotone.\cxbar{62}{0.4 0.4 1}{e}
 
 \color{black}\begin{proof}[Proof sketch]
 \cxtag{63}{N/S}By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-no output event of a run applies a \commitment.  If the spec is monotone, a run
-at $i$ is in $\sigma_P(i)$ (Corollary~\ref{cor:state-by-input}), and every
-output in its upper fiber \outrel $f(i)$, so $f(i)$ is legal and emitting it
-applies no \commitment.  Conversely, if the spec is not monotone, then
-$f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$, and emitting $f(i)$ at
-$\sigma_P(i)$ applies a \commitment that rules out $k$
-(\S\ref{sec:complete-calm-theorem} states this in general).  \fullproof
+no output event of a run applies a \commitment.  First assume they are
+consistent, and suppose $f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$.
+Emitting $f(i)$ at $\sigma_P(i)$ then applies a \commitment that rules out $k$,
+a contradiction, so the spec is monotone.  Now assume the spec is monotone.  A
+run at $i$ is in $\sigma_P(i)$ (Corollary~\ref{cor:state-by-input}), and every
+output in its upper fiber \outrel $f(i)$, so $f(i)$ is legal, emitting it
+applies no \commitment, and consistency follows.  \fullproof
 \end{proof}
 
 \paragraph{Classical CALM and CRDTs.}
@@ -1009,9 +1012,12 @@ if it satisfies the common-extension condition.
 \end{proposition}
 
 \color{blue!75!black}\begin{proof}[Proof sketch]
-\cxtag{81}{B/M}\cxbar{81}{0.4 0.4 1}{s}Relational Monotonicity carries each $o_r$ to some
-\outnoun in the fiber at $j$, and directedness of that fiber gives those a
-common \outnoun there.  \fullproof\cxbar{81}{0.4 0.4 1}{e}
+\cxtag{81}{B/M}\cxbar{81}{0.4 0.4 1}{s}First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common
+\indesc $j$.  Lifted Monotonicity at $i_r\InputOrd j$ carries each $o_r$ to an
+\outnoun in the fiber at $j$, and at $j$ itself it gives those a common
+\outnoun there.  Now assume the common-extension condition.  Lifted
+Monotonicity is its special case in which all the rows share one input.
+\fullproof\cxbar{81}{0.4 0.4 1}{e}
 \end{proof}
 
 \subsection{Lifted output events}
@@ -1077,11 +1083,14 @@ Lifted Monotonicity.\cxbar{88}{0.4 0.4 1}{e}
 
 \color{black}\begin{proof}[Proof sketch]
 \cxtag{89}{N/M}\cxbar{89}{0.4 0.4 1}{s}By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-no output event of a run applies a \commitment.  If Lifted Monotonicity holds,
-every output at every state reachable without \commitment is legal
-(Proposition~\ref{prop:exposure-boundary}), so by induction on its length every
-run is \commitment-free.  If it fails, some output at a state reachable without
-\commitment is not legal, and emitting it applies one.  \fullproof\cxbar{89}{0.4 0.4 1}{e}
+no output event of a run applies a \commitment.  First assume they are
+consistent.  Every output at every state reachable without \commitment is then
+legal, since emitting one that is not would apply a \commitment, so Lifted
+Monotonicity follows (Proposition~\ref{prop:exposure-boundary}).  Now assume
+Lifted Monotonicity.  Every output at every state reachable without
+\commitment is then legal (Proposition~\ref{prop:exposure-boundary}), so by
+induction on its length every run is \commitment-free, and consistency
+follows.  \fullproof\cxbar{89}{0.4 0.4 1}{e}
 \end{proof}
 
 \color{black}\cxtag{90}{N/S}So the runs of the traceroute spec in Figure~\ref{fig:ambiguity-frames} are
@@ -1149,11 +1158,11 @@ distributed history, every consistent cut is confluent at every common
 \end{corollary}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{98}{N/M}\cxbar{98}{0.4 0.4 1}{s}The participant runs at a cut are a finite family of runs, so if the spec
-satisfies Lifted Monotonicity, Complete CALM makes them confluent.  Conversely,
-any finite family of runs is the set of participant runs at the final cut of a
-history whose participants exchange no messages.  So if every consistent cut is
-confluent, the runs are consistent, and Complete CALM gives Lifted
+\cxtag{98}{N/M}\cxbar{98}{0.4 0.4 1}{s}First assume Lifted Monotonicity.  The participant runs at a cut are a finite
+family of runs, so Complete CALM makes them confluent.  Now assume every
+consistent cut is confluent.  Any finite family of runs is the set of
+participant runs at the final cut of a history whose participants exchange no
+messages, so the runs are consistent, and Complete CALM gives Lifted
 Monotonicity.  \fullproof\cxbar{98}{0.4 0.4 1}{e}
 \end{proof}
 

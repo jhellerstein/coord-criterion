@@ -362,7 +362,7 @@ abbrev «def:escapes-cap» (sp : Spec I O) (D : Type) (E : Table I O) : Prop :=
 
 /-- From the proof sketch of Theorem `thm:complete-cap`: "The canonical
 system's participants never wait: each can emit any output of `E` that its
-state allows, so it always has Availability for `E`."  This entry checks that
+state allows, so it has Availability for `E`."  This entry checks that
 sentence, for every spec and every `E`.  The connective sentence before Def.
 `def:lm-for-A`, "Whether the canonical system's answers stay compatible across
 sides depends on one condition", is made precise by Theorem `thm:complete-cap`. -/

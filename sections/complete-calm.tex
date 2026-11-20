@@ -274,12 +274,14 @@ if it satisfies the common-extension condition.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$
-to some \outnoun in the fiber at $j$, and that fiber is directed, so those
-\outnouns have a common \outnoun there.  Conversely, for $i\InputOrd j$, the
-rows $(i,x)$ for $x$ in a finite $X\subseteq\fiber{i}$ have $j$ as a common
-\indesc, so the condition gives the common \outnoun that Lifted Monotonicity
-asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
+First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common
+\indesc $j$.  Lifted Monotonicity gives Relational Monotonicity, which carries
+each $o_r$ to some \outnoun in the fiber at $j$, and that fiber is directed, so
+those \outnouns have a common \outnoun there.  Now assume the common-extension
+condition, and take $i\InputOrd j$ and a finite $X\subseteq\fiber{i}$.  The
+rows $(i,x)$ for $x\in X$ have $j$ as a common \indesc, so the condition gives
+the common \outnoun that Lifted Monotonicity asks for.  Full proof in
+Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
 \subsection{Lifted output events}
@@ -338,15 +340,18 @@ if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-By Proposition~\ref{prop:common-expansion-form}, Lifted Monotonicity holds if
-and only if the common-extension condition holds.  Suppose it does, and take a
-state $(i,R)$ reachable without \commitment, an output $o\in R(i)$, a legal
-\indesc $j$ of $i$, and $x\in R(j)$.  The condition gives $u\in P(j)$ that
-\outrel both $o$ and $x$, and $(j,u)\in R$ by Lemma~\ref{lem:run-residual},
-which makes $o$ legal (Proposition~\ref{prop:exposability}).  Conversely, if
-every such output is legal, applying Proposition~\ref{prop:exposability} at
-canonical states, one row at a time, builds the common \outnoun that the
-condition asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
+By Proposition~\ref{prop:common-expansion-form}, we may use the
+common-extension condition in place of Lifted Monotonicity.  First assume the
+condition, and take a state $(i,R)$ reachable without \commitment, an output
+$o\in R(i)$, a legal \indesc $j$ of $i$, and $x\in R(j)$.  The condition gives
+$u\in P(j)$ that \outrel both $o$ and $x$, and $(j,u)\in R$ by
+Lemma~\ref{lem:run-residual}, so $o$ is legal
+(Proposition~\ref{prop:exposability}).  Now assume every output at every state
+reachable without \commitment is legal, and take rows $(i_r,o_r)$ with a common
+\indesc $j$.  Each $o_r$ is legal at the canonical state $\sigma_P(i_r)$, and
+applying Proposition~\ref{prop:exposability} there, one row at a time, gives
+$u\in P(j)$ that \outrel every $o_r$, so the condition holds.  Full proof in
+Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
 \begin{theorem}[Complete CALM]
@@ -357,12 +362,14 @@ Lifted Monotonicity.
 
 \begin{proof}[Proof sketch]
 By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-no output event of a run applies a \commitment.  If the spec satisfies Lifted
-Monotonicity, every output at every state reachable without \commitment is legal
-(Proposition~\ref{prop:exposure-boundary}), so by induction on its length every
-run is \commitment-free.  If it does not, some output at a state reachable
-without \commitment is not legal, and emitting it applies a \commitment.  Full
-proof in Appendix~\ref{app:proofs-sec3}.
+no output event of a run applies a \commitment.  First assume they are
+consistent.  Every output at every state reachable without \commitment is then
+legal, since emitting one that is not would apply a \commitment, so the spec
+satisfies Lifted Monotonicity (Proposition~\ref{prop:exposure-boundary}).  Now
+assume Lifted Monotonicity.  Every output at every state reachable without
+\commitment is then legal (Proposition~\ref{prop:exposure-boundary}), so by
+induction on its length every run is \commitment-free, and consistency
+follows.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
 The condition that characterizes consistency of runs is a property of the spec

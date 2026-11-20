@@ -438,11 +438,13 @@ theorem «sec:complete-calm-theorem/lift-unchanged» {I O : Type} [PO I] [PO O]
 specification are consistent if and only if the spec satisfies Lifted
 Monotonicity."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs
 are consistent exactly when no output event of a run applies a commitment.
-If the spec satisfies Lifted Monotonicity, every output at every state reachable
-without commitment is legal (Proposition `prop:exposure-boundary`), so by
-induction on its length every run is commitment-free.  If it does not, some
-output at a state reachable without commitment is not legal, and emitting it
-applies a commitment."  After the theorem: "The condition that characterizes
+First assume they are consistent.  Every output at every state reachable
+without commitment is then legal, since emitting one that is not would apply a
+commitment, so the spec satisfies Lifted Monotonicity (Proposition
+`prop:exposure-boundary`).  Now assume Lifted Monotonicity.  Every output at
+every state reachable without commitment is then legal (Proposition
+`prop:exposure-boundary`), so by induction on its length every run is
+commitment-free, and consistency follows."  After the theorem: "The condition that characterizes
 consistency of runs is a property of the spec alone: Lifted Monotonicity,
 which for a function is ordinary monotonicity."
 
@@ -464,14 +466,16 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
   (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
 
 /-- Prop. `prop:exposure-boundary`, proof sketch: "By Proposition
-`prop:common-expansion-form`, Lifted Monotonicity holds if and only if the
-common-extension condition holds.  Suppose it does, and take a state `(i,R)`
-reachable without commitment, an output `o ∈ R(i)`, a legal input extension
-`j` of `i`, and `x ∈ R(j)`.  The condition gives `u ∈ P(j)` that extends both
-`o` and `x`, and `(j,u) ∈ R` by Lemma `lem:run-residual`, which makes `o`
-legal (Proposition `prop:exposability`).  Conversely, if every such output is
-legal, applying Proposition `prop:exposability` at canonical states, one row
-at a time, builds the common output extension that the condition asks for."
+`prop:common-expansion-form`, we may use the common-extension condition in
+place of Lifted Monotonicity.  First assume the condition, and take a state
+`(i,R)` reachable without commitment, an output `o ∈ R(i)`, a legal input
+extension `j` of `i`, and `x ∈ R(j)`.  The condition gives `u ∈ P(j)` that
+extends both `o` and `x`, and `(j,u) ∈ R` by Lemma `lem:run-residual`, so `o`
+is legal (Proposition `prop:exposability`).  Now assume every output at every
+state reachable without commitment is legal, and take rows `(i_r,o_r)` with a
+common input extension `j`.  Each `o_r` is legal at the canonical state
+`σ_P(i_r)`, and applying Proposition `prop:exposability` there, one row at a
+time, gives `u ∈ P(j)` that extends every `o_r`, so the condition holds."
 The common-extension form of the proposition; its forward direction
 (`commonExpansion_exposable`) uses the rows-remaining lemma directly, not
 Complete CALM. -/

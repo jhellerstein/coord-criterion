@@ -629,13 +629,14 @@ theorem «sec:executions/safety-of-runs» {I O : Type} [PO I] [PO O] (sp : Spec 
 
 /-- **Lemma `lem:confluence-legality`** (Confluence and legality).  "The runs
 of an I/O specification are consistent if and only if no output event of any
-run applies a commitment."  Proof sketch: "If a run's output event
-`output(o)` applies `x_o`, it removes some row `(k,x)` such that no row at `k`
-extends both `x` and `o`.  Compare that run with one from the state before that
-event that instead takes `input(k)` and then emits `x`: the two share no row
-at `k`, so by the Survivor test they are not confluent at `k`.  Conversely,
-suppose no output event applies a commitment, and take a family of runs and a
-common input extension `j`.  Each run keeps a row `(i_r,u_r)` at its current
+run applies a commitment."  Proof sketch: "First assume the runs are
+consistent, and suppose some run's output event `output(o)` applies `x_o`.  It
+removes some row `(k,x)` such that no row at `k` extends both `x` and `o`.
+Compare that run with one from the state before that event that instead takes
+`input(k)` and then emits `x`: the two share no row at `k`, so by the Survivor
+test they are not confluent at `k`, a contradiction.  Now assume no output
+event applies a commitment, and take a family of runs and a common input
+extension `j`.  Each run keeps a row `(i_r,u_r)` at its current
 input whose output extends everything it emitted (Lemma `lem:run-residual`),
 and `u_r` is legal at `σ_P(i_r)`.  Applying that legality one run at a time
 gives `u ∈ P(j)` that extends every `u_r`, and the Survivor test gives
@@ -661,12 +662,13 @@ theorem «lem:confluence-legality» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- **Theorem `thm:functional-calm`** (Functional CALM).  "The runs of a
 functional I/O specification are consistent if and only if the spec is
 monotone."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs are
-consistent exactly when no output event of a run applies a commitment.  A
-monotone spec can emit every current output without commitment (Proposition
+consistent exactly when no output event of a run applies a commitment.  First
+assume they are consistent, and suppose `f(i) ⋠ f(k)` for some `i ≼ k`.  At
+`σ_P(i)` the event `output(f(i))` then applies `x_{f(i)}` and rules out input
+`k`, a contradiction, so the spec is monotone.  Now assume the spec is
+monotone.  It can emit every current output without commitment (Proposition
 `prop:functional-exposure-boundary`), so by induction on its length every run
-is commitment-free.  If the spec is not monotone, then `f(i) ⋠ f(k)` for some
-`i ≼ k`, and at `σ_P(i)` the event `output(f(i))` applies `x_{f(i)}` and rules
-out input `k`."  Section opening: "Monotonicity is defined by a spec's table
+is commitment-free, and consistency follows."  Section opening: "Monotonicity is defined by a spec's table
 and orders alone, consistency by its runs.  Functional CALM shows that one
 holds exactly when the other does."
 
@@ -719,11 +721,11 @@ theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : S
     sp.MonotoneF ↔ ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   functional_exposure_boundary hf
 
-/-- From the proof sketch of Theorem `thm:functional-calm`: "If the spec is
-not monotone, then `f(i) ⋠ f(k)` for some `i ≼ k`, and at `σ_P(i)` the event
-`output(f(i))` applies `x_{f(i)}` and rules out input `k`."  ("A monotone spec
-can emit every current output without commitment" is the forward direction of
-Prop. `prop:functional-exposure-boundary`.) -/
+/-- From the proof sketch of Theorem `thm:functional-calm`: "suppose
+`f(i) ⋠ f(k)` for some `i ≼ k`.  At `σ_P(i)` the event `output(f(i))` then
+applies `x_{f(i)}` and rules out input `k`".  ("It can emit every current
+output without commitment" is the forward direction of Prop.
+`prop:functional-exposure-boundary`.) -/
 theorem «prop:functional-exposure-boundary/nonmonotone-excludes» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :

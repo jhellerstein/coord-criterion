@@ -204,10 +204,12 @@ abbrev «def:distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
 
 /-- **Prop. `prop:distributed-consistency`** (Distributed consistency).  "The
 runs of an I/O specification are consistent if and only if its distributed
-histories are consistent."  Proof sketch: "The participant runs at a cut are a
-finite family of runs, so consistent runs give consistent histories.
-Conversely, any finite family of runs can be placed at participants that
-exchange no messages." -/
+histories are consistent."  Proof sketch: "First assume the runs are
+consistent.  The participant runs at a cut are a finite family of runs, so
+every cut is confluent and the histories are consistent.  Now assume the
+histories are consistent.  Any finite family of runs is the set of participant
+runs at the final cut of a history whose participants exchange no messages, so
+the runs are consistent." -/
 theorem «prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
   Dist.consistent_iff_distConsistent sp D
@@ -777,12 +779,13 @@ theorem «prop:system-confluence» {sp : Spec I O} {m : Nat} (B : Fin m → Comm
 
 /-- Prop. `prop:system-confluence`, proof sketch: "(1) A row of `R̂_r` passes
 every input and output event of `ρ_r`, so it can leave `R_r` only through a
-commitment event.  (2) As in the Survivor test (Proposition confluence), a
-common state at `k` has a row at `k`, and since rows are never added, that row
-lies in every `R_r`.  Conversely, if `(k,u)` lies in every `R_r`, each run
-reaches the state whose only row is `(k,u)` by `input(k)`, then `output(u)`,
-then a commitment event that removes every other row.  Part (1) turns the
-condition on the `R_r` into the one stated."  (The final event is a commitment:
+commitment event.  (2) By part (1), the stated condition says some row at `k`
+lies in every `R_r`.  First assume the runs are confluent at `k`.  As in the
+Survivor test (Proposition confluence), a common state at `k` has a row at `k`,
+and since rows are never added, that row lies in every `R_r`.  Now assume
+`(k,u)` lies in every `R_r`.  Each run reaches the state whose only row is
+`(k,u)` by `input(k)`, then `output(u)`, then a commitment event that removes
+every other row."  (The final event is a commitment:
 after `output(u)` every other row at `k` extends `u` and differs from it, so
 none is extended by `(k,u)`; this is checked in Lean, not stated in the
 sketch.)
