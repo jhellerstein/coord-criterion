@@ -2113,8 +2113,8 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.} \text
 \textcolor{reviewed}{where $\pi$ and $\Join$ are relational projection and equijoin.} \textcolor{reviewed}{Every $i\in I$
 has a nonempty fiber in $P_2\circ P_1$, since $P_1$ is total on $I$ and $P_2$ is
 total on $M$ (it has a row at every $m\in M$).} \textcolor{reviewed}{We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
-its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.} Appendix~\ref{sec:parameterized-composition} gives each spec an input of its
-own as well, as when a store serves reads that bypass the log.
+its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.} Appendix~\ref{sec:parameterized-composition} allows each spec to have an input
+of its own as well, as when a store serves reads that bypass the log.
 
 \begin{lemma}[Composition]
 \label{lem:composition}
@@ -2182,8 +2182,9 @@ The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
 applied to $\Spec_2|_{\Spec_1}$. (2) The outputs of a run of $\Spec_1$ form a
 chain, since each output event keeps only rows above its output, so they are a
 valid input sequence for $\Spec_2|_{\Spec_1}$, which by (1) answers each without
-\commitment. Joining each answer with the row of $\Spec_1$ it answers gives a
-run of $P_2\circ P_1$. Full proofs of (2) and (3) in
+\commitment. Each row $(i,m)$ that the run of $\Spec_1$ passes through is a row
+of $P_1$. It joins with a row $(m,o)$ of $P_2$ to yield the projected row
+$(i,o)$ of $P_2\circ P_1$, and these rows form a run of $P_2\circ P_1$. Full proofs of (2) and (3) in
 Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -2197,10 +2198,11 @@ Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
 itself guard a third stage, and the theorem applies again
 (Appendix~\ref{app:composition}).
 
-Theorem~\ref{thm:proper-coordination} follows a pipeline event by event,
-with one system per stage. Stages can also be viewed from outside, so that
-stages with different specs and participants compose without one shared
-history. We call a system for one spec, seen only
+Theorem~\ref{thm:proper-coordination} looks inside a pipeline: each stage is a
+system, and the theorem tracks every event of both. A stage can also be
+treated as a black box that exposes only its inputs and outputs. Stages
+treated this way may have different specs and run on different participants,
+and they compose without merging their histories into one. We call a system for one spec, seen only
 through its boundary, a \emph{component}. A component may run as one process
 or as a replicated cluster. The stages around it observe only its
 \emph{admitted runs}, each pairing an input with an emitted output that its
