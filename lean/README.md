@@ -273,6 +273,10 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«prop:exposure-boundary»` | theorem | **Prop. |
 | `«prop:exposure-boundary/common-expansion»` | theorem | Prop. |
 | `«prop:exposure-boundary/functional»` | theorem | After Prop. |
+| `«lem:accumulating»` | theorem | **Lemma `lem:accumulating`** (Accumulating outputs). |
+| `«sec:three-patterns/accumulating-join»` | theorem | "The proof uses only that each fiber contains, with any two outputs, a common output extension of both. |
+| `«lem:order-commitment»` | theorem | **Lemma `lem:order-commitment`** (Ordering concurrent events). |
+| `«lem:bounded-values»` | theorem | **Lemma `lem:bounded-values`** (Bounded number of values). |
 
 ### §4.1–4.3 Distributed execution
 
@@ -951,10 +955,6 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/classical-problems
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«lem:accumulating»` | theorem | **Lemma `lem:accumulating`** (Accumulating outputs). |
-| `«app:additional-applications/accumulating-join»` | theorem | "The proof uses only that each fiber contains, with any two outputs, a common output extension of both. |
-| `«lem:order-commitment»` | theorem | **Lemma `lem:order-commitment`** (Ordering concurrent events). |
-| `«lem:bounded-values»` | theorem | **Lemma `lem:bounded-values`** (Bounded number of values). |
 | `«app:additional-applications/pattern-consequences»` | theorem | "When Lemma `lem:order-commitment` or Lemma `lem:bounded-values` applies, Complete CALM (Theorem `thm:complete-calm`) says that the runs of the spec are not… |
 | `«tab:classical-problems/reliable-broadcast»` | theorem | Table row "Reliable broadcast \| delivered messages (⊆) \| yes"; see `«app:additional-applications/reliable-broadcast»`. |
 | `«tab:classical-problems/causal-broadcast»` | theorem | Table row "Causal broadcast \| causally closed set of delivered messages (⊆) \| yes"; see `«app:additional-applications/causal-broadcast»`. |

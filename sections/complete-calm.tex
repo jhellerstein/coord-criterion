@@ -380,3 +380,81 @@ For functional specs, Lifted Monotonicity and the common-extension condition
 are both functional monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.
+
+\subsection{Three patterns}
+\label{sec:three-patterns}
+
+Many specs follow one of three patterns, and each pattern settles Lifted
+Monotonicity directly.  In the first, outputs report facts that only
+accumulate, as the route sets of Figure~\ref{fig:ambiguity-frames} do.  In the
+second, an output orders two events that the input leaves unordered, as the
+serial orders of the same figure do.  In the third, outputs decide values, and
+the spec bounds how many distinct values may be decided, as consensus allows
+only one.  The first pattern gives Lifted Monotonicity, and each of the other
+two gives a witness to its failure.
+
+\begin{lemma}[Accumulating outputs]
+\label{lem:accumulating}
+Suppose the outputs of an \spectype are sets of facts ordered by inclusion.  If
+every output permitted at an input is still permitted at each \indesc of that
+input, and the union of two outputs permitted at one input is permitted there,
+then the spec is monotone.
+\end{lemma}
+
+\begin{proof}
+Take $i\InputOrd j$ and a nonempty finite $X\subseteq\fiber{i}$.  Each member
+of $X$ is permitted at $j$, so by induction on the size of $X$ their union is
+permitted at $j$, and it \outrel every member of $X$.
+\end{proof}
+
+The proof uses only that each fiber contains, with any two outputs, a common
+\outnoun of both.  The lemma therefore holds for any output order and any
+binary operation with that property, such as the maximum of two counter
+values under $\leq$.
+
+Two events are \emph{concurrent} in an input when the input does not order
+them, as for transactions $A$ and $B$ at input $\{A,B\}$.  If the spec lets an
+output order them either way, two runs can choose opposite orders, and no
+later output reconciles the two.
+
+\begin{lemma}[Ordering concurrent events]
+\label{lem:order-commitment}
+Suppose that each output $o$ of an \spectype determines, for each pair of
+events $a$ and $b$, whether $o$ \emph{places $a$ before $b$}; that if
+$o\OutputOrd u$ and $o$ places $a$ before $b$, so does $u$; and that no output
+permitted at an input $j$ places two events in both orders.  If rows
+$(i_1,o_1)$ and $(i_2,o_2)$ have $j$ as a common \indesc, $o_1$ places $a$
+before $b$, and $o_2$ places $b$ before $a$, then the spec is not monotone.  If
+$i_1=i_2=j$, the fiber at $j$ is not directed.
+\end{lemma}
+
+\begin{proof}
+A common \outnoun of $o_1$ and $o_2$ in $\fiber{j}$ would place $a$ before $b$
+and $b$ before $a$.  So the common-extension condition fails, and by
+Proposition~\ref{prop:common-expansion-form} so does Lifted Monotonicity.  When
+$i_1=i_2=j$, the same argument shows that $o_1$ and $o_2$ are incompatible in
+$\fiber{j}$.
+\end{proof}
+
+\begin{lemma}[Bounded number of values]
+\label{lem:bounded-values}
+Suppose that each output $o$ of an \spectype determines a set of values that
+$o$ \emph{decides}; that if $o\OutputOrd u$, then $u$ decides every value that
+$o$ decides; and that every output permitted at an input $j$ decides at most
+$k$ values.  If $k+1$ rows have $j$ as a common \indesc and decide $k+1$
+distinct values, one per row, then the spec is not monotone.
+\end{lemma}
+
+\begin{proof}
+A common \outnoun of the $k+1$ outputs in $\fiber{j}$ would decide all $k+1$
+values.  So the common-extension condition fails, and
+Proposition~\ref{prop:common-expansion-form} applies.
+\end{proof}
+
+When Lemma~\ref{lem:order-commitment} or Lemma~\ref{lem:bounded-values}
+applies, Complete CALM says that the runs of the spec are not consistent, and
+the No-\commitment test (Proposition~\ref{prop:exposure-boundary}) says that
+some output, at some state reachable without \commitment, is not legal.  When
+Lemma~\ref{lem:accumulating} applies, the runs are consistent.
+Appendix~\ref{app:additional-applications} applies the three patterns to
+broadcast, consensus, leader election, snapshots, and queues.

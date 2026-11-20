@@ -4,8 +4,8 @@ import CoordCriterion.Appendix.ClassicalFrontiers
 /-!
 # Paper, Appendix G: Classical problems in distributed computing (`app:additional-applications`)
 
-Source: `appendices/classical-problems.tex` (the whole appendix: three
-patterns and the table of classical problems; broadcast; consensus, with
+Source: `appendices/classical-problems.tex` (the whole appendix: patterns
+and the table of classical problems; broadcast; consensus, with
 `k`-set agreement and the shared-memory remark; leader election; snapshots;
 queues; search structures).
 
@@ -41,77 +41,10 @@ namespace Paper
 
 open CC.Txn CC.Apps
 
-/-! ## Three patterns -/
+/-! ## Patterns and problems
 
-/-- **Lemma `lem:accumulating`** (Accumulating outputs).  "Suppose the outputs
-of an I/O specification are sets of facts ordered by inclusion.  If every
-output permitted at an input is still permitted at each input extension of
-that input, and the union of two outputs permitted at one input is permitted
-there, then the spec is monotone."  Proof: "Take `i ⊑ j` and a nonempty finite
-`X ⊆ P(i)`.  Each member of `X` is permitted at `j`, so by induction on the
-size of `X` their union is permitted at `j`, and it extends every member of
-`X`."  Sets of facts are `ESet F`. -/
-theorem «lem:accumulating» {I F : Type} [PO I] {sp : Spec I (ESet F)}
-    (hgrow : ∀ i j o, i ≼ j → sp.P i o → sp.P j o)
-    (hunion : ∀ j a b, sp.P j a → sp.P j b → sp.P j (ESet.union a b)) : sp.LiftedMono :=
-  accumulating_monotone hgrow hunion
-
-/-- "The proof uses only that each fiber contains, with any two outputs, a
-common output extension of both.  The lemma therefore holds for any output
-order and any binary operation with that property, such as the maximum of two
-counter values under `≤`."  Lean assumes Relational Monotonicity in place of
-"still permitted at each input extension", which is weaker; the counter case
-is `«tab:classical-problems/counter»`. -/
-theorem «app:additional-applications/accumulating-join» {I O : Type} [PO I] [PO O]
-    {sp : Spec I O} (join : O → O → O) (hl : ∀ a b, a ≼ join a b) (hr : ∀ a b, b ≼ join a b)
-    (hc : ∀ j a b, sp.P j a → sp.P j b → sp.P j (join a b)) (hR : sp.RelMono) :
-    sp.LiftedMono :=
-  liftedMono_of_join join hl hr hc hR
-
-/-- **Lemma `lem:order-commitment`** (Ordering concurrent events).  "Suppose
-that each output `o` of an I/O specification determines, for each pair of
-events `a` and `b`, whether `o` places `a` before `b`; that if `o ⪯ u` and `o`
-places `a` before `b`, so does `u`; and that no output permitted at an input
-`j` places two events in both orders.  If rows `(i₁,o₁)` and `(i₂,o₂)` have `j`
-as a common input extension, `o₁` places `a` before `b`, and `o₂` places `b`
-before `a`, then the spec is not monotone.  If `i₁ = i₂ = j`, the fiber at `j`
-is not directed."  Proof: "A common output extension of `o₁` and `o₂` in
-`P(j)` would place `a` before `b` and `b` before `a`.  So the common-extension
-condition fails, and by Proposition `prop:common-expansion-form` so does Lifted
-Monotonicity.  When `i₁ = i₂ = j`, the same argument shows that `o₁` and `o₂`
-are incompatible in `P(j)`." -/
-theorem «lem:order-commitment» {I O E : Type} [PO I] [PO O] {sp : Spec I O}
-    (before : O → E → E → Prop) (hmono : ∀ o u a b, o ≼ u → before o a b → before u a b)
-    {j : I} (hasym : ∀ u a b, sp.P j u → before u a b → ¬ before u b a)
-    {i1 i2 : I} {o1 o2 : O} {a b : E} (h1 : sp.P i1 o1) (h2 : sp.P i2 o2)
-    (hj1 : i1 ≼ j) (hj2 : i2 ≼ j) (hb1 : before o1 a b) (hb2 : before o2 b a) :
-    (¬ ∃ u, sp.P j u ∧ o1 ≼ u ∧ o2 ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono ∧
-      (i1 = j → i2 = j → ¬ sp.DirectedOutputs) :=
-  ⟨order_no_common before hmono hasym hb1 hb2,
-   (order_conflict before hmono hasym h1 h2 hj1 hj2 hb1 hb2).1,
-   (order_conflict before hmono hasym h1 h2 hj1 hj2 hb1 hb2).2,
-   fun e1 e2 => by
-     subst e1; subst e2
-     exact (order_conflict_fiber before hmono hasym h1 h2 hb1 hb2).1⟩
-
-/-- **Lemma `lem:bounded-values`** (Bounded number of values).  "Suppose that
-each output `o` of an I/O specification determines a set of values that `o`
-decides; that if `o ⪯ u`, then `u` decides every value that `o` decides; and
-that every output permitted at an input `j` decides at most `k` values.  If
-`k+1` rows have `j` as a common input extension and decide `k+1` distinct
-values, one per row, then the spec is not monotone."  Proof: "A common output
-extension of the `k+1` outputs in `P(j)` would decide all `k+1` values.  So the
-common-extension condition fails, and Proposition `prop:common-expansion-form`
-applies."  "At most `k` values": covered by a list of length `≤ k`. -/
-theorem «lem:bounded-values» {I O V : Type} [PO I] [PO O] {sp : Spec I O}
-    (dec : O → V → Prop) (hmono : ∀ o u v, o ≼ u → dec o v → dec u v) {k : Nat} {j : I}
-    (hbound : ∀ u, sp.P j u → ∃ l : List V, l.length ≤ k ∧ ∀ v, dec u v → v ∈ l)
-    (i : Fin (k + 1) → I) (o : Fin (k + 1) → O) (v : Fin (k + 1) → V)
-    (hv : ∀ r r', v r = v r' → r = r') (hrow : ∀ r, sp.P (i r) (o r)) (hj : ∀ r, i r ≼ j)
-    (hd : ∀ r, dec (o r) (v r)) :
-    (¬ ∃ u, sp.P j u ∧ ∀ r, o r ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono :=
-  ⟨bounded_no_common dec hmono hbound o v hv hd,
-   bounded_values dec hmono hbound i o v hv hrow hj hd⟩
+The three pattern lemmas are stated in `Paper/S3_CompleteCALM.lean`
+(`sec:three-patterns`). -/
 
 /-- "When Lemma `lem:order-commitment` or Lemma `lem:bounded-values` applies,
 Complete CALM (Theorem `thm:complete-calm`) says that the runs of the spec are
