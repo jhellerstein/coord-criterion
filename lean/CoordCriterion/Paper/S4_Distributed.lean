@@ -655,21 +655,24 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : CommitmentBasi
     canonical_equivalent h
 
 /-- *Canonical runs suffice*, example.  "To illustrate the lemma, consider 2PL
-on an input of three transactions `A`, `B`, `C` that have each issued their
-operations and requested commit, where `B` waits for a lock that `A` holds.
-When `B` begins to wait, 2PL applies `order(A,B)` in a commitment event, before
-any output, and removes every row that places `B` before `A`.  The canonical
-run drops that event and keeps those rows for now.  Suppose 2PL later commits
-all three transactions, fixes the order `A`, `C`, `B` in a second commitment
-event, and emits `[A,C,B]`.  The canonical run emits `[A,C,B]` directly.  Its
-output event applies the canonical commitment of `[A,C,B]`, which removes
-every row whose output does not extend `[A,C,B]`.  Those include every row 2PL
-removed earlier, since `[A,C,B]` contains each order that 2PL fixed, `A` before
-`B` among them.  After the output both runs keep exactly the same rows.  So the
-canonical commitment of an output makes, all at once and at output time, the
-decisions a system may have spread over earlier commitment events.  A system
-can decide earlier than its outputs require, but the commitments those outputs
-require are the same."
+on three transactions `A`, `B`, `C` that have each issued their operations and
+requested commit, where `B` waits for a lock that `A` holds.  When `B` begins
+to wait, 2PL applies `order(A,B)` in a commitment event, before any output,
+and removes every row that places `B` before `A`.  The canonical run drops that
+event and keeps those rows for now.  Suppose 2PL fixes the orders `(A,C)` and
+`(C,B)` in later commitment events and emits `[A,C,B]`.  The canonical run
+emits `[A,C,B]` directly, and its output event applies the canonical
+commitment of `[A,C,B]`, which removes every row whose output does not extend
+`[A,C,B]`.  Those include every row 2PL removed earlier, since `[A,C,B]`
+contains each order 2PL fixed.  After the output both runs keep the same rows."
+Next paragraph: "So the canonical commitment of an output makes, all at once and
+at output time, the decisions a system may have spread over earlier commitment
+events.  A system can decide earlier than its outputs require, but the
+commitments those outputs require are the same."
+
+Lean applies the later commitments as one commitment event (a sequence of
+commitments is itself a commitment, Def. `def:commitment-event`), together with
+the three `TxCommit`s.
 
 Lean (`CC.Txn.Partial.CommitEx.example_commitment_event_ABC`), at any input `k`
 whose transactions `A`, `B`, `C` have each issued their operations and requested
