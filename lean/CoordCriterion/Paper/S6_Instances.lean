@@ -1215,13 +1215,14 @@ abbrev «def:confluent-automaton» {A : Type} (M : IOA.Automaton A) : Prop := IO
 an automaton.  (1) Every finite family of histories of the system of `M` is
 confluent at every common input extension of their current inputs, by
 continuations that may apply any commitments, exactly when `M` is confluent.
-(2) For an execution of `M`, the canonical run of its run of `P_M` keeps the
-rows at extensions of its receive sequence whose reply sequences extend its
-own.  The history of item (2) of Proposition `prop:automaton-system` keeps
-those rows less the rows its commitment events removed.  `M` is confluent
-exactly when, for any finitely many executions and any common input
-extension `j` of their receive sequences, some row at `j` lies in the
-canonical table of each and in none of the sets of removed rows.  (3) If `M`
+(2) For an execution of `M` with receive sequence `w` and reply sequence `t`,
+let `R̂` be the table reached by its run of `P_M` (Proposition
+`prop:projection`), and let `Δ` be the rows that the commitment events of its
+history in Proposition `prop:automaton-system`(2) removed.  Then `R̂` consists
+of the rows `(k,u)` of `P_M` with `k` extending `w` and `u` extending `t`, and
+the history's table is `R̂ ∖ Δ`.  `M` is confluent exactly when, for any
+finitely many executions and any common input extension `j` of their receive
+sequences, some row at `j` lies in every `R̂` and in no `Δ`.  (3) If `M`
 is confluent, the runs of `P_M` are consistent.  The converse fails."
 
 Lean: (1) `IOT.sys_consistent_iff` (`Guard.SysConsistent` of the system's

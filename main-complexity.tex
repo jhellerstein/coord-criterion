@@ -2909,7 +2909,7 @@ registrar is empty, $x$, or $xz$, so the runs of its projected spec are
 consistent.\cxbar{instances-45}{0.4 0.4 1}{e}\color{black}
 
 \paragraph{The automaton as a system.}
-\color{black}\cxtag{instances:46}{N/L}\cxbar{instances-46}{0.9 0.45 0}{s}To recover what the projection drops, we map the automaton into our system
+\color{black}\cxtag{instances:46}{N/M}\cxbar{instances-46}{0.4 0.4 1}{s}To recover what the projection drops, we map the automaton into our system
 model (Definition~\ref{def:system}) with a single participant.  The rows of
 $P_M$ that a finite execution can still reach, by continuing from its final
 state, are its \emph{reachable rows}.  Removing every other row from a table
@@ -2919,11 +2919,11 @@ a kept row $(k,w)$ and a row $(k,u)$ of the table with $w$ extending $u$.
 Since $(k,u)$ is in the table, $u$ extends the execution's reply sequence
 (Lemma~\ref{lem:run-residual}).  The execution can reach $(k,w)$, so it can
 reply up to $u$, stop replying, and receive the rest of $k$.  It then reaches
-$(k,u)$, so $(k,u)$ is reachable and is kept as well.\cxbar{instances-46}{0.9 0.45 0}{e}\color{black}
+$(k,u)$, so $(k,u)$ is reachable and is kept as well.\cxbar{instances-46}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{definition}[System of an automaton]
 \label{def:automaton-system}
-\cxtag{instances:47}{N/L}\cxbar{instances-47}{0.9 0.45 0}{s}An execution of $M$ \emph{matches} a local history $\lambda$ when the input
+\cxtag{instances:47}{N/M}\cxbar{instances-47}{0.4 0.4 1}{s}An execution of $M$ \emph{matches} a local history $\lambda$ when the input
 and output events of $\lambda$ carry the execution's arrivals and replies in
 order, and the table after $\lambda$ keeps all of the execution's reachable
 rows.  An input event may carry several consecutive arrivals, or none.  The
@@ -2933,7 +2933,7 @@ contains the canonical \commitments and, for each finite execution, the
 history $\lambda$, its strategy allows the events that some execution matching
 $\lambda$ allows next: the output event that adds a reply the execution's
 final state can send, and the \commitment event that keeps only the
-execution's reachable rows.\cxbar{instances-47}{0.9 0.45 0}{e}\color{black}
+execution's reachable rows.\cxbar{instances-47}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{proposition}[System of an automaton]
@@ -2988,21 +2988,23 @@ execution with receive sequence $j$ and reply sequence $u$.\cxbar{instances-52}{
 
 \color{black}\begin{proposition}[Confluent automata]
 \label{prop:automaton-confluence}
-\cxtag{instances:53}{N/XL}\cxbar{instances-53}{0.8 0 0}{s}Let $M$ be an automaton.
+\cxtag{instances:53}{N/L}\cxbar{instances-53}{0.9 0.45 0}{s}Let $M$ be an automaton.
 \begin{enumerate}
   \item Every finite family of histories of the system of $M$ is confluent at
         every common \indesc of their current inputs, by continuations that
         may apply any \commitments, exactly when $M$ is confluent.
-  \item For an execution of $M$, the canonical run of its run of $P_M$ keeps
-        the rows at extensions of its receive sequence whose reply sequences
-        extend its own.  The history of item~(2) of
-        Proposition~\ref{prop:automaton-system} keeps those rows less the rows
-        its \commitment events removed.  $M$ is confluent exactly when, for any
-        finitely many executions and any common \indesc $j$ of their receive
-        sequences, some row at $j$ lies in the canonical table of each and in
-        none of the sets of removed rows.
+  \item For an execution of $M$ with receive sequence $w$ and reply sequence
+        $t$, let $\widehat R$ be the table reached by its run of $P_M$
+        (Proposition~\ref{prop:projection}), and let $\Delta$ be the rows that
+        the \commitment events of its history in
+        Proposition~\ref{prop:automaton-system}(2) removed.  Then $\widehat R$
+        consists of the rows $(k,u)$ of $P_M$ with $k$ extending $w$ and $u$
+        extending $t$, and the history's table is $\widehat R\setminus\Delta$.
+        $M$ is confluent exactly when, for any finitely many executions and any
+        common \indesc $j$ of their receive sequences, some row at $j$ lies in
+        every $\widehat R$ and in no $\Delta$.
   \item If $M$ is confluent, the runs of $P_M$ are consistent.  The converse
-        fails.\cxbar{instances-53}{0.8 0 0}{e}\color{black}
+        fails.\cxbar{instances-53}{0.9 0.45 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
