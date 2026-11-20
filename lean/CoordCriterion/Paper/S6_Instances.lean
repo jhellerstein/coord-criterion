@@ -1097,11 +1097,13 @@ theorem «sec:operational-models/registrar» :
 map the automaton into our system model with a single participant.  The rows
 of `P_M` that a finite execution can still reach, by continuing from its final
 state, are its *reachable rows*.  Removing every other row from a table that
-contains them is a commitment whenever it removes a row.  Suppose the
-execution can reach `(k,w)`, and `u` is a prefix of `w` that extends the
-execution's reply sequence.  The execution can stop replying once it has
-replied `u` and then receive the rest of `k`, so it also reaches `(k,u)`.  No
-removed row is therefore extended by a kept row at the same input."
+contains them is a commitment whenever it removes a row, because no removed row
+is extended by a kept row at the same input.  To see this, take a kept row
+`(k,w)` and a row `(k,u)` of the table with `w` extending `u`.  Since `(k,u)` is
+in the table, `u` extends the execution's reply sequence (Lemma
+`lem:run-residual`).  The execution can reach `(k,w)`, so it can reply up to
+`u`, stop replying, and receive the rest of `k`.  It then reaches `(k,u)`, so
+`(k,u)` is reachable and is kept as well."
 
 Lean: the reachable rows are `IOT.Live M β s`; `IOT.live_closed` is the
 argument; `IOT.narrow M X` keeps the rows in `X`, and it applies (is a
