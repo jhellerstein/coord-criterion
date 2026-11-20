@@ -627,11 +627,11 @@ theorem «thm:hat-levels» (D : Type) :
       fun E hES htot hans => HATSpec.lostUpdate_unavailableP P hP hLU D E hES htot hans⟩,
     fun L hL _ H h => HATSpec.proscribes_lostUpdate L hL H h⟩
 
-/-- Proof sketch of Thm. `thm:hat-levels`: "For read uncommitted and read
-committed, the timestamp condition rules out the dependency cycles of G0 and
-G1c, so `𝒮_L` permits the read rule's answers.  Proposition
-`prop:intersection-bound`, with the read rule as the bound, gives Lifted
-Monotonicity of `𝒮_st ∩ 𝒮_L`, whose rows include those of `E`."  (The bound
+/-- Proof sketch of Thm. `thm:hat-levels`: "The theorem has two parts.  First,
+for read uncommitted and read committed, the timestamp condition rules out the
+dependency cycles of G0 and G1c, so `𝒮_L` permits the read rule's answers.
+Proposition `prop:intersection-bound`, with the read rule as the bound, then
+gives Lifted Monotonicity of `𝒮_st ∩ 𝒮_L`, whose rows include those of `E`."  (The bound
 step is `HATSpec.store_inter_rc`; monotonicity of the rule, stated with the
 store specification, is the first conjunct here.)  Lean:
 the candidates of a read are the same at every input extension containing it
@@ -643,14 +643,18 @@ theorem «thm:hat-levels/answers-stable» :
       ∀ j : HATSpec.Inp true, (HATSpec.spec .RC).P j (HATSpec.hatOut j) :=
   ⟨HATSpec.hat_rule.2, HATSpec.hatOut_rc⟩
 
-/-- Proof sketch of Thm. `thm:hat-levels`: "For the converse, let two
-transactions at different replicas each read `x₀` and write `x`.  Under the
+/-- Proof sketch of Thm. `thm:hat-levels`: "Second, for a level that
+proscribes Lost Update, the intersection loses Lifted Monotonicity, because the
+read rule's own answers can exhibit Lost Update.  Let two transactions at
+different replicas each read `x₀` and write `x`.  Under the
 read rule, each replica can answer only `x₀`, since neither has received the
 other's write.  Together the two answers contain a cycle on `x` with an
 anti-dependency, which is Lost Update.  So the store's answer at one replica
 has no extension in `𝒮_st ∩ 𝒮_L` once both transactions are in the
 input.  The store needs no commitment on its own, so this need comes from the
-intersection with `𝒮_L`."  (The store's own Lifted Monotonicity is
+intersection with `𝒮_L`.  In both parts, the conclusions about systems
+follow from Complete CAP (Theorem `thm:complete-cap`) and Corollary
+`cor:complete-cap-any-system`."  (The store's own Lifted Monotonicity is
 `HATSpec.store_liftedMono`; the last step is `HATSpec.store_inter_lostUpdate`: the row of `T₂`'s
 answer `x₀` at `i₂` has no extension at the union; `HATSpec.i2_ans`.)  Lean: `T₁` (timestamp `(1,1)`) and
 `T₂` (`(1,2)`) read and write `x` at replicas 0 and 1, with no arrival event; at

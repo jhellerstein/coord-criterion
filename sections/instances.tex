@@ -229,18 +229,23 @@ has Availability for such an $E$ and Partition Consistency.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-For read uncommitted and read committed, the timestamp condition rules out the
-dependency cycles of G0 and G1c, so $\Spec_L$ permits the read rule's answers.
+The theorem has two parts.  First, for read uncommitted and read committed,
+the timestamp condition rules out the dependency cycles of G0 and G1c, so
+$\Spec_L$ permits the read rule's answers.
 Proposition~\ref{prop:intersection-bound}, with the read rule as the bound,
-gives Lifted Monotonicity of $\Spec_{\mathrm{st}}\cap\Spec_L$, whose rows
-include those of $E$.  For the converse, let two transactions at different
-replicas each read $x_0$ and write $x$.  Under the read rule, each replica can
-answer only $x_0$, since neither has received the other's write.  Together the
-two answers contain a cycle on $x$ with an anti-dependency, which is Lost
-Update.  So the store's answer at one replica has no extension in
-$\Spec_{\mathrm{st}}\cap\Spec_L$ once both transactions are in the input.
-The store needs no \commitment on its own, so this need comes from the
-intersection with $\Spec_L$.
+then gives Lifted Monotonicity of $\Spec_{\mathrm{st}}\cap\Spec_L$, whose rows
+include those of $E$.  Second, for a level that proscribes Lost Update, the
+intersection loses Lifted Monotonicity, because the read rule's own answers can
+exhibit Lost Update.  Let two transactions at different replicas each read
+$x_0$ and write $x$.  Under the read rule, each replica can answer only $x_0$,
+since neither has received the other's write.  Together the two answers contain
+a cycle on $x$ with an anti-dependency, which is Lost Update.  So the store's
+answer at one replica has no extension in $\Spec_{\mathrm{st}}\cap\Spec_L$ once
+both transactions are in the input.  The store needs no \commitment on its own,
+so this need comes from the intersection with $\Spec_L$.  In both parts, the
+conclusions about systems follow from Complete CAP
+(Theorem~\ref{thm:complete-cap}) and
+Corollary~\ref{cor:complete-cap-any-system}.
 \end{proof}
 
 The timestamp condition in the theorem is required, correcting an error in the
