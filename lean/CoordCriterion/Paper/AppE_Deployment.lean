@@ -641,10 +641,10 @@ theorem «app:registers/causal-monotone-across» (G : OpSig α n) :
   ⟨fun _ _ _ => Iff.rfl, fun F hA j hj => causal_common G F hA j hj,
    causal_monoAcross G, causal_confluent G⟩
 
-/-- Proof step: "We take a serialization `L_p` of `i_p` explaining `ρ_p`, and
-extend it to `j` by appending the new operations of `p` and the new writes in
-any order extending `→`.  Since no new operation causally precedes an old one,
-the result extends `→` and explains the same reads."  (The appended order is
+/-- Proof step: "We extend a serialization `L_p` of `i_p` explaining `ρ_p` to
+`j` by appending the new operations of `p` and the new writes in any order
+extending `→`.  No new operation causally precedes an old one, so the result
+extends `→` and explains the same reads."  (The appended order is
 built from a linear extension of a finite strict partial order, `linExt`.) -/
 theorem «app:registers/serialization-extends» (G : OpSig α n) {h j : Hist α} (hle : h ≼ j)
     {p : Fin n} {lt : α → α → Prop} (hs : Ser G h p lt) :
@@ -674,7 +674,7 @@ section RTC
 variable {α : Type} {n : Nat}
 
 /-- "[A] system can provide real-time causal consistency, but no stronger
-consistency, while staying always available … and one-way convergent …  We
+consistency, while staying always available and one-way convergent.  We
 recover both parts with real-time precedence recorded in the input."  (First
 paragraph of `app:rtc`, on the theorem of Mahajan et al.)
 
@@ -761,8 +761,8 @@ theorem «app:rtc/views» (G : OpSig α n) (p : Fin n) (i : RHist G) (v : SMap �
   Iff.rfl
 
 /-- "Intuitively, these items are Mahajan et al.'s checks for the order that
-`p`'s reads expose.  In that order each visible write precedes the read, and
-each overwritten write precedes the source.  Item (1) says a replica returns
+`p`'s reads expose, in which each visible write precedes the read and each
+overwritten write precedes the source.  Item (1) says a replica returns
 only writes it has received.  Item (2) is their real-time check 'time doesn't
 travel backward.'  Item (3) keeps one replica's overwrites consistent."
 
@@ -781,8 +781,8 @@ theorem «app:rtc/mahajan-checks» (G : OpSig α n) (p : Fin n) (i : RHist G) (v
     (RView G p i v → HBCheck i p v (Kv G (hbRt i) v)) :=
   ⟨rview_iff_check G p i v, rview_check⟩
 
-/-- "Their reads return all concurrent latest writes, while ours return one.
-So a view matches their check when that write is the only latest one."
+/-- "Their reads return all concurrent latest writes, while ours return one,
+so a view matches their check when that write is the only latest one."
 
 Lean: the match is with a singleton writeList (`«app:rtc/mahajan-checks»`),
 not with one element of theirs.  At the
