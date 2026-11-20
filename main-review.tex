@@ -2892,22 +2892,27 @@ execution with receive sequence $j$ and reply sequence $u$.
 Let $M$ be an automaton.
 \begin{enumerate}
 \item
-Every finite family of histories of the system of $M$ is confluent at
-        every common \indesc of their current inputs, by continuations that
-        may apply any \commitments, exactly when $M$ is confluent.
+$M$ is confluent if and only if, for every finite family of histories
+        of its system and every common \indesc $j$ of their current inputs,
+        the histories can be continued to a common state at $j$ by events
+        that may apply any \commitments.
 \item
-For an execution of $M$ with receive sequence $w$ and reply sequence
-        $t$, let $\widehat R$ be the table reached by its run of $P_M$
-        (Proposition~\ref{prop:projection}), and let $\Delta$ be the rows that
-        the \commitment events of its history in
-        Proposition~\ref{prop:automaton-system}(2) removed. Then $\widehat R$
-        consists of the rows $(k,u)$ of $P_M$ with $k$ extending $w$ and $u$
-        extending $t$, and the history's table is $\widehat R\setminus\Delta$. $M$ is confluent exactly when, for any finitely many executions and any
+The confluence of $M$ can be established by a row at a common
+        \indesc $j$ that survives in all of the executions. For an execution
+        of $M$ with receive sequence $w$ and reply sequence $t$, two sets of
+        rows determine which rows survive. One is the remainder table
+        $\widehat R$ at the end of its run of $P_M$
+        (Proposition~\ref{prop:projection}), which consists of the rows
+        $(k,u)$ of $P_M$ with $k$ extending $w$ and $u$ extending $t$. The
+        other is the set $\Delta$ of rows that the \commitment events of its
+        history in Proposition~\ref{prop:automaton-system}(2) removed. That
+        history ends with the table $\widehat R\setminus\Delta$, so $M$ is
+        confluent exactly when, for any finitely many executions and any
         common \indesc $j$ of their receive sequences, some row at $j$ lies in
         every $\widehat R$ and in no $\Delta$.
 \item
 If $M$ is confluent, the runs of $P_M$ are consistent. The converse
-        fails.
+        does not hold in general.
 \end{enumerate}
 \end{proposition}
 

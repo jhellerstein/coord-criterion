@@ -1211,18 +1211,21 @@ to" is `IOT.Live`). -/
 abbrev «def:confluent-automaton» {A : Type} (M : IOA.Automaton A) : Prop := IOT.Confluent M
 
 /-- **Prop. `prop:automaton-confluence`** (Confluent automata).  "Let `M` be
-an automaton.  (1) Every finite family of histories of the system of `M` is
-confluent at every common input extension of their current inputs, by
-continuations that may apply any commitments, exactly when `M` is confluent.
-(2) For an execution of `M` with receive sequence `w` and reply sequence `t`,
-let `R̂` be the table reached by its run of `P_M` (Proposition
-`prop:projection`), and let `Δ` be the rows that the commitment events of its
-history in Proposition `prop:automaton-system`(2) removed.  Then `R̂` consists
-of the rows `(k,u)` of `P_M` with `k` extending `w` and `u` extending `t`, and
-the history's table is `R̂ ∖ Δ`.  `M` is confluent exactly when, for any
-finitely many executions and any common input extension `j` of their receive
-sequences, some row at `j` lies in every `R̂` and in no `Δ`.  (3) If `M`
-is confluent, the runs of `P_M` are consistent.  The converse fails."
+an automaton.  (1) `M` is confluent if and only if, for every finite family of
+histories of its system and every common input extension `j` of their current
+inputs, the histories can be continued to a common state at `j` by events that
+may apply any commitments.  (2) The confluence of `M` can be established by a
+row at a common input extension `j` that survives in all of the executions.
+For an execution of `M` with receive sequence `w` and reply sequence `t`, two
+sets of rows determine which rows survive.  One is the remainder table `R̂` at
+the end of its run of `P_M` (Proposition `prop:projection`), which consists of
+the rows `(k,u)` of `P_M` with `k` extending `w` and `u` extending `t`.  The
+other is the set `Δ` of rows that the commitment events of its history in
+Proposition `prop:automaton-system`(2) removed.  That history ends with the
+table `R̂ ∖ Δ`, so `M` is confluent exactly when, for any finitely many
+executions and any common input extension `j` of their receive sequences, some
+row at `j` lies in every `R̂` and in no `Δ`.  (3) If `M` is confluent, the runs
+of `P_M` are consistent.  The converse does not hold in general."
 
 Lean: (1) `IOT.sys_consistent_iff` (`Guard.SysConsistent` of the system's
 history endpoints `IOT.SysRun`), proved with the Survivor test for runs
