@@ -131,7 +131,8 @@ general notion is Def. `def:commitment` (`«app:notation/commitment»`). -/
 abbrev «app:notation/output-event-excludes» {sp : Spec I O} (σ : State sp) (o : O) : Prop :=
   ¬ Exposable σ o
 
-/-- *legal output* — `output(o)` applies no commitment (Def. `def:exposable`).
+/-- *legal output* — every row `output(o)` would remove is subsumed
+(`Excluded_o` empty), so `output(o)` applies no commitment (Def. `def:exposable`).
 Lean: `Exposable σ o`. -/
 abbrev «app:notation/exposable» {sp : Spec I O} (σ : State sp) (o : O) : Prop := Exposable σ o
 
@@ -329,8 +330,8 @@ abbrev «app:notation/commitment-event» {sp : Spec I O} (B : CommitmentBasis sp
   SysStep B σ (.commitment γ) τ
 
 /-- *commitment basis; run under a basis* — a set `ℬ` of commitments; input,
-output, and commitment events whose commitments, including each non-legal
-output's `x_o`, come from `ℬ` (Def. `def:run-under-basis`).  Lean:
+output, and commitment events whose commitments, including the `x_o` of each
+output event whose output is not already legal, come from `ℬ` (Def. `def:run-under-basis`).  Lean:
 `RunUnder B es τ`. -/
 abbrev «app:notation/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=

@@ -80,7 +80,11 @@ theorem «app:lifted-output-events/functional» {sp : Spec I O}
     ¬ Subsumed σ o k x :=
   functional_subsumed_empty hf σ o k x
 
-/-- A legal output applies no commitment exactly when `Excluded_o` is empty. -/
+/-- "Legality lifts with the event: `o` is a legal output when `Excluded_o` is
+empty, and then `output(o)` applies no commitment, though it may still subsume
+the rows in `Subsumed_o`."  Proof of Prop. `prop:exposability`: "The output
+`o` is legal exactly when `Excluded_o` is empty, that is, when every ruled-out
+row …". -/
 theorem «app:lifted-output-events/exposable» {sp : Spec I O}
     (σ : State sp) (o : O) :
     Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x :=
@@ -223,8 +227,8 @@ theorem «app:bases/composite-commitment-defined» {sp : Spec I O} (c : Commitme
 §4.3).  "A *commitment basis* is a set `ℬ` of commitments.  A *run under `ℬ`*
 is a finite transition sequence from a canonical state `σ_P(i)` of input,
 output, and commitment events in which every commitment event applies only
-commitments in `ℬ`, and every output event of a non-legal output `o` applies
-its canonical commitment `x_o ∈ ℬ`."
+commitments in `ℬ`, and every output event `output(o)` whose output `o` is not
+already legal applies its canonical commitment `x_o ∈ ℬ`."
 
 Lean: `CommitmentBasis sp := Commitment sp → Prop`, and `RunUnder B es τ`, an
 execution of `SysStep B` from `σ_P(i)`: `SysStep.output` requires

@@ -703,13 +703,14 @@ and then emits $o$:}
 
 \begin{definition}[Canonical \commitment]
 \label{def:canonical-commitment-functional}
-When $o$ is not legal, equivalently $R'\neq R$, some rows have outputs that do
-not \outrelbase $o$, and the transition applies the \emph{canonical
-\commitment} $x_o(i,R)=(i,R')$, which removes them. \textcolor{reviewed}{In a functional table each
+\textcolor{reviewed}{When $o$ is not legal at $(i,R)$, equivalently $R'\neq R$, the event first
+removes the rows whose outputs do not \outrelbase $o$; this removal is the
+\emph{canonical \commitment} $x_o(i,R)=(i,R')$, after which $o$ is legal.} \textcolor{reviewed}{In a functional table each
 input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a \commitment).}
 \end{definition}
 
-\textcolor{reviewed}{Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.} The
+\textcolor{reviewed}{An output event therefore always emits a legal output; it applies a
+\commitment exactly when its output was not already legal.} The
 current row $(i,o)$ remains, since $o$ \outrel itself, so the event always ends
 at a specification state with current input $i$. A \commitment removes rows that input alone would
 keep; after the canonical \commitment, the inputs of the removed rows are no
@@ -843,21 +844,22 @@ message delivery, and a termination argument, which belong to the operational
 model in which a spec is realized.
 
 Whether runs are consistent depends on the outputs they emit. Confluence
-fails exactly when some run can emit an output that is not legal:
+fails exactly when some run's output event must apply a \commitment:
 
 \begin{lemma}[Confluence and legality]
 \label{lem:confluence-legality}
-\textcolor{reviewed}{The runs of an \spectype are consistent if and only if every output that a
-run can emit is legal at the state where it is emitted.}
+\textcolor{reviewed}{The runs of an \spectype are consistent if and only if no output event of any
+run applies a \commitment.}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-If a run can emit an output $o$ that is not legal, $\mathsf{output}(o)$
-removes some row $(k,x)$ such that no row at $k$ \outrel both $x$ and $o$. One
+If an output event $\mathsf{output}(o)$ of a run applies $x_o$, it removes
+some row $(k,x)$ such that no row at $k$ \outrel both $x$ and $o$. One
 continuation of the run emits $o$; another takes $\mathsf{input}(k)$ and then
 emits $x$. The two share no row at $k$, so by the Survivor test they are not
-confluent at $k$. Conversely, suppose every output is legal, and take a family of runs and
-a common \indesc $j$. Pick for each run a row $(i_r,u_r)$ remaining at its
+confluent at $k$. Conversely, suppose no output event applies a \commitment, so every output a
+run can emit is legal before its event, and take a family of runs and a common
+\indesc $j$. Pick for each run a row $(i_r,u_r)$ remaining at its
 current input; $u_r$ \outrel everything that run emitted
 (Lemma~\ref{lem:run-residual}). Each $u_r$ is legal at $\sigma_P(i_r)$, the
 canonical state of its input, so every output at an \indesc of $i_r$ has an
@@ -872,8 +874,8 @@ Appendix~\ref{app:proofs-sec2}.
 
 \textcolor{reviewed}{Monotonicity is defined by a spec's table and orders alone, consistency by its
 runs.} Functional CALM shows that one holds exactly when the other does. \textcolor{reviewed}{By
-Lemma~\ref{lem:confluence-legality}, the question is when every output a run
-can emit is legal.} In the functional case, monotonicity has a strong
+Lemma~\ref{lem:confluence-legality}, the question is when no output event of a
+run applies a \commitment.} In the functional case, monotonicity has a strong
 consequence: emitting outputs never changes the state, which depends only on
 the input.
 
@@ -921,7 +923,7 @@ monotone.}
 
 \begin{proof}[Proof sketch]
 \textcolor{reviewed}{By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-every output a run can emit is legal.} If every output at every state reachable
+no output event of a run applies a \commitment.} If every output at every state reachable
 without \commitment is legal, every run is reachable without \commitment, so
 this is the condition of Proposition~\ref{prop:functional-exposure-boundary},
 which holds exactly when the spec is monotone. Full proof in
@@ -1249,8 +1251,8 @@ so $x_o$ is as before.}
 
 \textcolor{reviewed}{The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split.} \textcolor{reviewed}{Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$.} \textcolor{reviewed}{The route sets removed in panel~(g), at both inputs, are in $\Subsumed_o$, so that output needs no \commitment.} Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
-\textcolor{reviewed}{Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
-applies no \commitment, that is, when $\Excluded_o$ is empty.} \textcolor{reviewed}{With several
+\textcolor{reviewed}{$o$ is a legal output at a state when $\Excluded_o$ is empty;
+$\mathsf{output}(o)$ then applies no \commitment.} \textcolor{reviewed}{With several
 outputs at one input, this is more permissive than in the functional case,
 since an output event may remove rows by output subsumption without a
 \commitment.} \textcolor{reviewed}{Equivalently, at every legal
@@ -1268,8 +1270,8 @@ output events still satisfy, so the rows-remaining lemma
 (Proposition~\ref{prop:confluence}), and
 Lemma~\ref{lem:confluence-legality}, with legality as in
 Section~\ref{sec:lifted-output-events}, apply unchanged. \textcolor{reviewed}{The question is
-therefore when every output a run can emit is legal, and Lifted Monotonicity
-answers it.}
+therefore when no output event of a run applies a \commitment, and Lifted
+Monotonicity answers it.}
 
 \begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
@@ -1297,7 +1299,7 @@ Lifted Monotonicity.}
 
 \begin{proof}[Proof sketch]
 \textcolor{reviewed}{By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-every output a run can emit is legal.} If every output at every state reachable
+no output event of a run applies a \commitment.} If every output at every state reachable
 without \commitment is legal, every run is reachable without \commitment, so
 this is the condition of Proposition~\ref{prop:exposure-boundary}, which holds
 exactly when the spec satisfies Lifted Monotonicity. Full proof in
@@ -1588,8 +1590,8 @@ A \emph{\commitment basis} is a set $\mathcal B$ of \commitments. A \emph{run
 under $\mathcal B$} is a finite transition sequence from a canonical state
 $\sigma_P(i)$ of input, output, and \commitment events in which every
 \commitment event applies only \commitments in $\mathcal B$, and every output
-event of a non-legal output $o$ applies its canonical \commitment
-$x_o\in\mathcal B$.
+event $\mathsf{output}(o)$ whose output $o$ is not already legal applies its
+canonical \commitment $x_o\in\mathcal B$.
 \end{definition}
 
 A canonical run is then a run under the basis of all canonical \commitments that
@@ -3139,7 +3141,7 @@ rows at $k$.
   canonical state & $\sigma_P(i)=(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
   input event; input loss & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
   output event; \commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; when it removes rows, that removal is a \commitment & Def.~\ref{def:output-event}\\
-  legal output & $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
+  legal output & every row $\mathsf{output}(o)$ would remove is subsumed ($\Excluded_o$ empty), so $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
   determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
   canonical run (run); \commitment-free & finite sequence of specification events from a canonical state; no output event issues a \commitment & Def.~\ref{def:run}\\
   consistent runs; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
@@ -3181,7 +3183,7 @@ rows at $k$.
   local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, \commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
     system; history of a system & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
   \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
-    \commitment basis; run under a basis & a set $\mathcal B$ of \commitments; input, output, and \commitment events whose \commitments, including each non-legal output's $x_o$, come from $\mathcal B$ & Def.~\ref{def:run-under-basis}\\
+    \commitment basis; run under a basis & a set $\mathcal B$ of \commitments; input, output, and \commitment events whose \commitments, including the $x_o$ of each output event whose output is not already legal, come from $\mathcal B$ & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
   $\Delta(\rho)$ & rows of the final table of $\rho$'s canonical run that a \commitment event of $\rho$ removed; $\rho$ keeps the rest & Prop.~\ref{prop:system-confluence}\\
   conflicting runs & a run applies a \commitment removing $(k,x)$; another, under any basis, issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\
@@ -3252,10 +3254,13 @@ specs: $o$ is legal at $(i,R)$ when, for every row $(k,x)\in R$, some
 $u\in R(k)$ \outrel both $o$ and $x$. In a functional table the only row at
 $k$ is $(k,x)$, so this says $x$ \outrel $o$
 (Definition~\ref{def:exposable}); with several outputs per input it says that
-$\Excluded_o$ is empty (Section~\ref{sec:lifted-output-events}).
+$\Excluded_o$ is empty (Section~\ref{sec:lifted-output-events}). An output
+event $\mathsf{output}(o)$ from $(i,R)$ applies a \commitment exactly when $o$
+is not legal at $(i,R)$, so the lemma's condition says that every output a run
+can emit is legal at the state where it is emitted.
 
-($\Rightarrow$) Suppose a run ends at $(i,R)$ and $o\in R(i)$ is not legal
-there. Then some $(k,x)\in R$ has no $u\in R(k)$ \outrelpart both $o$ and
+($\Rightarrow$) Suppose an output event of some run applies a \commitment: the
+run ends at $(i,R)$ before it, and $o\in R(i)$ is not legal there. Then some $(k,x)\in R$ has no $u\in R(k)$ \outrelpart both $o$ and
 $x$. We extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(k)$ followed by $\mathsf{output}(x)$, which is defined since
 $(k,x)$ remains after $\mathsf{input}(k)$. The input $k$ is a common \indesc
@@ -3263,7 +3268,8 @@ of the two current inputs. A row at $k$ in both resulting tables would be a
 row $(k,u)\in R$ with $u$ \outrelpart both $o$ and $x$, and there is none. By
 Proposition~\ref{prop:confluence}, the two runs are not confluent at $k$.
 
-($\Leftarrow$) Suppose every output that a run can emit is legal, and let runs
+($\Leftarrow$) Suppose no output event applies a \commitment, so every output
+that a run can emit is legal, and let runs
 end at $(i_r,R_r)$, $r=1,\ldots,m$, with common \indesc $j$. Each $R_r$ keeps a
 row at its current input, say $(i_r,u_r)$, and by Lemma~\ref{lem:run-residual}
 $u_r$ \outrel every output emitted on run $r$. The canonical state
@@ -3295,8 +3301,9 @@ for every \indesc $j$ of $i$, so $f$ is monotone.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:functional-calm}]
-\textcolor{reviewed}{By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-every output that a run can emit is legal.} This condition is equivalent to
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+no output event of a run applies a \commitment, that is, when every output that
+a run can emit is legal. This condition is equivalent to
 legality at every state reachable without \commitment. One direction is
 immediate, since such states are reached by runs. For the other, suppose every
 output at every state reachable without \commitment is legal. Then, by
@@ -3358,8 +3365,8 @@ $o_r$ and $u_{r-1}$. Then $u_k$ \outrel every $o_r$.
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
 The proof of Lemma~\ref{lem:confluence-legality} covers nondeterministic specs,
-so the runs are consistent exactly when every output that a run can emit is
-legal. As in the proof of Theorem~\ref{thm:functional-calm}, this holds exactly
+so the runs are consistent exactly when no output event of a run applies a
+\commitment, that is, when every output that a run can emit is legal. As in the proof of Theorem~\ref{thm:functional-calm}, this holds exactly
 when every output at every state reachable without \commitment is legal. By
 Proposition~\ref{prop:exposure-boundary}, that holds exactly when the spec
 satisfies Lifted Monotonicity.
@@ -3857,8 +3864,8 @@ Definition~\ref{def:output-event}. Apart from output subsumption and
 \commitments, a row leaves the remainder table only by input loss
 (\S\ref{sec:functional-events}).
 
-Legality lifts with the event: $o$ is a legal output when $\mathsf{output}(o)$
-applies no \commitment, exactly when $\Excluded_o$ is empty, though the event may
+Legality lifts with the event: $o$ is a legal output when $\Excluded_o$ is
+empty, and then $\mathsf{output}(o)$ applies no \commitment, though it may
 still subsume the rows in $\Subsumed_o$. The legal-output test lifts as well:
 
 \begin{proposition}[Legal-output test]
@@ -3874,7 +3881,7 @@ $j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
 \end{proposition}
 
 \begin{proof}
-The event $\mathsf{output}(o)$ applies no \commitment exactly when every
+The output $o$ is legal exactly when $\Excluded_o$ is empty, that is, when every
 ruled-out row $(j,x)$ lies in $\Subsumed_o$, that is, is \outrelpast by some row
 $(j,u)$ \outrelpart $o$. Rows that already \outrelbase $o$ satisfy the stated
 test with $u=x$, so this is exactly the stated test.

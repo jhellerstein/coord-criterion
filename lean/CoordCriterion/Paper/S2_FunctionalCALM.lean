@@ -359,11 +359,14 @@ abbrev «def:output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   outputTable σ o
 
-  /-- **Def. `def:canonical-commitment-functional`**.  "When `o` is not legal,
-  equivalently `R' ≠ R`, some rows have outputs that do not extend `o`, and the
-  transition applies the *canonical commitment* `x_o(i,R) = (i,R')`, which
-  removes them.  In a functional table each input has only one row, so `x_o`
-  rules out those rows' inputs (`x_o` is a commitment)."
+  /-- **Def. `def:canonical-commitment-functional`**.  "When `o` is not legal at
+  `(i,R)`, equivalently `R' ≠ R`, the event first removes the rows whose outputs
+  do not extend `o`; this removal is the *canonical commitment*
+  `x_o(i,R) = (i,R')`, after which `o` is legal.  In a functional table each
+  input has only one row, so `x_o` rules out those rows' inputs (`x_o` is a
+  commitment)."  Following text: "An output event therefore always emits a legal
+  output; it applies a commitment exactly when its output was not already
+  legal."
 
 Lean: `canonicalCommitment o : Commitment sp` (`commitmentApp o`): the commitment that removes the
 rows in `Excluded_o`, defined at states where `o ∈ R(i)` and `Excluded_o ≠ ∅`. -/
@@ -615,22 +618,23 @@ abbrev «eq:reconciliation» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 /-- Before Lemma `lem:confluence-legality`: "Consistency is a safety property
 of the spec's runs: it guarantees that a common state exists, not that a
 system reaches it."  "Whether runs are consistent depends on the outputs they
-emit.  Confluence fails exactly when some run can emit an output that is not
-legal."  The first sentence is the reading of Def. `def:consistency` (prose);
+emit.  Confluence fails exactly when some run's output event must apply a
+commitment."  The first sentence is the reading of Def. `def:consistency` (prose);
 the second is the lemma. -/
 theorem «sec:executions/safety-of-runs» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.Consistent ↔ sp.RunsLegal :=
   consistent_iff_runsLegal sp
 
 /-- **Lemma `lem:confluence-legality`** (Confluence and legality).  "The runs
-of an I/O specification are consistent if and only if every output that a run
-can emit is legal at the state where it is emitted."  Proof sketch: "If a run
-can emit an output `o` that is not legal, `output(o)` removes some row `(k,x)`
-such that no row at `k` extends both `x` and `o`.  One continuation of the run
+of an I/O specification are consistent if and only if no output event of any
+run applies a commitment."  Proof sketch: "If an output event `output(o)` of a
+run applies `x_o`, it removes some row `(k,x)` such that no row at `k` extends
+both `x` and `o`.  One continuation of the run
 emits `o`; another takes `input(k)` and then emits `x`.  The two share no row
 at `k`, so by the Survivor test they are not confluent at `k`.  Conversely,
-suppose every output is legal, and take a family of runs and a common input
-extension `j`.  Pick for each run a row `(i_r,u_r)` remaining at its current
+suppose no output event applies a commitment, so every output a run can emit is
+legal before its event, and take a family of runs and a common input extension
+`j`.  Pick for each run a row `(i_r,u_r)` remaining at its current
 input; `u_r` extends everything that run emitted (Lemma `lem:run-residual`).
 Each `u_r` is legal at `σ_P(i_r)`, the canonical state of its input, so every
 output at an input extension of `i_r` has an output extension there that also
@@ -638,29 +642,34 @@ extends `u_r`.  Taking the runs one at a time gives `u ∈ P(j)` that extends
 every `u_r`.  The row `(j,u)` remains in every run, and the Survivor test gives
 confluence."
 
-Lean: `consistent_iff_runsLegal` (`Spec.RunsLegal`: every output at every run
-state is `Exposable`).  It holds for every spec, functional or not, with the
+Lean: the event form is `consistent_iff_noOutputCommitment` (no output event
+from a run state has a row in `Excluded_o`, the rows `x_o` removes); it is
+`consistent_iff_runsLegal` (`Spec.RunsLegal`: every output at every run state is
+`Exposable`) restated.  It holds for every spec, functional or not, with the
 lifted legality of §3.2 (`Exposable`), which in a functional spec is Def.
 `def:exposable`.  The second conjunct is the bridge used by both CALM proofs:
 legality at every run state is the same as legality at every state reachable
 without commitment (`runsLegal_iff_legalReachLegal`). -/
 theorem «lem:confluence-legality» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
-    (sp.Consistent ↔ sp.RunsLegal) ∧ (sp.RunsLegal ↔ sp.LegalReachLegal) :=
-  ⟨consistent_iff_runsLegal sp, runsLegal_iff_legalReachLegal sp⟩
+    (sp.Consistent ↔
+        ∀ τ : State sp, IsRun τ → ∀ o, τ.R τ.cur o → ∀ k x, ¬ Excluded τ o k x) ∧
+      (sp.Consistent ↔ sp.RunsLegal) ∧ (sp.RunsLegal ↔ sp.LegalReachLegal) :=
+  ⟨consistent_iff_noOutputCommitment sp, consistent_iff_runsLegal sp,
+    runsLegal_iff_legalReachLegal sp⟩
 
 /-! ## The Functional CALM theorem (`sec:functional-calm-theorem`) -/
 
 /-- **Theorem `thm:functional-calm`** (Functional CALM).  "The runs of a
 functional I/O specification are consistent if and only if the spec is
 monotone."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs are
-consistent exactly when every output a run can emit is legal.  If every output
+consistent exactly when no output event of a run applies a commitment.  If every output
 at every state reachable without commitment is legal, every run is reachable
 without commitment, so this is the condition of Proposition
 `prop:functional-exposure-boundary`, which holds exactly when the spec is
 monotone."  Section opening: "Monotonicity is defined by a spec's table and
 orders alone, consistency by its runs.  Functional CALM shows that one holds
 exactly when the other does.  By Lemma `lem:confluence-legality`, the question
-is when every output a run can emit is legal."
+is when no output event of a run applies a commitment."
 
 Lean: `functional_calm_via_legality`, which follows the paper's order
 (Lemma `lem:confluence-legality`, the bridge, Prop.

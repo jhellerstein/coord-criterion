@@ -519,7 +519,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/input-loss»` | abbrev | *input loss* — the rows `input(j)` removes (Eq. |
 | `«app:notation/output-event»` | abbrev | *output event* — `output(o)` keeps `R[out ⪰ o]` and emits `o` (Def. |
 | `«app:notation/output-event-excludes»` | abbrev | *commitment* (§2 sense) — an output event that removes rows (Def. |
-| `«app:notation/exposable»` | abbrev | *legal output* — `output(o)` applies no commitment (Def. |
+| `«app:notation/exposable»` | abbrev | *legal output* — every row `output(o)` would remove is subsumed (`Excluded_o` empty), so `output(o)` applies no commitment (Def. |
 | `«app:notation/determined»` | abbrev | *determined* — the upper fiber has one element; *determination* — reaching such a state (Sec. |
 | `«app:notation/run»` | abbrev | *canonical run* (*run*) — finite sequence of specification events from a canonical state (Def. |
 | `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
@@ -555,7 +555,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/basis»` | abbrev | *commitment basis* (Def. |
 | `«app:notation/produced»` | abbrev | *history of a system* — every event other than an input or receive permitted by its strategy and using only commitments from `𝓑` (Defs. |
 | `«app:notation/commitment-event»` | abbrev | *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of commitments, emits nothing (Def. |
-| `«app:notation/run-under-basis»` | abbrev | *commitment basis; run under a basis* — a set `ℬ` of commitments; input, output, and commitment events whose commitments, including each non-legal output's `… |
+| `«app:notation/run-under-basis»` | abbrev | *commitment basis; run under a basis* — a set `ℬ` of commitments; input, output, and commitment events whose commitments, including the `x_o` of each output… |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/delta»` | def | *`Δ(ρ)`* — rows of the final table of `ρ`'s canonical run that a commitment event of `ρ` removed; `ρ` keeps the rest (Prop. |
@@ -679,7 +679,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«def:lifted-output-event/examples»` | theorem | "In Figure `fig:ambiguity-frames`(f), emitting `[A,B]` places the row for `[B,A]` in `Excluded_o` … In panel (g), the removed route sets, at both inputs, are… |
 | `«app:lifted-output-events/disjoint»` | theorem | `Subsumed_o` and `Excluded_o` are disjoint. |
 | `«app:lifted-output-events/functional»` | theorem | With one row per input, no ruled-out row is subsumed. |
-| `«app:lifted-output-events/exposable»` | theorem | A legal output applies no commitment exactly when `Excluded_o` is empty. |
+| `«app:lifted-output-events/exposable»` | theorem | "Legality lifts with the event: |
 | `«prop:exposability»` | theorem | **Prop. |
 | `«eq:safe-exposure»` | abbrev | **Eq. |
 | `«def:canonical-commitment-basis»` | abbrev | **Def. |

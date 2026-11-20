@@ -40,7 +40,7 @@ rows at $k$.
   canonical state & $\sigma_P(i)=(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
   input event; input loss & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
   output event; \commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; when it removes rows, that removal is a \commitment & Def.~\ref{def:output-event}\\
-  legal output & $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
+  legal output & every row $\mathsf{output}(o)$ would remove is subsumed ($\Excluded_o$ empty), so $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
   determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
   canonical run (run); \commitment-free & finite sequence of specification events from a canonical state; no output event issues a \commitment & Def.~\ref{def:run}\\
   consistent runs; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
@@ -82,7 +82,7 @@ rows at $k$.
   local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, \commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
     system; history of a system & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
   \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
-    \commitment basis; run under a basis & a set $\mathcal B$ of \commitments; input, output, and \commitment events whose \commitments, including each non-legal output's $x_o$, come from $\mathcal B$ & Def.~\ref{def:run-under-basis}\\
+    \commitment basis; run under a basis & a set $\mathcal B$ of \commitments; input, output, and \commitment events whose \commitments, including the $x_o$ of each output event whose output is not already legal, come from $\mathcal B$ & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
   $\Delta(\rho)$ & rows of the final table of $\rho$'s canonical run that a \commitment event of $\rho$ removed; $\rho$ keeps the rest & Prop.~\ref{prop:system-confluence}\\
   conflicting runs & a run applies a \commitment removing $(k,x)$; another, under any basis, issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\

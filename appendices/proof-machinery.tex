@@ -34,10 +34,13 @@ specs: $o$ is legal at $(i,R)$ when, for every row $(k,x)\in R$, some
 $u\in R(k)$ \outrel both $o$ and $x$.  In a functional table the only row at
 $k$ is $(k,x)$, so this says $x$ \outrel $o$
 (Definition~\ref{def:exposable}); with several outputs per input it says that
-$\Excluded_o$ is empty (Section~\ref{sec:lifted-output-events}).
+$\Excluded_o$ is empty (Section~\ref{sec:lifted-output-events}).  An output
+event $\mathsf{output}(o)$ from $(i,R)$ applies a \commitment exactly when $o$
+is not legal at $(i,R)$, so the lemma's condition says that every output a run
+can emit is legal at the state where it is emitted.
 
-($\Rightarrow$) Suppose a run ends at $(i,R)$ and $o\in R(i)$ is not legal
-there.  Then some $(k,x)\in R$ has no $u\in R(k)$ \outrelpart both $o$ and
+($\Rightarrow$) Suppose an output event of some run applies a \commitment: the
+run ends at $(i,R)$ before it, and $o\in R(i)$ is not legal there.  Then some $(k,x)\in R$ has no $u\in R(k)$ \outrelpart both $o$ and
 $x$.  We extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(k)$ followed by $\mathsf{output}(x)$, which is defined since
 $(k,x)$ remains after $\mathsf{input}(k)$.  The input $k$ is a common \indesc
@@ -45,7 +48,8 @@ of the two current inputs.  A row at $k$ in both resulting tables would be a
 row $(k,u)\in R$ with $u$ \outrelpart both $o$ and $x$, and there is none.  By
 Proposition~\ref{prop:confluence}, the two runs are not confluent at $k$.
 
-($\Leftarrow$) Suppose every output that a run can emit is legal, and let runs
+($\Leftarrow$) Suppose no output event applies a \commitment, so every output
+that a run can emit is legal, and let runs
 end at $(i_r,R_r)$, $r=1,\ldots,m$, with common \indesc $j$.  Each $R_r$ keeps a
 row at its current input, say $(i_r,u_r)$, and by Lemma~\ref{lem:run-residual}
 $u_r$ \outrel every output emitted on run $r$.  The canonical state
@@ -80,7 +84,8 @@ for every \indesc $j$ of $i$, so $f$ is monotone.
 
 \begin{proof}[Proof of Theorem~\ref{thm:functional-calm}]
 By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-every output that a run can emit is legal.  This condition is equivalent to
+no output event of a run applies a \commitment, that is, when every output that
+a run can emit is legal.  This condition is equivalent to
 legality at every state reachable without \commitment.  One direction is
 immediate, since such states are reached by runs.  For the other, suppose every
 output at every state reachable without \commitment is legal.  Then, by
@@ -143,8 +148,8 @@ $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
 The proof of Lemma~\ref{lem:confluence-legality} covers nondeterministic specs,
-so the runs are consistent exactly when every output that a run can emit is
-legal.  As in the proof of Theorem~\ref{thm:functional-calm}, this holds exactly
+so the runs are consistent exactly when no output event of a run applies a
+\commitment, that is, when every output that a run can emit is legal.  As in the proof of Theorem~\ref{thm:functional-calm}, this holds exactly
 when every output at every state reachable without \commitment is legal.  By
 Proposition~\ref{prop:exposure-boundary}, that holds exactly when the spec
 satisfies Lifted Monotonicity.

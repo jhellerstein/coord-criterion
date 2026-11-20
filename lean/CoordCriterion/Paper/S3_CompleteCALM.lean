@@ -398,8 +398,8 @@ Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
   event to rule out `k`.  This is formalized by
   `«def:canonical-commitment/subsumed-keeps-fiber»`. -/
 
-  /-- §3.2: "Legality is defined as before: `o` is a legal output when
-  `output(o)` applies no commitment, that is, when `Excluded_o` is empty.  With
+  /-- §3.2: "`o` is a legal output at a state when `Excluded_o` is empty;
+  `output(o)` then applies no commitment.  With
   several outputs at one input, this is more permissive than in the functional
   case, since an output event may remove rows by output subsumption without a
   commitment."
@@ -421,7 +421,8 @@ output events still satisfy, so the rows-remaining lemma (Lemma
 `lem:run-residual`), the Survivor test (Proposition `prop:confluence`), and
 Lemma `lem:confluence-legality`, with legality as in Section
 `sec:lifted-output-events`, apply unchanged.  The question is therefore when
-every output a run can emit is legal, and Lifted Monotonicity answers it."
+no output event of a run applies a commitment, and Lifted Monotonicity answers
+it."
 In Lean there is nothing to lift: the transition system, Lemma
 `lem:run-residual`, Prop. `prop:confluence` and Lemma `lem:confluence-legality`
 (`consistent_iff_runsLegal`, with the lifted `Exposable`) are stated for
@@ -436,8 +437,8 @@ theorem «sec:complete-calm-theorem/lift-unchanged» {I O : Type} [PO I] [PO O]
 /-- **Theorem `thm:complete-calm`** (Complete CALM).  "The runs of an I/O
 specification are consistent if and only if the spec satisfies Lifted
 Monotonicity."  Proof sketch: "By Lemma `lem:confluence-legality`, the runs
-are consistent exactly when every output a run can emit is legal.  If every
-output at every state reachable without commitment is legal, every run is
+are consistent exactly when no output event of a run applies a commitment.
+If every output at every state reachable without commitment is legal, every run is
 reachable without commitment, so this is the condition of Proposition
 `prop:exposure-boundary`, which holds exactly when the spec satisfies Lifted
 Monotonicity."  After the theorem: "The condition that characterizes

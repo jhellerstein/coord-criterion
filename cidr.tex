@@ -636,12 +636,14 @@ and then emits $o$:
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-If $o$ is not legal, some rows have outputs that do not \outrelbase $o$;
-removing them is the \emph{canonical \commitment} $x_o$.  In a functional table
-each input has only one row, so $x_o$ rules out those rows' inputs.
+If $o$ is not legal at $(i,R)$, the event first removes the rows whose outputs
+do not \outrelbase $o$; this removal is the \emph{canonical \commitment} $x_o$,
+after which $o$ is legal.  In a functional table each input has only one row,
+so $x_o$ rules out those rows' inputs.
 \end{definition}
 
-Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.
+An output event therefore always emits a legal output; it applies a
+\commitment exactly when its output was not already legal.
 Under the equality order of Figure~\ref{fig:nonmonotone-frame}, for example,
 $x_\bot$ at $ab\cdot$ removes $(aba,a)$ and $(abb,b)$.  At a
 determined state the current output is the only future output, so it is legal,
@@ -720,28 +722,30 @@ it describes no protocol and promises no delivery or termination.
 
 \begin{lemma}[Confluence and legality]
 \label{lem:confluence-legality}
-The runs of an \spectype are consistent if and only if every output that a
-run can emit is legal at the state where it is emitted.
+The runs of an \spectype are consistent if and only if no output event of any
+run applies a \commitment.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-An output that is not legal removes some row $(k,x)$; one continuation emits
-the output, another takes $\mathsf{input}(k)$ and emits $x$, and the two share
-no row at $k$.  If every output is legal, the rows the runs keep at their
+An output event that applies $x_o$ removes some row $(k,x)$; one
+continuation emits $o$, another takes $\mathsf{input}(k)$ and emits $x$, and
+the two share no row at $k$.  If no output event applies a \commitment, every
+emitted output was legal before its event, and the rows the runs keep at their
 current inputs have a common \outnoun at $j$, which survives in every run.
 \fullproof
 \end{proof}
 
-In the election under the equality order, $\bot$ is not legal at $ab\cdot$,
-and the two runs of Section~\ref{sec:election-story} share no row at $aba$.
+In the election under the equality order, emitting $\bot$ at $ab\cdot$ applies
+a \commitment, since $\bot$ is not legal there, and the two runs of
+Section~\ref{sec:election-story} share no row at $aba$.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
 Monotonicity is defined by a spec's table and orders; consistency is defined by
 its runs.  Functional CALM shows that one holds exactly when the other does,
-and by Lemma~\ref{lem:confluence-legality} the question is when every output a
-run can emit is legal.
+and by Lemma~\ref{lem:confluence-legality} the question is when no output event
+of a run applies a \commitment.
 
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
@@ -769,9 +773,10 @@ monotone.
 
 \begin{proof}[Proof sketch]
 By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-every output a run can emit is legal.  A monotone spec's runs stay at canonical
-states, where every output is legal; a non-monotone spec has an output that is
-not legal at a canonical state.  \fullproof
+no output event of a run applies a \commitment.  A monotone spec's runs stay at
+canonical states, where every output is legal; a non-monotone spec has an
+output that is not legal at a canonical state, and emitting it there applies a
+\commitment.  \fullproof
 \end{proof}
 
 \paragraph{Classical CALM and CRDTs.}
@@ -986,8 +991,8 @@ excluded, so $x_o$ is as before.
 
 The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split.  Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.
 
-Legality is defined as before: $o$ is a legal output when $\mathsf{output}(o)$
-applies no \commitment, that is, when $\Excluded_o$ is empty.  With several
+$o$ is a legal output at a state when $\Excluded_o$ is empty;
+$\mathsf{output}(o)$ then applies no \commitment.  With several
 outputs at one input, this is more permissive than in the functional case,
 since an output event may remove rows by output subsumption without a
 \commitment.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
@@ -1003,8 +1008,8 @@ rows-remaining lemma (Lemma~\ref{lem:run-residual}), the Survivor test
 (Proposition~\ref{prop:confluence}), and Lemma~\ref{lem:confluence-legality},
 with legality as in \S\ref{sec:lifted-output-events}, hold as stated, since
 they depend on output events only through Equation~\ref{eq:output-action}.  The
-question is therefore when every output a run can emit is legal, and Lifted
-Monotonicity answers it.
+question is therefore when no output event of a run applies a \commitment, and
+Lifted Monotonicity answers it.
 
 \begin{proposition}[No-\commitment test]
 \label{prop:exposure-boundary}
@@ -1027,7 +1032,7 @@ Lifted Monotonicity.
 
 \begin{proof}[Proof sketch]
 By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
-every output a run can emit is legal.  If every output at every state reachable
+no output event of a run applies a \commitment.  If every output at every state reachable
 without \commitment is legal, every run is reachable without \commitment, so
 Proposition~\ref{prop:exposure-boundary} applies.  \fullproof
 \end{proof}

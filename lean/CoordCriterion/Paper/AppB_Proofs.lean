@@ -51,12 +51,17 @@ theorem «proof:prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
 
 /-- Proof of Lemma `lem:confluence-legality`.  "We use legality in a form that
 covers both functional and nondeterministic specs: `o` is legal at `(i,R)`
-when, for every row `(k,x) ∈ R`, some `u ∈ R(k)` extends both `o` and `x`."
-(⇒) "Suppose a run ends at `(i,R)` and `o ∈ R(i)` is not legal there.  Then
+when, for every row `(k,x) ∈ R`, some `u ∈ R(k)` extends both `o` and `x`. …
+An output event `output(o)` from `(i,R)` applies a commitment exactly when `o`
+is not legal at `(i,R)`, so the lemma's condition says that every output a run
+can emit is legal at the state where it is emitted."
+(⇒) "Suppose an output event of some run applies a commitment: the run ends at
+`(i,R)` before it, and `o ∈ R(i)` is not legal there.  Then
 some `(k,x) ∈ R` has no `u ∈ R(k)` extending both `o` and `x`.  We extend the
 run in two ways: by `output(o)`, and by `input(k)` followed by `output(x)` …
 By Proposition `prop:confluence`, the two runs are not confluent at `k`."
-(⇐) "Each `R_r` keeps a row at its current input, say `(i_r,u_r)` … `u_r` is
+(⇐) "Suppose no output event applies a commitment, so every output that a run
+can emit is legal … Each `R_r` keeps a row at its current input, say `(i_r,u_r)` … `u_r` is
 legal [at `σ_P(i_r)`].  By totality there is some `v₀ ∈ P(j)`.  For
 `r = 1,…,m` in turn, `(j,v_{r-1})` is a row of `σ_P(i_r)` … so legality of
 `u_r` gives `v_r ∈ P(j)` extending both `u_r` and `v_{r-1}`. … Proposition
@@ -90,8 +95,9 @@ theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
   functional_exposure_boundary hf
 
 /-- Proof of Thm. `thm:functional-calm`: "By Lemma `lem:confluence-legality`,
-the runs are consistent exactly when every output that a run can emit is
-legal.  This condition is equivalent to legality at every state reachable
+the runs are consistent exactly when no output event of a run applies a
+commitment, that is, when every output that a run can emit is legal.  This
+condition is equivalent to legality at every state reachable
 without commitment. … suppose every output at every state reachable without
 commitment is legal.  Then, by induction along any run, each of its output
 events is legal, so the run is commitment-free and every state it reaches is
@@ -161,7 +167,8 @@ theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I
 
 /-- Proof of Thm. `thm:complete-calm`: "The proof of Lemma
 `lem:confluence-legality` covers nondeterministic specs, so the runs are
-consistent exactly when every output that a run can emit is legal.  As in the
+consistent exactly when no output event of a run applies a commitment, that is,
+when every output that a run can emit is legal.  As in the
 proof of Theorem `thm:functional-calm`, this holds exactly when every output at
 every state reachable without commitment is legal.  By Proposition
 `prop:exposure-boundary`, that holds exactly when the spec satisfies Lifted

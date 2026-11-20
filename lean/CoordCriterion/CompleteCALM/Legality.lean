@@ -45,6 +45,20 @@ theorem consistent_iff_runsLegal (sp : Spec I O) : sp.Consistent ↔ sp.RunsLega
     exact commonExpansion_consistent
       ((exposure_boundary sp).2 fun τ hτ o ho => hL τ hτ.isRun o ho)
 
+/-- **Lemma 1, event form.**  The runs are consistent exactly when no output
+event of any run applies a commitment: an output event `output(o)` from a run
+state `τ` applies a commitment exactly when some row is in `Excluded_o`. -/
+theorem consistent_iff_noOutputCommitment (sp : Spec I O) :
+    sp.Consistent ↔
+      ∀ τ : State sp, IsRun τ → ∀ o, τ.R τ.cur o → ∀ k x, ¬ Excluded τ o k x := by
+  rw [consistent_iff_runsLegal]
+  constructor
+  · intro h τ hτ o ho k x he
+    exact he.2.2 ⟨he.1, he.2.1, h τ hτ o ho k x he.1 he.2.1⟩
+  · intro h τ hτ o ho k x hR hox
+    exact Classical.byContradiction fun hn =>
+      h τ hτ o ho k x ⟨hR, hox, fun hs => hn hs.2.2⟩
+
 /-- A legal execution extends by one legal step. -/
 theorem execCF_snoc {sp : Spec I O} {α σ τ : State sp} {l : List (Event I O)}
     {e : Event I O} (hl : ExecCF α l σ) (hs : Step σ e τ)
