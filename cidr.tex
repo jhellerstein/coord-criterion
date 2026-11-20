@@ -114,9 +114,8 @@ outputs.  Its runs are \emph{consistent} when they are confluent.
 between ordered domains: the runs are consistent exactly when the function is
 monotone.  \emph{Complete CALM}
 extends this to nondeterministic specs, where the test is
-\emph{Lifted Monotonicity}, and \emph{Complete CAP} follows as a corollary.
-Highly Available Transactions, Invariant Confluence, and later refinements of
-CALM map into the same framework.
+\emph{Lifted Monotonicity}; \emph{Complete CAP} follows as a corollary.
+Highly Available Transactions, Invariant Confluence, and later CALM refinements map into the same framework.
 
 Prior CALM results stop at monotonicity: for non-monotone
 specs, they say only that coordination is needed somewhere.  Our
@@ -221,12 +220,6 @@ means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-releva
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.
 
-Traditionally, automata are often used to formally specify distributed
-protocols; we show how an automaton can be projected onto an \spectype[] that
-captures only observable behavior (\S\ref{sec:scope}).
-Despite its simplicity, our model captures not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
-\S\ref{sec:hat-instance}).
-
 As a system runs, possibilities narrow: the spec's table loses rows.  When new
 input arrives, the world has moved on, and rows that cannot be reached by
 extending that input are lost.  When the system decides among possibilities, it
@@ -238,9 +231,15 @@ ruling out every row with a later ballot.  We call a fateful decision a
 \emph{\commitment}: an irrevocable decision, enforceable by coordination
 mechanisms such as locks and consensus.
 
+Automata have often been used to formally specify distributed
+protocols; we show how an automaton can be projected onto an \spectype[] that
+captures only observable behavior (\S\ref{sec:scope}).
+Despite its simplicity, our model supports not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
+\S\ref{sec:hat-instance}).
+
 \paragraph{The criterion: Lifted Monotonicity.}
-The model provides clean definitions for the key ingredients of CALM:
-Consistency and Monotonicity.  A spec's possible executions, its runs, are
+The model provides clean definitions for the two sides of CALM:
+Consistency (a property of executions) and Monotonicity (a property of specs).  A spec's possible executions, its runs, are
 \emph{consistent} when they are \emph{confluent}: states reached along different paths can be
 brought to a common state.  We will see that this definition is general.  The spec is a parameter:
 specs and confluence together capture a range of classical consistency models,
