@@ -381,9 +381,12 @@ theorem «sec:query-instance/sufficient-half» :
 
 The opening paragraph ("A CRDT uses join semilattices to guarantee that
 replicas that have received the same updates converge to equivalent states,
-whatever the order of delivery and merge [Shapiro et al.] …
-That guarantee, Strong Eventual Consistency, says nothing about what a client
-observes when it queries a replica that has not yet received every update.
+whatever the order of delivery and merge [Shapiro et al.].  That guarantee,
+Strong Eventual Consistency, is the convergence of Corollary `cor:convergence`.
+The corollary assumes only that the spec is monotone, not that its input or
+output order is a join semilattice."  Next paragraph: "Strong Eventual
+Consistency says nothing about what a client observes when it queries a replica
+that has not yet received every update.
 Such a query risks Lamport's "anomalous behavior" (§`sec:functional-events`).
 Laddad et al. proposed monotonicity as the right test for safe observation
 from CRDT state.") cites rather than proves; its two-phase-set example is
@@ -554,11 +557,11 @@ theorem «def:hat-spec/read-rule» :
 specification `𝒮_st` has the inputs and outputs of Definition `def:hat-spec`.
 At each input, it permits any subset of the answers that the read rule
 gives."  And after it: "The store spec says only that answers follow the read
-rule; it says nothing about isolation.  On its own it satisfies Lifted
+rule, and nothing about isolation.  On its own it satisfies Lifted
 Monotonicity: a read's answer under the read rule depends only on the writes
 its replica received before the read, so later input never changes it.  The
-store's rows that answer every read are exactly the rows of `E`.  Holding the
-store to an isolation level `L` means taking the intersection `𝒮_st ∩ 𝒮_L`
+store's rows that answer every read are exactly the rows of `E`."  Next
+paragraph: "Holding the store to an isolation level `L` means taking the intersection `𝒮_st ∩ 𝒮_L`
 (Definition `def:intersection`), which is total, since both specs permit
 answering no reads.  By Proposition `prop:intersection-bound`, the
 intersection keeps Lifted Monotonicity when `𝒮_L` permits the read rule's

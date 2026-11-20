@@ -2545,13 +2545,14 @@ of Definition~\ref{def:hat-spec}. At each input, it permits any subset of the
 answers that the read rule gives.
 \end{definition}
 
-The store spec says only that answers follow the read rule; it says nothing
-about isolation. On its own it satisfies Lifted Monotonicity: a read's
-answer under the read rule depends only on the writes its replica received
+The store spec says only that answers follow the read rule, and nothing about
+isolation. On its own it satisfies Lifted Monotonicity: a read's answer under the read rule depends only on the writes its replica received
 before the read, so later input never changes it. The store's rows that answer
-every read are exactly the rows of $E$. Holding the store to an isolation
-level $L$ means taking the intersection $\Spec_{\mathrm{st}}\cap\Spec_L$
-(Definition~\ref{def:intersection}), which is total, since both specs permit
+every read are exactly the rows of $E$.
+
+Holding the store to an isolation level $L$ means taking the intersection
+$\Spec_{\mathrm{st}}\cap\Spec_L$ (Definition~\ref{def:intersection}), which
+is total, since both specs permit
 answering no reads. By Proposition~\ref{prop:intersection-bound}, the
 intersection keeps Lifted Monotonicity when $\Spec_L$ permits the read rule's
 answers.
