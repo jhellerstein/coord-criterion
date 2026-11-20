@@ -631,7 +631,7 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Observable equivalence.*  "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis.
+/-- *Observable Equivalence.*  "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis.
 Removing the commitment events from `ρ` gives a canonical run of `𝒮`
 (Definition run) that is observably equivalent to `ρ`: the two accept the same
 inputs and emit the same outputs, and after each event the canonical run keeps
@@ -717,7 +717,7 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
   Txn.Partial.CommitEx.example_commitment_event_ABC h
 
 
-/-- §`sec:systems`, end of *Observable equivalence*: "The CALM and CAP
+/-- §`sec:systems`, end of *Observable Equivalence*: "The CALM and CAP
 criteria are about specs and their canonical runs.  A system with no
 commitment events inherits their confluence directly, since its runs are
 canonical runs.  A system with commitments of its own keeps at most the rows of
