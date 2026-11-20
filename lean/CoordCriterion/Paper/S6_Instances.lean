@@ -510,9 +510,8 @@ precedes the arrivals of its writes at replicas.  One input extends another when
 happens before an event already present.  An output is a set of read answers, ordered by
 inclusion.  A history is *complete* when it answers every read and orders
 versions by timestamp.  For an isolation level `L`, the table `P_L` of `𝒮_L`
-contains an output at an input when the input extends to a complete history
-that includes the output and exhibits none of the phenomena that `L`
-proscribes.  The explicit relation `E` contains, at each input, the output
+contains a row `(i,o)` when some complete history extends `i`, includes `o`,
+and exhibits none of the phenomena that `L` proscribes.  The explicit relation `E` contains, at each input, the output
 that the read rule gives."  (CIDR version:
 "An input is a history: a set of events, partially ordered by happens-before,
 of three kinds.  A read is tagged with its replica; a commit carries its
