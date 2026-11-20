@@ -33,7 +33,7 @@ ORDER = [
     ("AppE_Deployment", "Appendix E: Deployment", "appendices/deployment.tex"),
     ("AppF_ResponseAvailability", "Appendix F: Response availability and Gilbert–Lynch", "appendices/cap-response.tex"),
     ("AppG_TransactionBases", "Appendix G: 2PL and MVTO", "appendices/commitment-bases.tex"),
-    ("AppH_Applications", "Appendix H: Additional applications", "appendices/additional-applications.tex"),
+    ("AppH_Applications", "Appendix G: Classical problems in distributed computing", "appendices/classical-problems.tex"),
 ]
 
 DECL = re.compile(r"^(?:noncomputable\s+)?(theorem|abbrev|def|lemma|structure|inductive)\s+(«[^»]+»)", re.M)

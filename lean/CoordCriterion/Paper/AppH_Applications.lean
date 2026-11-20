@@ -1,33 +1,39 @@
 import CoordCriterion.Appendix.Classical
+import CoordCriterion.Appendix.ClassicalFrontiers
 
 /-!
 # Paper, Appendix G: Classical problems in distributed computing (`app:additional-applications`)
 
 Source: `appendices/classical-problems.tex` (the whole appendix: three
-patterns and the table of classical problems; consensus; `k`-set agreement;
-renaming; snapshots; a causal FIFO queue).
+patterns and the table of classical problems; broadcast; consensus, with
+`k`-set agreement and the shared-memory remark; leader election; snapshots;
+queues; search structures).
 
 How to read this file: one `/-! ## … -/` section per subsection of the
 appendix, in paper order.  Lemmas, propositions, the table, and labeled
 equations are named by their label (`«lem:accumulating»`,
-`«prop:causal-fifo»`, `«tab:classical-problems/…»`, `«eq:tight-renaming»`);
-every other claim is named `«app:additional-applications/<slug>»`.  Each
-docstring quotes the claim; statements are written out in terms of library
-definitions of `Appendix/Applications.lean` and `Appendix/Classical.lean`
-(namespace `CC.Apps`), and proofs point there.
+`«prop:causal-queue»`, `«tab:classical-problems/…»`,
+`«eq:authority-refinement»`); every other claim is named
+`«app:additional-applications/<slug>»`.  Each docstring quotes the claim;
+statements are written out in terms of library definitions of
+`Appendix/Applications.lean`, `Appendix/Classical.lean`,
+`Appendix/ClassicalFrontiers.lean`, and `Appendix/Frontiers.lean`, and proofs
+point there.
 
 Common modeling choices: output types contain all partial maps / sets, and
 "no common output extension" is proved in the whole output type when that is
-stronger; "not monotone" is `¬ LiftedMono`; "the negative side of Complete
-CAP" (Theorem `thm:complete-cap` with `E = P` and Corollary
-`cor:complete-cap-any-system`) is
+stronger; "not monotone" is `¬ LiftedMono`; "no system has Availability for
+`P` and Partition Consistency" (Theorem `thm:complete-cap` with `E = P` and
+Corollary `cor:complete-cap-any-system`) is
 `¬ ∃ Sys, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys`, obtained from
 `CC.CAP.complete_cap`, whose proof builds the partition separating the rows'
 inputs.  Classical results the appendix cites (Fischer–Lynch–Paterson,
-wait-free impossibility of `k`-set agreement, the renaming hierarchy, the
-equivalence of total-order broadcast and consensus, wait-free atomic
-snapshots, liveness of reliable broadcast) are not proved here; the
-docstrings that mention them say so.
+wait-free computability and Herlihy's hierarchy, the renaming bounds, the
+equivalence of total-order broadcast and consensus, broadcast without
+agreement, ring election algorithms, Angluin's anonymous-ring result, the
+weakest failure detector `Ω`, wait-free atomic snapshots, liveness of reliable
+broadcast, the Chandy–Lamport algorithm) are not proved here; the docstrings
+that mention them say so.
 -/
 
 namespace CC
@@ -131,49 +137,139 @@ theorem «app:additional-applications/pattern-consequences» {I O : Type} [PO I]
       CAP.Availability (CAP.cfSystem sp D) ∧ CAP.PartitionConsistency (CAP.cfSystem sp D)) :=
   ⟨fun h => pattern_consequences_neg h D, fun h => pattern_consequences_pos h D⟩
 
-/-! ### Table `tab:classical-problems` and the specs defined after it -/
 
-/-- Table row "Reliable broadcast | broadcast messages (⊆) | delivered messages
-(⊆) | Lemma `lem:accumulating` | yes", with the text: "In reliable broadcast,
-an input is a finite set of broadcast messages, and an output is a set of
-delivered messages.  An output is permitted when it contains only broadcast
-messages, so Lemma `lem:accumulating` applies."  The liveness requirement of
-reliable broadcast that the text mentions is cited, not modeled. -/
-theorem «tab:classical-problems/reliable-broadcast» {M : Type} :
-    (∀ i o, (bcastSpec M).P i o ↔ ∀ x, o.mem x → i.1 x) ∧ (bcastSpec M).LiftedMono :=
-  ⟨fun _ _ => Iff.rfl, bcast_liftedMono⟩
+/-! ### Table `tab:classical-problems` -/
 
-/-- Table row "Causal broadcast, global snapshot | causal history |
-downward-closed set of events (⊆) | Lemma `lem:accumulating` | yes": the prefix
-spec of Section `app:snapshots`, monotone by Lemma `lem:accumulating`. -/
+/-- Table row "Reliable broadcast | delivered messages (⊆) | yes"; see
+`«app:additional-applications/reliable-broadcast»`. -/
+theorem «tab:classical-problems/reliable-broadcast» {M : Type} : (bcastSpec M).LiftedMono :=
+  bcast_liftedMono
+
+/-- Table row "Causal broadcast | causally closed set of delivered messages
+(⊆) | yes"; see `«app:additional-applications/causal-broadcast»`. -/
 theorem «tab:classical-problems/causal-broadcast» {Ev : Type} : (prefixSpec Ev).LiftedMono :=
   prefix_liftedMono_accumulating
 
-/-- Table row "Grow-only counter | increments (⊆) | count (≤) | Lemma
-`lem:accumulating`, with maximum | yes", with the text: "A grow-only counter
-takes as input a finite set of increments and outputs a count, ordered by `≤`.
-A count is permitted when it is at most the number of increments.  A permitted
-count stays permitted as increments arrive, and the larger of two permitted
-counts is permitted, so the maximum form of Lemma `lem:accumulating` applies."
-Counts are `Count` (a wrapper on `Nat`); `card i` is the number of
-increments. -/
+/-- Table row "Grow-only counter | count (≤) | yes"; see
+`«app:additional-applications/counter»`. -/
 theorem «tab:classical-problems/counter» {Inc : Type} [DecidableEq Inc] :
+    (counterSpec Inc).LiftedMono :=
+  counter_liftedMono
+
+/-- Table row "Total-order broadcast | delivery sequence (prefix) | no"; see
+`«app:additional-applications/total-order-broadcast»`. -/
+theorem «tab:classical-problems/total-order-broadcast» {M : Type} [DecidableEq M] {a b : M}
+    (h : a ≠ b) : ¬ (tobSpec M).LiftedMono :=
+  (tob_not_liftedMono h).2
+
+/-- Table row "Consensus, `k`-set agreement | decision map (extension) | no";
+see `«app:additional-applications/consensus»` and
+`«app:additional-applications/kset»`. -/
+theorem «tab:classical-problems/consensus-kset» {P Val : Type} [DecidableEq P] {k : Nat}
+    {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
+    (hp : ∀ r r', p r = p r' → r = r') (hv : ∀ r r', v r = v r' → r = r') (hk : 1 ≤ k) :
+    ¬ (ksetSpec P Val k).LiftedMono :=
+  (kset_not_directed hp hv hk).2
+
+/-- Table row "Leader election, participants listed | leader or `⊥` (`⊥`
+lowest) | yes"; see `«app:additional-applications/leader-listed»`. -/
+theorem «tab:classical-problems/leader-listed» (All : List Nat) :
+    (leaderAllSpec All).LiftedMono :=
+  (leaderAll_consistent All).2
+
+/-- Table row "Leader election, participants unlisted | leader or `⊥` (`⊥`
+lowest) | no"; see `«app:additional-applications/leader-unlisted»`. -/
+theorem «tab:classical-problems/leader-unlisted» : ¬ leaderSpec.LiftedMono :=
+  (leader_not_monotone Unit).1
+
+/-- Table row "Global snapshot | a cut per scan (extension) | yes*", with the
+caption: "*Monotone across partitions when each process answers its own
+scans."  See Proposition `prop:snapshots`(1). -/
+theorem «tab:classical-problems/global-snapshot» {Ev : Type} {n : Nat} (proc : Ev → Fin n)
+    (scan : Ev → Prop) : Deploy.MonoAcrossPartitions (Deploy.ownerD (clSpec proc scan)) :=
+  cl_monoAcross proc scan
+
+/-- Table row "Atomic snapshot | a view per scan (extension) | no*"; see
+Proposition `prop:snapshots`(2). -/
+theorem «tab:classical-problems/atomic-snapshot» {Ev : Type} {proc : Ev → Fin 2}
+    {scan : Ev → Prop} (w : Four proc scan) :
+    ¬ Deploy.MonoAcrossPartitions (Deploy.ownerD (atSpec proc scan)) :=
+  atomic_not_monoAcross w
+
+/-- Table row "Causal queue | dequeue report (extension) | yes"; see
+Proposition `prop:causal-queue`(1). -/
+theorem «tab:classical-problems/causal-queue» {Ev : Type} : (cqSpec Ev).LiftedMono :=
+  cqSpec_liftedMono
+
+/-- Table row "Forward-reachability lookup | valid claims (⊆) | yes": the spec
+bounded by the valid claims satisfies Lifted Monotonicity
+(Propositions `prop:persistent-forwarding` and `prop:remembered-claims`(1)). -/
+theorem «tab:classical-problems/forward-lookup» {K P : Type} (Rs : Front.Restructuring K P) :
+    (boundSpec (fwdV Rs)).LiftedMono :=
+  (boundSpec_liftedMono_iff _).2 (fwdV_grows Rs)
+
+/-! ## Broadcast -/
+
+/-- "In reliable broadcast, an input is a finite set of broadcast messages,
+and an output is a set of delivered messages.  An output is permitted when it
+contains only broadcast messages, so Lemma `lem:accumulating` applies."  The
+liveness requirement of reliable broadcast that the text mentions is cited,
+not modeled. -/
+theorem «app:additional-applications/reliable-broadcast» {M : Type} :
+    (∀ i o, (bcastSpec M).P i o ↔ ∀ x, o.mem x → i.1 x) ∧ (bcastSpec M).LiftedMono :=
+  ⟨fun _ _ => Iff.rfl, bcast_liftedMono⟩
+
+/-- "An input is a finite causal history of broadcasts: a finite set of events
+with a strict partial order of causal precedence.  A history `h'` extends `h`,
+`h ⊑ h'`, when the events of `h` form a causally closed subset of `h'` that
+carries the restricted order, so an input extension never adds an event to
+the causal past of an old one." -/
+theorem «app:additional-applications/history-order» {Ev : Type} (h h' : Hist Ev) :
+    h ≼ h' ↔
+      (∀ x, h.s.1 x → h'.s.1 x) ∧ (∀ a b, h.s.1 b → h'.lt a b → h.s.1 a) ∧
+      ∀ a b, h.s.1 a → h.s.1 b → (h.lt a b ↔ h'.lt a b) :=
+  Iff.rfl
+
+/-- "An output is a set of delivered messages, permitted when it is causally
+closed in the input.  Such a set stays causally closed as the history grows,
+and a union of causally closed sets is causally closed, so Lemma
+`lem:accumulating` applies."  Delivered messages are identified with their
+broadcast events; the spec is `prefixSpec`, and the last conjunct goes
+through Lemma `lem:accumulating` (`prefix_liftedMono_accumulating`). -/
+theorem «app:additional-applications/causal-broadcast» {Ev : Type} :
+    (∀ (h : Hist Ev) p, (prefixSpec Ev).P h p ↔
+      (∀ x, p.mem x → h.s.1 x) ∧ ∀ a b, p.mem b → h.lt a b → p.mem a) ∧
+    (∀ {h h' : Hist Ev} (p : ESet Ev), h ≼ h' → (prefixSpec Ev).P h p → (prefixSpec Ev).P h' p) ∧
+    (∀ (j : Hist Ev) (ps : List (ESet Ev)), (∀ p ∈ ps, (prefixSpec Ev).P j p) →
+      (prefixSpec Ev).P j ⟨fun x => ∃ p ∈ ps, p.mem x⟩) ∧
+    (prefixSpec Ev).LiftedMono :=
+  ⟨fun _ _ => Iff.rfl, fun _ hle hp => prefix_mono hle hp, fun _ ps hps => prefix_union ps hps,
+    prefix_liftedMono_accumulating⟩
+
+/-- "A grow-only counter takes as input a finite set of increments and outputs
+a count, ordered by `≤`.  A count is permitted when it is at most the number
+of increments.  A permitted count stays permitted as increments arrive, and
+the larger of two permitted counts is permitted, so the maximum form of Lemma
+`lem:accumulating` applies."  Counts are `Count` (a wrapper on `Nat`);
+`card i` is the number of increments. -/
+theorem «app:additional-applications/counter» {Inc : Type} [DecidableEq Inc] :
     (∀ i c, (counterSpec Inc).P i c ↔ c.n ≤ card i) ∧ (counterSpec Inc).LiftedMono :=
   ⟨fun _ _ => Iff.rfl, counter_liftedMono⟩
 
-/-- Table row "Total-order broadcast | broadcast messages (⊆) | delivery
-sequence (prefix) | Lemma `lem:order-commitment` | no", with the text:
-"Total-order broadcast has the inputs of reliable broadcast, but an output is
-a delivery sequence of distinct broadcast messages, ordered by prefix.  Two
+/-- "Total-order broadcast has the inputs of reliable broadcast, but an output
+is a delivery sequence of distinct broadcast messages, ordered by prefix.  Two
 delivery sequences have a common output extension only when one is a prefix
 of the other, which is the agreement that total-order broadcast requires.  A
 sequence places `a` before `b` when it lists `a`, and lists `b`, if at all,
 after `a`.  An extension of the sequence keeps this placement, and no sequence
 places two messages in both orders.  The rows `({a},[a])` and `({b},[b])` have
-the common input extension `{a,b}`, so by Lemma `lem:order-commitment` the spec
-is not monotone."  The cited equivalence with consensus is not proved. -/
-theorem «tab:classical-problems/total-order-broadcast» {M : Type} [DecidableEq M] {a b : M}
-    (h : a ≠ b) (D : Type) :
+the common input extension `{a,b}`, so by Lemma `lem:order-commitment` the
+spec is not monotone."  Also: "Total-order broadcast needs a commitment"
+(the last conjunct, and by the No-commitment test).  The cited classical
+results (broadcast without agreement; the equivalence with consensus) are not
+proved. -/
+theorem «app:additional-applications/total-order-broadcast» {M : Type} [DecidableEq M]
+    {a b : M} (h : a ≠ b) (D : Type) :
     (∀ i s, (tobSpec M).P i s ↔ s.l.Nodup ∧ ∀ x ∈ s.l, i.1 x) ∧
     (∀ s t : Seq M, (∃ u, s ≼ u ∧ t ≼ u) ↔ s ≼ t ∨ t ≼ s) ∧
     (∀ (s u : Seq M) (x y : M), s ≼ u → PlacesBefore s x y → PlacesBefore u x y) ∧
@@ -184,74 +280,46 @@ theorem «tab:classical-problems/total-order-broadcast» {M : Type} [DecidableEq
    fun _ _ _ h1 h2 => placesBefore_asymm h1 h2, (tob_not_liftedMono h).2,
    no_cap_of_not_liftedMono (tob_not_liftedMono h).2 D⟩
 
-/-- Table row "Causal FIFO queue | causal history of enqueues | dequeue
-sequence (prefix) | Lemma `lem:order-commitment` | no; yes on chains": see
-Proposition `prop:causal-fifo`. -/
-theorem «tab:classical-problems/causal-fifo-queue» {Ev : Type} [DecidableEq Ev] {h : Hist Ev}
-    {a b : Ev} (ha : h.s.1 a) (hb : h.s.1 b) (hab : a ≠ b) (h1 : ¬ h.lt a b) (h2 : ¬ h.lt b a) :
-    ¬ (queueSpec Ev).LiftedMono ∧ (queueChainSpec Ev).LiftedMono :=
-  ⟨(queue_not_directed ha hb hab h1 h2).2, queueChain_liftedMono⟩
-
-/-- Table row "Atomic snapshot | updates and scans (⊆) | views of answered
-scans (extension) | Lemma `lem:order-commitment` | no": see
-`«app:additional-applications/atomic-snapshot»`. -/
-theorem «tab:classical-problems/atomic-snapshot» {U S : Type} [DecidableEq S] {u1 u2 : U}
-    {s1 s2 : S} (hu : u1 ≠ u2) (hs : s1 ≠ s2) : ¬ (snapSpec U S).LiftedMono :=
-  (snap_not_liftedMono hu hs Unit).2.1
-
-/-- Table row "Consensus | proposals (⊆) | decision map (extension) | Lemma
-`lem:bounded-values`, `k = 1` | no": see
-`«app:additional-applications/consensus»`. -/
-theorem «tab:classical-problems/consensus» {P Val : Type} [DecidableEq P]
-    {p : Fin 2 → P} {v : Fin 2 → Val}
-    (hp : ∀ r r', p r = p r' → r = r') (hv : ∀ r r', v r = v r' → r = r') :
-    ¬ (ksetSpec P Val 1).LiftedMono :=
-  (kset_not_directed hp hv (Nat.le_refl 1)).2
-
-/-- Table row "`k`-set agreement | proposals (⊆) | decision map (extension) |
-Lemma `lem:bounded-values` | no": see Section `app:kset`. -/
-theorem «tab:classical-problems/kset» {P Val : Type} [DecidableEq P] {k : Nat}
-    {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
-    (hp : ∀ r r', p r = p r' → r = r') (hv : ∀ r r', v r = v r' → r = r') (hk : 1 ≤ k) :
-    ¬ (ksetSpec P Val k).LiftedMono :=
-  (kset_not_directed hp hv hk).2
-
-/-- Table row "Leader election | candidates (⊆) | choice of leader (extension)
-| Lemma `lem:bounded-values`, `k = 1` | no", with the text: "In leader
-election, an input is a finite set of candidates, and an output maps candidates
-to the leader each has chosen, ordered by extension.  An output is permitted
-when it names only candidates and names at most one leader.  This is consensus
-in which each candidate proposes itself, so Lemma `lem:bounded-values` applies
-with `k = 1`."  Lean models the spec exactly so: `ksetSpec P P 1`, with
-candidate `p` entering as the proposal `(p, p)`; two candidates give the
-witness. -/
-theorem «tab:classical-problems/leader-election» {P : Type} [DecidableEq P] {p : Fin 2 → P}
-    (hp : ∀ r r', p r = p r' → r = r') (D : Type) :
-    ¬ (ksetSpec P P 1).LiftedMono ∧
-      ¬ ∃ Sys : CAP.System (ksetSpec P P 1) D, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
-  ⟨(kset_not_directed hp hp (Nat.le_refl 1)).2, (leader_not_liftedMono hp D).2⟩
-
-/-- Table row "Renaming | participants (⊆) | names (extension) | Lemma
-`lem:bounded-values`, `k = 1` | no": see `«app:additional-applications/renaming-bounded»`
-and `«app:additional-applications/renaming-any-bound»`. -/
-theorem «tab:classical-problems/renaming» {P : Type} [DecidableEq P] {p q : P} (h : p ≠ q) :
-    ¬ (renSpec P).LiftedMono :=
-  (ren_via_bounded h).2
-
 /-! ## Consensus: committed authority, then monotone evidence -/
 
-/-- "As a spec, consensus is `k`-set agreement with `k = 1` …  Two
-participants that propose different values and each decide their own give two
-rows with a common input extension, so by Lemma `lem:bounded-values` the spec
-is not monotone."  Also, from Section `app:kset`: "Consensus is `k = 1`."  The
+/-- "In consensus, inputs are finite sets of proposals, at most one per
+participant, ordered by inclusion.  Outputs are partial decision maps from
+participants to values, ordered by extension, and every permitted output
+decides at most one value, which some participant proposed.  Two participants
+that propose different values and each decide their own give two rows with a
+common input extension, so by Lemma `lem:bounded-values` with `k = 1` the spec
+is not monotone."  Consensus is `ksetSpec P Val 1`; the second conjunct goes
+through Lemma `lem:bounded-values` (`kset_not_directed`).  The
 Fischer–Lynch–Paterson result the paragraph cites is not proved. -/
 theorem «app:additional-applications/consensus» {P Val : Type} [DecidableEq P]
     {p : Fin 2 → P} {v : Fin 2 → Val}
     (hp : ∀ r r', p r = p r' → r = r') (hv : ∀ r r', v r = v r' → r = r') (D : Type) :
+    (∀ I m, (ksetSpec P Val 1).P I m ↔
+      (∀ p a, m.f p = some a → ∃ b, I.1.1 (p, b)) ∧
+      (∀ p a, m.f p = some a → ∃ q, I.1.1 (q, a)) ∧
+      ∃ l : List Val, l.length ≤ 1 ∧ ∀ p a, m.f p = some a → a ∈ l) ∧
     ¬ (ksetSpec P Val 1).LiftedMono ∧
       ¬ ∃ Sys : CAP.System (ksetSpec P Val 1) D,
         CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
-  ⟨(kset_not_directed hp hv (Nat.le_refl 1)).2, kset_no_cap hp hv (Nat.le_refl 1) D⟩
+  ⟨fun _ _ => Iff.rfl, (kset_not_directed hp hv (Nat.le_refl 1)).2,
+    kset_no_cap hp hv (Nat.le_refl 1) D⟩
+
+/-- "The same holds for `k`-set agreement, which allows up to `k` decided
+values: `k+1` participants that each decide their own proposal give the
+witness of Lemma `lem:bounded-values`."  `ksetSpec P Val k`; the witness rows
+are `(propIn p v r, single p v r)` at the common input extension
+`unionIn p v hp`. -/
+theorem «app:additional-applications/kset» {P Val : Type} [DecidableEq P]
+    {k : Nat} {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
+    (hp : ∀ r r', p r = p r' → r = r') (hv : ∀ r r', v r = v r' → r = r') (hk : 1 ≤ k)
+    (D : Type) :
+    (∀ r, (ksetSpec P Val k).P (propIn p v r) (single p v r) ∧ propIn p v r ≼ unionIn p v hp) ∧
+    (¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u) ∧
+    ¬ (ksetSpec P Val k).LiftedMono ∧
+      ¬ ∃ Sys : CAP.System (ksetSpec P Val k) D,
+        CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
+  ⟨fun r => ⟨kset_single_row hk r, kset_union_upper hp r⟩, kset_all_fail hp hv,
+    (kset_not_directed hp hv hk).2, kset_no_cap hp hv hk D⟩
 
 /-- "An output is a triple `(E,V,D)`: a certified epoch chain `E`, which is a finite
 sequence of epochs …; a set `V` of votes or certificates; and a set `D` of
@@ -333,313 +401,325 @@ theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I
       ∀ (B : CommitmentBasis sp) τ, SysStep B σ (.output o) τ → B (canonicalCommitment o) :=
   epoch_conflict ho ho' he he' hne
 
-/-! ## `k`-set agreement: no `k`-wise test suffices -/
 
-/-- "An input is a finite set of proposals `(p,v)`, at most one per
-participant, ordered by inclusion." -/
-abbrev «app:additional-applications/kset-input» (P Val : Type) := KInput P Val
+/-- Paragraph "Shared memory": "The queue orders concurrent requests.  From
+sets of requests to request sequences, it is the total-order broadcast spec of
+Section `app:broadcast`, so ordering them is a commitment, made by one
+participant.  …  Any stage that is a monotone function of its input needs no
+commitment, whatever stage guards it, so by Theorem `thm:proper-coordination`
+every such pipeline is proper.  This holds for every object type and every
+task, including consensus over read/write registers."  First conjunct: the
+queue, as a spec from sets of requests to request sequences, is `tobSpec`,
+which is not monotone, so some output needs a commitment
+(`pattern_consequences_neg`).  Second: `sp` is any upstream stage (for
+example the memory, whose outputs are its responses); `d` is the processes'
+decisions as a monotone function of those outputs.  The modeling of shared
+memory as a single participant, the example algorithm, and the cited
+wait-free results (Herlihy's hierarchy, the renaming bounds) are prose and
+citations, not formalized. -/
+theorem «app:additional-applications/shared-memory» {R : Type} [DecidableEq R] {a b : R}
+    (hab : a ≠ b) {I M O : Type} [PO I] [PO M] [PO O]
+    (sp : Spec I M) (d : M → O) (hd : ∀ m m', m ≼ m' → d m ≼ d m') :
+    (¬ (tobSpec R).LiftedMono ∧
+      ∃ τ : State (tobSpec R), ReachableCF τ ∧ ∃ o, τ.R τ.cur o ∧ ¬ Exposable τ o) ∧
+    Guard.Proper sp (funSpec d) := by
+  refine ⟨⟨(tob_not_liftedMono hab).2, ?_⟩, monotone_stage_proper sp d hd⟩
+  obtain ⟨τ, hτ, o, ho, hne, _⟩ := (pattern_consequences_neg (tob_not_liftedMono hab).2 Unit).2.1
+  exact ⟨τ, hτ, o, ho, hne⟩
 
-/-- "Outputs are partial decision maps `m : 𝒩 ⇀ Val` ordered by extension."
-(The participant type is `P` here.) -/
-theorem «app:additional-applications/pmap-order» {P Val : Type} (m m' : PMap P Val) :
-    m ≼ m' ↔ ∀ p a, m.f p = some a → m'.f p = some a := Iff.rfl
+/-! ## Leader election -/
 
-/-- "At input `I`, `m` is permitted when three conditions hold: it decides only
-participants that propose in `I`, every value in its range is proposed in `I` (validity), and its
-range has at most `k` values."  (The range is covered by a list of length
-`≤ k`.) -/
-theorem «app:additional-applications/kset-permitted» {P Val : Type} (k : Nat)
-    (I : KInput P Val) (m : PMap P Val) :
-    (ksetSpec P Val k).P I m ↔
-      (∀ p a, m.f p = some a → ∃ b, I.1.1 (p, b)) ∧
-      (∀ p a, m.f p = some a → ∃ q, I.1.1 (q, a)) ∧
-      ∃ l : List Val, l.length ≤ k ∧ ∀ p a, m.f p = some a → a ∈ l :=
+/-- "In both, an output is a leader or `⊥`, for no leader yet, ordered with `⊥`
+below every leader and leaders incomparable." -/
+theorem «app:additional-applications/leader-order» (x y : Flat Nat) :
+    x ≼ y ↔ x.v = none ∨ x = y :=
   Iff.rfl
 
-/-- "At `p_r`'s proposal input, `{p_r ↦ v_r}` is permitted" (`k ≥ 1`).
-Participants and values are indexed by `r : Fin (k+1)`. -/
-theorem «app:additional-applications/kset-proposal-row» {P Val : Type} [DecidableEq P]
-    {k : Nat} {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hk : 1 ≤ k) (r : Fin (k + 1)) :
-    (ksetSpec P Val k).P (propIn p v r) (single p v r) :=
-  kset_single_row hk r
+/-- "In the first, the input includes the list of all participants, the
+`All` relation of Section `sec:systems`, in every row.  It also records, for
+some of the listed participants, whether each is a candidate, and inputs are
+ordered by extension of these records.  The spec is functional.  Its output is
+the largest candidate once every listed participant has reported, or `⊥` if
+there is none, and `⊥` before that.  The spec is monotone, since more input
+never changes a report already received, so once every participant has
+reported the output is fixed.  By Functional CALM (Theorem
+`thm:functional-calm`), its runs are consistent.  Electing the largest
+candidate therefore needs no commitment."  The list `All` is a parameter of
+the spec, so it is the same in every row; participants are identified by
+natural numbers, and a record is a partial map to `Bool` (candidate or not).
+The cited ring algorithms are not formalized. -/
+theorem «app:additional-applications/leader-listed» (All : List Nat) :
+    (∀ x o, (leaderAllSpec All).P x o ↔ o = maxLeader All x) ∧
+    (leaderAllSpec All).Functional ∧ (leaderAllSpec All).MonotoneF ∧
+    (leaderAllSpec All).Consistent ∧ (leaderAllSpec All).LiftedMono :=
+  ⟨fun _ _ => Iff.rfl, leaderAllSpec_functional All, leaderAll_mono All,
+    leaderAll_consistent All⟩
 
-/-- "… and the union of the proposal inputs is a common input extension" (an input
-because the `p_r` are distinct). -/
-theorem «app:additional-applications/kset-union» {P Val : Type} [DecidableEq P] {k : Nat}
-    {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
-    (r : Fin (k + 1)) :
-    propIn p v r ≼ unionIn p v hp :=
-  kset_union_upper hp r
-
-/-- "Any `k` of these `k+1` rows have a common output extension there": for each
-omitted index `r₀`, a permitted output at the union extends every
-`{p_r ↦ v_r}`, `r ≠ r₀`.  This is also the sense of "no test that examines
-`k` proposal rows at a time detects the failure". -/
-theorem «app:additional-applications/kset-any-k» {P Val : Type} [DecidableEq P] {k : Nat}
-    {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
-    (r0 : Fin (k + 1)) :
-    ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u :=
-  kset_any_k hp r0
-
-/-- "All `k+1` do not, since such an output would have `k+1` values." -/
-theorem «app:additional-applications/kset-all-fail» {P Val : Type} [DecidableEq P] {k : Nat}
-    {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
-    (hv : ∀ r r', v r = v r' → r = r') :
-    ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u :=
-  kset_all_fail hp hv
-
-/-- "So the common-extension condition fails, and the spec is not
-monotone (Proposition `prop:common-expansion-form`).  This is Lemma
-`lem:bounded-values`, where a map decides the values in its range.  A
-partition separating the `p_r` gives the negative side of Complete CAP."
-The second conjunct is obtained through Lemma `lem:bounded-values`
-(`kset_not_directed`), with `Decides`. -/
-theorem «app:additional-applications/kset-not-monotone» {P Val : Type} [DecidableEq P]
-    {k : Nat} {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
-    (hp : ∀ r r', p r = p r' → r = r') (hv : ∀ r r', v r = v r' → r = r') (hk : 1 ≤ k)
-    (D : Type) :
-    ¬ (ksetSpec P Val k).CommonExpansion ∧ ¬ (ksetSpec P Val k).LiftedMono ∧
-      ¬ ∃ Sys : CAP.System (ksetSpec P Val k) D,
-        CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
-  ⟨kset_not_commonExpansion hp hv hk, (kset_not_directed hp hv hk).2, kset_no_cap hp hv hk D⟩
-
-/-- "The failure lies within one fiber.  An output permitted at an input is
-still permitted at each input extension of that input, so Relational
-Monotonicity holds.  At the union of the proposal inputs, each `{p_r ↦ v_r}`
-is permitted, but the `k+1` of them are not compatible in that fiber, so the
-fiber is not directed."  The wait-free impossibility result cited after this is not
-proved. -/
-theorem «app:additional-applications/kset-within-fiber» {P Val : Type} [DecidableEq P]
-    {k : Nat} {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
-    (hp : ∀ r r', p r = p r' → r = r') (hv : ∀ r r', v r = v r' → r = r') (hk : 1 ≤ k) :
-    (∀ (I J : KInput P Val) m, I ≼ J → (ksetSpec P Val k).P I m → (ksetSpec P Val k).P J m) ∧
-    (ksetSpec P Val k).RelMono ∧
-    (∀ r, (ksetSpec P Val k).P (unionIn p v hp) (single p v r)) ∧
-    ¬ (ksetSpec P Val k).DirectedOutputs :=
-  ⟨fun _ _ _ hIJ hm => kset_grow hIJ hm, kset_relMono, kset_union_row hp hk,
-   (kset_not_directed hp hv hk).1⟩
-
-/-! ## Renaming -/
-
-/-- Eq. `tight-renaming`: "the outputs at `N` are the injective maps
-`m : N → {1,…,|N|}`" (total on `N`, undefined outside `N`; `card N` is `|N|`). -/
-theorem «eq:tight-renaming» {P : Type} [DecidableEq P] (N : FinSet P) (m : PMap P Nat) :
-    (renSpec P).P N m ↔
-      (∀ x, N.1 x ↔ ∃ n, m.f x = some n) ∧
-      (∀ x y n, m.f x = some n → m.f y = some n → x = y) ∧
-      ∀ x n, m.f x = some n → 1 ≤ n ∧ n ≤ card N :=
-  Iff.rfl
-
-/-- "Relational Monotonicity holds.  Given `N ⊆ N'` and an output `m` at `N`,
-the participants of `N' ∖ N` can take the names `|N|+1,…,|N'|`, which gives an
-output at `N'` that extends `m`." -/
-theorem «app:additional-applications/renaming-relational» {P : Type} [DecidableEq P] :
-    (renSpec P).RelMono :=
-  ren_relMono
-
-/-- "At `{p}` the only output is `p ↦ 1`, and at `{q}` it is `q ↦ 1`." -/
-theorem «app:additional-applications/renaming-singletons» {P : Type} [DecidableEq P]
-    (p q : P) (m : PMap P Nat) :
-    ((renSpec P).P (sing p) m ↔ m = name1 p) ∧ ((renSpec P).P (sing q) m ↔ m = name1 q) :=
-  ⟨ren_singleton_iff p m, ren_singleton_iff q m⟩
-
-/-- "Each has an output extension at `{p,q}`, but no injective map extends
-both." -/
-theorem «app:additional-applications/renaming-each-extends» {P : Type} [DecidableEq P]
-    {p q : P} (h : p ≠ q) :
-    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 p ≼ u) ∧
-    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 q ≼ u) ∧
-    ¬ ∃ u : PMap P Nat, Injective u ∧ name1 p ≼ u ∧ name1 q ≼ u :=
-  ⟨(ren_each_extends h).1, (ren_each_extends h).2, ren_no_injective_extends_both h⟩
-
-/-- "This is Lemma `lem:bounded-values` with `k = 1`, where a map decides the
-participants to which it gives the name `1`." -/
-theorem «app:additional-applications/renaming-bounded» {P : Type} [DecidableEq P]
-    {p q : P} (h : p ≠ q) :
-    (∀ u : PMap P Nat, Injective u → ∃ l : List P, l.length ≤ 1 ∧ ∀ x, HoldsName1 u x → x ∈ l) ∧
-    ¬ (renSpec P).CommonExpansion ∧ ¬ (renSpec P).LiftedMono :=
-  ⟨fun _ hu => inj_bound hu, ren_via_bounded h⟩
-
-/-- "The fiber at `{p,q}` is not directed either: `{p↦1,q↦2}` and `{p↦2,q↦1}`
-have no common output extension.  The spec therefore fails Lifted
-Monotonicity, and by Theorem `thm:complete-cap` with `E = P` and Corollary
-`cor:complete-cap-any-system` a partition separating `p` and `q` rules out
-Availability for `P` with Partition Consistency." -/
-theorem «app:additional-applications/renaming-not-monotone» {P : Type} [DecidableEq P]
-    {p q : P} (h : p ≠ q) (D : Type) :
-    (¬ ∃ u, name2 p q 1 2 ≼ u ∧ name2 p q 2 1 ≼ u) ∧
-    ¬ (renSpec P).DirectedOutputs ∧ ¬ (renSpec P).LiftedMono ∧
-    ¬ ∃ Sys : CAP.System (renSpec P) D, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
-  ⟨(ren_not_directed h).1, (ren_not_directed h).2.1, (ren_not_directed h).2.2,
-    ren_no_cap h D⟩
-
-/-- "The witness uses only the name `1` at single-participant inputs and the
-injectivity of outputs at `{p,q}`.  It therefore applies to renaming with any
-namespace `{1,…,f(|N|)}` such that `f(n) ≥ n` for all `n`, for example
-`f(n) = 2n-1`."  The wait-free renaming hierarchy cited next is not proved. -/
-theorem «app:additional-applications/renaming-any-bound» {P : Type} [DecidableEq P]
-    {f : Nat → Nat} (hf : ∀ n, n ≤ f n) {p q : P} (h : p ≠ q) (D : Type) :
-    ¬ (renSpecB P f hf).LiftedMono ∧
-      ¬ ∃ Sys : CAP.System (renSpecB P f hf) D,
-        CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
-  renB_not_liftedMono hf h D
+/-- "In the second spec the input is only the set of candidates heard so far,
+ordered by inclusion, and an output is `⊥` or a candidate heard.  Two
+candidates, each elected at the input where only it has been heard, have no
+common output extension at the input where both have been heard.  So the spec
+is not monotone, and by Theorem `thm:complete-cap` no system has Availability
+for `P` and Partition Consistency."  The two candidates are `1` and `2`. -/
+theorem «app:additional-applications/leader-unlisted» (D : Type) :
+    (∀ S o, leaderSpec.P S o ↔ o.v = none ∨ ∃ l, o.v = some l ∧ S.1 l) ∧
+    ¬ leaderSpec.LiftedMono ∧
+      ¬ ∃ Sys : CAP.System leaderSpec D, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
+  ⟨fun _ _ => Iff.rfl, leader_not_monotone D⟩
 
 /-! ## Snapshots -/
 
-/-- "Inputs are finite causal histories, that is, finite sets of environment events with a
-causal partial order; `h ⊑ h'` when `h` is a downward-closed subset of `h'`
-carrying the restricted order." -/
-theorem «app:additional-applications/history-order» {Ev : Type} (h h' : Hist Ev) :
-    h ≼ h' ↔
-      (∀ x, h.s.1 x → h'.s.1 x) ∧ (∀ a b, h.s.1 b → h'.lt a b → h.s.1 a) ∧
-      ∀ a b, h.s.1 a → h.s.1 b → (h.lt a b ↔ h'.lt a b) :=
+/-- "For a scan `s` of a history `h`, a cut for `s` is a set `C` of updates of
+`h` that is causally closed among updates, contains every update causally
+before `s`, and contains no update causally after `s`."  Events are labeled
+by participant (`proc`) and kind (`scan`); updates are the events that are
+not scans. -/
+theorem «app:additional-applications/cut» {Ev : Type} (scan : Ev → Prop) (h : Hist Ev)
+    (s : Ev) (C : ESet Ev) :
+    ClCut scan h s C ↔
+      (∀ u, C.mem u → h.s.1 u ∧ ¬ scan u) ∧
+      (∀ u w, C.mem w → ¬ scan u → h.lt u w → C.mem u) ∧
+      (∀ u, ¬ scan u → h.lt u s → C.mem u) ∧
+      (∀ u, C.mem u → ¬ h.lt s u) :=
   Iff.rfl
 
-/-- "The *prefix* spec permits at `h` any downward-closed subset of
-`h`, with outputs ordered by inclusion." -/
-theorem «app:additional-applications/prefix-spec» {Ev : Type} (h : Hist Ev) (p : ESet Ev) :
-    (prefixSpec Ev).P h p ↔ (∀ x, p.mem x → h.s.1 x) ∧ ∀ a b, p.mem b → h.lt a b → p.mem a :=
+/-- "A view of participant `p` at `h` assigns a cut to each scan of `p` in `h`,
+and views are ordered by extension.  The global-snapshot spec is the product
+interface of these views (Appendix `app:rtc`): its outputs are partial tuples
+with one view per participant." -/
+theorem «app:additional-applications/global-snapshot-spec» {Ev : Type} {n : Nat}
+    (proc : Ev → Fin n) (scan : Ev → Prop) :
+    (∀ (p : Fin n) h (v : PMap Ev (ESet Ev)), ClView proc scan p h v ↔
+      (∀ s, v.f s ≠ none ↔ ScanOf proc scan h p s) ∧ ∀ s C, v.f s = some C → ClCut scan h s C) ∧
+    (clSpec proc scan).P = Deploy.prodTable (fun p h v => ClView proc scan p h v) :=
+  ⟨fun _ _ _ => Iff.rfl, rfl⟩
+
+/-- **Prop. `prop:snapshots`** (Global and atomic snapshots).  "(1) The
+global-snapshot spec is monotone across partitions under the owner
+deployment.  (2) The atomic snapshot is the strengthening of the
+global-snapshot spec that selects the tuples of views explained by one strict
+total order `L` of all events of the input that extends causal precedence: the
+view of each scan is the set of updates before it in `L`.  With two
+participants that can each perform an update and then a scan, it is not
+monotone across partitions under the owner deployment."  Proof of (1): "The views of a participant at one input are
+defined on the same scans, so they form an antichain, and the updates
+causally before a scan form a cut for it, so views exist.  By Theorem
+`thm:product-frontier`(1), it suffices that views continue.  An input
+extension adds nothing to the causal past of an old event, so the cut of an
+old scan is still a cut for it.  A new scan can take as its cut the updates
+causally before it."  Proof of (2): "The updates before a scan in such an `L`
+form a cut for it, since `L` extends causal precedence, so the selected tuples
+are tuples of views.  Let participant `p` perform update `u_p` and then scan
+`s_p`, and let `q` perform `u_q` and then `s_q`, with no messages between
+them.  The answer `{u_p}` to `s_p` is explained by the order
+`u_p s_p u_q s_q`, and the answer `{u_q}` to `s_q` by `u_q s_q u_p s_p`.  An
+order explaining both would place `u_p` before `s_p`, `s_p` before `u_q`,
+`u_q` before `s_q`, and `s_q` before `u_p`.  So the two answers, emitted by
+`p` and `q` on two sides of a partition, have no common output extension."
+Part (2) holds for every event universe with two participants that contains
+such four events (`Four`); the atomic snapshot is `atSpec`, whose rows are the
+restrictions of the tuples `atomicStr` selects. -/
+theorem «prop:snapshots» {Ev : Type} :
+    (∀ {n : Nat} (proc : Ev → Fin n) (scan : Ev → Prop),
+      Deploy.Antichain (W := fun _ : Fin n => PMap Ev (ESet Ev))
+        (fun p h v => ClView proc scan p h v) ∧
+      (∀ p h, ∃ v, ClView proc scan p h v) ∧
+      Deploy.Continue (W := fun _ : Fin n => PMap Ev (ESet Ev))
+        (fun p h v => ClView proc scan p h v) ∧
+      Deploy.MonoAcrossPartitions (Deploy.ownerD (clSpec proc scan))) ∧
+    (∀ {n : Nat} (proc : Ev → Fin n) (scan : Ev → Prop) (h : Hist Ev) L (p : Fin n),
+      LinExt h L → ClView proc scan p h (atomicView proc scan h L p)) ∧
+    (∀ (proc : Ev → Fin 2) (scan : Ev → Prop), Four proc scan →
+      ¬ Deploy.MonoAcrossPartitions (Deploy.ownerD (atSpec proc scan))) :=
+  ⟨fun proc scan => ⟨cl_antichain proc scan, cl_nonempty proc scan, cl_continue proc scan,
+      cl_monoAcross proc scan⟩,
+   fun proc scan h L p hL => atomicView_cl proc scan h L hL p,
+   fun _ _ w => atomic_not_monoAcross w⟩
+
+/-- "By Proposition `prop:deployment-complete-cap`, the owner deployment's
+canonical system for the global-snapshot spec has Deployment Availability and
+Partition Consistency, and no system for the atomic snapshot has both.  The
+global-snapshot spec permits the two answers of the proof together."  The
+first conjunct needs at least two participants.  The cited wait-free
+implementations of atomic snapshots, and the remark that the memory makes the
+commitments, are not formalized. -/
+theorem «app:additional-applications/snapshot-cap» {Ev : Type} (D : Type) :
+    (∀ {n : Nat} (proc : Ev → Fin n) (scan : Ev → Prop), 2 ≤ n →
+      ∃ Sys : CAP.System (clSpec proc scan) D,
+        Deploy.DeploymentAvailability Sys (Deploy.ownerD (clSpec proc scan)) ∧
+        Deploy.PartitionConsistencyAt Sys n) ∧
+    (∀ {proc : Ev → Fin 2} {scan : Ev → Prop} (w : Four proc scan),
+      (¬ ∃ Sys : CAP.System (atSpec proc scan) D,
+        Deploy.DeploymentAvailability Sys (Deploy.ownerD (atSpec proc scan)) ∧
+        Deploy.PartitionConsistencyAt Sys 2) ∧
+      (clSpec proc scan).P w.hist ⟨fun p => some (w.y p)⟩) :=
+  ⟨fun proc scan hn => cl_cap proc scan hn D, fun w => ⟨atomic_no_cap w D, w.cl_row⟩⟩
+
+/-! ## Queues -/
+
+/-- "An output is a dequeue report `(D,<)`: a set `D` of dequeued items with a
+strict order `<` on `D` that the queue guarantees among them.  Reports are
+ordered by extension: `(D,<) ⪯ (D',<')` when `D ⊆ D'`, the order `<'` agrees
+with `<` on `D`, and no item of `D' ∖ D` comes before an item of `D` under
+`<'`."  (Strictness is a hypothesis where it is used.) -/
+theorem «app:additional-applications/dequeue-report» {Ev : Type} (x y : DReport Ev) :
+    x ≼ y ↔ (∀ a, x.D a → y.D a) ∧ (∀ a b, x.D a → x.D b → (x.lt a b ↔ y.lt a b)) ∧
+      ∀ a b, x.D b → y.lt a b → x.D a :=
   Iff.rfl
 
-/-- "Old prefixes stay legal as history grows, and finite unions of prefixes are
-prefixes, so it satisfies Lifted Monotonicity, by Lemma `lem:accumulating`."
-The last conjunct goes through Lemma `lem:accumulating`
-(`prefix_liftedMono_accumulating`). -/
-theorem «app:additional-applications/prefix-monotone» {Ev : Type} :
-    (∀ {h h' : Hist Ev} (p : ESet Ev), h ≼ h' → (prefixSpec Ev).P h p → (prefixSpec Ev).P h' p) ∧
-    (∀ (j : Hist Ev) (ps : List (ESet Ev)), (∀ p ∈ ps, (prefixSpec Ev).P j p) →
-      (prefixSpec Ev).P j ⟨fun x => ∃ p ∈ ps, p.mem x⟩) ∧
-    (prefixSpec Ev).LiftedMono :=
-  ⟨fun _ hle hp => prefix_mono hle hp, fun _ ps hps => prefix_union ps hps,
-    prefix_liftedMono_accumulating⟩
-
-/-- "It guarantees neither freshness nor completeness": the empty prefix is
-permitted at every history.  (The following sentences on global snapshots and
-causal broadcast describe those protocols' outputs as prefixes and are not
-formalized beyond this spec.) -/
-theorem «app:additional-applications/prefix-empty» {Ev : Type} (h : Hist Ev) :
-    (prefixSpec Ev).P h ⟨fun _ => False⟩ :=
-  prefix_empty h
-
-/-- "A spec that requires the complete history, with output `h` at `h`
-and outputs ordered by equality, is functional and not monotone: its required
-output changes whenever an environment event arrives."  (Not monotone as soon as there is an
-event `e`: `∅ ⊑ {e}`.) -/
-theorem «app:additional-applications/complete-history» {Ev : Type} (e : Ev) :
-    (∀ h o, (completeSpec Ev).P h o ↔ o = ⟨h⟩) ∧
-    (completeSpec Ev).Functional ∧ ¬ (completeSpec Ev).MonotoneF ∧
-      ¬ (completeSpec Ev).LiftedMono :=
-  ⟨fun _ _ => Iff.rfl, completeSpec_functional, completeSpec_not_monotone e⟩
-
-/-- "By Proposition `prop:functional-exposure-boundary`, some output can then be
-emitted only after a commitment that rules out larger inputs."   At some state
-reachable without commitment, some current output rules out an excluded row, and
-the output event emitting it applies a commitment, `x_o`, which the basis must
-contain. -/
-theorem «app:additional-applications/complete-history-commitment» {Ev : Type} (e : Ev) :
-    ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
-      (∃ k x, Excluded τ o k x) ∧
-      ∀ (B : CommitmentBasis (completeSpec Ev)) τ', SysStep B τ (.output o) τ' →
-        B (canonicalCommitment o) :=
-  completeSpec_commitment_needed e
-
-/-- "An input is a finite set of update and scan operations, ordered by
-inclusion.  An output maps answered scans to views, each a set of updates of
-the input, and is ordered by extension.  It is permitted when every answered
-scan is in the input and any two of its views are comparable."  Only this
-consequence of atomicity is modeled, as the paper says ("We model one
-consequence of this requirement"). -/
-theorem «app:additional-applications/atomic-snapshot-spec» {U S : Type}
-    (i : FinSet (SOp U S)) (o : PMap S (ESet U)) :
-    (snapSpec U S).P i o ↔
-      (∀ s V, o.f s = some V → i.1 (.scan s) ∧ ∀ u, V.mem u → i.1 (.upd u)) ∧
-      (∀ s s' V V', o.f s = some V → o.f s' = some V' → V ≼ V' ∨ V' ≼ V) :=
+/-- "The causal queue permits at `h` the reports `(D,→)` in which `D` is a
+causally closed set of items of `h` and `→` is causal precedence restricted to
+`D`." -/
+theorem «app:additional-applications/causal-queue-spec» {Ev : Type} (h : Hist Ev)
+    (x : DReport Ev) :
+    (cqSpec Ev).P h x ↔ (∀ a, x.D a → h.s.1 a) ∧ (∀ a b, x.D b → h.lt a b → x.D a) ∧
+      ∀ a b, x.lt a b ↔ (x.D a ∧ x.D b ∧ h.lt a b) :=
   Iff.rfl
 
-/-- "An output places update `a` before update `b` when one of its views
-contains `a` and not `b`.  Let an input contain updates `u₁,u₂` and scans
-`s₁,s₂`.  The outputs `{s₁ ↦ {u₁}}` and `{s₂ ↦ {u₂}}` are both permitted there,
-and they place `u₁` and `u₂` in opposite orders.  By Lemma
-`lem:order-commitment`, the fiber is not directed and the spec is not
-monotone."  (`Reflects o a b` is "places `a` before `b`".)  The wait-free
-implementability from atomic registers that the paragraph cites is not
-proved; the linearizable register is treated in Section `sec:complete-cap`. -/
-theorem «app:additional-applications/atomic-snapshot» {U S : Type} [DecidableEq S]
-    {u1 u2 : U} {s1 s2 : S} (hu : u1 ≠ u2) (hs : s1 ≠ s2) (D : Type) :
-    (snapSpec U S).P (snapIn hu hs) (scanAns s1 u1) ∧
-    (snapSpec U S).P (snapIn hu hs) (scanAns s2 u2) ∧
-    Reflects (scanAns s1 u1) u1 u2 ∧ Reflects (scanAns s2 u2) u2 u1 ∧
-    ¬ (snapSpec U S).DirectedOutputs ∧ ¬ (snapSpec U S).LiftedMono ∧
-      ¬ ∃ Sys : CAP.System (snapSpec U S) D,
-        CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
-  ⟨scanAns_row hu hs (Or.inl rfl) (Or.inl rfl), scanAns_row hu hs (Or.inr rfl) (Or.inr rfl),
-   ⟨s1, ⟨fun x => x = u1⟩, by simp [scanAns], rfl, fun h => hu h.symm⟩,
-   ⟨s2, ⟨fun x => x = u2⟩, by simp [scanAns], rfl, fun h => hu h⟩,
-   snap_not_liftedMono hu hs D⟩
+/-- **Prop. `prop:causal-queue`** (Causal queue).  "(1) The causal queue
+satisfies Lifted Monotonicity.  (2) Consider any spec with these inputs and
+outputs whose fiber at `h` is directed, and which permits at `h`, for each
+item `b` of `h`, a report whose set consists of `b` and the items causally
+before it.  Every order that a report it permits at `h` guarantees between
+two distinct items of `h` is causal precedence.  (3) Consider a spec that satisfies Lifted
+Monotonicity.  Suppose that its reports list only items of the input, contain
+every item causally before a listed one, order every causally ordered pair of
+listed items causally, and never place an item before itself, and that every
+causally closed set of items is the set of some report it permits.  Then it
+permits exactly the reports of the causal queue."  Proof: "(1) We check the
+common-extension condition.  Given rows `(h_r,(D_r,→))` with a common input
+extension `j`, the union `D` of the `D_r` is causally closed in `j`, and
+`(D,→)` extends each `(D_r,→)`: causal precedence on `D_r` is the same in
+`h_r` and `j`, and an item causally before an item of `D_r` lies in `D_r`.
+(2) Suppose a permitted report `(D,<)` has `a<b` with `a ≠ b`, and `a` is not
+causally before `b`.  Let `(D_b,<_b)` be a permitted report whose set consists
+of `b` and the items causally before it, so `a ∉ D_b`.  A common output
+extension `(D'',<'')` in the fiber has `a <'' b` with `b ∈ D_b`, so `a` comes
+before an item of `D_b`, and the order on reports forces `a ∈ D_b`, a
+contradiction.  (3) A spec that satisfies Lifted Monotonicity has directed
+fibers, and the set consisting of an item and the items causally before it is
+causally closed.  So by (2) and the remaining hypotheses, each permitted
+report orders exactly the causally ordered pairs of its causally closed set,
+and is a report of the causal queue.  Conversely, a report `(D,→)` of the
+causal queue has the same set as some permitted report, which by the same
+argument is `(D,→)`."  In (2), `below h b` is `b` with its causal past. -/
+theorem «prop:causal-queue» {Ev : Type} :
+    (cqSpec Ev).LiftedMono ∧
+    (∀ (T : Spec (Hist Ev) (DReport Ev)) (h : Hist Ev),
+      JointLift (T.P h) (T.P h) → (∀ b, h.s.1 b → ∃ x, T.P h x ∧ x.D = below h b) →
+      ∀ {x : DReport Ev} {a b : Ev}, T.P h x → x.lt a b → a ≠ b → h.s.1 b → h.lt a b) ∧
+    (∀ T : Spec (Hist Ev) (DReport Ev), T.LiftedMono →
+      (∀ h x, T.P h x → ∀ a, x.D a → h.s.1 a) →
+      (∀ h x, T.P h x → ∀ a b, x.D b → h.lt a b → x.D a) →
+      (∀ h x, T.P h x → ∀ a b, x.D a → x.D b → h.lt a b → x.lt a b) →
+      (∀ h x, T.P h x → ∀ a, ¬ x.lt a a) →
+      (∀ h (D : Ev → Prop), (∀ a, D a → h.s.1 a) → (∀ a b, D b → h.lt a b → D a) →
+        ∃ x, T.P h x ∧ x.D = D) →
+      ∀ h x, T.P h x ↔ (cqSpec Ev).P h x) :=
+  ⟨cqSpec_liftedMono, fun T h hdir hdown _ _ _ hx hab hne hb =>
+      directed_orders_causal T h hdir hdown hx hab hne hb,
+   fun T hT hs hc hf hi ha => cq_unique T hT hs hc hf hi ha⟩
 
-/-! ## A causal FIFO queue -/
+/-- "Under it, a spec that guarantees any order between two concurrent items
+has a fiber that is not directed, so it is not monotone.  A queue that reports
+total dequeue orders is one example." -/
+theorem «app:additional-applications/queue-total» {Ev : Type} (T : Spec (Hist Ev) (DReport Ev))
+    (h : Hist Ev) (hdown : ∀ b, h.s.1 b → ∃ x, T.P h x ∧ x.D = below h b)
+    {a b : Ev} (ha : h.s.1 a) (hb : h.s.1 b) (hne : a ≠ b)
+    (hca : ¬ h.lt a b) (hcb : ¬ h.lt b a)
+    {x : DReport Ev} (hx : T.P h x) (hord : x.lt a b ∨ x.lt b a) :
+    ¬ JointLift (T.P h) (T.P h) ∧ ¬ T.LiftedMono :=
+  total_report_not_directed T h hdown ha hb hne hca hcb hx hord
 
-/-- "An input is a finite causal history of enqueue events, ordered as in
-Section `app:snapshots`.  Each event enqueues a distinct value, which we
-identify with the event.  An output is a dequeue sequence, ordered by prefix.
-A sequence is permitted at `h` when it lists distinct events of `h`, never
-lists an event after one that is causally later, and skips no event: if it
-lists an event, it lists every event causally before it." -/
-theorem «app:additional-applications/queue-spec» {Ev : Type} (h : Hist Ev) (s : Seq Ev) :
-    (queueSpec Ev).P h s ↔
-      s.l.Nodup ∧ (∀ x ∈ s.l, h.s.1 x) ∧ (∀ a b, b ∈ s.l → h.lt a b → a ∈ s.l) ∧
-        s.l.Pairwise (fun x y => ¬ h.lt y x) :=
+/-! ## Search structures -/
+
+/-- **Prop. `prop:persistent-forwarding`** (Persistent forwarding).  "Under
+(1)–(3), every claim valid at `h` is valid at every input extension of `h`."
+Proof: "By induction it suffices to treat one step.  Let the search for `k`
+from `π` reach an occurrence before the step.  After the step, by (2) the
+search from each position on that path reaches the next one, so the search
+from `π` reaches the old occurrence, and by (3) it continues to a current
+occurrence."  The structure is modeled as in `Appendix/Frontiers.lean`
+(`Front.Restructuring`): key-indexed search edges and occurrences, with
+obligation (1) built into the fixed position type; the child/link distinction
+is needed only for exact claims, which are an arbitrary table of valid claims
+below. -/
+theorem «prop:persistent-forwarding» {K P : Type} (Rs : Front.Restructuring K P)
+    {h h' : Rs.Hist} (hle : h ≼ h') : ∀ k p, Rs.R h k p → Rs.R h' k p :=
+  Front.persistent_forwarding Rs hle
+
+/-- "For a map `V` that gives a set `V(h)` of claims at each input, the spec
+bounded by `V` permits at `h` every set of claims contained in `V(h)`, ordered
+by inclusion." -/
+theorem «app:additional-applications/bounded-spec» {I C : Type} [PO I] (V : I → C → Prop)
+    (h : I) (S : ESet C) : (boundSpec V).P h S ↔ ∀ c, S.mem c → V h c :=
   Iff.rfl
 
-/-- **Prop. `prop:causal-fifo`** (Causal FIFO queue).  "The causal FIFO queue
-satisfies Relational Monotonicity.  Its fiber at a history `h` is directed if
-and only if any two events of `h` are causally ordered.  Hence the spec is not
-monotone if two values can be enqueued concurrently, and its restriction to
-histories whose events are causally totally ordered is monotone."  The proof's
-steps are `queue_grow`, `below_seq` and `queue_concurrent` (with
-`PlacesBefore`, Lemma `lem:order-commitment`), `qperm_pred`, `qperm_eq`,
-`qperm_prefix`, and `directed_of_comparable`.  The restriction is
-`queueChainSpec`, on `ChainHist`. -/
-theorem «prop:causal-fifo» {Ev : Type} [DecidableEq Ev] :
-    (queueSpec Ev).RelMono ∧
-    (∀ h : Hist Ev, JointLift ((queueSpec Ev).P h) ((queueSpec Ev).P h) ↔ Chain h) ∧
-    (∀ {h : Hist Ev} {a b : Ev}, h.s.1 a → h.s.1 b → a ≠ b → ¬ h.lt a b → ¬ h.lt b a →
-      ¬ (queueSpec Ev).LiftedMono) ∧
-    (queueChainSpec Ev).LiftedMono :=
-  ⟨queue_relMono, queue_directed_iff, fun ha hb hab h1 h2 => (queue_not_directed ha hb hab h1 h2).2,
-   queueChain_liftedMono⟩
+/-- **Prop. `prop:remembered-claims`** (Remembered claims).  "(1) The spec
+bounded by `V` satisfies Lifted Monotonicity if and only if `h ⊑ h'` implies
+`V(h) ⊆ V(h')`.  (2) Let `X̂(h)` be the set of claims exact at some input below
+`h`.  The spec bounded by `X̂` satisfies Lifted Monotonicity, and every map
+`V ⊇ X` for which the spec bounded by `V` does has `X̂ ⊆ V`.  (3) Let `X̃(h)` be
+the set of claims exact at some input below an input whose current structure
+is that of `h`.  The spec bounded by `X̃` satisfies Lifted Monotonicity, and
+every map `V ⊇ X` that depends only on the current structure, and for which
+the spec bounded by `V` satisfies Lifted Monotonicity, has `X̃ ⊆ V`.  (4)
+Valid claims contain `X̃`, and they equal `X̃` at every input if and only if
+every valid claim at every input is in `X̃`."  Proof: "(1) First assume
+Lifted Monotonicity.  A claim `c ∈ V(h)` gives the row `(h,{c})`, which has an
+output extension at `h'`, so `c ∈ V(h')`.  Now assume that `V` grows.  The
+union of finitely many sets permitted at inputs below `h'` is contained in
+`V(h')`.  (2) `X̂` grows by construction.  A claim exact at `h₀ ⊑ h` lies in
+`V(h₀)`, and so in `V(h)` by (1).  (3) Whether a history can be continued by
+a step depends only on its current structure.  So if `h₀` lies below an input
+`h'` with the structure of `h`, and `h` grows to `k`, then `h'` grows to an
+input with the structure of `k`, and `h₀` lies below it.  Hence `X̃` grows.
+For `V` as in (3), a claim exact at `h₀ ⊑ h'` lies in `V(h')` by (1), and
+`V(h') = V(h)`.  (4) The valid claims depend only on the current structure,
+contain `X`, and grow by Proposition `prop:persistent-forwarding`, so (3)
+applies."  (2) and (3) are stated for any input order; (3) assumes, as the
+proof says, that continuations depend only on the current structure
+(`StateDet`), which holds for restructuring histories (`restr_stateDet`).  A
+map that "depends only on the current structure" is `F (g h)`.  In (4), `X`
+is any table of valid claims (exact claims are valid). -/
+theorem «prop:remembered-claims» :
+    (∀ {I C : Type} [PO I] (V : I → C → Prop), (boundSpec V).LiftedMono ↔ Grows V) ∧
+    (∀ {I C : Type} [PO I] (X : I → C → Prop),
+      (boundSpec (remembered X)).LiftedMono ∧
+      ∀ V : I → C → Prop, (∀ i c, X i c → V i c) → (boundSpec V).LiftedMono →
+        ∀ i c, remembered X i c → V i c) ∧
+    (∀ {I C S : Type} [PO I] (g : I → S), StateDet g → ∀ X : I → C → Prop,
+      (boundSpec (stateRemembered g X)).LiftedMono ∧
+      ∀ F : S → C → Prop, (∀ i c, X i c → F (g i) c) →
+        (boundSpec (fun i => F (g i))).LiftedMono →
+        ∀ i c, stateRemembered g X i c → F (g i) c) ∧
+    (∀ {K P : Type} (Rs : Front.Restructuring K P) (X : Rs.Hist → K × P → Prop),
+      (∀ h c, X h c → fwdV Rs h c) →
+      (∀ h c, stateRemembered (curSnap Rs) X h c → fwdV Rs h c) ∧
+      ((∀ h c, fwdV Rs h c ↔ stateRemembered (curSnap Rs) X h c) ↔
+        (∀ h c, fwdV Rs h c → stateRemembered (curSnap Rs) X h c))) :=
+  ⟨fun V => boundSpec_liftedMono_iff V,
+   fun X => ⟨(boundSpec_liftedMono_iff _).2 (remembered_grows X),
+     fun V hXV hV => remembered_least X V hXV ((boundSpec_liftedMono_iff V).1 hV)⟩,
+   fun g hdet X => ⟨(boundSpec_liftedMono_iff _).2 (stateRemembered_grows g hdet X),
+     fun F hX hF => stateRemembered_least g X F hX ((boundSpec_liftedMono_iff _).1 hF)⟩,
+   fun Rs X hX => ⟨fwd_contains_stateRemembered Rs X hX, fwd_eq_iff Rs X hX⟩⟩
 
-/-- "At a history with concurrent enqueues `a` and `b`, consider the two
-sequences built in the proof.  Emitting the one that lists `a` removes the row
-of the one that lists `b`, and no remaining row at that input extends the
-removed one.  So the output event applies a commitment." -/
-theorem «app:additional-applications/queue-commitment» {Ev : Type} [DecidableEq Ev]
-    {h : Hist Ev} {a b : Ev} (ha : h.s.1 a) (hb : h.s.1 b) (hab : a ≠ b)
-    (h1 : ¬ h.lt a b) (h2 : ¬ h.lt b a) :
-    ∃ σa σb : Seq Ev, PlacesBefore σa a b ∧ PlacesBefore σb b a ∧
-      Excluded (canon (queueSpec Ev) h) σa h σb ∧ ¬ Exposable (canon (queueSpec Ev) h) σa ∧
-      ∀ (B : CommitmentBasis (queueSpec Ev)) τ, SysStep B (canon (queueSpec Ev) h) (.output σa) τ →
-        B (canonicalCommitment σa) :=
-  queue_order_commitment ha hb hab h1 h2
-
-/-- "A queue that reports only the set of dequeued events, which must be
-downward closed, has the prefix spec of Section `app:snapshots`, which is
-monotone." -/
-theorem «app:additional-applications/queue-set-variant» {Ev : Type} :
-    (prefixSpec Ev).LiftedMono :=
-  prefix_liftedMono_accumulating
-
-/-- "A queue without the no-skipping rule may dequeue an event and never
-dequeue an event causally before it.  Its fiber at any history with two
-distinct events `a` and `b` is not directed, even when `a` is causally before
-`b`, since `[a]` and `[b]` are both permitted and place the two events in
-opposite orders." -/
-theorem «app:additional-applications/queue-skip-variant» {Ev : Type} [DecidableEq Ev]
-    {h : Hist Ev} {a b : Ev} (ha : h.s.1 a) (hb : h.s.1 b) (hab : a ≠ b) :
-    ((skipSpec Ev).P h ⟨[a]⟩ ∧ (skipSpec Ev).P h ⟨[b]⟩) ∧
-    ¬ (skipSpec Ev).DirectedOutputs ∧ ¬ (skipSpec Ev).LiftedMono :=
-  ⟨⟨⟨by simp, by simpa using ha, by simp [Sorted]⟩, ⟨by simp, by simpa using hb, by simp [Sorted]⟩⟩,
-   skipSpec_not_directed ha hb hab⟩
+/-- "Forward-reachability lookup is the strongest lookup that depends only on
+the structure and needs no commitment exactly when every valid claim was exact
+at some earlier point of some history that reaches the same structure."
+Restated: the valid claims equal the least state-determined growing map
+containing the exact claims (Prop. `prop:remembered-claims`(3)) exactly under
+that condition; "needs no commitment" is Lifted Monotonicity of the bounded
+spec (by the No-commitment test).  Whether the condition holds for Lehman and
+Yao's trees is left open in the paper. -/
+theorem «app:additional-applications/forwarding-frontier» {K P : Type}
+    (Rs : Front.Restructuring K P) (X : Rs.Hist → K × P → Prop)
+    (hX : ∀ h c, X h c → fwdV Rs h c) :
+    (boundSpec (fwdV Rs)).LiftedMono ∧
+    ((∀ h c, fwdV Rs h c ↔ stateRemembered (curSnap Rs) X h c) ↔
+      (∀ h c, fwdV Rs h c → stateRemembered (curSnap Rs) X h c)) :=
+  ⟨(boundSpec_liftedMono_iff _).2 (fwdV_grows Rs), fwd_eq_iff Rs X hX⟩
 
 end Paper
 end CC

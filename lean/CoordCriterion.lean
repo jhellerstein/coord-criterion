@@ -88,4 +88,5 @@ import CoordCriterion.Appendix.Graphs
 -- Appendix H additional applications
 import CoordCriterion.Appendix.Applications
 import CoordCriterion.Appendix.Classical
+import CoordCriterion.Appendix.ClassicalFrontiers
 import CoordCriterion.Paper
