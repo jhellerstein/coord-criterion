@@ -498,7 +498,8 @@ paragraph on the extended paper's definition of read your writes (Def. 34) is
 `«sec:hat-instance/myr-as-written»`. -/
 
 /-- **Definition `def:hat-spec`** (HAT specification): "An input is a history
-ordered by happens-before: reads, each tagged with its replica; commits, each
+ordered by happens-before.  It contains reads, each tagged with its replica;
+commits, each
 with its client timestamp and write set; and arrivals of committed writes
 at replicas.  The history preserves each client's program order and each
 replica's arrival order, and a transaction's reads precede its commit, which
@@ -509,7 +510,7 @@ versions by timestamp.  For an isolation level `L`, the table `P_L` of `𝒮_L`
 contains an output at an input when the input extends to a complete history
 that includes the output and exhibits none of the phenomena that `L`
 proscribes.  The explicit relation `E` contains, at each input, the output
-that the read rule above gives."  (CIDR version:
+that the read rule gives."  (CIDR version:
 "An input is a history: a set of events, partially ordered by happens-before,
 of three kinds.  A read is tagged with its replica; a commit carries its
 timestamp and write set; a delivery brings a committed write to a replica.  One

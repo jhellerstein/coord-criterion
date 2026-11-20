@@ -2594,7 +2594,7 @@ Complete CALM requires only \emph{some} common \outnoun of query outputs
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-\color{black}\cxtag{instances:16}{N/L}\cxbar{instances-16}{0.9 0.45 0}{s}Bailis et al.\ define isolation levels by Adya's phenomena, adding sessions and
+\color{black}\cxtag{instances:16}{N/M}\cxbar{instances-16}{0.4 0.4 1}{s}Bailis et al.\ define isolation levels by Adya's phenomena, adding sessions and
 per-item dependencies, and give highly available algorithms for the weaker
 levels~\cite{bailis2013hat,adya1999weakconsistency}.  We take their
 assumptions as given.  Items are partially replicated, and a client sends each
@@ -2602,19 +2602,19 @@ operation to some replica of its item.  A transaction's writes carry a unique
 client timestamp, and versions are ordered by timestamp, last writer wins.
 The system never aborts a transaction on its own.  A replica answers a read
 with the highest-timestamped committed write of the item that it has received;
-we call this the store's \emph{read rule}.\cxbar{instances-16}{0.9 0.45 0}{e}\color{black}
+we call this the store's \emph{read rule}.\cxbar{instances-16}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{instances:17}{N/L}\cxbar{instances-17}{0.9 0.45 0}{s}The HAT results illustrate the intersection reasoning of
+\color{black}\cxtag{instances:17}{N/M}\cxbar{instances-17}{0.4 0.4 1}{s}The HAT results illustrate the intersection reasoning of
 Section~\ref{sec:intersection}.  An isolation level and a store are separate
 specs on the same histories: the level constrains which read answers may
 appear together, and the store answers each read by its read rule.  The store
 held to a level is their intersection, and we ask which intersections satisfy
-Lifted Monotonicity.\cxbar{instances-17}{0.9 0.45 0}{e}\color{black}
+Lifted Monotonicity.\cxbar{instances-17}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{definition}[HAT specification]
 \label{def:hat-spec}
-\cxtag{instances:18}{N/L}\cxbar{instances-18}{0.9 0.45 0}{s}An input is a history ordered by happens-before: reads, each tagged with its
-replica; commits, each with its client timestamp and write set; and arrivals
+\cxtag{instances:18}{N/L}\cxbar{instances-18}{0.9 0.45 0}{s}An input is a history ordered by happens-before.  It contains reads, each
+tagged with its replica; commits, each with its client timestamp and write set; and arrivals
 of committed writes at replicas.  The history preserves
 each client's program order and each replica's arrival order, and a
 transaction's reads precede its commit, which precedes the arrivals of its
@@ -2625,7 +2625,7 @@ answers, ordered by inclusion.  A history is \emph{complete} when it answers
 every read and orders versions by timestamp.  For an isolation level $L$, the table $P_L$ of $\Spec_L$ contains
 an output at an input when the input extends to a complete history that includes the output and exhibits
 none of the phenomena that $L$ proscribes.  The explicit relation $E$
-contains, at each input, the output that the read rule above gives.\cxbar{instances-18}{0.9 0.45 0}{e}\color{black}
+contains, at each input, the output that the read rule gives.\cxbar{instances-18}{0.9 0.45 0}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{definition}[Store specification]
