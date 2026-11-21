@@ -965,17 +965,28 @@ ending at $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).
 
 Removing a row $(k,x)$ does not always lose the information in its output.  If
 some output $u\in R(k)$ \outrel both $x$ and $o$, the row $(k,u)$ is kept, and
-a later output $u$ reports everything $x$ would have.  We call this
-\emph{output subsumption} and put $(k,x)$ in $\Subsumed_o$; every other removed
-row goes in $\Excluded_o$.
+a later output $u$ reports everything $x$ would have.  We separate the removed
+rows accordingly.
 
-The output event still removes both kinds of rows, but only removing the rows
-in $\Excluded_o$ is a \commitment: the canonical \commitment $x_o$ removes only
-those.  If $x_o$ removes every row at $k$, it rules out the input $k$;
-otherwise it rules out only the excluded outputs at $k$.  In the functional
-case every removed row is excluded, so $x_o$ is as before.  An output $o$ is
-thus legal at a state when $\Excluded_o$ is empty, and $\mathsf{output}(o)$
-then applies no \commitment.
+\begin{definition}[Output subsumption, nondeterministic legality]
+\label{def:subsumed-excluded}
+At a state $(i,R)$ with $o\in R(i)$, let $(k,x)\in R$ be a row with
+$o\not\OutputOrd x$.  It is \emph{subsumed} when some $u\in R(k)$ has
+$x\OutputOrd u$ and $o\OutputOrd u$, and \emph{excluded} otherwise; $\Subsumed_o$
+and $\Excluded_o$ are the sets of such rows.  The \emph{canonical \commitment}
+$x_o$ removes $\Excluded_o$, and $o$ is \emph{legal} when $\Excluded_o$ is
+empty.
+\end{definition}
+
+The output event first applies $x_o$ and then removes $\Subsumed_o$, and only
+the first removal is a \commitment.  No row of $\Excluded_o$ has a remaining row
+$(k,w)$ with $x\OutputOrd w$: such a $w$ either \outrel $o$ or is itself
+subsumed, and either way $(k,x)$ would be subsumed.  So $x_o$ is a \commitment
+in the sense of Definition~\ref{def:commitment}.  In a functional table no
+other row shares an input with $(k,x)$, so every removed row is excluded, and
+legality and $x_o$ are as in Definitions~\ref{def:exposable}
+and~\ref{def:output-event}.  If $x_o$ removes every row at $k$, it rules out the
+input $k$; otherwise it rules out only the excluded outputs at $k$.
 
 The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split.  Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$.  The route sets removed in panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.
 
@@ -988,7 +999,7 @@ not those in $\Subsumed_o$ (\S\ref{sec:lifted-output-events}).  The rest of the
 framework carries over.  States, input events, runs, and consistency are defined as in \S\ref{sec:framework-brief}, and the
 rows-remaining lemma (Lemma~\ref{lem:run-residual}), the Survivor test
 (Proposition~\ref{prop:confluence}), and Lemma~\ref{lem:confluence-legality},
-with legality as in \S\ref{sec:lifted-output-events}, hold as stated, since
+with legality as in Definition~\ref{def:subsumed-excluded}, hold as stated, since
 they depend on output events only through Equation~\ref{eq:output-action}.
 By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
 every output they emit is legal, so the question is when every output is legal
