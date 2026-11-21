@@ -1,5 +1,6 @@
 import CoordCriterion.Appendix.Classical
 import CoordCriterion.Appendix.ClassicalFrontiers
+import CoordCriterion.Appendix.BLink
 
 /-!
 # Paper, Appendix G: Classical problems in distributed computing (`app:additional-applications`)
@@ -571,18 +572,42 @@ theorem «app:additional-applications/queue-total» {Ev : Type} (T : Spec (Hist 
 
 /-- **Prop. `prop:persistent-forwarding`** (Persistent forwarding).  "Under
 (1)–(3), every claim valid at `h` is valid at every input extension of `h`."
-Proof: "By induction it suffices to treat one step.  Let the search for `k`
-from `π` reach an occurrence before the step.  After the step, by (2) the
-search from each position on that path reaches the next one, so the search
-from `π` reaches the old occurrence, and by (3) it continues to a current
-occurrence."  The structure is modeled as in `Appendix/Frontiers.lean`
+Proof: "By induction on the history it suffices to treat one step.  We show,
+by induction on `n`, that if the search for `k` from `π` reaches an occurrence
+of `k` after `n` edges before the step, then after the step it reaches a
+current occurrence of `k`.  If `n = 0`, `π` held `k`, and (3) applies.
+Otherwise let `π → π'` be the first edge.  By (2), the search from `π` after
+the step reaches a position `ρ` that the search from `π'` reached before it.
+Before the step, each position had at most one search edge for `k` and the
+search stopped at the occurrence, so `ρ` lies on the path from `π'` to the
+occurrence, fewer than `n` edges from it.  By induction, the search from `ρ`
+after the step reaches a current occurrence, and so does the search from
+`π`."  The structure is modeled as in `Appendix/Frontiers.lean`
 (`Front.Restructuring`): key-indexed search edges and occurrences, with
-obligation (1) built into the fixed position type; the child/link distinction
-is needed only for exact claims, which are an arbitrary table of valid claims
-below. -/
+obligation (1) built into the fixed position type.  `Front.Obligations`
+records the two setup assumptions (`det`: at most one search edge per key;
+`stop`: an occurrence has no search edge for its key) with (2) (`edges`) and
+(3) (`occs`); the induction on `n` is `Front.claims_step`.  The child/link
+distinction is needed only for exact claims, which are an arbitrary table of
+valid claims below. -/
 theorem «prop:persistent-forwarding» {K P : Type} (Rs : Front.Restructuring K P)
     {h h' : Rs.Hist} (hle : h ≼ h') : ∀ k p, Rs.R h k p → Rs.R h' k p :=
   Front.persistent_forwarding Rs hle
+
+/-- "Condition (2) does not ask that the search from `π` still reach `π'`.
+Posting a new node's separator into its parent changes the parent's search
+edge for some keys from the old child to the new node, which lies to the right
+of the old child, so the search no longer reaches the old child."  A posting
+step of the B-link model (`BLink.post_breaks_strong`, on the reachable tree
+`BLink.s3`) after which the search for key `4` from node `2` no longer reaches
+`0`, its search edge before the step.  "It reaches the new node, which the old
+search reached through the old child's right link" holds because the step
+satisfies the obligations (`BLink.oblig_step`). -/
+theorem «app:additional-applications/posting-weak» :
+    BLink.Star BLink.BStep BLink.St.init BLink.s3 ∧ BLink.BStep BLink.s3 (BLink.s3.addPost 3) ∧
+      (BLink.St.snap BLink.s3).edge 4 2 0 ∧
+      ¬ Front.Path (BLink.St.snap (BLink.s3.addPost 3)) 4 2 0 :=
+  BLink.post_breaks_strong
 
 /-- "For a map `V` that gives a set `V(h)` of claims at each input, the spec
 bounded by `V` permits at `h` every set of claims contained in `V(h)`, ordered
@@ -641,17 +666,12 @@ theorem «prop:remembered-claims» :
      fun F hX hF => stateRemembered_least g X F hX ((boundSpec_liftedMono_iff _).1 hF)⟩,
    fun Rs X hX => ⟨fwd_contains_stateRemembered Rs X hX, fwd_eq_iff Rs X hX⟩⟩
 
-/-- "Forward-reachability lookup is the strongest lookup that depends only on
-the structure and needs no commitment exactly when every valid claim was exact
-at some earlier point of some history that reaches the same structure."
-Restated: the valid claims equal the least state-determined growing map
-containing the exact claims (Prop. `prop:remembered-claims`(3)) exactly under
-that condition; "needs no commitment" is Lifted Monotonicity of the bounded
-spec (by the No-commitment test).  Whether the condition holds for Lehman and
-Yao's trees is left open in the paper.  Lean: for the B-link tree model
-`BLink.blink` (histories of states, `BLink.SRestr`) the condition holds
-(`BLink.blink_H`), so forward reachability equals the remembered exact claims
-(`BLink.blink_fwd_eq`). -/
+/-- "By (4), forward-reachability lookup is the strongest lookup that depends
+only on the structure and satisfies Lifted Monotonicity exactly when every
+valid claim was exact at some earlier point of some history that reaches the
+same structure."  Restated: the valid claims equal the least state-determined
+growing map containing the exact claims (Prop. `prop:remembered-claims`(3))
+exactly under that condition. -/
 theorem «app:additional-applications/forwarding-frontier» {K P : Type}
     (Rs : Front.Restructuring K P) (X : Rs.Hist → K × P → Prop)
     (hX : ∀ h c, X h c → fwdV Rs h c) :
@@ -659,6 +679,27 @@ theorem «app:additional-applications/forwarding-frontier» {K P : Type}
     ((∀ h c, fwdV Rs h c ↔ stateRemembered (curSnap Rs) X h c) ↔
       (∀ h c, fwdV Rs h c → stateRemembered (curSnap Rs) X h c)) :=
   ⟨(boundSpec_liftedMono_iff _).2 (fwdV_grows Rs), fwd_eq_iff Rs X hX⟩
+
+/-- "Each step satisfies (1)–(3), and searches stop at leaves."  The model
+`BLink.St`, `BLink.BStep` (insert, half-split, post, grow), on well-formed
+trees (`BLink.WF`, preserved by steps). -/
+theorem «app:additional-applications/blink-steps» {s s' : BLink.St} (hs : BLink.WF s)
+    (h : BLink.BStep s s') : Front.Obligations (BLink.St.snap s) (BLink.St.snap s') :=
+  BLink.oblig_step hs h
+
+/-- **Prop. `prop:blink`** (B-link trees).  "In the B-link tree model, every
+claim valid at `h` lies in `X̃(h)`.  So the valid claims equal `X̃`, and
+forward-reachability lookup is the strongest lookup that depends only on the
+current structure and satisfies Lifted Monotonicity."  Proof sketch as in the
+paper: `BLink.valid_facts`, `BLink.cut` (with `cut_wf`, `cut_sub`,
+`cut_exact`), `BLink.complete`, giving `BLink.blink_H`; histories are
+sequences of trees (`BLink.SRestr`), since exact claims need the child/link
+distinction.  Lean states the first two sentences; the third is
+Prop. `prop:remembered-claims`(3). -/
+theorem «prop:blink» :
+    (∀ h c, BLink.blink.fwdV h c → stateRemembered BLink.blink.cur BLink.exactX h c) ∧
+    (∀ h c, BLink.blink.fwdV h c ↔ stateRemembered BLink.blink.cur BLink.exactX h c) :=
+  ⟨BLink.blink_H, BLink.blink_fwd_eq⟩
 
 end Paper
 end CC

@@ -6170,10 +6170,11 @@ not monotone.  A queue that guarantees a total dequeue order is one example.\col
 \subsection{Search structures}
 \label{app:search}
 
-\color{black}\cxtag{classical-problems:33}{N/S}B-link trees keep a search starting at a split node correct by following a
+\color{black}\cxtag{classical-problems:33}{N/M}\cxbar{classical-problems-33}{0.4 0.4 1}{s}B-link trees keep a search starting at a split node correct by following a
 right link, so the parent can be repaired later~\cite{lehman1981efficient}.  We
-show that the claims such searches support only accumulate, and compare them
-with the least monotone relaxation of exact lookup.\color{black}
+show that the claims such searches support only accumulate, compare them with
+the least monotone relaxation of exact lookup, and show that for B-link trees
+the two coincide.\cxbar{classical-problems-33}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{classical-problems:34}{N/M}\cxbar{classical-problems-34}{0.4 0.4 1}{s}Inputs are finite legal restructuring histories $h$, ordered by prefix.  The
 structure after $h$ is a finite directed graph whose nodes are
@@ -6181,19 +6182,27 @@ structure after $h$ is a finite directed graph whose nodes are
 some positions hold keys.  For each key $k$, every position has at most one
 outgoing \emph{search edge for $k$}, the edge a search for $k$ follows there;
 the \emph{search for $k$ from $\pi$} follows search edges for $k$ from position
-$\pi$.  An \emph{occurrence} of $k$ is a position holding $k$, and
-\emph{current} means present after $h$.  The \emph{claim} $(k,\pi)$ is
+$\pi$.  An \emph{occurrence} of $k$ is a position holding $k$, and a search
+for $k$ stops there: an occurrence of $k$ has no search edge for $k$.
+\emph{Current} means present after $h$.  The \emph{claim} $(k,\pi)$ is
 \emph{valid} at $h$ when the search for $k$ from $\pi$ reaches a current
 occurrence of $k$ after finitely many edges, and \emph{exact} when it does so
 by child edges alone.  Each restructuring step must satisfy:
 \begin{enumerate}
   \item positions keep stable identities;
   \item if $\pi\to\pi'$ was the search edge for $k$ at $\pi$ before the step,
-        the search for $k$ from $\pi$ reaches $\pi'$ after it; and
+        the search for $k$ from $\pi$ after the step reaches some position
+        that the search for $k$ from $\pi'$ reached before it; and
   \item from every position that held $k$ before the step, the search for $k$
         reaches a current occurrence of $k$ after it.
 \end{enumerate}
-Deletion and reclamation can violate (2) and (3) and are excluded.\cxbar{classical-problems-34}{0.4 0.4 1}{e}\color{black}
+Condition~(2) does not ask that the search from $\pi$ still reach $\pi'$.
+Posting a new node's separator into its parent changes the parent's search
+edge for some keys from the old child to the new node, which lies to the
+right of the old child, so the search no longer reaches the old child.  It
+reaches the new node, which the old search reached through the old child's
+right link.  Deletion and reclamation can violate (2) and (3) and are
+excluded.\cxbar{classical-problems-34}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Persistent forwarding]
 \label{prop:persistent-forwarding}
@@ -6201,10 +6210,17 @@ Deletion and reclamation can violate (2) and (3) and are excluded.\cxbar{classic
 \end{proposition}
 
 \color{black}\begin{proof}
-\cxtag{classical-problems:36}{N/S}By induction it suffices to treat one step.  Let the search for $k$ from $\pi$
-reach an occurrence before the step.  After the step, by (2) the search from
-each position on that path reaches the next one, so the search from $\pi$
-reaches the old occurrence, and by (3) it continues to a current occurrence.\color{black}
+\cxtag{classical-problems:36}{N/M}\cxbar{classical-problems-36}{0.4 0.4 1}{s}By induction on the history it suffices to treat one step.  We show, by
+induction on $n$, that if the search for $k$ from $\pi$ reaches an occurrence
+of $k$ after $n$ edges before the step, then after the step it reaches a
+current occurrence of $k$.  If $n=0$, $\pi$ held $k$, and (3) applies.
+Otherwise let $\pi\to\pi'$ be the first edge.  By (2), the search from $\pi$
+after the step reaches a position $\rho$ that the search from $\pi'$ reached
+before it.  Before the step, each position had at most one search edge for $k$
+and the search stopped at the occurrence, so $\rho$ lies on the path from
+$\pi'$ to the occurrence, fewer than $n$ edges from it.  By induction, the
+search from $\rho$ after the step reaches a current occurrence, and so does the
+search from $\pi$.\cxbar{classical-problems-36}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
 \color{black}\cxtag{classical-problems:37}{N/S}A lookup spec reports sets of claims.  For a map $V$ that gives a set $V(h)$
@@ -6251,16 +6267,54 @@ Proposition~\ref{prop:persistent-forwarding}, so~(3) applies.\cxbar{classical-pr
 \end{proof}
 
 \color{black}\cxtag{classical-problems:40}{N/M}\cxbar{classical-problems-40}{0.4 0.4 1}{s}A lookup inspects the current structure, not the history, so~(3) gives the
-relevant comparison.  Forward-reachability lookup is the strongest lookup that
-depends only on the structure and needs no \commitment exactly when every
-valid claim was exact at some earlier point of some history that reaches the
-same structure.  For a key that a search from $\pi$ reaches through link
-edges, this asks that some history to the same structure first place the key
-where a search from $\pi$ finds it by child edges.  Whether that holds depends
-on which restructuring steps a structure allows, and we do not settle it for
-Lehman and Yao's trees.\cxbar{classical-problems-40}{0.4 0.4 1}{e}\color{black}
+relevant comparison.  By~(4), forward-reachability lookup is the strongest
+lookup that depends only on the structure and satisfies Lifted Monotonicity
+exactly when every valid claim was exact at some earlier point of some history
+that reaches the same structure.  For a key that a search from $\pi$ reaches
+through link edges, this asks that some history to the same structure first
+place the key where a search from $\pi$ finds it by child edges.  We show that
+this holds for B-link trees.\cxbar{classical-problems-40}{0.4 0.4 1}{e}\color{black}
 
-\color{black!45}\cxtag{classical-problems:41}{C}\begin{acks}
+\color{black}\cxtag{classical-problems:41}{N/L}\cxbar{classical-problems-41}{0.9 0.45 0}{s}In our model of Lehman and Yao's trees, each node has a level and a low key.
+The nodes of a level are ordered by low key, each has a link edge to its right
+neighbor, and a node covers the keys above its low key up to the low key of
+its right neighbor.  Leaves hold keys, and an internal node has a child edge to
+each node of the level below that has been \emph{posted} to it.  A search for
+$k$ at a node that does not cover $k$ follows the link edge; at an internal
+node that covers $k$, it follows the child edge to the posted child with the
+largest low key below $k$.  There are four steps: insert a key into the leaf
+that covers it; half-split a node at a separator, creating a right sibling
+that covers the keys above the separator; post a node to the level above; and
+grow a new root above the top level, with child edges to the old root and to a
+node split off from it.  Steps are atomic, split points are arbitrary, and
+there are no deletions.  Each step satisfies (1)--(3), and searches stop at
+leaves.\cxbar{classical-problems-41}{0.9 0.45 0}{e}\color{black}
+
+\color{black}\begin{proposition}[B-link trees]
+\label{prop:blink}
+\cxtag{classical-problems:42}{N/M}\cxbar{classical-problems-42}{0.4 0.4 1}{s}In the B-link tree model, every claim valid at $h$ lies in
+$\widetilde X(h)$.  So the valid claims equal $\widetilde X$, and
+forward-reachability lookup is the strongest lookup that depends only on the
+current structure and satisfies Lifted Monotonicity.\cxbar{classical-problems-42}{0.4 0.4 1}{e}\color{black}
+\end{proposition}
+
+\color{black}\begin{proof}
+\cxtag{classical-problems:43}{N/L}\cxbar{classical-problems-43}{0.9 0.45 0}{s}Let $(k,\pi)$ be valid at $h$, with current tree $G$.  Then $\pi$ has a low
+key below $k$, and $k$ has been inserted.  Remove from $G$ the levels above
+the level of $\pi$, the nodes of $\pi$'s level whose low keys lie strictly
+between those of $\pi$ and $k$, and, on each lower level, the nodes not yet
+posted that lie between the last posted node below $k$ and $k$.  The result is
+a tree $W$ in which the search for $k$ from $\pi$ uses child edges only, so
+$(k,\pi)$ is exact in $W$.  Every tree whose nodes, keys, and posted nodes are
+among those of a reachable tree $G$ can be completed to $G$ by steps: insert
+the missing keys, then, level by level from the bottom, split off the missing
+nodes, grow the root, and post the missing nodes.  So some history reaches $W$
+and then $G$, and $(k,\pi)$ is exact at an input below one whose current
+structure is $G$.  By Proposition~\ref{prop:remembered-claims}(4), the valid
+claims equal $\widetilde X$, and~(3) gives the rest.\cxbar{classical-problems-43}{0.9 0.45 0}{e}\color{black}
+\end{proof}
+
+\color{black!45}\cxtag{classical-problems:44}{C}\begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.
 Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
 Kleppmann, Paris Koutris, Edward Lee, Shulu Li, Vincent Liu, David Chu McElroy,
@@ -6268,7 +6322,7 @@ Sarah Morin, and Dan Suciu for helpful feedback. Thanks also to
 anonymous reviewers of this and previous submissions for frank feedback that pushed
 this work deeper.\color{black}
 
-\color{black!45}\cxtag{classical-problems:42}{C}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
+\color{black!45}\cxtag{classical-problems:45}{C}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
 reviewing assistants during the preparation of this work, including drafting
 and revising text, and synthesizing Lean proofs for all mathematical arguments.  All
 content was reviewed, validated, and approved by the author.\color{black}

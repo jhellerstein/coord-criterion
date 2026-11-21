@@ -150,7 +150,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-729 entries.
+732 entries.
 
 ### §2 Functional CALM
 
@@ -996,8 +996,11 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/classical-problems
 | `«prop:causal-queue»` | theorem | **Prop. |
 | `«app:additional-applications/queue-total»` | theorem | "Under it, a spec that guarantees any order between two concurrent items has a fiber that is not directed, so it is not monotone. |
 | `«prop:persistent-forwarding»` | theorem | **Prop. |
+| `«app:additional-applications/posting-weak»` | theorem | "Condition (2) does not ask that the search from `π` still reach `π'`. |
 | `«app:additional-applications/bounded-spec»` | theorem | "For a map `V` that gives a set `V(h)` of claims at each input, the spec bounded by `V` permits at `h` every set of claims contained in `V(h)`, ordered by in… |
 | `«prop:remembered-claims»` | theorem | **Prop. |
-| `«app:additional-applications/forwarding-frontier»` | theorem | "Forward-reachability lookup is the strongest lookup that depends only on the structure and needs no commitment exactly when every valid claim was exact at s… |
+| `«app:additional-applications/forwarding-frontier»` | theorem | "By (4), forward-reachability lookup is the strongest lookup that depends only on the structure and satisfies Lifted Monotonicity exactly when every valid cl… |
+| `«app:additional-applications/blink-steps»` | theorem | "Each step satisfies (1)–(3), and searches stop at leaves." The model `BLink.St`, `BLink.BStep` (insert, half-split, post, grow), on well-formed trees (`BLin… |
+| `«prop:blink»` | theorem | **Prop. |
 
 <!-- END PAPER INDEX -->

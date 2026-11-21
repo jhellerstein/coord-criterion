@@ -729,6 +729,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:causal-queue»
 #check @CC.Paper.«app:additional-applications/queue-total»
 #check @CC.Paper.«prop:persistent-forwarding»
+#check @CC.Paper.«app:additional-applications/posting-weak»
 #check @CC.Paper.«app:additional-applications/bounded-spec»
 #check @CC.Paper.«prop:remembered-claims»
 #check @CC.Paper.«app:additional-applications/forwarding-frontier»
+#check @CC.Paper.«app:additional-applications/blink-steps»
+#check @CC.Paper.«prop:blink»
