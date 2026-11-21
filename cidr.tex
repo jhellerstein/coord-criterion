@@ -1004,7 +1004,7 @@ The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of thi
 Moving from functions to nondeterministic specs changes only which rows
 removed by an output event count as a \commitment: those in $\Excluded_o$, but
 not those in $\Subsumed_o$ (\S\ref{sec:lifted-output-events}).  The rest of the
-framework carries over.  States, input events, runs, and consistency are defined as in \S\ref{sec:framework-brief}, and the
+framework carries over.  States, input events, runs, and consistency are defined as in \S\ref{sec:framework-brief}; the
 rows-remaining lemma (Lemma~\ref{lem:run-residual}), the Survivor test
 (Proposition~\ref{prop:confluence}), and Lemma~\ref{lem:confluence-legality},
 with legality as in Definition~\ref{def:subsumed-excluded}, hold as stated, since
@@ -1195,8 +1195,7 @@ possibly nondeterministic \emph{strategy} per participant that picks its next ou
 \commitment, or send event, applying only
 \commitments from $\mathcal B$.  The full paper gives these definitions formally.
 Coordination mechanisms live in the system: its
-strategies describe how participants use them, and its basis records the
-\commitments they can enforce.
+strategies describe how participants use them to apply commitments from $\mathcal B$.
 
 Two familiar concurrency control examples make this concrete. Two-phase locking
 (2PL) orders transactions pairwise through lock requests: when $B$ waits for a
@@ -1570,8 +1569,8 @@ total-order broadcast, and Lost Update do; outputs that choose a proper subset
 of competing values, as consensus, leader election, and unique IDs do; and
 outputs that block an input before it arrives, as closing the polls and a
 final tally do.  A system that emits such an output either enforces it with a
-\commitment, as closing the polls does, or leaves it unenforced, which can
-result in observable inconsistency.  The mappings below include both.
+\commitment, like closing the polls, or leaves it unenforced, which can
+result in observable inconsistency.  We will see both below.
 
 \subsection{Query monotonicity}
 \label{sec:query-instance}
@@ -1800,19 +1799,20 @@ trajectory of the work points to next steps.
 % A. Origins and the conjecture:
 
 The computing literature is rich with coordination mechanisms. Prior to the CALM
-Conjecture, the justifications for these mechanisms were often situational. In
-the best cases---serializability being a prime example---there is a crisp,
-whole-system invariant, and coordination mechanisms provably enforce system
-correctness. But mechanisms like locks, atomics and total orders are also used
+Conjecture, the justifications for these mechanisms were often situational.
+% In the best cases---serializability being a prime example---there is a crisp,
+% whole-system invariant, and coordination mechanisms provably enforce system
+% correctness. But mechanisms like locks, atomics and total orders are also used
+Mechanisms like locks, atomics and total orders are used
 liberally for guaranteeing local operational properties of concurrent data
-structures or algorithms, and have often been used poorly in both systems and
+structures or systems, and have often been used poorly in both software and
 academic literature.
 
 MapReduce~\cite{dean2004mapreduce} conflated barriers with communication. In database systems, query
-engines typically pipeline data between operators in a query plan, and wait only
+engines often pipeline data between operators in a query plan, and block only
 where a non-monotone operator, such as aggregation, needs all of its input to
 produce an output~\cite{wilschut1991dataflow,graefe1990volcano}. MapReduce
-instead tightly coupled barrier coordination into every communication phase,
+instead coupled barrier coordination into every communication phase,
 so even monotone parallel operators like join had to wait for coordination.
 Parallel complexity models that count rounds, including Valiant's BSP model,
 similarly conflate communication and
@@ -1822,19 +1822,19 @@ Rather than repairing a specific model, the CALM Conjecture asked the underlying
 question: when is coordination inherent, and why? The question was
 first addressed in the context of declarative
 networking~\cite{loo2009declarative}, another query processing setting. That
-research agenda took Codd's tradition of declarative
-specification~\cite{codd1970relational} and extended it to a broader domain,
+agenda took Codd's idea of declarative
+specification~\cite{codd1970relational} to a broader domain,
 demonstrating that full distributed systems could be implemented in declarative
 languages, with practical
 payoffs~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2010boom,alvaro2011bloom}.
-This validation, combined with query processing intuition, suggested the answer
+That validation, combined with query processing intuition, suggested the answer
 to the CALM question: coordination of any kind is required if and only if the
 system's declarative specification is non-monotone. Ameloot et al.\ proved it
 for relational languages~\cite{ameloot2013relational}.
 
   % B. From programs to specs (the paragraph you said needed rewording):
-This paper raises the abstraction level yet further: from logic programs to the
-\spectype[s] of any system. All that matters about a spec is which outputs it
+This paper raises the abstraction level yet further: from logic programs to simple
+\spectype[s]. All that matters about a spec is which outputs it
 permits for each input; the analysis needs no language or programming model,
 declarative or otherwise. By going a level higher to specs, we not only set
 aside the lack of mainstream adoption of declarative languages; we also capture
@@ -1853,11 +1853,11 @@ declared contracts and invariants in specific
 contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
 operation the weakest consistency or isolation level a store offers that still
 satisfies them. We ask what a spec itself requires, independent of any menu of
-levels, and by Observable equivalence (Lemma~\ref{lem:canonical-equivalent}) the
+levels, and by observable equivalence (Lemma~\ref{lem:canonical-equivalent}) the
 answer holds for every mechanism.
 
 Underlying these issues is a reassessment of Codd's declarative tradition: how
-``declarative'' can a specification be? How little structure does it need to be
+little structure must be declared to be
 useful? The question is timely. Coding agents today translate from natural
 language to imperative code, which is often rife with bugs. This has renewed
 interest in interposing formal specification languages like
@@ -1865,9 +1865,8 @@ Lean~\cite{demoura2021lean4} as a narrow waist in the agentic coding pipeline~\c
 Formal languages couple heuristic
 AI-driven inference to deterministic proofs of correctness: neurosymbolic
 computing~\cite{an2025neurosymbolic}. This presents a renewed
-opportunity for practical declarative programming languages, including logic,
-dataflow, and functional languages. These languages still specify protocols and
-programs in a relatively high degree of detail, as in declarative networking.
+opportunity for declarative programming languages, but, as in declarative networking,
+this still requires a relatively high degree of detail.
 Our \spectype[] model and its composition point to the possibility of
 specification at a higher level still, suggesting we could declare far less detail
 and still get the neurosymbolic advantage of heuristic search for
