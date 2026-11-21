@@ -149,7 +149,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-728 entries.
+729 entries.
 
 ### §2 Functional CALM
 
@@ -274,9 +274,10 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«prop:exposure-boundary/common-expansion»` | theorem | Prop. |
 | `«prop:exposure-boundary/functional»` | theorem | After Prop. |
 | `«lem:accumulating»` | theorem | **Lemma `lem:accumulating`** (Accumulating outputs). |
-| `«sec:three-patterns/accumulating-join»` | theorem | "The proof uses only that each fiber contains, with any two outputs, a common output extension of both. |
+| `«sec:patterns/accumulating-join»` | theorem | "The proof uses only that each fiber contains, with any two outputs, a common output extension of both. |
 | `«lem:order-commitment»` | theorem | **Lemma `lem:order-commitment`** (Ordering concurrent events). |
 | `«lem:bounded-values»` | theorem | **Lemma `lem:bounded-values`** (Bounded number of values). |
+| `«lem:ruling-out»` | theorem | **Lemma `lem:ruling-out`** (Ruling out inputs). |
 
 ### §4.1–4.3 Distributed execution
 
@@ -955,7 +956,7 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/classical-problems
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«app:additional-applications/pattern-consequences»` | theorem | "When Lemma `lem:order-commitment` or Lemma `lem:bounded-values` applies, Complete CALM (Theorem `thm:complete-calm`) says that the runs of the spec are not… |
+| `«app:additional-applications/pattern-consequences»` | theorem | "When one of the last three [Lemmas `lem:order-commitment`, `lem:bounded-values`, `lem:ruling-out`] applies, Complete CALM (Theorem `thm:complete-calm`) says… |
 | `«tab:classical-problems/reliable-broadcast»` | theorem | Table row "Reliable broadcast \| delivered messages (⊆) \| yes"; see `«app:additional-applications/reliable-broadcast»`. |
 | `«tab:classical-problems/causal-broadcast»` | theorem | Table row "Causal broadcast \| causally closed set of delivered messages (⊆) \| yes"; see `«app:additional-applications/causal-broadcast»`. |
 | `«tab:classical-problems/counter»` | theorem | Table row "Grow-only counter \| count (≤) \| yes"; see `«app:additional-applications/counter»`. |

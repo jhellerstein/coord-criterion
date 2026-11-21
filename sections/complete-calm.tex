@@ -381,17 +381,19 @@ are both functional monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.
 
-\subsection{Three patterns}
-\label{sec:three-patterns}
+\subsection{Four patterns}
+\label{sec:patterns}
 
-Many specs follow one of three patterns, and each pattern settles Lifted
+Many specs follow one of four patterns, and each pattern settles Lifted
 Monotonicity directly.  In the first, outputs report facts that only
 accumulate, as the route sets of Figure~\ref{fig:ambiguity-frames} do.  In the
 second, an output orders two events that the input leaves unordered, as the
 serial orders of the same figure do.  In the third, outputs decide values, and
 the spec bounds how many distinct values may be decided, as consensus allows
-only one.  The first pattern gives Lifted Monotonicity, and each of the other
-two gives a witness to its failure.
+only one.  In the fourth, an output claims that some input will never arrive,
+as a final tally claims that the polls are closed.  The first pattern gives
+Lifted Monotonicity, and each of the other three gives a witness to its
+failure.
 
 \begin{lemma}[Accumulating outputs]
 \label{lem:accumulating}
@@ -441,8 +443,9 @@ $\fiber{j}$.
 Suppose that each output $o$ of an \spectype determines a set of values that
 $o$ \emph{decides}; that if $o\OutputOrd u$, then $u$ decides every value that
 $o$ decides; and that every output permitted at an input $j$ decides at most
-$k$ values.  If $k+1$ rows have $j$ as a common \indesc and decide $k+1$
-distinct values, one per row, then the spec is not monotone.
+$k$ values.  If $k+1$ rows each decide a different value, and their inputs all
+\ingrow to $j$, then they cannot all grow to one output at $j$, so the spec is
+not monotone.
 \end{lemma}
 
 \begin{proof}
@@ -451,10 +454,40 @@ values.  So the common-extension condition fails, and
 Proposition~\ref{prop:common-expansion-form} applies.
 \end{proof}
 
-When Lemma~\ref{lem:order-commitment} or Lemma~\ref{lem:bounded-values}
-applies, Complete CALM says that the runs of the spec are not consistent, and
+\begin{lemma}[Ruling out inputs]
+\label{lem:ruling-out}
+Suppose that each input of an \spectype determines a set of facts that it
+\emph{contains}, and each output $o$ a set of facts that $o$ \emph{rules out};
+that if $o\OutputOrd u$, then $u$ rules out every fact that $o$ rules out; and
+that no output permitted at an input rules out a fact that the input contains.
+If a row $(i,o)$ has an \indesc $j$ that contains a fact $o$ rules out, then
+the spec fails Relational Monotonicity, so it is not monotone.
+\end{lemma}
+
+\begin{proof}
+An \outnoun of $o$ in $\fiber{j}$ would rule out a fact that $j$ contains, so
+none exists, and Relational Monotonicity fails at $i\InputOrd j$.  Lifted
+Monotonicity with $X=\{o\}$ is Relational Monotonicity, so it fails too.
+\end{proof}
+
+Consider a variant of the election in which the registrar may also announce
+the final tally, which rules out every ballot it does not count.  A final
+tally at $ab\cdot$ rules out a ballot from $v_3$, and the \indesc $aba$
+contains one.  By Lemma~\ref{lem:ruling-out}, the announcement requires a
+\commitment.  Closing the polls (Figure~\ref{fig:election-frames}(d)) is that
+\commitment: it removes the rows whose inputs contain the ruled-out ballot.
+The lemma needs an \indesc that adds the ruled-out fact.  The election's
+inputs list every voter, so at $aba$, where every voter has voted, no such
+extension exists, and the final tally there needs no \commitment.  When inputs
+do not list the participants, every input has an extension with a report from
+one more participant, so an output that rules out further reports always
+requires a \commitment.  This is the role of the list of all participants
+discussed in Section~\ref{sec:systems}.
+
+When Lemma~\ref{lem:order-commitment}, \ref{lem:bounded-values}, or
+\ref{lem:ruling-out} applies, Complete CALM says that the runs of the spec are not consistent, and
 the No-\commitment test (Proposition~\ref{prop:exposure-boundary}) says that
 some output, at some state reachable without \commitment, is not legal.  When
 Lemma~\ref{lem:accumulating} applies, the runs are consistent.
-Appendix~\ref{app:additional-applications} applies the three patterns to
+Appendix~\ref{app:additional-applications} applies the patterns to
 broadcast, consensus, leader election, snapshots, and queues.

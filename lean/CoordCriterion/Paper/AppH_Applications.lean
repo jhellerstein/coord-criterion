@@ -43,19 +43,20 @@ open CC.Txn CC.Apps
 
 /-! ## Patterns and problems
 
-The three pattern lemmas are stated in `Paper/S3_CompleteCALM.lean`
-(`sec:three-patterns`). -/
+The four pattern lemmas are stated in `Paper/S3_CompleteCALM.lean`
+(`sec:patterns`). -/
 
-/-- "When Lemma `lem:order-commitment` or Lemma `lem:bounded-values` applies,
-Complete CALM (Theorem `thm:complete-calm`) says that the runs of the spec are
-not consistent.  The No-commitment test (Proposition `prop:exposure-boundary`)
-adds that some output, at some state reachable without commitment, is not
-legal, so emitting it applies a commitment.  With `E = P`, Theorem
+/-- "When one of the last three [Lemmas `lem:order-commitment`,
+`lem:bounded-values`, `lem:ruling-out`] applies, Complete CALM (Theorem
+`thm:complete-calm`) says that the runs of the spec are not consistent.  The
+No-commitment test (Proposition `prop:exposure-boundary`) adds that some
+output, at some state reachable without commitment, is not legal, so emitting
+it applies a commitment.  With `E = P`, Theorem
 `thm:complete-cap` and Corollary `cor:complete-cap-any-system` add that no
 system for the spec has Availability for `P` and Partition Consistency.  …
 When Lemma `lem:accumulating` applies, the runs are consistent, and the
 canonical system for `P` needs no commitment and escapes CAP for `P`."
-First conjunct: from `¬ LiftedMono` (the conclusion of both lemmas); second:
+First conjunct: from `¬ LiftedMono` (the conclusion of each of the three lemmas); second:
 from `LiftedMono`, with the canonical system the commitment-free system
 `CAP.cfSystem`. -/
 theorem «app:additional-applications/pattern-consequences» {I O : Type} [PO I] [PO O]

@@ -492,7 +492,7 @@ theorem «prop:exposure-boundary/functional» {I O : Type} [PO I] [PO O] {sp : S
     (sp.LiftedMono ↔ sp.MonotoneF) ∧ (sp.CommonExpansion ↔ sp.MonotoneF) :=
   ⟨liftedMono_iff_monoF hf, commonExpansion_iff_monoF hf⟩
 
-/-! ## Three patterns (`sec:three-patterns`) -/
+/-! ## Four patterns (`sec:patterns`) -/
 
 section ThreePatterns
 open CC.Apps
@@ -516,7 +516,7 @@ order and any binary operation with that property, such as the maximum of two
 counter values under `≤`."  Lean assumes Relational Monotonicity in place of
 "still permitted at each input extension", which is weaker; the counter case
 is `«tab:classical-problems/counter»`. -/
-theorem «sec:three-patterns/accumulating-join» {I O : Type} [PO I] [PO O]
+theorem «sec:patterns/accumulating-join» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (join : O → O → O) (hl : ∀ a b, a ≼ join a b) (hr : ∀ a b, b ≼ join a b)
     (hc : ∀ j a b, sp.P j a → sp.P j b → sp.P j (join a b)) (hR : sp.RelMono) :
     sp.LiftedMono :=
@@ -552,8 +552,9 @@ theorem «lem:order-commitment» {I O E : Type} [PO I] [PO O] {sp : Spec I O}
 each output `o` of an I/O specification determines a set of values that `o`
 decides; that if `o ⪯ u`, then `u` decides every value that `o` decides; and
 that every output permitted at an input `j` decides at most `k` values.  If
-`k+1` rows have `j` as a common input extension and decide `k+1` distinct
-values, one per row, then the spec is not monotone."  Proof: "A common output
+`k+1` rows each decide a different value, and their inputs all grow to `j`,
+then they cannot all grow to one output at `j`, so the spec is not
+monotone."  Proof: "A common output
 extension of the `k+1` outputs in `P(j)` would decide all `k+1` values.  So the
 common-extension condition fails, and Proposition `prop:common-expansion-form`
 applies."  "At most `k` values": covered by a list of length `≤ k`. -/
@@ -566,6 +567,26 @@ theorem «lem:bounded-values» {I O V : Type} [PO I] [PO O] {sp : Spec I O}
     (¬ ∃ u, sp.P j u ∧ ∀ r, o r ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono :=
   ⟨bounded_no_common dec hmono hbound o v hv hd,
    bounded_values dec hmono hbound i o v hv hrow hj hd⟩
+
+/-- **Lemma `lem:ruling-out`** (Ruling out inputs).  "Suppose that each input
+of an I/O specification determines a set of facts that it contains, and each
+output `o` a set of facts that `o` rules out; that if `o ⪯ u`, then `u` rules
+out every fact that `o` rules out; and that no output permitted at an input
+rules out a fact that the input contains.  If a row `(i,o)` has an input
+extension `j` that contains a fact `o` rules out, then the spec fails
+Relational Monotonicity, so it is not monotone."  Proof: "An output extension
+of `o` in `P(j)` would rule out a fact that `j` contains, so none exists, and
+Relational Monotonicity fails at `i ⊑ j`.  Lifted Monotonicity with `X = {o}`
+is Relational Monotonicity, so it fails too."  The election example that
+follows (a final tally at `ab·`, closing the polls, and the list of all
+participants) is prose and is not formalized. -/
+theorem «lem:ruling-out» {I O F : Type} [PO I] [PO O] {sp : Spec I O}
+    (has : I → F → Prop) (rules : O → F → Prop)
+    (hmono : ∀ o u f, o ≼ u → rules o f → rules u f)
+    (hsafe : ∀ j u f, sp.P j u → has j f → ¬ rules u f)
+    {i j : I} {o : O} {f : F} (hrow : sp.P i o) (hij : i ≼ j) (hr : rules o f)
+    (hj : has j f) : ¬ sp.RelMono ∧ ¬ sp.LiftedMono :=
+  ruling_out has rules hmono hsafe hrow hij hr hj
 
 end ThreePatterns
 
