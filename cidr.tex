@@ -80,7 +80,14 @@
 % Pointer to the long version (proofs and extended material).
 \newcommand{\extended}{the full paper~\cite{hellerstein2026completecalmfull}}
 \newcommand{\fullproof}{Complete proof in the full paper~\cite{hellerstein2026completecalmfull}.}
-\newcommand{\proofinfull}{\begin{proof}In the full paper~\cite{hellerstein2026completecalmfull}.\end{proof}}
+% \proofinfull: a one-line proof with tighter vertical space than the class's
+% proof environment (topsep 2pt instead of 6pt plus 6pt); same label and QED.
+\makeatletter
+\newcommand{\proofinfull}{\par\pushQED{\qed}\normalfont\topsep2\p@\relax
+  \trivlist\item[\@proofindent\hskip\labelsep{\@proofnamefont\proofname\@addpunct{.}}]%
+  \ignorespaces In the full paper~\cite{hellerstein2026completecalmfull}.%
+  \popQED\endtrivlist\@endpefalse}
+\makeatother
 % CIDR only: omit DOIs and URLs from the bibliography (read by ACM-Reference-Format's .bbl).
 \def\showDOI#1{\unskip}
 \def\showURL#1{\unskip}
