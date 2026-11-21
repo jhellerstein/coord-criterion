@@ -294,12 +294,13 @@ and Monotonicity.  Our Consistency definition is general: the runs of a spec are
 different paths can be brought to a common state.  Applied to different specs,
 this one definition captures classical consistency models, from
 linearizability, through serializability and other isolation levels, to the
-eventual consistency of replicated data.\color{black}
+eventual consistency of replicated data.  It also captures consistency of
+application specs.\color{black}
 
 \color{black!45}\cxtag{introduction:10}{C}For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
 implies $f(i)\OutputOrd f(j)$.  Nondeterministic specs, such as leader election
 and transaction scheduling, need a richer monotonicity property that ensures
-not only that output grows as inputs grow, but also that different output
+not only that outputs grow as inputs grow, but also that different output
 choices for the same input can grow by $\OutputOrd$ to a common permitted
 output.  We call this property \emph{Lifted Monotonicity}, and a spec that has
 it \emph{lifted monotone}.  It reduces to standard monotonicity for specs that
@@ -319,11 +320,12 @@ Functional CALM covers prior CALM work and CRDT state.\color{black}
 mechanism achieves, apart from how it achieves it: locks, consensus,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
-A system that omits a required \commitment can produce inconsistent runs; one that makes more \commitments coordinates needlessly.  In a composition of specs, \emph{Proper Coordination}
+A system that omits a required \commitment can produce inconsistent runs;
+coordination beyond what the required \commitments need is wasted work.  In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
 stages need none.  In state-machine replication, for example, the consensus log
-makes every \commitment and the replicated store makes none
-(Section~\ref{sec:composition}).\color{black}
+makes every \commitment; the replicated store makes none, whether it employs
+coordination or not (Section~\ref{sec:composition}).\color{black}
 
 \color{black!45}\cxtag{introduction:13}{C}Distributed histories are captured under the same consistency criteria as
 centralized ones (Section~\ref{sec:distributed-execution}).  Complete CAP
