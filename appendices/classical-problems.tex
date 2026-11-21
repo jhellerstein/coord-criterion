@@ -15,16 +15,16 @@ these specs.  We cite them where they bear on an example.
 \subsection{Patterns and problems}
 \label{app:classical-patterns}
 
-Many specs follow one of four patterns, summarized in Table~\ref{tab:patterns},
-and each pattern settles Lifted Monotonicity directly. In the first, outputs
-grow in a join semilattice, as the route sets of
-Figure~\ref{fig:ambiguity-frames} do under union. In the second, an output
-orders two events that the input leaves unordered, as the serial orders of the
-same figure do. In the third, outputs decide values, and the spec bounds how
-many distinct values may be decided, as consensus allows only one. In the
-fourth, an output blocks an input before it arrives, as closing the polls
-blocks every ballot not yet received. The first pattern gives Lifted
-Monotonicity, and each of the other three gives a witness to its failure.
+Many specs follow one of four patterns, and each pattern settles Lifted
+Monotonicity directly.  In the first, outputs grow in a join semilattice, as
+the route sets of Figure~\ref{fig:ambiguity-frames} do under union.  In the
+second, an output orders two events that the input leaves unordered, as the
+serial orders of the same figure do.  In the third, outputs choose a proper
+subset of competing values, as consensus chooses one proposal.  In the fourth,
+an output blocks an input before it arrives, as closing the polls blocks every
+ballot not yet received.  The first pattern gives Lifted Monotonicity, and
+each of the other three, the patterns of non-monotonicity of
+Section~\ref{sec:instances}, gives a witness to its failure.
 
 \begin{lemma}[Growth in a semilattice]
 \label{lem:accumulating}
@@ -117,28 +117,34 @@ blocked. The spec includes the rows \begin{itemize} \item $(ab\cdot,\
 arrives; and \item $(aba,\ (aba,\ \varnothing))$, with $v_3$'s ballot accepted
 when it arrives. \end{itemize} The second and third rows have no common
 \outnoun at $aba$, since $(v_3,a)$ would be both accepted and blocked, so by
-Lemma~\ref{lem:blocking} the spec is not monotone. Accepting a ballot when it
-arrives reports evidence. Blocking $v_3$'s ballot before it arrives is a claim
-about an input not yet seen: that the ballot will not count. Blocking every
+Lemma~\ref{lem:blocking} the spec is not monotone.  Accepting a ballot when it
+arrives reports evidence.  Blocking $v_3$'s ballot before it arrives is a claim
+about an input not yet seen: that the ballot will not count.  Blocking every
 ballot not yet received is closing the polls
-(Figure~\ref{fig:election-frames}(d)), and it is a \commitment. Because the
+(Figure~\ref{fig:election-frames}(d)), and it is a \commitment.  Because the
 election has a fixed list of voters, once every voter has voted no ballot
 remains to arrive, and closing the polls blocks nothing that could later be
 accepted.
 
 When Lemma~\ref{lem:order-commitment}, \ref{lem:bounded-values}, or
 \ref{lem:blocking} applies, Complete CALM (Theorem~\ref{thm:complete-calm})
-says that the runs of the spec are not consistent. The No-\commitment test
+says that the runs of the spec are not consistent.  The No-\commitment test
 (Proposition~\ref{prop:exposure-boundary}) adds that some output, at some state
 reachable without \commitment, is not legal, so emitting it applies a
-\commitment. With $E=P$, Theorem~\ref{thm:complete-cap} and
+\commitment.  With $E=P$, Theorem~\ref{thm:complete-cap} and
 Corollary~\ref{cor:complete-cap-any-system} add that no system for the spec has
-Availability for $P$ and Partition Consistency. The witness rows, each placed
-on its own side of a partition, show why. When Lemma~\ref{lem:accumulating}
+Availability for $P$ and Partition Consistency.  The witness rows, each placed
+on its own side of a partition, show why.  When Lemma~\ref{lem:accumulating}
 applies, the runs are consistent, and the canonical system for $P$ needs no
-\commitment and escapes CAP for $P$. The rest of this appendix applies the
-patterns to broadcast, consensus, leader election, snapshots, queues, and
-search structures.
+\commitment and escapes CAP for $P$.
+
+Every \commitment that the other three patterns require can be made by one
+participant, as the leader of an epoch makes each per-slot \commitment in
+Multi-Paxos (Section~\ref{app:consensus}), and a deployment records that
+placement (Section~\ref{sec:commitment-conflict}).  Placing a \commitment at
+one participant changes who makes it, not whether the spec requires it.  The
+rest of this appendix applies the patterns to broadcast, consensus, leader
+election, snapshots, queues, and search structures.
 
 \begin{table}[t]
   \centering
