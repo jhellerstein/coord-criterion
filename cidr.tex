@@ -423,8 +423,8 @@ received so far with the permitted result.  For brevity, the figure shows only
 inputs \inrelpart $a\cdot\cdot$.
 
 \paragraph{Specs and monotonicity.}
-A spec is such a table, with an order on each column.  To avoid ambiguity, we
-state this precisely.
+A spec is a possibility table for a function over ordered types.
+To avoid ambiguity, we state this precisely.
 
 \begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
@@ -438,18 +438,14 @@ input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
 function $f:I\to O$.
 \end{definition}
 
-The two orders require thoughtful design.  Inputs are \emph{cumulative}, since
-an output may depend on everything a system has received: $i\InputOrd j$ means
-that $j$ contains at least the input information in $i$, and we say that $j$
-\emph{\inrel} $i$, or is an \emph{\indesc} of $i$.  In the election, $ab\cdot$
-\inrel $a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  In the
-\emph{output order}, $o\OutputOrd u$ means that $u$ subsumes every externally
-visible claim in $o$, and we say that $u$ \emph{\outrel} $o$.  The election's
-output order says which announcements are safe to build on: $\bot$ claims
-nothing, so either winner \outrel it, while $a$ and $b$ are incomparable.  A
-\emph{common \indesc} of several inputs \inrel each of them, and a \emph{common
-\outnoun} of several outputs \outrel each.  A functional spec is monotone when
-growing input only ever extends its output:
+The two orders require thoughtful design.
+Inputs grow as ballots arrive: $i\InputOrd j$, read ``$j$ \emph{\inrel} $i$'', means that
+$j$ has everything $i$ has and possibly more. So $ab\cdot$ \inrel $a\cdot\cdot$,
+while $aa\cdot$ and $ab\cdot$ are incomparable. Outputs grow as announcements
+say more: $o\OutputOrd u$, read ``$u$ \outrel $o$'', means that $u$ makes every
+claim $o$ makes. Either winner \outrel $\bot$, which claims nothing, while $a$
+and $b$ are incomparable. A functional spec is monotone when growing input only
+ever extends its output:
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -496,7 +492,7 @@ the remainder table.  For a state $(i,R)$ and a legal input $j$, the
   \label{eq:input-event}
 \end{equation}
 makes $j$ current and drops the rows whose input does not
-\inrelbase $j$.  Because inputs are cumulative, $\mathsf{input}(j)$ then
+\inrelbase $j$.  Because each input contains the ones before it, $\mathsf{input}(j)$ then
 $\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
 
 Two sets of outputs recur throughout our discussion: those a table permits at
