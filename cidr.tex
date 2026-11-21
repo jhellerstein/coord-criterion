@@ -119,7 +119,7 @@ availability.  CALM, CAP, and CRDTs each answer the question for one class of
 programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.
 
-We put them on common ground, in a formalism that clarifies the literature and
+We provide a simple formalism that unifies the literature and
 offers new results.  A minimalist \emph{\spectype} (spec) is a possibility table containing, for
 each input, every output a system may produce, with partial orders on inputs and
 outputs.  Its runs are \emph{consistent} when they are confluent.
@@ -133,7 +133,7 @@ Highly Available Transactions, Invariant Confluence, and later CALM refinements 
 Prior CALM results stop at monotonicity: for non-monotone
 specs, they say only that coordination is needed somewhere.  Our
 unified framework says exactly
-how much coordination a spec needs, and where.  A non-monotone
+what coordination a spec needs, and when.  A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
 \emph{Proper Coordination} identifies which stage of a composition must make the
@@ -187,8 +187,8 @@ networks~\cite{ameloot2013relational,hellerstein2020keeping}.  The CAP
 Conjecture proposed a related question: which consistency guarantees can remain
 available when participants cannot
 communicate~\cite{brewer2000towards,brewer2012cap}?  Its original proof
-answered it for only one guarantee: linearizable registers cannot remain
-available~\cite{gilbert2002cap}.  Both results are invoked broadly: CALM as a
+provided the answer for only one guarantee: linearizable registers~\cite{gilbert2002cap}.
+Yet both results are invoked broadly: CALM as a
 rule that monotone programs need no coordination, CAP as a general constraint
 on distributed systems. The folklore outgrew the proofs.
 
@@ -250,23 +250,22 @@ captures only observable behavior (\S\ref{sec:scope}).
 Despite its simplicity, our model supports not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
 \S\ref{sec:hat-instance}).
 
-\paragraph{The criterion: Lifted Monotonicity.}
+\paragraph{Consistency and a criterion for achieving it.}
 The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity.  Our Consistency definition is general: the runs of a spec are
 \emph{consistent} when they are \emph{confluent}, so that states reached along
 different paths can be brought to a common state.  Applied to different specs,
-this one definition captures classical consistency models, from
-linearizability, through serializability and other isolation levels, to the
-eventual consistency of replicated data. It also captures consistency of application specs.
+this one definition captures classical consistency models, from eventual consistency of replicated data
+through linearizability, serializability and other isolation levels.
+It also captures consistency of application specs.
 
-For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
+A spec with one output per input is a function, and its monotonicity is standard: $i\InputOrd j$
 implies $f(i)\OutputOrd f(j)$.  Nondeterministic specs, such as leader election
 and transaction scheduling, need a richer monotonicity property that ensures
 not only that outputs grow as inputs grow, but also that different output
 choices for the same input can grow by $\OutputOrd$ to a common permitted
 output.  We call this property \emph{Lifted Monotonicity}, and a spec that has
-it \emph{lifted monotone}.  It reduces to standard monotonicity for specs that
-are deterministic functions.
+it \emph{lifted monotone}.  It reduces to standard monotonicity for functional specs.
 
 Confluence is an operational property of all the runs a spec allows.  Lifted Monotonicity,
 by contrast, is a static property of the spec's table: it can be checked on
@@ -275,16 +274,15 @@ pairs of rows, without exploring runs.  \emph{Functional CALM}
 (\S\ref{sec:complete-calm-theorem}) show that the two coincide: the runs a spec allows are consistent exactly when the spec is
 lifted monotone.  Hence Consistency As Lifted Monotonicity, a new reading of the
 CALM acronym.
-Functional CALM is sufficient to cover prior CALM work and CRDT state.
 
 Distributed histories are captured under the same consistency criteria as
-centralized ones (\S\ref{sec:distributed-execution}).  Complete CAP
+sequential runs (\S\ref{sec:distributed-execution}).  Complete CAP
 (\S\ref{sec:complete-cap}) says Lifted Monotonicity exactly characterizes specs
-that can keep every permitted output available and confluent during a
+that can keep every permitted output both available and consistent during a
 partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.
 
 \paragraph{Coordination is for \commitment.} What of coordination?  A \commitment isolates the contract a coordination
-mechanism achieves, apart from how it achieves it: locks, consensus,
+mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
 In a composition of specs, \emph{Proper Coordination}
@@ -324,7 +322,7 @@ We make contributions in four categories:
 \vspace{0.5em}
 \noindent
 The full paper~\cite{hellerstein2026completecalmfull} gives further
-intuition, proofs, and applications.
+intuition, proofs, and applications across concurrent and distributed systems.
 
 % ======================================================================
 \section{Functional CALM}
