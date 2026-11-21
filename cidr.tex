@@ -638,18 +638,6 @@ canonical state $\sigma_P(i)$ at some input $i$.  It is
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
-Both kinds of event are relational selections, and selections commute, so a
-run's remainder table depends only on its last input and the outputs it
-emitted:
-
-\begin{lemma}[Rows remaining after a run]
-\label{lem:run-residual}
-If a run ends with the current input $i$ after emitting
-$o_1,\ldots,o_m$, its remainder table is \(P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
-  \mathrm{out}\OutputGe o_m].\)
-\end{lemma}
-\proofinfull
-
 Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at
@@ -677,9 +665,31 @@ definitions forbid it.  Nonetheless, output orders align our view with the ``eve
 consistency'' literature: outputs that can only \outrelbase each other, as in
 CRDTs, always leave runs consistent by our definition (\S\ref{sec:crdt-instance}).
 
-Confluence asks whether runs can be continued to a common state.  That question
-can be answered for any finite set of runs by examining their current remainder
-tables.
+The election shows the whole arc in miniature.  Input narrows the
+possibilities, and an output that everything remaining builds on is legal and
+needs nothing more.  An output that is not legal needs a \commitment, and runs
+that emit it can diverge for good.  Functional CALM says exactly when that
+happens: when the spec is not monotone.
+
+\subsection{The Functional CALM theorem}
+\label{sec:functional-calm-theorem}
+
+Monotonicity is defined by a spec's table and orders; consistency is defined by
+its runs.  Functional CALM shows that one holds exactly when the other does.
+Three facts about runs drive the proof.  First, both kinds of event are
+relational selections, and selections commute, so a run's remainder table
+depends only on its last input and the outputs it emitted:
+
+\begin{lemma}[Rows remaining after a run]
+\label{lem:run-residual}
+If a run ends with the current input $i$ after emitting
+$o_1,\ldots,o_m$, its remainder table is \(P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
+  \mathrm{out}\OutputGe o_m].\)
+\end{lemma}
+\proofinfull
+
+Second, whether runs can be continued to a common state can be read off their
+current remainder tables.
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
@@ -701,7 +711,8 @@ Consistency thus ensures that runs never diverge irreparably: there is no
 ``split brain''.  Whatever events a finite collection of runs contains, at any
 common \indesc of their current inputs, some state is reachable by every run
 and contradicts none of their outputs.  Consistency is a safety property of the spec's runs:
-it describes no protocol and promises no delivery or termination.
+it describes no protocol and promises no delivery or termination.  Third,
+consistency comes down to legality:
 
 \begin{lemma}[Confluence and legality]
 \label{lem:confluence-legality}
@@ -721,15 +732,9 @@ common \indesc $j$, which survives in every run, and consistency follows.
 \end{proof}
 
 In the election under the equality order, emitting $\bot$ at $ab\cdot$ applies
-a \commitment, since $\bot$ is not legal there, and the two runs above share no
-row at $aba$.  Section~\ref{sec:functional-calm-theorem} shows that for
-functional tables the runs are consistent exactly when the spec is monotone.
+a \commitment, since $\bot$ is not legal there, and the two runs of
+\S\ref{sec:election-story} share no row at $aba$.
 
-\subsection{The Functional CALM theorem}
-\label{sec:functional-calm-theorem}
-
-Monotonicity is defined by a spec's table and orders; consistency is defined by
-its runs.  Functional CALM shows that one holds exactly when the other does.
 In a monotone spec, a run's outputs never narrow its state:
 
 \begin{corollary}[State is fixed by input]
