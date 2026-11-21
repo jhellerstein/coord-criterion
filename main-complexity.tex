@@ -6051,18 +6051,31 @@ participants enlarges what can be computed without coordination.  The cost is
 availability: a participant cut off from any listed participant waits
 forever.  Fault-tolerant protocols such as Raft elect by majority vote instead,
 and each voter's ballot is a \commitment that the voter makes locally, as in
-Section~\ref{app:consensus}.  Leader election is also the running example of
-Baccaert and Ketsman, who ask which behaviors become computable when nodes
-share knowledge such as the list of all nodes
-(Section~\ref{sec:query-instance}).  For them, a behavior that cannot be
-computed without that list needs coordination.  In our framework the list is
+Section~\ref{app:consensus}.\cxbar{classical-problems-22}{0.4 0.4 1}{e}\color{black}
+
+\color{black}\cxtag{classical-problems:23}{N/M}\cxbar{classical-problems-23}{0.4 0.4 1}{s}Leader election is also the running example of Baccaert and
+Ketsman~\cite{baccaert2026spectrum}, and their results for transducer networks
+match both specs.  Without the list of all nodes, leader election is not
+coordination-free: groups of nodes that have heard from different nodes can
+each elect the smallest identifier they know, and a node with a smaller
+identifier, heard later, contradicts both~\cite[Prop.~37]{baccaert2026spectrum}.
+With the list and an order on identifiers, and every node a candidate, each
+node elects the smallest identifier in the list without
+communicating~\cite[Ex.~6]{baccaert2026spectrum}.  The list alone is not
+enough: without an order on identifiers or another way to break symmetry, no
+transducer network elects a leader~\cite[Thm.~1]{baccaert2026spectrum}, the
+counterpart of Angluin's result for anonymous rings.  Our spec with the list
+presumes such an order, since it elects the largest candidate.  The two
+frameworks differ in what they call coordination.  For Baccaert and Ketsman, a
+behavior that cannot be computed without the list of all nodes needs
+coordination (Section~\ref{sec:query-instance}).  In our framework the list is
 part of the input, and the question is whether, given that input, the spec
-requires a \commitment.  For election by largest candidate it does not.\cxbar{classical-problems-22}{0.4 0.4 1}{e}\color{black}
+requires a \commitment.  For election by largest candidate it does not.\cxbar{classical-problems-23}{0.4 0.4 1}{e}\color{black}
 
 \subsection{Snapshots}
 \label{app:snapshots}
 
-\color{black}\cxtag{classical-problems:23}{N/S}Chandy and Lamport's algorithm records a consistent global state of a running
+\color{black}\cxtag{classical-problems:24}{N/S}Chandy and Lamport's algorithm records a consistent global state of a running
 message-passing system without stopping it~\cite{chandy1985distributed}.  An
 atomic snapshot object answers each scan with a view of all components, and a
 single order of all scans and updates must explain every
@@ -6070,7 +6083,7 @@ answer~\cite{afek1993atomic}.  Both answer requests for a view of the system.
 The specs below show that the first is monotone across partitions when each
 process answers its own scans, and the second is not.\color{black}
 
-\color{blue!75!black}\cxtag{classical-problems:24}{B/M}\cxbar{classical-problems-24}{0.4 0.4 1}{s}An input is a finite causal history of updates and scans, each event at one
+\color{blue!75!black}\cxtag{classical-problems:25}{B/M}\cxbar{classical-problems-25}{0.4 0.4 1}{s}An input is a finite causal history of updates and scans, each event at one
 participant, ordered as in Section~\ref{app:broadcast}.  For a scan $s$ of a
 history $h$, a \emph{cut for $s$} is a set $C$ of updates of $h$ that is
 causally closed among updates, contains every update causally before $s$, and
@@ -6081,11 +6094,11 @@ each scan of $p$ in $h$, and views are ordered by extension.  The
 \emph{global-snapshot spec} is the product interface of these views
 (Appendix~\ref{app:rtc}): its outputs are partial tuples with one view per
 participant.  Under the owner deployment, each participant answers only its
-own scans.\cxbar{classical-problems-24}{0.4 0.4 1}{e}\color{black}
+own scans.\cxbar{classical-problems-25}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Global and atomic snapshots]
 \label{prop:snapshots}
-\cxtag{classical-problems:25}{N/M}\cxbar{classical-problems-25}{0.4 0.4 1}{s}\leavevmode
+\cxtag{classical-problems:26}{N/M}\cxbar{classical-problems-26}{0.4 0.4 1}{s}\leavevmode
 \begin{enumerate}
   \item The global-snapshot spec is monotone across partitions under the owner
         deployment.
@@ -6094,19 +6107,19 @@ own scans.\cxbar{classical-problems-24}{0.4 0.4 1}{e}\color{black}
         $L$ of all events of the input that extends causal precedence: the
         view of each scan is the set of updates before it in $L$.  With two
         participants that can each perform an update and then a scan, it is
-        not monotone across partitions under the owner deployment.\cxbar{classical-problems-25}{0.4 0.4 1}{e}\color{black}
+        not monotone across partitions under the owner deployment.\cxbar{classical-problems-26}{0.4 0.4 1}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}
-\cxtag{classical-problems:26}{N/M}\cxbar{classical-problems-26}{0.4 0.4 1}{s}(1) The views of a participant at one input are defined on the same scans,
+\cxtag{classical-problems:27}{N/M}\cxbar{classical-problems-27}{0.4 0.4 1}{s}(1) The views of a participant at one input are defined on the same scans,
 so they form an antichain, and the updates causally before a scan form a cut
 for it, so views exist.  By Theorem~\ref{thm:product-frontier}(1), it
 suffices that views continue.  An \indesc adds nothing to the causal past of
 an old event, so the cut of an old scan is still a cut for it.  A new scan can take as its cut the
-updates causally before it.\cxbar{classical-problems-26}{0.4 0.4 1}{e}\color{black}
+updates causally before it.\cxbar{classical-problems-27}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{classical-problems:27}{N/M}\cxbar{classical-problems-27}{0.4 0.4 1}{s}(2) The updates before a scan in such an $L$ form a cut for it, since $L$
+\color{black}\cxtag{classical-problems:28}{N/M}\cxbar{classical-problems-28}{0.4 0.4 1}{s}(2) The updates before a scan in such an $L$ form a cut for it, since $L$
 extends causal precedence, so the selected tuples are tuples of views.  Let
 participant $p$ perform update $u_p$ and then scan $s_p$, and let $q$
 perform $u_q$ and then $s_q$, with no messages between them.  The answer
@@ -6114,10 +6127,10 @@ $\{u_p\}$ to $s_p$ is explained by the order $u_p\,s_p\,u_q\,s_q$, and the
 answer $\{u_q\}$ to $s_q$ by $u_q\,s_q\,u_p\,s_p$.  An order explaining both
 would place $u_p$ before $s_p$, $s_p$ before $u_q$, $u_q$ before $s_q$, and
 $s_q$ before $u_p$.  So the two answers, emitted by $p$ and $q$ on two sides of
-a partition, have no common \outnoun.\cxbar{classical-problems-27}{0.4 0.4 1}{e}\color{black}
+a partition, have no common \outnoun.\cxbar{classical-problems-28}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{blue!75!black}\cxtag{classical-problems:28}{B/M}\cxbar{classical-problems-28}{0.4 0.4 1}{s}By Proposition~\ref{prop:deployment-complete-cap}, the owner deployment's
+\color{blue!75!black}\cxtag{classical-problems:29}{B/M}\cxbar{classical-problems-29}{0.4 0.4 1}{s}By Proposition~\ref{prop:deployment-complete-cap}, the owner deployment's
 canonical system for the global-snapshot spec has Deployment Availability and
 Partition Consistency, and no system for the atomic snapshot has both.  The
 global-snapshot spec permits the two answers of the proof together: neither
@@ -6126,18 +6139,18 @@ nonetheless have wait-free implementations from atomic
 registers~\cite{afek1993atomic}.  In the model of
 Section~\ref{app:consensus}, the memory that serves those registers is a
 single participant, and its order of service makes the \commitments.  In the
-proof, by contrast, each process answers its own scan.\cxbar{classical-problems-28}{0.4 0.4 1}{e}\color{black}
+proof, by contrast, each process answers its own scan.\cxbar{classical-problems-29}{0.4 0.4 1}{e}\color{black}
 
 \subsection{Queues}
 \label{app:queue}
 
-\color{black}\cxtag{classical-problems:29}{N/S}A replicated queue cannot report a total dequeue order of two concurrent
+\color{black}\cxtag{classical-problems:30}{N/S}A replicated queue cannot report a total dequeue order of two concurrent
 enqueues without a \commitment, by Lemma~\ref{lem:order-commitment}.  We
 identify what a queue can report without one, and show that nothing more is
 possible when each item can be dequeued as soon as the items causally before
 it have been.\color{black}
 
-\color{blue!75!black}\cxtag{classical-problems:30}{B/M}\cxbar{classical-problems-30}{0.4 0.4 1}{s}An input is a finite causal history of enqueues, ordered as in
+\color{blue!75!black}\cxtag{classical-problems:31}{B/M}\cxbar{classical-problems-31}{0.4 0.4 1}{s}An input is a finite causal history of enqueues, ordered as in
 Section~\ref{app:broadcast}.  Each enqueue adds a distinct item, which we
 identify with the event.  An output is a \emph{dequeue history} $(D,<)$, a
 partially ordered history of dequeue events: a set $D$ of the enqueued items
@@ -6148,11 +6161,11 @@ on $D$, and no item of $D'\setminus D$ comes before an item of $D$ under
 $<'$.  On totally ordered histories this is the usual prefix order.  The
 \emph{causal queue} permits at $h$ the dequeue histories $(D,\to)$ in which $D$
 is a causally closed set of items of $h$ and $\to$ is causal precedence
-restricted to $D$.\cxbar{classical-problems-30}{0.4 0.4 1}{e}\color{black}
+restricted to $D$.\cxbar{classical-problems-31}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Causal queue]
 \label{prop:causal-queue}
-\cxtag{classical-problems:31}{N/L}\cxbar{classical-problems-31}{0.9 0.45 0}{s}\leavevmode
+\cxtag{classical-problems:32}{N/L}\cxbar{classical-problems-32}{0.9 0.45 0}{s}\leavevmode
 \begin{enumerate}
   \item The causal queue satisfies Lifted Monotonicity.
   \item Consider any spec with these inputs and outputs whose fiber at $h$ is
@@ -6166,34 +6179,34 @@ restricted to $D$.\cxbar{classical-problems-30}{0.4 0.4 1}{e}\color{black}
         listed items causally, and never place an item before itself, and that
         every causally closed set of items is the set of some dequeue history
         it permits.  Then it permits exactly the dequeue histories of the
-        causal queue.\cxbar{classical-problems-31}{0.9 0.45 0}{e}\color{black}
+        causal queue.\cxbar{classical-problems-32}{0.9 0.45 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}
-\cxtag{classical-problems:32}{N/S}(1) We check the common-extension condition.  Given rows $(h_r,(D_r,\to))$
+\cxtag{classical-problems:33}{N/S}(1) We check the common-extension condition.  Given rows $(h_r,(D_r,\to))$
 with a common \indesc $j$, the union $D$ of the $D_r$ is causally closed in
 $j$, and $(D,\to)$ \outrel each $(D_r,\to)$: causal precedence on $D_r$ is the
 same in $h_r$ and $j$, and an item causally before an item of $D_r$ lies in
 $D_r$.\color{black}
 
-\color{black}\cxtag{classical-problems:33}{N/M}\cxbar{classical-problems-33}{0.4 0.4 1}{s}(2) Suppose a permitted dequeue history $(D,<)$ has $a<b$ with $a\neq b$, and
+\color{black}\cxtag{classical-problems:34}{N/M}\cxbar{classical-problems-34}{0.4 0.4 1}{s}(2) Suppose a permitted dequeue history $(D,<)$ has $a<b$ with $a\neq b$, and
 $a$ is not causally before $b$.  Let $(D_b,<_b)$ be a permitted dequeue history
 whose set consists of $b$ and the items causally before it, so
 $a\notin D_b$.  A common \outnoun $(D'',<'')$ in the fiber has $a<''b$ with
 $b\in D_b$, so $a$ comes before an item of $D_b$, and the prefix order forces
-$a\in D_b$, a contradiction.\cxbar{classical-problems-33}{0.4 0.4 1}{e}\color{black}
+$a\in D_b$, a contradiction.\cxbar{classical-problems-34}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{classical-problems:34}{N/M}\cxbar{classical-problems-34}{0.4 0.4 1}{s}(3) A spec that satisfies Lifted Monotonicity has directed fibers, and the set
+\color{black}\cxtag{classical-problems:35}{N/M}\cxbar{classical-problems-35}{0.4 0.4 1}{s}(3) A spec that satisfies Lifted Monotonicity has directed fibers, and the set
 consisting of an item and the items causally before it is causally closed.
 So by~(2) and the remaining hypotheses, each permitted dequeue history orders
 exactly the causally ordered pairs of its causally closed set, and is a dequeue
 history of the causal queue.  Conversely, a dequeue history $(D,\to)$ of the
 causal queue has the same set as some permitted dequeue history, which by the
-same argument is $(D,\to)$.\cxbar{classical-problems-34}{0.4 0.4 1}{e}\color{black}
+same argument is $(D,\to)$.\cxbar{classical-problems-35}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{classical-problems:35}{N/S}The hypothesis of~(2) says that an item can be dequeued as soon as the items
+\color{black}\cxtag{classical-problems:36}{N/S}The hypothesis of~(2) says that an item can be dequeued as soon as the items
 causally before it have been.  It is the counterpart of local conservativity
 in Theorem~\ref{thm:product-frontier}(2).  Under it, a spec that guarantees any
 order between two concurrent items has a fiber that is not directed, so it is
@@ -6202,13 +6215,13 @@ not monotone.  A queue that guarantees a total dequeue order is one example.\col
 \subsection{Search structures}
 \label{app:search}
 
-\color{black}\cxtag{classical-problems:36}{N/M}\cxbar{classical-problems-36}{0.4 0.4 1}{s}B-link trees keep a search starting at a split node correct by following a
+\color{black}\cxtag{classical-problems:37}{N/M}\cxbar{classical-problems-37}{0.4 0.4 1}{s}B-link trees keep a search starting at a split node correct by following a
 right link, so the parent can be repaired later~\cite{lehman1981efficient}.  We
 show that the claims such searches support only accumulate, compare them with
 the least monotone relaxation of exact lookup, and show that for B-link trees
-the two coincide.\cxbar{classical-problems-36}{0.4 0.4 1}{e}\color{black}
+the two coincide.\cxbar{classical-problems-37}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{classical-problems:37}{N/M}\cxbar{classical-problems-37}{0.4 0.4 1}{s}Inputs are finite legal restructuring histories $h$, ordered by prefix.  The
+\color{black}\cxtag{classical-problems:38}{N/M}\cxbar{classical-problems-38}{0.4 0.4 1}{s}Inputs are finite legal restructuring histories $h$, ordered by prefix.  The
 structure after $h$ is a finite directed graph whose nodes are
 \emph{positions}; each edge is a \emph{child edge} or a \emph{link edge}, and
 some positions hold keys.  For each key $k$, every position has at most one
@@ -6234,15 +6247,15 @@ edge for some keys from the old child to the new node, which lies to the
 right of the old child, so the search no longer reaches the old child.  It
 reaches the new node, which the old search reached through the old child's
 right link.  Deletion and reclamation can violate (2) and (3) and are
-excluded.\cxbar{classical-problems-37}{0.4 0.4 1}{e}\color{black}
+excluded.\cxbar{classical-problems-38}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Persistent forwarding]
 \label{prop:persistent-forwarding}
-\cxtag{classical-problems:38}{N/S}Under (1)--(3), every claim valid at $h$ is valid at every \indesc of $h$.\color{black}
+\cxtag{classical-problems:39}{N/S}Under (1)--(3), every claim valid at $h$ is valid at every \indesc of $h$.\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}
-\cxtag{classical-problems:39}{N/M}\cxbar{classical-problems-39}{0.4 0.4 1}{s}By induction on the history it suffices to treat one step.  We show, by
+\cxtag{classical-problems:40}{N/M}\cxbar{classical-problems-40}{0.4 0.4 1}{s}By induction on the history it suffices to treat one step.  We show, by
 induction on $n$, that if the search for $k$ from $\pi$ reaches an occurrence
 of $k$ after $n$ edges before the step, then after the step it reaches a
 current occurrence of $k$.  If $n=0$, $\pi$ held $k$, and (3) applies.
@@ -6252,10 +6265,10 @@ before it.  Before the step, each position had at most one search edge for $k$
 and the search stopped at the occurrence, so $\rho$ lies on the path from
 $\pi'$ to the occurrence, fewer than $n$ edges from it.  By induction, the
 search from $\rho$ after the step reaches a current occurrence, and so does the
-search from $\pi$.\cxbar{classical-problems-39}{0.4 0.4 1}{e}\color{black}
+search from $\pi$.\cxbar{classical-problems-40}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{classical-problems:40}{N/S}A lookup spec reports sets of claims.  For a map $V$ that gives a set $V(h)$
+\color{black}\cxtag{classical-problems:41}{N/S}A lookup spec reports sets of claims.  For a map $V$ that gives a set $V(h)$
 of claims at each input, the spec \emph{bounded by $V$} permits at $h$ every
 set of claims contained in $V(h)$, ordered by inclusion.  A spec bounded by a
 smaller map promises more.  Exact lookup is bounded by the map $X$ of exact
@@ -6263,7 +6276,7 @@ claims, and forward-reachability lookup by the map of valid claims.\color{black}
 
 \color{black}\begin{proposition}[Remembered claims]
 \label{prop:remembered-claims}
-\cxtag{classical-problems:41}{N/L}\cxbar{classical-problems-41}{0.9 0.45 0}{s}\leavevmode
+\cxtag{classical-problems:42}{N/L}\cxbar{classical-problems-42}{0.9 0.45 0}{s}\leavevmode
 \begin{enumerate}
   \item The spec bounded by $V$ satisfies Lifted Monotonicity if and only if
         $h\InputOrd h'$ implies $V(h)\subseteq V(h')$.
@@ -6279,12 +6292,12 @@ claims, and forward-reachability lookup by the map of valid claims.\color{black}
         $\widetilde X\subseteq V$.
   \item Valid claims contain $\widetilde X$, and they equal $\widetilde X$ at
         every input if and only if every valid claim at every input is in
-        $\widetilde X$.\cxbar{classical-problems-41}{0.9 0.45 0}{e}\color{black}
+        $\widetilde X$.\cxbar{classical-problems-42}{0.9 0.45 0}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{blue!75!black}\begin{proof}
-\cxtag{classical-problems:42}{B/L}\cxbar{classical-problems-42}{0.9 0.45 0}{s}(1) First assume Lifted Monotonicity.  A claim $c\in V(h)$ gives the row
+\cxtag{classical-problems:43}{B/L}\cxbar{classical-problems-43}{0.9 0.45 0}{s}(1) First assume Lifted Monotonicity.  A claim $c\in V(h)$ gives the row
 $(h,\{c\})$, which has an \outnoun at $h'$, so $c\in V(h')$.  Now assume that
 $V$ grows.  The union of finitely many sets permitted at inputs below $h'$ is
 contained in $V(h')$.  (2) $\widehat X$ grows by construction.  A claim exact
@@ -6295,19 +6308,19 @@ $k$, then $h'$ grows to an input with the structure of $k$, and $h_0$ lies
 below it.  Hence $\widetilde X$ grows.  For $V$ as in~(3), a claim exact at
 $h_0\InputOrd h'$ lies in $V(h')$ by~(1), and $V(h')=V(h)$.  (4) The valid
 claims depend only on the current structure, contain $X$, and grow by
-Proposition~\ref{prop:persistent-forwarding}, so~(3) applies.\cxbar{classical-problems-42}{0.9 0.45 0}{e}\color{black}
+Proposition~\ref{prop:persistent-forwarding}, so~(3) applies.\cxbar{classical-problems-43}{0.9 0.45 0}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{classical-problems:43}{N/M}\cxbar{classical-problems-43}{0.4 0.4 1}{s}A lookup inspects the current structure, not the history, so~(3) gives the
+\color{black}\cxtag{classical-problems:44}{N/M}\cxbar{classical-problems-44}{0.4 0.4 1}{s}A lookup inspects the current structure, not the history, so~(3) gives the
 relevant comparison.  By~(4), forward-reachability lookup is the strongest
 lookup that depends only on the structure and satisfies Lifted Monotonicity
 exactly when every valid claim was exact at some earlier point of some history
 that reaches the same structure.  For a key that a search from $\pi$ reaches
 through link edges, this asks that some history to the same structure first
 place the key where a search from $\pi$ finds it by child edges.  We show that
-this holds for B-link trees.\cxbar{classical-problems-43}{0.4 0.4 1}{e}\color{black}
+this holds for B-link trees.\cxbar{classical-problems-44}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{classical-problems:44}{N/L}\cxbar{classical-problems-44}{0.9 0.45 0}{s}In our model of Lehman and Yao's trees, each node has a level and a low key.
+\color{black}\cxtag{classical-problems:45}{N/L}\cxbar{classical-problems-45}{0.9 0.45 0}{s}In our model of Lehman and Yao's trees, each node has a level and a low key.
 The nodes of a level are ordered by low key, each has a link edge to its right
 neighbor, and a node covers the keys above its low key up to the low key of
 its right neighbor.  Leaves hold keys, and an internal node has a child edge to
@@ -6320,18 +6333,18 @@ that covers the keys above the separator; post a node to the level above; and
 grow a new root above the top level, with child edges to the old root and to a
 node split off from it.  Steps are atomic, split points are arbitrary, and
 there are no deletions.  Each step satisfies (1)--(3), and searches stop at
-leaves.\cxbar{classical-problems-44}{0.9 0.45 0}{e}\color{black}
+leaves.\cxbar{classical-problems-45}{0.9 0.45 0}{e}\color{black}
 
 \color{black}\begin{proposition}[B-link trees]
 \label{prop:blink}
-\cxtag{classical-problems:45}{N/M}\cxbar{classical-problems-45}{0.4 0.4 1}{s}In the B-link tree model, every claim valid at $h$ lies in
+\cxtag{classical-problems:46}{N/M}\cxbar{classical-problems-46}{0.4 0.4 1}{s}In the B-link tree model, every claim valid at $h$ lies in
 $\widetilde X(h)$.  So the valid claims equal $\widetilde X$, and
 forward-reachability lookup is the strongest lookup that depends only on the
-current structure and satisfies Lifted Monotonicity.\cxbar{classical-problems-45}{0.4 0.4 1}{e}\color{black}
+current structure and satisfies Lifted Monotonicity.\cxbar{classical-problems-46}{0.4 0.4 1}{e}\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}
-\cxtag{classical-problems:46}{N/L}\cxbar{classical-problems-46}{0.9 0.45 0}{s}Let $(k,\pi)$ be valid at $h$, with current tree $G$.  Then $\pi$ has a low
+\cxtag{classical-problems:47}{N/L}\cxbar{classical-problems-47}{0.9 0.45 0}{s}Let $(k,\pi)$ be valid at $h$, with current tree $G$.  Then $\pi$ has a low
 key below $k$, and $k$ has been inserted.  Remove from $G$ the levels above
 the level of $\pi$, the nodes of $\pi$'s level whose low keys lie strictly
 between those of $\pi$ and $k$, and, on each lower level, the nodes not yet
@@ -6343,10 +6356,10 @@ the missing keys, then, level by level from the bottom, split off the missing
 nodes, grow the root, and post the missing nodes.  So some history reaches $W$
 and then $G$, and $(k,\pi)$ is exact at an input below one whose current
 structure is $G$.  By Proposition~\ref{prop:remembered-claims}(4), the valid
-claims equal $\widetilde X$, and~(3) gives the rest.\cxbar{classical-problems-46}{0.9 0.45 0}{e}\color{black}
+claims equal $\widetilde X$, and~(3) gives the rest.\cxbar{classical-problems-47}{0.9 0.45 0}{e}\color{black}
 \end{proof}
 
-\color{black!45}\cxtag{classical-problems:47}{C}\begin{acks}
+\color{black!45}\cxtag{classical-problems:48}{C}\begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.
 Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
 Kleppmann, Paris Koutris, Edward Lee, Shulu Li, Vincent Liu, David Chu McElroy,
@@ -6354,7 +6367,7 @@ Sarah Morin, and Dan Suciu for helpful feedback. Thanks also to
 anonymous reviewers of this and previous submissions for frank feedback that pushed
 this work deeper.\color{black}
 
-\color{black!45}\cxtag{classical-problems:48}{C}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
+\color{black!45}\cxtag{classical-problems:49}{C}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
 reviewing assistants during the preparation of this work, including drafting
 and revising text, and synthesizing Lean proofs for all mathematical arguments.  All
 content was reviewed, validated, and approved by the author.\color{black}

@@ -5899,11 +5899,23 @@ participants enlarges what can be computed without coordination. The cost is
 availability: a participant cut off from any listed participant waits
 forever. Fault-tolerant protocols such as Raft elect by majority vote instead,
 and each voter's ballot is a \commitment that the voter makes locally, as in
-Section~\ref{app:consensus}. Leader election is also the running example of
-Baccaert and Ketsman, who ask which behaviors become computable when nodes
-share knowledge such as the list of all nodes
-(Section~\ref{sec:query-instance}). For them, a behavior that cannot be
-computed without that list needs coordination. In our framework the list is
+Section~\ref{app:consensus}.
+
+Leader election is also the running example of Baccaert and
+Ketsman~\cite{baccaert2026spectrum}, and their results for transducer networks
+match both specs. Without the list of all nodes, leader election is not
+coordination-free: groups of nodes that have heard from different nodes can
+each elect the smallest identifier they know, and a node with a smaller
+identifier, heard later, contradicts both~\cite[Prop.~37]{baccaert2026spectrum}. With the list and an order on identifiers, and every node a candidate, each
+node elects the smallest identifier in the list without
+communicating~\cite[Ex.~6]{baccaert2026spectrum}. The list alone is not
+enough: without an order on identifiers or another way to break symmetry, no
+transducer network elects a leader~\cite[Thm.~1]{baccaert2026spectrum}, the
+counterpart of Angluin's result for anonymous rings. Our spec with the list
+presumes such an order, since it elects the largest candidate. The two
+frameworks differ in what they call coordination. For Baccaert and Ketsman, a
+behavior that cannot be computed without the list of all nodes needs
+coordination (Section~\ref{sec:query-instance}). In our framework the list is
 part of the input, and the question is whether, given that input, the spec
 requires a \commitment. For election by largest candidate it does not.
 

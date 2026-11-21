@@ -416,8 +416,8 @@ the largest candidate needs no commitment."  The list `All` is a parameter of
 the spec, so it is the same in every row; participants are identified by
 natural numbers, and a record is a partial map to `Bool` (candidate or not).
 The remarks on waiting for evidence, the ring algorithms, availability, Raft,
-and the comparison with Ameloot et al. and Baccaert and Ketsman are prose and
-are not formalized. -/
+and the comparison with Ameloot et al. and with Baccaert and Ketsman's results
+(their Prop. 37, Ex. 6, Thm. 1) are prose and citations, not formalized. -/
 theorem «app:additional-applications/leader-listed» (All : List Nat) :
     (∀ x o, (leaderAllSpec All).P x o ↔ o = maxLeader All x) ∧
     (leaderAllSpec All).Functional ∧ (leaderAllSpec All).MonotoneF ∧
