@@ -112,12 +112,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:exposure-boundary»
 #check @CC.Paper.«prop:exposure-boundary/common-expansion»
 #check @CC.Paper.«prop:exposure-boundary/functional»
-#check @CC.Paper.«lem:accumulating»
-#check @CC.Paper.«sec:patterns/accumulating-sets»
-#check @CC.Paper.«sec:patterns/accumulating-join»
-#check @CC.Paper.«lem:order-commitment»
-#check @CC.Paper.«lem:bounded-values»
-#check @CC.Paper.«lem:blocking»
 #check @CC.Paper.«def:distributed-history»
 #check @CC.Paper.«def:distributed-history/well-formed»
 #check @CC.Paper.«def:happens-before»
@@ -691,6 +685,12 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:cc-bases/abort-entailed»
 #check @CC.Paper.«app:cc-bases/abort-is-commitment»
 #check @CC.Paper.«app:cc-bases/comparison»
+#check @CC.Paper.«lem:accumulating»
+#check @CC.Paper.«app:classical-patterns/accumulating-sets»
+#check @CC.Paper.«app:classical-patterns/accumulating-join»
+#check @CC.Paper.«lem:order-commitment»
+#check @CC.Paper.«lem:bounded-values»
+#check @CC.Paper.«lem:blocking»
 #check @CC.Paper.«app:additional-applications/pattern-consequences»
 #check @CC.Paper.«tab:classical-problems/reliable-broadcast»
 #check @CC.Paper.«tab:classical-problems/causal-broadcast»

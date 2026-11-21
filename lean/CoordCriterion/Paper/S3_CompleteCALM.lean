@@ -1,7 +1,6 @@
 import CoordCriterion.Figures
 import CoordCriterion.CompleteCALM.Legality
 import CoordCriterion.Appendix.Frontiers
-import CoordCriterion.Appendix.Classical
 
 /-!
 # Paper §3: Complete CALM (`sections/complete-calm.tex`)
@@ -491,117 +490,5 @@ theorem «prop:exposure-boundary/functional» {I O : Type} [PO I] [PO O] {sp : S
     (hf : sp.Functional) :
     (sp.LiftedMono ↔ sp.MonotoneF) ∧ (sp.CommonExpansion ↔ sp.MonotoneF) :=
   ⟨liftedMono_iff_monoF hf, commonExpansion_iff_monoF hf⟩
-
-/-! ## Four patterns (`sec:patterns`) -/
-
-section ThreePatterns
-open CC.Apps
-
-/-- **Lemma `lem:accumulating`** (Growth in a semilattice).  "Suppose the
-outputs of an I/O specification form a join semilattice under `⪯`.  If every
-output permitted at an input is still permitted at each input extension of
-that input, and the join of two outputs permitted at one input is permitted
-there, then the spec is monotone."  Proof: "Take `i ⊑ j` and a nonempty finite
-`X ⊆ P(i)`.  Each member of `X` is permitted at `j`, so by induction on the
-size of `X` their join is permitted at `j`, and it extends every member of
-`X`."  `join` is any binary operation giving an upper bound of its arguments
-(`hl`, `hr`); leastness is not used. -/
-theorem «lem:accumulating» {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (join : O → O → O) (hl : ∀ a b, a ≼ join a b) (hr : ∀ a b, b ≼ join a b)
-    (hgrow : ∀ i j o, i ≼ j → sp.P i o → sp.P j o)
-    (hjoin : ∀ j a b, sp.P j a → sp.P j b → sp.P j (join a b)) : sp.LiftedMono :=
-  liftedMono_of_join join hl hr hjoin (fun i j o hij ho => ⟨o, hgrow i j o hij ho, PO.refl o⟩)
-
-/-- "The common case is sets of facts ordered by inclusion, with union as the
-join; counters under `≤`, with the maximum as the join, are another."  The set
-case: outputs `ESet F` under inclusion with `ESet.union`
-(`accumulating_monotone`); the counter case is
-`«tab:classical-problems/counter»`. -/
-theorem «sec:patterns/accumulating-sets» {I F : Type} [PO I] {sp : Spec I (ESet F)}
-    (hgrow : ∀ i j o, i ≼ j → sp.P i o → sp.P j o)
-    (hunion : ∀ j a b, sp.P j a → sp.P j b → sp.P j (ESet.union a b)) : sp.LiftedMono :=
-  accumulating_monotone hgrow hunion
-
-/-- "The proof uses only that each fiber contains, with any two outputs, a
-common output extension of both, so the join need not be least."  Lean
-assumes Relational Monotonicity in place of "still permitted at each input
-extension", which is weaker. -/
-theorem «sec:patterns/accumulating-join» {I O : Type} [PO I] [PO O]
-    {sp : Spec I O} (join : O → O → O) (hl : ∀ a b, a ≼ join a b) (hr : ∀ a b, b ≼ join a b)
-    (hc : ∀ j a b, sp.P j a → sp.P j b → sp.P j (join a b)) (hR : sp.RelMono) :
-    sp.LiftedMono :=
-  liftedMono_of_join join hl hr hc hR
-
-/-- **Lemma `lem:order-commitment`** (Ordering concurrent events).  "Fix an
-input `j`.  Suppose that each output `o` of an I/O specification has a
-relation `<_o` on events, the pairs that `o` places in order, such that (1)
-`o ⪯ u` implies `<_o ⊆ <_u`, and (2) no `u ∈ P(j)` has both `a <_u b` and
-`b <_u a`.  If rows `(i₁,o₁)` and `(i₂,o₂)` with `i₁ ⊑ j` and `i₂ ⊑ j` have
-`a <_{o₁} b` and `b <_{o₂} a`, then the spec is not monotone.  If
-`i₁ = i₂ = j`, the fiber at `j` is not directed."  Proof: "A common output
-extension `u` of `o₁` and `o₂` in `P(j)` would have `a <_u b` and `b <_u a` by
-(1), which contradicts (2).  So the common-extension condition fails, and by
-Proposition `prop:common-expansion-form` so does Lifted Monotonicity.  When
-`i₁ = i₂ = j`, the same argument shows that `o₁` and `o₂` are incompatible in
-`P(j)`."  `<_o` is `before o`. -/
-theorem «lem:order-commitment» {I O E : Type} [PO I] [PO O] {sp : Spec I O}
-    (before : O → E → E → Prop) (hmono : ∀ o u a b, o ≼ u → before o a b → before u a b)
-    {j : I} (hasym : ∀ u a b, sp.P j u → before u a b → ¬ before u b a)
-    {i1 i2 : I} {o1 o2 : O} {a b : E} (h1 : sp.P i1 o1) (h2 : sp.P i2 o2)
-    (hj1 : i1 ≼ j) (hj2 : i2 ≼ j) (hb1 : before o1 a b) (hb2 : before o2 b a) :
-    (¬ ∃ u, sp.P j u ∧ o1 ≼ u ∧ o2 ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono ∧
-      (i1 = j → i2 = j → ¬ sp.DirectedOutputs) :=
-  ⟨order_no_common before hmono hasym hb1 hb2,
-   (order_conflict before hmono hasym h1 h2 hj1 hj2 hb1 hb2).1,
-   (order_conflict before hmono hasym h1 h2 hj1 hj2 hb1 hb2).2,
-   fun e1 e2 => by
-     subst e1; subst e2
-     exact (order_conflict_fiber before hmono hasym h1 h2 hb1 hb2).1⟩
-
-/-- **Lemma `lem:bounded-values`** (Bounded number of values).  "Fix an input
-`j` and a number `k`.  Suppose that each output `o` of an I/O specification has
-a set `D(o)` of values it decides, such that (1) `o ⪯ u` implies
-`D(o) ⊆ D(u)`, and (2) every `u ∈ P(j)` has at most `k` values in `D(u)`.  If
-`k+1` rows `(i_r,o_r)` with `i_r ⊑ j` each decide a different value
-`v_r ∈ D(o_r)`, then they cannot all grow to one output at `j`, so the spec is
-not monotone."  Proof: "A common output extension `u` of the `k+1` outputs in
-`P(j)` would have all `k+1` values in `D(u)` by (1), which contradicts (2).  So
-the common-extension condition fails, and Proposition
-`prop:common-expansion-form` applies."  `D(o)` is `dec o`; "at most `k`
-values": covered by a list of length `≤ k`. -/
-theorem «lem:bounded-values» {I O V : Type} [PO I] [PO O] {sp : Spec I O}
-    (dec : O → V → Prop) (hmono : ∀ o u v, o ≼ u → dec o v → dec u v) {k : Nat} {j : I}
-    (hbound : ∀ u, sp.P j u → ∃ l : List V, l.length ≤ k ∧ ∀ v, dec u v → v ∈ l)
-    (i : Fin (k + 1) → I) (o : Fin (k + 1) → O) (v : Fin (k + 1) → V)
-    (hv : ∀ r r', v r = v r' → r = r') (hrow : ∀ r, sp.P (i r) (o r)) (hj : ∀ r, i r ≼ j)
-    (hd : ∀ r, dec (o r) (v r)) :
-    (¬ ∃ u, sp.P j u ∧ ∀ r, o r ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono :=
-  ⟨bounded_no_common dec hmono hbound o v hv hd,
-   bounded_values dec hmono hbound i o v hv hrow hj hd⟩
-
-/-- **Lemma `lem:blocking`** (Blocking before arrival).  "Suppose the inputs
-of an I/O specification are sets ordered by `⊆`, and its outputs are pairs
-`(A,B)` of disjoint sets, the accepted and the blocked facts, ordered
-componentwise by `⊆`.  If rows `(i,(A,B))` and `(j,(A',B'))` with `i ⊆ j` have
-a fact `f ∈ B ∩ A'`, the spec is not monotone."  Proof: "A common output
-extension `(A'',B'')` of the two outputs in `P(j)` has `f ∈ B ⊆ B''` and
-`f ∈ A' ⊆ A''`, but `A''` and `B''` are disjoint.  So the common-extension
-condition fails, and Proposition `prop:common-expansion-form` applies."
-Generic in the input order and in the output type: `acc o` and `blk o` are the
-accepted and blocked facts, each growing with `⪯` (as componentwise `⊆`
-does), and disjointness is needed only in the fiber at `j`.  The election
-example that follows (the rows at `ab·` and `aba`, closing the polls, and the
-fixed list of voters) is prose and is not formalized. -/
-theorem «lem:blocking» {I O F : Type} [PO I] [PO O] {sp : Spec I O}
-    (acc blk : O → F → Prop)
-    (hacc : ∀ o u f, o ≼ u → acc o f → acc u f)
-    (hblk : ∀ o u f, o ≼ u → blk o f → blk u f) {j : I}
-    (hdisj : ∀ u f, sp.P j u → acc u f → ¬ blk u f)
-    {i : I} {o o' : O} {f : F} (h1 : sp.P i o) (h2 : sp.P j o') (hij : i ≼ j)
-    (hb : blk o f) (ha : acc o' f) :
-    (¬ ∃ u, sp.P j u ∧ o ≼ u ∧ o' ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono :=
-  blocking acc blk hacc hblk hdisj h1 h2 hij hb ha
-
-end ThreePatterns
 
 end CC.Paper
