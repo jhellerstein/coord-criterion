@@ -1,5 +1,20 @@
 # Appendix G (Classical Problems in Distributed Computing): status notes
 
+## Update (later session)
+
+Branch `classical-problems-2` now has main merged and the author's decisions
+applied: consensus per-slot local commitments; queue outputs as partially
+ordered dequeue histories under prefix; patterns moved to main body §3.4
+("Four patterns", label sec:patterns) with the new Lemma lem:blocking
+(blocking before arrival, §2 election example) and a CIDR paragraph; search
+structures with weakened condition (2), searches stop at occurrences, and
+Prop. prop:blink proving (H) for a B-link model (Lean Appendix/BLink.lean);
+leader election reframed (expected non-monotone spec first, then the known
+population via All, Ameloot, Baccaert–Ketsman, availability caveat);
+shared-memory paragraph reframed (positive half of Herlihy via a monotonicity
+test, impossibility half a translation of the valency proof). The material
+below records the earlier state and is partly superseded.
+
 Recorded 2026-11-21 so nuance from the helper threads is not lost.
 Appendix G = `appendices/classical-problems.tex`, label `app:additional-applications`
 (the paper's PODC-relevance appendix; author wants it on par with the 2PL/MVTO material).

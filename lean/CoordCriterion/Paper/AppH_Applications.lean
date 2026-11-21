@@ -340,19 +340,19 @@ theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I
 
 /-- Paragraph "Shared memory": "The queue orders concurrent requests.  From
 sets of requests to request sequences, it is the total-order broadcast spec of
-Section `app:broadcast`, so ordering them is a commitment, made by one
-participant.  …  Any stage that is a monotone function of its input needs no
-commitment, whatever stage guards it, so by Theorem `thm:proper-coordination`
-every such pipeline is proper.  This holds for every object type and every
-task, including consensus over read/write registers."  First conjunct: the
-queue, as a spec from sets of requests to request sequences, is `tobSpec`,
-which is not monotone, so some output needs a commitment
-(`pattern_consequences_neg`).  Second: `sp` is any upstream stage (for
-example the memory, whose outputs are its responses); `d` is the processes'
-decisions as a monotone function of those outputs.  The modeling of shared
-memory as a single participant, the example algorithm, and the cited
-wait-free results (Herlihy's hierarchy, the renaming bounds) are prose and
-citations, not formalized. -/
+Section `app:broadcast`, so ordering them is a commitment, and the object
+makes it locally, as the authority of an epoch does above."  And, for the
+register algorithm: "That decision stage is also monotone, so the pipeline is
+proper and never decides two values …"  First conjunct: the queue, as a spec
+from sets of requests to request sequences, is `tobSpec`, which is not
+monotone, so some output needs a commitment (`pattern_consequences_neg`).
+Second: `sp` is any upstream stage (for example the memory, whose outputs are
+its responses); `d` is the processes' decisions as a monotone function of
+those outputs (Theorem `thm:proper-coordination` via
+`monotone_stage_proper`).  The modeling of shared memory as a single
+participant, wait-freedom, crashes, and the cited results (Herlihy's
+hierarchy and valency argument, the renaming bounds) are prose and citations,
+not formalized. -/
 theorem «app:additional-applications/shared-memory» {R : Type} [DecidableEq R] {a b : R}
     (hab : a ≠ b) {I M O : Type} [PO I] [PO M] [PO O]
     (sp : Spec I M) (d : M → O) (hd : ∀ m m', m ≼ m' → d m ≼ d m') :
@@ -363,36 +363,36 @@ theorem «app:additional-applications/shared-memory» {R : Type} [DecidableEq R]
   obtain ⟨τ, hτ, o, ho, hne, _⟩ := (pattern_consequences_neg (tob_not_liftedMono hab).2 Unit).2.1
   exact ⟨τ, hτ, o, ho, hne⟩
 
+/-- "With compare-and-swap, each process applies compare-and-swap with its
+proposal to a location that starts empty, and its response names the value of
+the first compare-and-swap, the same value in every response.  Each process
+decides the value in its response.  That decision stage is a monotone function
+of the object's responses, so by Theorem `thm:proper-coordination` the
+pipeline from the object to the decisions is proper, and the object's
+ordering is the only commitment."  The object is any upstream stage `sp` whose
+outputs are response maps (a partial map from processes to the value named in
+their response, ordered by extension) in which all responses name the same
+value; the decision stage is the identity on response maps.  Conclusions: the
+pipeline is proper, and no two processes decide different values.  Wait-free
+termination and the test-and-set algorithm are prose, not formalized. -/
+theorem «app:additional-applications/cas-positive» {I P V : Type} [PO I]
+    (sp : Spec I (PMap P V))
+    (hagree : ∀ i m, sp.P i m → ∀ p q a b, m.f p = some a → m.f q = some b → a = b) :
+    Guard.Proper sp (funSpec (fun m : PMap P V => m)) ∧
+      ∀ i m, sp.P i m → ∀ p q a b,
+        (funSpec (fun m : PMap P V => m)).P m m → m.f p = some a → m.f q = some b → a = b :=
+  ⟨monotone_stage_proper sp _ (fun _ _ h => h), fun i m hm p q a b _ => hagree i m hm p q a b⟩
+
 /-! ## Leader election -/
 
-/-- "In both, an output is a leader or `⊥`, for no leader yet, ordered with `⊥`
-below every leader and leaders incomparable." -/
+/-- "Its input is the set of candidates heard so far, ordered by inclusion,
+and an output is `⊥`, for no leader yet, or a candidate heard, ordered with `⊥`
+below every leader and leaders incomparable."  The output order. -/
 theorem «app:additional-applications/leader-order» (x y : Flat Nat) :
     x ≼ y ↔ x.v = none ∨ x = y :=
   Iff.rfl
 
-/-- "In the first, the input includes the list of all participants, the
-`All` relation of Section `sec:systems`, in every row.  It also records, for
-some of the listed participants, whether each is a candidate, and inputs are
-ordered by extension of these records.  The spec is functional.  Its output is
-the largest candidate once every listed participant has reported, or `⊥` if
-there is none, and `⊥` before that.  The spec is monotone, since more input
-never changes a report already received, so once every participant has
-reported the output is fixed.  By Functional CALM (Theorem
-`thm:functional-calm`), its runs are consistent.  Electing the largest
-candidate therefore needs no commitment."  The list `All` is a parameter of
-the spec, so it is the same in every row; participants are identified by
-natural numbers, and a record is a partial map to `Bool` (candidate or not).
-The cited ring algorithms are not formalized. -/
-theorem «app:additional-applications/leader-listed» (All : List Nat) :
-    (∀ x o, (leaderAllSpec All).P x o ↔ o = maxLeader All x) ∧
-    (leaderAllSpec All).Functional ∧ (leaderAllSpec All).MonotoneF ∧
-    (leaderAllSpec All).Consistent ∧ (leaderAllSpec All).LiftedMono :=
-  ⟨fun _ _ => Iff.rfl, leaderAllSpec_functional All, leaderAll_mono All,
-    leaderAll_consistent All⟩
-
-/-- "In the second spec the input is only the set of candidates heard so far,
-ordered by inclusion, and an output is `⊥` or a candidate heard.  Two
+/-- "The spec one would write first gives the expected answer.  …  Two
 candidates, each elected at the input where only it has been heard, have no
 common output extension at the input where both have been heard.  So the spec
 is not monotone, and by Theorem `thm:complete-cap` no system has Availability
@@ -402,6 +402,28 @@ theorem «app:additional-applications/leader-unlisted» (D : Type) :
     ¬ leaderSpec.LiftedMono ∧
       ¬ ∃ Sys : CAP.System leaderSpec D, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys :=
   ⟨fun _ _ => Iff.rfl, leader_not_monotone D⟩
+
+/-- "Including the list of all participants in the input, the `All` relation
+of Ameloot et al. (Section `sec:systems`), changes the answer.  The input then
+also records, for some of the listed participants, whether each is a
+candidate, and inputs are ordered by extension of these records.  The spec is
+functional.  Its output is the largest candidate once every listed
+participant has reported, or `⊥` if there is none, and `⊥` before that.  The
+spec is monotone, since more input never changes a report already received,
+so once every participant has reported the output is fixed.  By Functional
+CALM (Theorem `thm:functional-calm`), its runs are consistent, and electing
+the largest candidate needs no commitment."  The list `All` is a parameter of
+the spec, so it is the same in every row; participants are identified by
+natural numbers, and a record is a partial map to `Bool` (candidate or not).
+The remarks on waiting for evidence, the ring algorithms, availability, Raft,
+and the comparison with Ameloot et al. and Baccaert and Ketsman are prose and
+are not formalized. -/
+theorem «app:additional-applications/leader-listed» (All : List Nat) :
+    (∀ x o, (leaderAllSpec All).P x o ↔ o = maxLeader All x) ∧
+    (leaderAllSpec All).Functional ∧ (leaderAllSpec All).MonotoneF ∧
+    (leaderAllSpec All).Consistent ∧ (leaderAllSpec All).LiftedMono :=
+  ⟨fun _ _ => Iff.rfl, leaderAllSpec_functional All, leaderAll_mono All,
+    leaderAll_consistent All⟩
 
 /-! ## Snapshots -/
 

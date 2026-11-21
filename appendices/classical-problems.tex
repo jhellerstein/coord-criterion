@@ -197,27 +197,41 @@ advance, and that replica makes the slot's \commitment, possibly choosing a
 no-op.
 
 \paragraph{Shared memory.}
-These specs do not say which agreement problems can be solved wait-free from
-which shared objects, as in Herlihy's consensus
-hierarchy~\cite{herlihy1991waitfree} or the bounds on
-renaming~\cite{attiya1990renaming,herlihy1999topological}.  To see why,
-consider shared memory as a single participant with a queue of requests, an
-automaton in the sense of Section~\ref{sec:operational-models}.  The queue
-orders concurrent requests.  From sets of requests to request sequences, it is
-the total-order broadcast spec of Section~\ref{app:broadcast}, so ordering
-them is a \commitment, made by one participant.  The memory's responses
-follow from the queue.  A process algorithm that never retracts a decision
-computes the decisions as a monotone function of the responses.  Any stage that is a monotone function of its input needs no
-\commitment, whatever stage guards it, so by
-Theorem~\ref{thm:proper-coordination} every such pipeline is proper.  This
-holds for every object type and every task, including consensus over
-read/write registers.  For example, the algorithm in which every process waits
-until one designated process has written its proposal, and then decides it,
-never decides two values.  It is not wait-free, since the other processes wait
-forever if the designated one crashes.  The objects of the hierarchy differ in
-whether every process can decide after finitely many of its own steps,
-whatever the other processes do.  That is a termination property, which the
-specs do not express.
+Herlihy's consensus hierarchy~\cite{herlihy1991waitfree} ranks shared objects
+by the largest number of processes for which they solve consensus wait-free,
+together with read/write registers.  Our framework treats the two halves of
+that result differently.  Consider a shared object as a single participant
+with a queue of requests, an automaton in the sense of
+Section~\ref{sec:operational-models}.  The queue orders concurrent requests.
+From sets of requests to request sequences, it is the total-order broadcast
+spec of Section~\ref{app:broadcast}, so ordering them is a \commitment, and
+the object makes it locally, as the authority of an epoch does above.
+
+The positive half of the hierarchy follows from a monotonicity test.  With
+compare-and-swap, each process applies compare-and-swap with its proposal to
+a location that starts empty, and its response names the value of the first
+compare-and-swap, the same value in every response.  Each process decides the
+value in its response.  That decision stage is a monotone function of the
+object's responses, so by Theorem~\ref{thm:proper-coordination} the pipeline
+from the object to the decisions is proper, and the object's ordering is the
+only \commitment.  Each process decides after one operation of its own, so the
+algorithm is wait-free for any number of processes.  Test-and-set gives the
+same for two processes: each process first writes its proposal to its own
+register, the winner of test-and-set decides its own proposal, and the loser
+reads and decides the winner's.
+
+The impossibility half, for example that read/write registers do not solve
+consensus wait-free for two processes, is a termination property, and safety
+alone does not separate the objects.  Over registers, every process can wait
+until one designated process has written its proposal and then decide it.
+That decision stage is also monotone, so the pipeline is proper and never
+decides two values, but the other processes wait forever if the designated
+one crashes.  The specs can represent the termination requirement, by asking
+that each process decide after finitely many of its own steps whatever the
+others do, and Herlihy's valency argument can be restated in that
+representation.  The restatement is a translation of his proof, and the CALM
+theorems give no alternative proof.  The same holds for the bounds on
+renaming~\cite{attiya1990renaming,herlihy1999topological}.
 
 \subsection{Leader election}
 \label{app:leader}
@@ -233,32 +247,50 @@ With crash failures and a majority of correct processes, $\Omega$, which
 eventually names the same correct leader at every correct process, is the
 weakest failure detector for solving consensus~\cite{chandra1996weakest}.
 
-We compare two election specs that differ in what the input says about
-membership.  In both, an output is a leader or $\bot$, for no leader yet,
-ordered with $\bot$ below every leader and leaders incomparable.  In the
-first, the input includes the list of all participants, the $\mathsf{All}$
-relation of Section~\ref{sec:systems}, in every row.  It also records, for
-some of the listed participants, whether each is a candidate, and inputs are
-ordered by extension of these records.  The spec is functional.  Its output is
-the largest candidate once every listed participant has reported, or $\bot$
-if there is none, and $\bot$ before that.  The spec is monotone, since more
-input never changes a report already received, so once every participant has
-reported the output is fixed.
-By Functional CALM (Theorem~\ref{thm:functional-calm}), its runs are
-consistent.  Electing the largest candidate therefore needs no \commitment: a
-participant that has not heard from everyone emits $\bot$ and waits.  In the
-ring algorithms above, a message that returns to its sender has passed every
-process, which tells the sender what the list of participants would.
-
-In the second spec the input is only the set of candidates heard so far,
-ordered by inclusion, and an output is $\bot$ or a candidate heard.  Two
-candidates, each elected at the input where only it has been heard, have no
-common \outnoun at the input where both have been heard.  So the spec is not
-monotone, and by Theorem~\ref{thm:complete-cap} no system has Availability for
-$P$ and Partition Consistency.  Electing a leader then needs a \commitment,
-such as closing the list of candidates, as the registrar closes the polls in
+The spec one would write first gives the expected answer.  Its input is the
+set of candidates heard so far, ordered by inclusion, and an output is $\bot$,
+for no leader yet, or a candidate heard, ordered with $\bot$ below every
+leader and leaders incomparable.  Two candidates, each elected at the input
+where only it has been heard, have no common \outnoun at the input where both
+have been heard.  So the spec is not monotone, and by
+Theorem~\ref{thm:complete-cap} no system has Availability for $P$ and
+Partition Consistency.  Electing a leader then needs a \commitment, such as
+closing the list of candidates, as the registrar closes the polls in
 Section~\ref{sec:election-story}.  Without one, the two sides of a partition
 can each elect a leader.
+
+In practice, though, leader election usually runs in a known, finite
+population, such as the members of a replica group or the processes of a
+ring.  Including the list of all participants in the input, the
+$\mathsf{All}$ relation of Ameloot et al.\ (Section~\ref{sec:systems}),
+changes the answer.  The input then also records, for some of the listed
+participants, whether each is a candidate, and inputs are ordered by extension
+of these records.  The spec is functional.  Its output is the largest
+candidate once every listed participant has reported, or $\bot$ if there is
+none, and $\bot$ before that.  The spec is monotone, since more input never
+changes a report already received, so once every participant has reported the
+output is fixed.  By Functional CALM (Theorem~\ref{thm:functional-calm}), its
+runs are consistent, and electing the largest candidate needs no
+\commitment: a participant that has not heard from everyone emits $\bot$ and
+waits.  It waits for a report from each listed participant, which is
+evidence, and not for the absence of further candidates, which would block
+inputs before they arrive (Lemma~\ref{lem:blocking}).  In the ring algorithms
+above, a message that returns to its sender has passed every process, which
+tells the sender what the list of participants would.
+
+So the leader election that systems usually run needs no \commitment.  This
+follows directly from the result of Ameloot et al.\ that the list of all
+participants enlarges what can be computed without coordination.  The cost is
+availability: a participant cut off from any listed participant waits
+forever.  Fault-tolerant protocols such as Raft elect by majority vote instead,
+and each voter's ballot is a \commitment that the voter makes locally, as in
+Section~\ref{app:consensus}.  Leader election is also the running example of
+Baccaert and Ketsman, who ask which behaviors become computable when nodes
+share knowledge such as the list of all nodes
+(Section~\ref{sec:query-instance}).  For them, a behavior that cannot be
+computed without that list needs coordination.  In our framework the list is
+part of the input, and the question is whether, given that input, the spec
+requires a \commitment.  For election by largest candidate it does not.
 
 \subsection{Snapshots}
 \label{app:snapshots}

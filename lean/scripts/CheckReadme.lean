@@ -717,9 +717,10 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:additional-applications/slot-conflict»
 #check @CC.Paper.«app:additional-applications/epoch-conflict»
 #check @CC.Paper.«app:additional-applications/shared-memory»
+#check @CC.Paper.«app:additional-applications/cas-positive»
 #check @CC.Paper.«app:additional-applications/leader-order»
-#check @CC.Paper.«app:additional-applications/leader-listed»
 #check @CC.Paper.«app:additional-applications/leader-unlisted»
+#check @CC.Paper.«app:additional-applications/leader-listed»
 #check @CC.Paper.«app:additional-applications/cut»
 #check @CC.Paper.«app:additional-applications/global-snapshot-spec»
 #check @CC.Paper.«prop:snapshots»

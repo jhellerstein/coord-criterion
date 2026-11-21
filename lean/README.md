@@ -150,7 +150,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-732 entries.
+733 entries.
 
 ### §2 Functional CALM
 
@@ -984,9 +984,10 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/classical-problems
 | `«app:additional-applications/slot-conflict»` | theorem | "Competing proposals for an undecided slot have incompatible extensions of `D`, since a permitted output decides at most one value per epoch and slot. |
 | `«app:additional-applications/epoch-conflict»` | theorem | "If the succession rule were not fixed, choosing among competing next epochs would require a commitment as well." Two current outputs extending the chain `e`… |
 | `«app:additional-applications/shared-memory»` | theorem | Paragraph "Shared memory": |
-| `«app:additional-applications/leader-order»` | theorem | "In both, an output is a leader or `⊥`, for no leader yet, ordered with `⊥` below every leader and leaders incomparable." |
-| `«app:additional-applications/leader-listed»` | theorem | "In the first, the input includes the list of all participants, the `All` relation of Section `sec:systems`, in every row. |
-| `«app:additional-applications/leader-unlisted»` | theorem | "In the second spec the input is only the set of candidates heard so far, ordered by inclusion, and an output is `⊥` or a candidate heard. |
+| `«app:additional-applications/cas-positive»` | theorem | "With compare-and-swap, each process applies compare-and-swap with its proposal to a location that starts empty, and its response names the value of the firs… |
+| `«app:additional-applications/leader-order»` | theorem | "Its input is the set of candidates heard so far, ordered by inclusion, and an output is `⊥`, for no leader yet, or a candidate heard, ordered with `⊥` below… |
+| `«app:additional-applications/leader-unlisted»` | theorem | "The spec one would write first gives the expected answer. |
+| `«app:additional-applications/leader-listed»` | theorem | "Including the list of all participants in the input, the `All` relation of Ameloot et al. |
 | `«app:additional-applications/cut»` | theorem | "For a scan `s` of a history `h`, a cut for `s` is a set `C` of updates of `h` that is causally closed among updates, contains every update causally before `… |
 | `«app:additional-applications/global-snapshot-spec»` | theorem | "A view of participant `p` at `h` assigns a cut to each scan of `p` in `h`, and views are ordered by extension. |
 | `«prop:snapshots»` | theorem | **Prop. |
