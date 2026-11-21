@@ -324,9 +324,9 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments that leave some rows at the input." Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the canonical commitment `x_o` of an output." At the canonical state of an input whose transactions `A`, `B`, `C` have each requested commi… |
 | `«sec:systems/run-under-basis»` | abbrev | After Def. |
-| `«sec:systems/canonical-equivalent»` | theorem | *Observable Equivalence.* "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis. |
+| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
-| `«sec:systems/at-most-the-rows»` | theorem | §`sec:systems`, end of *Observable Equivalence*: |
+| `«sec:systems/at-most-the-rows»` | theorem | §`sec:systems`, end of *Observable equivalence*: |
 | `«sec:commitment-conflict/delta»` | def | §`sec:commitment-conflict`, before Prop. |
 | `«prop:system-confluence»` | theorem | **Proposition `prop:system-confluence`** (System confluence). |
 | `«prop:system-confluence/survivor»` | theorem | Prop. |
@@ -703,7 +703,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«def:run-under-basis/canonical-run»` | abbrev | "Canonical runs (Definition run) are exactly the runs under the canonical basis `ℬ_P` of Definition `def:canonical-commitment-basis` with no commitment event… |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | "Canonical runs (Definition run) are exactly the runs under the canonical basis `ℬ_P` … with no commitment events": |
 | `«app:bases/observably-equivalent»` | abbrev | Not quoted from the paper: |
-| `«lem:canonical-equivalent»` | theorem | **Lemma Observable Equivalence** (`lem:canonical-equivalent`). |
+| `«lem:canonical-equivalent»` | theorem | **Lemma Observable equivalence** (`lem:canonical-equivalent`). |
 | `«cor:reconciliation-any-basis»` | theorem | **Cor. |
 | `«app:bases/converse-fails»` | theorem | "The converse of Lemma canonical-equivalent fails: |
 | `«app:bases/basis-2PL»` | abbrev | Not in the paper: |

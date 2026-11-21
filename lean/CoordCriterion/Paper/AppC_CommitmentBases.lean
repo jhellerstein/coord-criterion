@@ -275,7 +275,7 @@ state is fixed by the context. -/
 abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- **Lemma Observable Equivalence** (`lem:canonical-equivalent`).  "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis.
+/-- **Lemma Observable equivalence** (`lem:canonical-equivalent`).  "Let `ρ` be a run of a system for a spec `𝒮`, under any commitment basis.
 Removing the commitment events from `ρ` gives a canonical run of `𝒮`
 (Definition run) that is observably equivalent to `ρ`: the two accept the same
 inputs and emit the same outputs, and after each event the canonical run keeps
