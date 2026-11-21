@@ -158,73 +158,73 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«sec:election-story/input-order»` | theorem | "The *input order* records accumulated ballots: |
-| `«sec:election-story/output-order»` | theorem | "The *output order* says which announcements are safe to build on: |
-| `«sec:election-story/monotone»` | theorem | "The functional table is *monotone* … Here, for example, the input sequence `a·· ⪯ ab· ⪯ aba` monotonically produces the output sequence `⊥ ⪯ ⊥ ⪯ a`." The el… |
 | `«fig:election-frames/printed-rows»` | theorem | Fig. |
 | `«fig:election-frames/a»` | theorem | Fig. |
+| `«def:functional-specification»` | abbrev | "A spec is a possibility table for a function over ordered types." **Def. |
+| `«def:functional-specification/induced-function»` | theorem | "The unique output paired with `i` induces the function `f : |
+| `«sec:election-story/input-order»` | theorem | "Inputs grow as ballots arrive: |
+| `«sec:election-story/output-order»` | theorem | "Outputs grow as announcements say more: |
+| `«def:functional-monotonicity»` | abbrev | "A functional spec is monotone when growing input only ever extends its output:" **Def. |
+| `«eq:functional-monotonicity»` | abbrev | **Eq. |
+| `«def:functional-monotonicity/via-f»` | theorem | Def. |
+| `«sec:election-story/monotone»` | theorem | "The election is monotone: |
+| `«def:residual-state»` | abbrev | "Each panel of Figure `fig:election-frames` shows one moment: |
+| `«def:legal-input»` | abbrev | "Not every input can still arrive in a state:" **Def. |
+| `«eq:canonical-state»` | abbrev | **Eq. |
+| `«eq:canonical-state/largest»` | theorem | "A run starts from the *canonical state* at its first input `i`, which keeps every row of `P` whose input extends `i`: |
+| `«eq:input-event»` | abbrev | **Eq. |
+| `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since every row of the remainder table is at an input that exten… |
 | `«fig:election-frames/b»` | theorem | Fig. |
 | `«fig:election-frames/b-rows»` | theorem | Fig. |
+| `«sec:functional-events/input-cumulative»` | theorem | "An input event names the cumulative input `j`: |
+| `«eq:canonical-state/input-moves-canonical»` | theorem | "… and an input event from a canonical state leads to another canonical state." |
+| `«def:fiber»` | abbrev | "Two sets of outputs matter in every state: |
+| `«def:fiber/upper»` | abbrev | Def. |
+| `«def:fiber/state»` | theorem | After Def. |
+| `«sec:functional-events/determined»` | abbrev | "… we say that the state is *determined* when that set has one element: |
+| `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
 | `«fig:election-frames/c»` | theorem | Fig. |
+| `«def:exposable»` | abbrev | "At a state `(i,R)`, the current input has a unique row `(i,o)`, so `o`, the *current output*, is the only output the system may emit. |
+| `«def:exposable/no-commitment»` | theorem | Def. |
+| `«sec:election-story/exposable-panels»` | theorem | "So `⊥` is legal in panels (a) and (b), and `a` in panel (c)." |
+| `«def:commitment»` | abbrev | "Possibilities can also be removed deliberately. |
+| `«eq:commitment-unsubsumed»` | theorem | **Eq. |
+| `«def:commitment/functional»` | theorem | After Def. |
+| `«def:output-event»` | abbrev | "When `o` is not legal, a commitment can make it legal by removing the rows whose outputs conflict with `o`. |
+| `«eq:output-action»` | theorem | **Eq. |
+| `«def:output-event/commitment-iff-excluded»` | theorem | Def. |
+| `«def:canonical-commitment-functional»` | abbrev | **Def. |
+| `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a specification state with current input `i`." |
+| `«sec:functional-events/determination-examples»` | theorem | "*Determination* is the process of reaching a determined state. |
+| `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state with the same output: |
+| `«fig:nonmonotone-frame»` | theorem | Fig. |
+| `«sec:election-story/equality-order-commitment»` | theorem | "Under this order (called the *equality order*), `⊥` is incompatible with future winners, so it is not legal at `ab·`, and emitting it applies `x_⊥`, which r… |
 | `«fig:election-frames/d»` | theorem | Fig. |
 | `«fig:election-frames/d-gray»` | theorem | Fig. |
 | `«fig:election-frames/bot-alone»` | theorem | Fig. |
-| `«fig:nonmonotone-frame»` | theorem | Fig. |
 | `«fig:nonmonotone-frame/matches-d»` | theorem | Fig. |
-| `«sec:election-story/exposable-panels»` | theorem | §2.1 "Output and consistency": |
-| `«sec:election-story/equality-order-commitment»` | theorem | §2.1: |
-| `«sec:election-story/obstruction»` | theorem | §2.1: |
-| `«sec:election-story/not-reconciled»` | theorem | §2.1: |
-| `«sec:election-story/consistency»` | theorem | §2.1: |
-| `«def:functional-specification»` | abbrev | **Def. |
-| `«def:functional-specification/induced-function»` | theorem | "The unique output paired with `i` induces the function `f : |
-| `«def:functional-monotonicity»` | abbrev | **Def. |
-| `«eq:functional-monotonicity»` | abbrev | **Eq. |
-| `«def:functional-monotonicity/via-f»` | theorem | Def. |
-| `«def:residual-state»` | abbrev | **Def. |
-| `«def:legal-input»` | abbrev | **Def. |
-| `«eq:canonical-state»` | abbrev | **Eq. |
-| `«eq:canonical-state/largest»` | theorem | "The *canonical state at `i`* is the state at `i` with no rows removed: |
-| `«eq:canonical-state/input-moves-canonical»` | theorem | "An input event from a canonical state leads to another canonical state." |
-| `«def:fiber»` | abbrev | **Def. |
-| `«def:fiber/upper»` | abbrev | Def. |
-| `«def:fiber/state»` | theorem | Def. |
-| `«eq:input-event»` | abbrev | **Eq. |
-| `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since the remainder table contains only rows at input extensions… |
-| `«sec:functional-events/input-cumulative»` | theorem | "`input(j)` then `input(k)` has the effect of `input(k)` alone; `input(i)` at `(i,R)` has no effect." |
-| `«def:output-event»` | abbrev | **Def. |
-| `«def:canonical-commitment-functional»` | abbrev | **Def. |
-| `«eq:output-action»` | theorem | **Eq. |
-| `«def:output-event/commitment-iff-excluded»` | theorem | Def. |
-| `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a specification state with current input `i`." |
-| `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments than an output requires, as the registrar does in Figure `fig:election-frames`(d), but such extra commitments are a syste… |
-| `«def:exposable»` | abbrev | **Def. |
-| `«def:exposable/no-commitment»` | theorem | Def. |
-| `«def:commitment»` | abbrev | "Emitting an output can require removing rows that no remaining output covers. |
-| `«eq:commitment-unsubsumed»` | theorem | **Eq. |
-| `«def:commitment/functional»` | theorem | After Def. |
-| `«sec:functional-events/determined»` | abbrev | §2.3 "Determination": |
-| `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
-| `«sec:functional-events/determination-examples»` | theorem | "A spec with multiple distinct outputs can have undetermined states, as in panel (b) … An input event can achieve determination through input loss, as in pan… |
-| `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state with the same output: |
+| `«sec:functional-events/extra-commitments»` | theorem | "Panel (d) of Figure `fig:election-frames`, by contrast, reflects a commitment that the spec does not require. |
 | `«def:specification-event»` | abbrev | **Def. |
 | `«def:transition-system»` | abbrev | **Def. |
 | `«def:run»` | abbrev | **Def. |
 | `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment. |
-| `«lem:run-residual»` | theorem | **Lemma `lem:run-residual`** (Rows remaining after a run). |
+| `«sec:election-story/obstruction»` | theorem | "Different runs may retain different rows. |
+| `«sec:election-story/not-reconciled»` | theorem | "A run that emits `⊥` at `ab·` applies `x_⊥` and keeps no row at `aba`, while a run that receives `aba` and emits `a` keeps `(aba,a)`, so the two runs can ne… |
+| `«def:confluence»` | abbrev | "To compare runs that end at different inputs, we consider a common input extension of those inputs." **Def. |
+| `«def:consistency»` | abbrev | **Def. |
+| `«sec:election-story/consistency»` | theorem | Closing paragraph of §2.1: |
+| `«lem:run-residual»` | theorem | "Three facts about runs drive the proof. |
 | `«eq:run-residual»` | abbrev | **Eq. |
 | `«lem:run-residual/example»` | theorem | Example after Lemma `lem:run-residual`: |
-| `«def:confluence»` | abbrev | **Def. |
-| `«def:consistency»` | abbrev | **Def. |
-| `«prop:confluence»` | theorem | **Prop. |
-| `«eq:reconciliation»` | abbrev | **Eq. |
-| `«sec:executions/safety-of-runs»` | theorem | Before Lemma `lem:confluence-legality`: |
+| `«prop:confluence»` | theorem | "Second, a set of runs can be continued to a common state exactly when their current remainder tables share a row at the target input:" **Prop. |
+| `«prop:confluence/survivor-condition»` | abbrev | Prop. |
+| `«sec:functional-calm-theorem/safety-of-runs»` | theorem | Before Lemma `lem:confluence-legality`: |
 | `«lem:confluence-legality»` | theorem | **Lemma `lem:confluence-legality`** (Confluence and legality). |
-| `«thm:functional-calm»` | theorem | **Theorem `thm:functional-calm`** (Functional CALM). |
-| `«thm:functional-calm/example»` | theorem | Example after Theorem `thm:functional-calm`: |
-| `«cor:state-by-input»` | theorem | **Corollary `cor:state-by-input`** (State is fixed by input). |
+| `«lem:confluence-legality/example»` | theorem | Example after Lemma `lem:confluence-legality`: |
+| `«cor:state-by-input»` | theorem | "In the functional case, monotonicity has a strong consequence: |
 | `«cor:state-by-input/input-suffices»` | theorem | After Cor. |
-| `«prop:functional-exposure-boundary»` | theorem | **Prop. |
+| `«prop:functional-exposure-boundary»` | theorem | "Monotonicity also governs legality:" **Prop. |
+| `«thm:functional-calm»` | theorem | Subsection opening: |
 | `«prop:functional-exposure-boundary/nonmonotone-excludes»` | theorem | From the proof sketch of Theorem `thm:functional-calm`: |
 | `«eq:query-monotonicity»` | theorem | **Eq. |
 
