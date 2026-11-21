@@ -1561,8 +1561,7 @@ Complete CALM provides a unified lens for many results across literatures. For t
 applying either CALM theorem. \textcolor{newblue}{The full paper~\cite{hellerstein2026completecalmfull}
 gives each mapping in detail, with deployments, response
 obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
-and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.} \textcolor{newblue}{Many of these mappings follow one of four patterns, which
-Table~\ref{tab:patterns} lists with the design options each leaves.}
+and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.} \textcolor{newblue}{Four patterns recur in these mappings and in many other specs.} \textcolor{newblue}{Table~\ref{tab:patterns} lists them with the design options each leaves.}
 
 \begin{table}[t]
   \centering
@@ -1607,7 +1606,8 @@ set inputs ordered by inclusion and arbitrary partially ordered outputs, with a
 coordination-free implementation in place of consistency.}
 
 \textcolor{newblue}{Baccaert and Ketsman were the first to consider nondeterministic specs in a
-CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}.} \textcolor{newblue}{They keep the relational transducer setting, with a small extension that models
+CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}, which
+decides one value (Table~\ref{tab:patterns}).} \textcolor{newblue}{They keep the relational transducer setting, with a small extension that models
 explicitly where input facts are placed.} \textcolor{newblue}{Their aims differ from ours: they ask
 what shared system knowledge, such as identifiers or the list of all
 participants, lets a network compute, while we ask when a spec requires a
@@ -1635,7 +1635,8 @@ receiving more updates never yields an answer that fails to extend an earlier
 one.} \textcolor{newblue}{For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{The CRDT's join is one
+test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{The query for added
+elements, $A$, passes: its answers only accumulate (Table~\ref{tab:patterns}).} \textcolor{newblue}{The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).}
 

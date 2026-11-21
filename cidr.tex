@@ -1564,8 +1564,8 @@ applying either CALM theorem.  The full paper~\cite{hellerstein2026completecalmf
 gives each mapping in detail, with deployments, response
 obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
 and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.
-Many of these mappings follow one of four patterns, which
-Table~\ref{tab:patterns} lists with the design options each leaves.
+Four patterns recur in these mappings and in many other specs.
+Table~\ref{tab:patterns} lists them with the design options each leaves.
 
 \begin{table}[t]
   \centering
@@ -1610,7 +1610,8 @@ set inputs ordered by inclusion and arbitrary partially ordered outputs, with a
 coordination-free implementation in place of consistency.
 
 Baccaert and Ketsman were the first to consider nondeterministic specs in a
-CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}.
+CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}, which
+decides one value (Table~\ref{tab:patterns}).
 They keep the relational transducer setting, with a small extension that models
 explicitly where input facts are placed.  Their aims differ from ours: they ask
 what shared system knowledge, such as identifiers or the list of all
@@ -1639,7 +1640,8 @@ receiving more updates never yields an answer that fails to extend an earlier
 one.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.  The CRDT's join is one
+test: a later removal grows $R$ and shrinks the answer.  The query for added
+elements, $A$, passes: its answers only accumulate (Table~\ref{tab:patterns}).  The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).
 
