@@ -289,18 +289,14 @@ Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).\cxbar{introduction
 
 \subsection{The criterion: Lifted Monotonicity}
 \color{black!45}\cxtag{introduction:9}{C}The model provides clean definitions for the two sides of CALM: Consistency
-and Monotonicity.  Consistency is a property of all the runs the spec allows.
-Monotonicity, by contrast, is a static property of the spec's table: it can be
-checked on pairs of rows, without exploring runs.\color{black}
-
-\color{black!45}\cxtag{introduction:10}{C}Our Consistency definition is general: the runs of a spec are
+and Monotonicity.  Our Consistency definition is general: the runs of a spec are
 \emph{consistent} when they are \emph{confluent}, so that states reached along
 different paths can be brought to a common state.  Applied to different specs,
 this one definition captures classical consistency models, from
 linearizability, through serializability and other isolation levels, to the
 eventual consistency of replicated data.\color{black}
 
-\color{black!45}\cxtag{introduction:11}{C}For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
+\color{black!45}\cxtag{introduction:10}{C}For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
 implies $f(i)\OutputOrd f(j)$.  Nondeterministic specs, such as leader election
 and transaction scheduling, need a richer monotonicity property that ensures
 not only that output grows as inputs grow, but also that different output
@@ -309,14 +305,17 @@ output.  We call this property \emph{Lifted Monotonicity}, and a spec that has
 it \emph{lifted monotone}.  It reduces to standard monotonicity for specs that
 are deterministic functions.\color{black}
 
-\color{black!45}\cxtag{introduction:12}{C}\emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem}) and \emph{Complete CALM} (Section~\ref{sec:complete-calm-theorem}) show that the two
-sides coincide: the runs a spec allows are consistent exactly when the spec is
+\color{black!45}\cxtag{introduction:11}{C}Confluence is a property of all the runs a spec allows.  Lifted Monotonicity,
+by contrast, is a static property of the spec's table: it can be checked on
+pairs of rows, without exploring runs.  \emph{Functional CALM}
+(Section~\ref{sec:functional-calm-theorem}) and \emph{Complete CALM}
+(Section~\ref{sec:complete-calm-theorem}) show that the two coincide: the runs a spec allows are consistent exactly when the spec is
 lifted monotone.  Hence Consistency As Lifted Monotonicity, a new reading of the
 CALM acronym.
 Functional CALM covers prior CALM work and CRDT state.\color{black}
 
 \subsection{Coordination is for \commitment}
-\color{black!45}\cxtag{introduction:13}{C}What of coordination?  A \commitment isolates the contract a coordination
+\color{black!45}\cxtag{introduction:12}{C}What of coordination?  A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, consensus,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
@@ -326,29 +325,29 @@ stages need none.  In state-machine replication, for example, the consensus log
 makes every \commitment and the replicated store makes none
 (Section~\ref{sec:composition}).\color{black}
 
-\color{black!45}\cxtag{introduction:14}{C}Distributed histories are captured under the same consistency criteria as
+\color{black!45}\cxtag{introduction:13}{C}Distributed histories are captured under the same consistency criteria as
 centralized ones (Section~\ref{sec:distributed-execution}).  Complete CAP
 (Section~\ref{sec:complete-cap}) says Lifted Monotonicity exactly characterizes specs
 that can keep every permitted output available and confluent during a
 partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.\color{black}
 
 \subsection{Contributions}
-\color{black!45}\cxtag{introduction:15}{C}We make contributions in four categories:\color{black}
+\color{black!45}\cxtag{introduction:14}{C}We make contributions in four categories:\color{black}
 
 \color{black!45}\noindent
-\cxtag{introduction:16}{C}\emph{1. A unified model.} A system's observable behavior is captured via
+\cxtag{introduction:15}{C}\emph{1. A unified model.} A system's observable behavior is captured via
         \spectype[s]. Consistency is defined as
         confluence of a spec's runs, unifying general consistency models,
         application-specific requirements, and distributed consistency.\color{black}
 
 \color{black!45}\noindent
-\cxtag{introduction:17}{C}\emph{2. A unified criterion.} For functions between ordered domains,
+\cxtag{introduction:16}{C}\emph{2. A unified criterion.} For functions between ordered domains,
         Functional CALM shows that the runs are consistent exactly when the spec is monotone. For nondeterministic specs,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.\color{black}
 
 \color{black!45}\noindent
-\cxtag{introduction:18}{C}\emph{3. Constructive results for coordination.} We define \commitments,
+\cxtag{introduction:17}{C}\emph{3. Constructive results for coordination.} We define \commitments,
         the underlying contracts that coordination mechanisms can enforce,
         and identify exactly the \commitments a non-monotone spec requires.
         Specs compose by equijoin, and Proper Coordination identifies the stage
@@ -356,13 +355,13 @@ partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directl
         none.\color{black}
 
 \color{black!45}\noindent
-\cxtag{introduction:19}{C}\emph{4. A map of the literature.} Highly Available Transactions, Invariant
+\cxtag{introduction:18}{C}\emph{4. A map of the literature.} Highly Available Transactions, Invariant
         Confluence, CRDT observation, and later refinements of CALM are all
         explained via Complete CALM (Section~\ref{sec:instances}).\color{black}
 
 \color{black}\vspace{0.5em}
 \noindent
-\cxtag{introduction:20}{N/S}The paper develops these contributions in order, then relates the criterion to
+\cxtag{introduction:19}{N/S}The paper develops these contributions in order, then relates the criterion to
 earlier results (Section~\ref{sec:instances}) and the broader CALM agenda
 (Section~\ref{sec:discussion}).  The appendices provide proofs and further
 applications; Appendix~\ref{app:notation} collects notation and defined terms.\color{black}
