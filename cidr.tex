@@ -472,11 +472,11 @@ a state.
 \label{def:state}
 A \emph{specification state} $\sigma=(i,R)$ consists of a \emph{current input}
 $i$ and a \emph{remainder table} $R\subseteq P$ that contains a row with input
-$i$ and otherwise only rows whose inputs \inrel $i$.  Rows are never added to
-$R$.
+$i$ and otherwise only rows whose inputs \inrel $i$.
 \end{definition}
 
-We say that a row $(k,u)$ is \emph{at input} $k$, and that an input is
+The events defined below only ever remove rows.  We say that a row $(k,u)$ is
+\emph{at input} $k$, and that an input is
 \emph{legal} in a state when the remainder table has a row at it.  To write
 remainder tables compactly, we borrow selection from relational algebra: a
 predicate in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$ holds
@@ -511,7 +511,7 @@ first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.
 Let $R$ be a table and $k$ an input.  The \emph{fiber} of $R$ at $k$ is
 $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
 \emph{upper fiber} of $R$ at $k$ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe
-k])$, the outputs paired with $k$ or any of its \indescs.
+k])$, the outputs paired with $k$ or with any input that \inrel $k$.
 \end{definition}
 
 In a state $(i,R)$, the upper fiber at $i$ is $\pi_{\mathrm{out}}(R)$, every
@@ -527,8 +527,8 @@ be, since $b$ is still possible.
 
 \begin{definition}[Legal output]
 \label{def:exposable}
-At a state $(i,R)$, let $o$ be the unique output at the current input.  The
-output $o$ is \emph{legal} when every output in the upper fiber \outrel
+At a state $(i,R)$, the \emph{current output} is the unique output $o$ at the
+current input.  It is \emph{legal} when every output in the upper fiber \outrel
 $o$.
 \end{definition}
 
@@ -540,8 +540,8 @@ decision of the introduction.
 \begin{definition}[\Commitment]
 \label{def:commitment}
 A \emph{\commitment} removes a nonempty set of rows from a state's remainder
-table, none of which is \outrelpast by a row that remains at the same input,
-and leaves the current input unchanged.
+table and leaves the current input unchanged, such that no removed row $(k,u)$
+has a remaining row $(k,w)$ with $u\OutputOrd w$.
 \end{definition}
 
 In a functional spec each input has one row, so a \commitment rules out the
@@ -651,8 +651,10 @@ $o_1,\ldots,o_m$, its remainder table is \(P[\mathrm{in}\InputGe i,\ \mathrm{out
 \proofinfull
 
 Different runs may retain different rows.  Under the equality order, rows
-$(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
-$aba$ \outrel both $\bot$ and $a$.  A run that emits $\bot$ at $ab\cdot$
+$(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
+that \inrel both of their inputs, but no output at
+$aba$ \outrel both $\bot$ and $a$: none is a \emph{common \outnoun} of them.
+A run that emits $\bot$ at $ab\cdot$
 applies $x_\bot$ and keeps no row at $aba$, while a run that receives $aba$ and
 emits $a$ keeps $(aba,a)$, so the two runs can never be reconciled at $aba$.
 The argument uses only the table, its orders, and canonical runs, so the need
