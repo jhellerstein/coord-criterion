@@ -665,10 +665,10 @@ definitions forbid it.  Nonetheless, output orders align our view with the ``eve
 consistency'' literature: outputs that can only \outrelbase each other, as in
 CRDTs, always leave runs consistent by our definition (\S\ref{sec:crdt-instance}).
 
-The election shows the whole arc in miniature.  Input narrows the
+The election shows the arc in miniature.  Input narrows the
 possibilities, and an output that everything remaining builds on is legal and
-needs nothing more.  An output that is not legal needs a \commitment, and runs
-that emit it can diverge for good.  Functional CALM says exactly when that
+needs nothing more.  An output that is not legal needs a \commitment, otherwise runs
+that emit it would diverge for good.  Next, we establish when that
 happens: when the spec is not monotone.
 
 \subsection{The Functional CALM theorem}
@@ -676,10 +676,9 @@ happens: when the spec is not monotone.
 
 We now have both sides that the introduction promised.  Monotonicity is a
 static property of the spec's table, and consistency is an operational property
-of the runs it allows: sequences of input and output events that narrow the
-table.  Functional CALM bridges the two: the runs are consistent exactly when
+of the runs it allows.  Functional CALM bridges the two: the runs are consistent exactly when
 the spec is monotone.
-Three facts about runs drive the proof.  First, both kinds of event are
+Three facts about runs drive the proof.  First, events are
 relational selections, and selections commute, so a run's remainder table
 depends only on its last input and the outputs it emitted:
 
@@ -691,7 +690,7 @@ $o_1,\ldots,o_m$, its remainder table is \(P[\mathrm{in}\InputGe i,\ \mathrm{out
 \end{lemma}
 \proofinfull
 
-Second, runs can be continued to a common state exactly when their current
+Second, a set of runs can be continued to a common state exactly when their current
 remainder tables share a row at the target input:
 
 \begin{proposition}[Survivor test]
@@ -759,14 +758,14 @@ monotone.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+By Lemma~\ref{lem:confluence-legality}, the runs are consistent iff
 no output event of a run applies a \commitment.  First assume they are
 consistent, and suppose $f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$.
 Emitting $f(i)$ at $\sigma_P(i)$ then applies a \commitment that rules out $k$,
 a contradiction, so the spec is monotone.  Now assume the spec is monotone.  A
-run at $i$ is in $\sigma_P(i)$ (Corollary~\ref{cor:state-by-input}), and every
-output in its upper fiber \outrel $f(i)$, so $f(i)$ is legal, emitting it
-applies no \commitment, and consistency follows.  \fullproof
+run at $i$ is in $\sigma_P(i)$ (Corollary~\ref{cor:state-by-input}); every
+output in its upper fiber \outrel $f(i)$, so $f(i)$ is legal, requires no \commitment
+to emit, and consistency follows.  \fullproof
 \end{proof}
 
 \paragraph{Classical CALM and CRDTs.}
