@@ -463,27 +463,35 @@ $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$ produces the output sequence
 $\bot\OutputOrd\bot\OutputOrd a$.
 
 \paragraph{States and input events.}
-Each panel of Figure~\ref{fig:election-frames} shows what is still possible at
-one point in a run: the ballots received so far, and the rows that can still
-be reached from them.  When $v_2$'s ballot for $b$ arrives, the rows whose
-inputs do not extend $ab\cdot$, such as $aa\cdot$, are lost: the world has
-moved on, and panel~(b) results.
+As a run proceeds, the possibilities narrow.  Each panel of
+Figure~\ref{fig:election-frames} shows one moment: the ballots received so
+far, and the rows that can still be reached from them.  We call such a moment
+a state.
 
-\begin{definition}[Specification state, input event]
+\begin{definition}[Specification state]
 \label{def:state}
-A row $(k,u)$ of a table $R\subseteq I\times O$ is \emph{at input} $k$;
-$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ selects the rows whose
-input \inrel $j$ and whose output \outrel $o$, and $\pi_{\mathrm{out}}(R)$ is
-the set of outputs in $R$.  A \emph{specification state} $\sigma=(i,R)$ pairs
-the \emph{current input} $i$ with a \emph{remainder table} $R\subseteq P$ that
-contains a row at $i$ and only rows at \indescs of $i$; an input is
-\emph{legal} when $R$ has a row at it.  Rows are never added.  The
-\emph{canonical state at $i$} has received $i$, emitted nothing, and removed no
-rows:
+A \emph{specification state} $\sigma=(i,R)$ consists of a \emph{current input}
+$i$ and a \emph{remainder table} $R\subseteq P$ that contains a row with input
+$i$ and otherwise only rows whose inputs \inrel $i$.  Rows are never added to
+$R$.
+\end{definition}
+
+We say that a row $(k,u)$ is \emph{at input} $k$, and that an input is
+\emph{legal} in a state when the remainder table has a row at it.  To write
+remainder tables compactly, we borrow selection from relational algebra: a
+predicate in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$ holds
+the rows of $P$ whose input \inrel $i$, and commas separate conjuncts, as in
+$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$.  We write
+$\pi_{\mathrm{out}}(R)$ for the set of outputs in $R$.  A run starts from the
+\emph{canonical state} at its first input, which has received $i$, emitted
+nothing, and removed no rows:
 \begin{equation}
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
     \label{eq:canonical-state}
 \end{equation}
+
+When $v_2$'s ballot for $b$ arrives, rows such as $aa\cdot$ no longer extend
+the input, and they are lost: the world has moved on, and panel~(b) results.
 For a legal input $j$, the \emph{input event}
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{input}(j)}
@@ -491,25 +499,25 @@ For a legal input $j$, the \emph{input event}
   \label{eq:input-event}
 \end{equation}
 makes $j$ current and drops the rows whose input does not \inrelbase $j$.
-\end{definition}
-
 Because each input contains the ones before it, $\mathsf{input}(j)$ then
-$\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.  In panel~(b),
-$\bot$ is the only output permitted at $ab\cdot$ itself, while the shaded
-outputs $\{\bot,a,b\}$ are still possible once more ballots arrive.
+$\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
+
+Two sets of outputs matter in every state: those permitted at the current
+input, and those still possible once more input arrives.  In panel~(b), the
+first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.
 
 \begin{definition}[Fiber, upper fiber]
 \label{def:fiber}
 Let $R$ be a table and $k$ an input.  The \emph{fiber} of $R$ at $k$ is
 $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
 \emph{upper fiber} of $R$ at $k$ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe
-k])$, the outputs paired with $k$ or any of its \indescs.  A state $(i,R)$ is
-\emph{determined} when its upper fiber at $i$, which is $\pi_{\mathrm{out}}(R)$,
-has one element.
+k])$, the outputs paired with $k$ or any of its \indescs.
 \end{definition}
 
-If $v_2$ instead votes for $a$ (panel~(c)), only $a$ remains possible: input
-alone has determined the outcome, without \commitment.
+In a state $(i,R)$, the upper fiber at $i$ is $\pi_{\mathrm{out}}(R)$, every
+output still possible, and the state is \emph{determined} when that set has one
+element.  If $v_2$ instead votes for $a$ (panel~(c)), it is $\{a\}$: input
+alone has settled the outcome, without \commitment.
 
 \paragraph{Output events and \commitments.}
 Inputs arrive from the environment, but outputs are the system's to choose, and
