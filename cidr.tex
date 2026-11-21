@@ -204,9 +204,9 @@ properly placed.
 \paragraph{The model: \Spectype[s].}
 In systems, as in life, our possibilities narrow over time. Sometimes the world
 moves on, and possibilities are lost to us. Sometimes possibilities disappear
-because we must decide among them. A decision is incidental when
-every possibility it removes is covered by a remaining alternative. A
-decision is fateful when it rules out a possibility that no remaining alternative covers. When must a system make a fateful decision?
+because we must decide among them. A
+decision is fateful when it rules out a possibility that no remaining alternative
+can cover. When must a system make a fateful decision?
 
 We ground the problem in a simple model of \emph{\spectype[s]}, or \emph{specs}
 for short, independent of any language, protocol, or placement. The designer of
@@ -224,13 +224,12 @@ a spec to be faithful.
 As a system runs, possibilities narrow: the spec's table loses rows.  When new
 input arrives, the world has moved on, and rows that cannot be reached by
 extending that input are lost.  When the system decides among possibilities, it
-makes a controlled decision to remove rows.  The decision is incidental if each
-removed output is covered by a remaining output that \outrel it, and fateful if
-not.  Choosing between two candidates in a leader election is fateful: nothing
+makes a controlled decision to remove rows.  The decision is fateful if some
+removed output has no remaining output that \outrel it.
+Choosing between two candidates in a leader election is fateful: nothing
 remaining covers the loser's possibility of a win.  So is closing the polls early,
-ruling out every row with a later ballot.  We call a fateful decision a
-\emph{\commitment}: an irrevocable decision, enforceable by coordination
-mechanisms such as locks and consensus.
+ruling out every row with a late ballot.  We call a fateful decision a
+\emph{\commitment}.
 
 Automata have often been used to formally specify distributed
 protocols; we show how an automaton can be projected onto an \spectype[] that
@@ -263,7 +262,7 @@ pairs of rows, without exploring runs.  \emph{Functional CALM}
 (\S\ref{sec:complete-calm-theorem}) show that the two coincide: the runs a spec allows are consistent exactly when the spec is
 lifted monotone.  Hence Consistency As Lifted Monotonicity, a new reading of the
 CALM acronym.
-Functional CALM covers prior CALM work and CRDT state.
+Functional CALM is sufficient to cover prior CALM work and CRDT state.
 
 Distributed histories are captured under the same consistency criteria as
 centralized ones (\S\ref{sec:distributed-execution}).  Complete CAP
@@ -286,13 +285,14 @@ We make contributions in four categories:
 
 \noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
-        \spectype[s]. Consistency is defined as
+        \spectype[s], which admit runs of input, output
+        and \commitment events. Consistency is defined as
         confluence of a spec's runs, unifying general consistency models,
         application-specific requirements, and their distributed executions.
 
 \noindent
-\emph{2. A unified criterion.} For functions between ordered domains,
-        Functional CALM shows that the runs are consistent exactly when the spec is monotone. For nondeterministic specs,
+\emph{2. A unified criterion.} For specs with one output per input, Functional
+        CALM shows that the runs are consistent exactly when the spec is monotone. For nondeterministic specs,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
@@ -317,7 +317,7 @@ intuition, proofs, and applications.
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-This section focuses on functional specs, in which each input has a
+We begin with the simplified case of functional specs, in which each input has a
 single specified output.  We walk through the framework informally on an
 election (\S\ref{sec:election-story}), state it precisely
 (\S\ref{sec:framework-brief}), and
@@ -399,7 +399,7 @@ when an output can be emitted without \commitment.
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
-  \caption{The election specification and three states reached from it, limited to rows
+  \caption{The election spec and states reached from it, limited to rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its upper fiber.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
@@ -413,9 +413,9 @@ Figure~\ref{fig:election-frames}.  Each row of the possibility table pairs
 the ballots received so far with the permitted result; the column orders
 say how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
-Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
-$b$.  The output is whichever candidate has two ballots, or $\bot$ while there
-is no winner.  An input is a vector of the ballots received so far, one entry per voter, with a
+Three voters each cast at most one immutable ballot for $a$ or
+$b$.  The output is whichever candidate has a majority, or $\bot$ while there
+is none.  An input is a vector of the ballots received so far, one entry per voter, with a
 dot for a ballot not yet received.  We write it as a string: $ab\cdot$ means
 $v_1$ voted $a$, $v_2$ voted $b$, and $v_3$'s ballot has not arrived.  For brevity,
 the figure shows only inputs \inrelpart $a\cdot\cdot$.
@@ -426,10 +426,7 @@ $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output order} says which
 announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$.
 $\bot$ claims nothing, so either winner
 \outrel it, while $a$ and $b$ are incomparable.  In general, the functional table is \emph{monotone}
-when
-\[
-  i\InputOrd j\quad\Longrightarrow\quad f(i)\OutputOrd f(j).
-\]
+when $i\InputOrd j \Longrightarrow f(i)\OutputOrd f(j).$
 Here, for example, the input sequence $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$
 monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.
 
@@ -438,8 +435,7 @@ Each panel of Figure~\ref{fig:election-frames} shows a \emph{specification
 state}: the \emph{current input} and the \emph{remainder table} of rows still
 possible from it.  When $v_2$'s ballot for $b$ arrives, the input event
 $\mathsf{input}(ab\cdot)$ produces panel~(b).  The table passively loses the rows
-whose inputs do not extend $ab\cdot$, such as $aa\cdot$: those possibilities are
-lost.  The \emph{upper fiber} (Definition~\ref{def:fiber}) is the set of outputs
+whose inputs do not extend $ab\cdot$, such as $aa\cdot$: the world has moved on.  The \emph{upper fiber} (Definition~\ref{def:fiber}) is the set of outputs
 still possible in the remainder table: $\{\bot,a,b\}$ in panel~(b).  If $v_2$
 instead votes for $a$
 (panel~(c)), the upper fiber is a singleton, $\{a\}$, and we call such
@@ -447,23 +443,21 @@ states \emph{determined}.  In that case, input alone has determined an outcome,
 without \commitment.
 
 \paragraph{Output and consistency.}
-Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
-rows whose outputs \outrelbase $o$, since later outputs must not contradict it.
-In a functional table, $o$ is a \emph{legal output} when everything in the
-upper fiber already \outrel $o$, so the event removes nothing.  Thus
-$\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  When $o$ is not
-legal, the event removes the rows that conflict with $o$, ruling out their
-inputs; that removal is a \commitment.
+Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$.  In a functional
+spec, $o$ is a \emph{legal output} when everything in the upper fiber already
+\outrel $o$.  Thus $\bot$ is legal in panels~(a) and~(b), and $a$ in
+panel~(c).  When $o$ is not legal, a \commitment makes it legal by removing
+rows whose outputs conflict with $o$.  Emitting
+$o$ only once it is legal keeps a run from contradicting $o$ later on, when
+the environment may already have acted on it.
 
-Panel~(d), by contrast, adds a decision by the \emph{system}: the implementation
-that receives the ballots and announces the result.  Here
-the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
-closes the polls.  Closing the polls is a \emph{\commitment}: it removes the
-still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$.
-The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result.
-The spec did not require this \commitment: emitting $\bot$ removes
-nothing by itself, since every output still possible extends $\bot$.  Closing the polls is
-the registrar's own fateful decision.
+Panel~(d), by contrast, reflects a \commitment that was not required by the spec.
+A \emph{system} that implements a spec may choose to do this via a \emph{\commitment event}.
+In this case, the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
+closes the polls, removing the still-possible rows $aba$ and $abb$, keeping the current
+input unchanged. The output was already legal; every output still possible
+\outrelpast $\bot$. After the event, the upper fiber is determined at $\{\bot\}$.
+Closing the polls is the registrar's own fateful decision.
 
 \begin{figure}[t]
   \centering
@@ -502,22 +496,27 @@ the registrar's own fateful decision.
 \end{figure}
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
-changes only the output order: all outputs are incomparable, including $\bot$
-for no winner. Under this order (known as the \emph{equality order}), $\bot$ is
+changes only the output order $\OutputOrd$: now all outputs are incomparable.
+Under this order (called the \emph{equality order}), $\bot$ is
 incompatible with future winners, so emitting it requires a \commitment.  That
 change in the output order is Functional CALM in miniature: the spec is monotone
 under the original order, so later outputs \outrelbase every earlier one; under
 the equality order it is non-monotone, and some outputs can be emitted only with a \commitment.
 
-To see why, we follow the events.  A \emph{run} is a sequence of input and output
+To see why, we follow the events.  A \emph{run} is a sequence of input, output and \commitment
 events from a starting state, like the sequences that produce the panels of
 Figure~\ref{fig:election-frames}.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
 $aba$ \outrel both $\bot$ and $a$.  So a run that emits $\bot$ at $ab\cdot$ and
 a run that receives $aba$ and emits $a$ can never be reconciled at $aba$.
-Emitting $\bot$ is safe only with the \commitment that rules out $aba$ and
-$abb$; without it, the two runs would diverge for good.  The argument uses only the table and its orders, so the need for the \commitment is a property of the spec, not of any system.
+Emitting $\bot$ requires the \commitment that rules out $aba$ and
+$abb$ to make $\bot$ legal; without it, the two runs would be inconsistent.
+The argument uses only the table and its orders, so the need for the \commitment is a property of the spec, not of any system.
+\jmh{We used to be papering over the fact that the poll-closing example was a commitment event. I added commitment events to
+that discussion. But now the final sentence doesn't work.}
 
+\jmh{This is also a bit problematic in the face of commitment events. Should we introduce the idea
+of canonical runs in the previous sentence, or this one?}
 Runs are the foundation of the consistency side of CALM.  Input and output
 events form a transition system over specification states, and the runs of a
 spec are \emph{consistent} when they are \emph{confluent}: runs whose inputs have a
