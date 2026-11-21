@@ -89,4 +89,5 @@ import CoordCriterion.Appendix.Graphs
 import CoordCriterion.Appendix.Applications
 import CoordCriterion.Appendix.Classical
 import CoordCriterion.Appendix.ClassicalFrontiers
+import CoordCriterion.Appendix.BLink
 import CoordCriterion.Paper

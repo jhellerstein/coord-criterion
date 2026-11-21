@@ -372,24 +372,87 @@ theorem Path.trans {G : Snap K P} {k : K} {p q r : P}
 /-- Positive forward-reachability claims `(k, p)`. -/
 def claims (G : Snap K P) (k : K) (p : P) : Prop := ∃ q, Path G k p q ∧ G.occ k q
 
-/-- Obligations 2 and 3 of a restructuring step (obligation 1, stable
-identities, holds because positions live in the fixed type `P`). -/
-structure Obligations (G G' : Snap K P) : Prop where
-  edges : ∀ k p q, G.edge k p q → Path G' k p q
-  occs : ∀ k p, G.occ k p → ∃ q, Path G' k p q ∧ G'.occ k q
+/-- Length-indexed key-directed search paths. -/
+inductive PathN (G : Snap K P) (k : K) : Nat → P → P → Prop
+  | refl (p : P) : PathN G k 0 p p
+  | step {n : Nat} {p q r : P} : G.edge k p q → PathN G k n q r → PathN G k (n + 1) p r
 
-theorem Path.simulate {G G' : Snap K P} (hO : Obligations G G') {k : K} {p q : P}
-    (h : Path G k p q) : Path G' k p q := by
+theorem PathN.toPath {G : Snap K P} {k : K} {n : Nat} {p q : P} (h : PathN G k n p q) :
+    Path G k p q := by
   induction h with
   | refl p => exact Path.refl p
-  | step he _ ih => exact (hO.edges _ _ _ he).trans ih
+  | step he _ ih => exact Path.step he ih
 
-/-- One restructuring step preserves every positive claim. -/
+theorem Path.toPathN {G : Snap K P} {k : K} {p q : P} (h : Path G k p q) :
+    ∃ n, PathN G k n p q := by
+  induction h with
+  | refl p => exact ⟨0, PathN.refl p⟩
+  | step he _ ih => obtain ⟨n, hn⟩ := ih; exact ⟨n + 1, PathN.step he hn⟩
+
+/-- Obligations 2 and 3 of a restructuring step (obligation 1, stable
+identities, holds because positions live in the fixed type `P`).  `det` and
+`stop` record two properties of the snapshot before the step that the setup
+assumes: each position has at most one search edge for each key, and a search
+stops at an occurrence.  Obligation 2 (`edges`): if `p → q` was the search
+edge for `k` before the step, the search for `k` from `p` after the step
+reaches some position that the search from `q` reached before it.  Posting a
+separator into a parent satisfies this but not the stronger condition that
+the search from `p` still reaches `q` (`Obligations.of_strong`). -/
+structure Obligations (G G' : Snap K P) : Prop where
+  det : ∀ k p q q', G.edge k p q → G.edge k p q' → q = q'
+  stop : ∀ k p q, G.occ k p → ¬ G.edge k p q
+  edges : ∀ k p q, G.edge k p q → ∃ r, Path G' k p r ∧ Path G k q r
+  occs : ∀ k p, G.occ k p → ∃ q, Path G' k p q ∧ G'.occ k q
+
+/-- The stronger form of obligation 2 (the search from `p` still reaches the
+old target `q`) is a special case. -/
+theorem Obligations.of_strong {G G' : Snap K P}
+    (det : ∀ k p q q', G.edge k p q → G.edge k p q' → q = q')
+    (stop : ∀ k p q, G.occ k p → ¬ G.edge k p q)
+    (edges : ∀ k p q, G.edge k p q → Path G' k p q)
+    (occs : ∀ k p, G.occ k p → ∃ q, Path G' k p q ∧ G'.occ k q) : Obligations G G' :=
+  ⟨det, stop, fun k p q h => ⟨q, edges k p q h, Path.refl q⟩, occs⟩
+
+/-- With deterministic search, a search path to a position from which no
+search edge leaves is at least as long as any search path from the same
+start, and the shorter one is a prefix. -/
+theorem PathN.prefix {G : Snap K P} {k : K}
+    (det : ∀ p q q', G.edge k p q → G.edge k p q' → q = q') :
+    ∀ {m n : Nat} {p r o : P}, PathN G k n p o → (∀ q, ¬ G.edge k o q) →
+      PathN G k m p r → m ≤ n ∧ PathN G k (n - m) r o
+  | 0, n, p, r, o, h, _, hm => by
+    cases hm; exact ⟨Nat.zero_le _, by simpa using h⟩
+  | m + 1, n, p, r, o, h, hs, hm => by
+    cases hm with
+    | step he hm' =>
+      cases h with
+      | refl _ => exact absurd he (hs _)
+      | @step n' _ _ _ he' h' =>
+        have := det _ _ _ he he'; subst this
+        obtain ⟨h1, h2⟩ := PathN.prefix det h' hs hm'
+        refine ⟨by omega, ?_⟩
+        rw [Nat.add_sub_add_right]; exact h2
+
+/-- One restructuring step preserves every positive claim (by strong
+induction on the length of the old search path). -/
 theorem claims_step {G G' : Snap K P} (hO : Obligations G G') {k : K} {p : P}
     (h : claims G k p) : claims G' k p := by
-  obtain ⟨q, hpq, hocc⟩ := h
-  obtain ⟨q', hqq', hocc'⟩ := hO.occs k q hocc
-  exact ⟨q', (hpq.simulate hO).trans hqq', hocc'⟩
+  obtain ⟨o, hpo, hocc⟩ := h
+  obtain ⟨n, hn⟩ := hpo.toPathN
+  have key : ∀ n p, PathN G k n p o → claims G' k p := by
+    intro n
+    induction n using Nat.strongRecOn with
+    | _ n ih =>
+      intro p hp
+      cases hp with
+      | refl _ => exact hO.occs k _ hocc
+      | @step n' _ q _ he hq =>
+        obtain ⟨r, hpr, hqr⟩ := hO.edges k _ q he
+        obtain ⟨m, hm⟩ := hqr.toPathN
+        obtain ⟨hle, hro⟩ := PathN.prefix (hO.det k) hq (hO.stop k o · hocc) hm
+        obtain ⟨o', hro', hocc'⟩ := ih (n' - m) (by omega) r hro
+        exact ⟨o', hpr.trans hro', hocc'⟩
+  exact key n p hn
 
 inductive Chain (st : Snap K P → Snap K P → Prop) : Snap K P → List (Snap K P) → Prop
   | nil (g : Snap K P) : Chain st g []

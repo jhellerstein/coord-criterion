@@ -648,7 +648,10 @@ Restated: the valid claims equal the least state-determined growing map
 containing the exact claims (Prop. `prop:remembered-claims`(3)) exactly under
 that condition; "needs no commitment" is Lifted Monotonicity of the bounded
 spec (by the No-commitment test).  Whether the condition holds for Lehman and
-Yao's trees is left open in the paper. -/
+Yao's trees is left open in the paper.  Lean: for the B-link tree model
+`BLink.blink` (histories of states, `BLink.SRestr`) the condition holds
+(`BLink.blink_H`), so forward reachability equals the remembered exact claims
+(`BLink.blink_fwd_eq`). -/
 theorem «app:additional-applications/forwarding-frontier» {K P : Type}
     (Rs : Front.Restructuring K P) (X : Rs.Hist → K × P → Prop)
     (hX : ∀ h c, X h c → fwdV Rs h c) :

@@ -141,6 +141,7 @@ first and supporting claims and examples follow.
 | `Appendix/MahajanRTC.lean` | `CC.Deploy` | App. E (real-time causal) | Mahajan et al.'s RTC check for one replica's reads is the real-time causal views (single-source writeLists; one element of a set-valued writeList is not enough); always availability as totality plus Deployment Availability; one-way convergence from delivery in the input; implementations that do not observe real time induce real-time blind strengthenings; their Theorem 3.1 derived from Prop. rtc-maximal and Thm. independent products (2), realized in any system with Deployment Availability |
 | `Appendix/RealTimeTies.lean` | `CC.Deploy.Tie` | App. E | A strict strengthening of the real-time causal product interface that reads real time to break ties is monotone across partitions under its owner deployment, so real-time blindness is needed |
 | `Appendix/Applications.lean` | `CC.Apps` | App. H | Committed authority, `k`-set agreement, tight renaming, snapshots |
+| `Appendix/BLink.lean` | `CC.BLink` | App. G (search structures) | Restructuring histories of states; a Lehman–Yao B-link tree model (insert, half-split, post, grow) satisfying the step conditions; posting breaks the strong form of condition (2); every valid claim was exact earlier on a history to the same tree, so forward reachability equals the remembered exact claims |
 
 `ProductFrontier`, `Registers`, `RealTimeCausal`, and `MahajanRTC` are in `CC.Deploy` because they are stated
 in terms of the deployment notions of `Appendix/Deployment.lean`.
