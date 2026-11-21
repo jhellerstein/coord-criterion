@@ -47,7 +47,7 @@ The four pattern lemmas are stated in `Paper/S3_CompleteCALM.lean`
 (`sec:patterns`). -/
 
 /-- "When one of the last three [Lemmas `lem:order-commitment`,
-`lem:bounded-values`, `lem:ruling-out`] applies, Complete CALM (Theorem
+`lem:bounded-values`, `lem:blocking`] applies, Complete CALM (Theorem
 `thm:complete-calm`) says that the runs of the spec are not consistent.  The
 No-commitment test (Proposition `prop:exposure-boundary`) adds that some
 output, at some state reachable without commitment, is not legal, so emitting

@@ -569,26 +569,28 @@ theorem «lem:bounded-values» {I O V : Type} [PO I] [PO O] {sp : Spec I O}
   ⟨bounded_no_common dec hmono hbound o v hv hd,
    bounded_values dec hmono hbound i o v hv hrow hj hd⟩
 
-/-- **Lemma `lem:ruling-out`** (Ruling out inputs).  "Let `F` be a set of
-facts.  Suppose that each input `i` of an I/O specification has a set
-`C(i) ⊆ F` of facts it contains, and each output `o` a set `N(o) ⊆ F` of facts
-it rules out, such that (1) `o ⪯ u` implies `N(o) ⊆ N(u)`, and (2) every row
-`(i,o)` of the table has `N(o) ∩ C(i) = ∅`.  If a row `(i,o)` and an input `j`
-with `i ⊑ j` have `N(o) ∩ C(j) ≠ ∅`, then the spec fails Relational
-Monotonicity, so it is not monotone."  Proof: "Suppose some `u ∈ P(j)` has
-`o ⪯ u`.  By (1), `N(o) ⊆ N(u)`, so `N(u)` meets `C(j)`, which contradicts (2)
-for the row `(j,u)`.  So Relational Monotonicity fails at `i ⊑ j`.  Lifted
-Monotonicity with `X = {o}` is Relational Monotonicity, so it fails too."
-`C(i)` is `has i`, `N(o)` is `rules o`, and the shared fact is `f`.  The
-election example that follows (a final tally at `ab·`, closing the polls, and
-the list of all participants) is prose and is not formalized. -/
-theorem «lem:ruling-out» {I O F : Type} [PO I] [PO O] {sp : Spec I O}
-    (has : I → F → Prop) (rules : O → F → Prop)
-    (hmono : ∀ o u f, o ≼ u → rules o f → rules u f)
-    (hsafe : ∀ j u f, sp.P j u → has j f → ¬ rules u f)
-    {i j : I} {o : O} {f : F} (hrow : sp.P i o) (hij : i ≼ j) (hr : rules o f)
-    (hj : has j f) : ¬ sp.RelMono ∧ ¬ sp.LiftedMono :=
-  ruling_out has rules hmono hsafe hrow hij hr hj
+/-- **Lemma `lem:blocking`** (Blocking before arrival).  "Suppose the inputs
+of an I/O specification are sets ordered by `⊆`, and its outputs are pairs
+`(A,B)` of disjoint sets, the accepted and the blocked facts, ordered
+componentwise by `⊆`.  If rows `(i,(A,B))` and `(j,(A',B'))` with `i ⊆ j` have
+a fact `f ∈ B ∩ A'`, the spec is not monotone."  Proof: "A common output
+extension `(A'',B'')` of the two outputs in `P(j)` has `f ∈ B ⊆ B''` and
+`f ∈ A' ⊆ A''`, but `A''` and `B''` are disjoint.  So the common-extension
+condition fails, and Proposition `prop:common-expansion-form` applies."
+Generic in the input order and in the output type: `acc o` and `blk o` are the
+accepted and blocked facts, each growing with `⪯` (as componentwise `⊆`
+does), and disjointness is needed only in the fiber at `j`.  The election
+example that follows (the rows at `ab·` and `aba`, closing the polls, and the
+fixed list of voters) is prose and is not formalized. -/
+theorem «lem:blocking» {I O F : Type} [PO I] [PO O] {sp : Spec I O}
+    (acc blk : O → F → Prop)
+    (hacc : ∀ o u f, o ≼ u → acc o f → acc u f)
+    (hblk : ∀ o u f, o ≼ u → blk o f → blk u f) {j : I}
+    (hdisj : ∀ u f, sp.P j u → acc u f → ¬ blk u f)
+    {i : I} {o o' : O} {f : F} (h1 : sp.P i o) (h2 : sp.P j o') (hij : i ≼ j)
+    (hb : blk o f) (ha : acc o' f) :
+    (¬ ∃ u, sp.P j u ∧ o ≼ u ∧ o' ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono :=
+  blocking acc blk hacc hblk hdisj h1 h2 hij hb ha
 
 end ThreePatterns
 

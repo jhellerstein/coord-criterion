@@ -116,7 +116,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:patterns/accumulating-join»
 #check @CC.Paper.«lem:order-commitment»
 #check @CC.Paper.«lem:bounded-values»
-#check @CC.Paper.«lem:ruling-out»
+#check @CC.Paper.«lem:blocking»
 #check @CC.Paper.«def:distributed-history»
 #check @CC.Paper.«def:distributed-history/well-formed»
 #check @CC.Paper.«def:happens-before»

@@ -1333,8 +1333,8 @@ accumulate, as the route sets of Figure~\ref{fig:ambiguity-frames} do. In the
 second, an output orders two events that the input leaves unordered, as the
 serial orders of the same figure do. In the third, outputs decide values, and
 the spec bounds how many distinct values may be decided, as consensus allows
-only one. In the fourth, an output claims that some input will never arrive,
-as a final tally claims that the polls are closed. The first pattern gives
+only one. In the fourth, an output blocks an input before it arrives, as
+closing the polls blocks every ballot not yet received. The first pattern gives
 Lifted Monotonicity, and each of the other three gives a witness to its
 failure.
 
@@ -1406,44 +1406,49 @@ $k+1$ values in $D(u)$ by~(1), which contradicts~(2). So the common-extension
 condition fails, and Proposition~\ref{prop:common-expansion-form} applies.
 \end{proof}
 
-\begin{lemma}[Ruling out inputs]
-\label{lem:ruling-out}
-Let $F$ be a set of facts. Suppose that each input $i$ of an \spectype has a
-set $C(i)\subseteq F$ of facts it contains, and each output $o$ a set
-$N(o)\subseteq F$ of facts it rules out, such that
-\begin{enumerate}
-\item
-$o\OutputOrd u$ implies $N(o)\subseteq N(u)$, and
-\item
-every row $(i,o)$ of the table has $N(o)\cap C(i)=\varnothing$.
-\end{enumerate}
-If a row $(i,o)$ and an input $j$ with $i\InputOrd j$ have
-$N(o)\cap C(j)\neq\varnothing$, then the spec fails Relational Monotonicity,
-so it is not monotone.
+\begin{lemma}[Blocking before arrival]
+\label{lem:blocking}
+Suppose the inputs of an \spectype are sets ordered by $\subseteq$, and its
+outputs are pairs $(A,B)$ of disjoint sets, the accepted and the blocked
+facts, ordered componentwise by $\subseteq$. If rows $(i,(A,B))$ and
+$(j,(A',B'))$ with $i\subseteq j$ have a fact $f\in B\cap A'$, the spec is not
+monotone.
 \end{lemma}
 
 \begin{proof}
-Suppose some $u\in\fiber{j}$ has $o\OutputOrd u$. By~(1), $N(o)\subseteq
-N(u)$, so $N(u)$ meets $C(j)$, which contradicts~(2) for the row $(j,u)$. So
-Relational Monotonicity fails at $i\InputOrd j$. Lifted Monotonicity with
-$X=\{o\}$ is Relational Monotonicity, so it fails too.
+A common \outnoun $(A'',B'')$ of the two outputs in $\fiber{j}$ has
+$f\in B\subseteq B''$ and $f\in A'\subseteq A''$, but $A''$ and $B''$ are
+disjoint. So the common-extension condition fails, and
+Proposition~\ref{prop:common-expansion-form} applies.
 \end{proof}
 
-Consider a variant of the election in which the registrar may also announce
-the final tally, which rules out every ballot it does not count. A final
-tally at $ab\cdot$ rules out a ballot from $v_3$, and the \indesc $aba$
-contains one. By Lemma~\ref{lem:ruling-out}, the announcement requires a
-\commitment. Closing the polls (Figure~\ref{fig:election-frames}(d)) is that
-\commitment: it removes the rows whose inputs contain the ruled-out ballot. The lemma needs an \indesc that adds the ruled-out fact. The election's
-inputs list every voter, so at $aba$, where every voter has voted, no such
-extension exists, and the final tally there needs no \commitment. When inputs
-do not list the participants, every input has an extension with a report from
-one more participant, so an output that rules out further reports always
-requires a \commitment. This is the role of the list of all participants
-discussed in Section~\ref{sec:systems}.
+Consider a variant of the election whose outputs record which ballots the
+registrar has accepted and which it has blocked. An input is the set of
+ballots received, so $ab\cdot$ stands for $\{(v_1,a),(v_2,b)\}$, and the order
+on ballot vectors is $\subseteq$. An output is a pair $(A,B)$ of disjoint sets
+of ballots with $A\cup B\supseteq i$: every received ballot is accepted or
+blocked. The spec includes the rows
+\begin{itemize}
+\item
+$(ab\cdot,\ (ab\cdot,\ \varnothing))$, with no decision about $v_3$;
+\item
+$(ab\cdot,\ (ab\cdot,\ \{(v_3,a),(v_3,b)\}))$, with $v_3$'s ballot
+        blocked before it arrives; and
+\item
+$(aba,\ (aba,\ \varnothing))$, with $v_3$'s ballot accepted when it
+        arrives.
+\end{itemize}
+The second and third rows have no common \outnoun at $aba$, since $(v_3,a)$
+would be both accepted and blocked, so by Lemma~\ref{lem:blocking} the spec is
+not monotone. Accepting a ballot when it arrives reports evidence. Blocking
+$v_3$'s ballot before it arrives is a claim about an input not yet seen: that
+the ballot will not count. Blocking every ballot not yet received is closing
+the polls (Figure~\ref{fig:election-frames}(d)), and it is a \commitment. Because the election has a fixed list of voters, once every voter has voted
+no ballot remains to arrive, and closing the polls blocks nothing that could later be
+accepted.
 
 When Lemma~\ref{lem:order-commitment}, \ref{lem:bounded-values}, or
-\ref{lem:ruling-out} applies, Complete CALM says that the runs of the spec are not consistent, and
+\ref{lem:blocking} applies, Complete CALM says that the runs of the spec are not consistent, and
 the No-\commitment test (Proposition~\ref{prop:exposure-boundary}) says that
 some output, at some state reachable without \commitment, is not legal. When
 Lemma~\ref{lem:accumulating} applies, the runs are consistent. Appendix~\ref{app:additional-applications} applies the patterns to
@@ -5640,8 +5645,8 @@ Many classical specs follow one of the four patterns of
 Section~\ref{sec:patterns}: outputs that only accumulate
 (Lemma~\ref{lem:accumulating}), outputs that order concurrent events
 (Lemma~\ref{lem:order-commitment}), outputs that decide a bounded number of
-values (Lemma~\ref{lem:bounded-values}), and outputs that rule out inputs
-(Lemma~\ref{lem:ruling-out}). When one of the last three applies,
+values (Lemma~\ref{lem:bounded-values}), and outputs that block inputs before
+they arrive (Lemma~\ref{lem:blocking}). When one of the last three applies,
 Complete CALM (Theorem~\ref{thm:complete-calm}) says that the runs of the spec
 are not consistent. The No-\commitment test
 (Proposition~\ref{prop:exposure-boundary}) adds that some output, at some

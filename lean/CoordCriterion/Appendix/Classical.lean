@@ -10,7 +10,7 @@ Namespace `CC.Apps` (extends `Appendix/Applications.lean`).
   (sets of facts under inclusion; Lemma `lem:accumulating`);
   `order_no_common`, `order_conflict`, `order_conflict_fiber` (Lemma
   `lem:order-commitment`); `bounded_no_common`, `bounded_values` (Lemma
-  `lem:bounded-values`); `ruling_out` (Lemma `lem:ruling-out`); `no_cap_of_not_liftedMono`, `canon_incompatible`,
+  `lem:bounded-values`); `blocking` (Lemma `lem:blocking`); `no_cap_of_not_liftedMono`, `canon_incompatible`,
   `pattern_consequences_neg`, `pattern_consequences_pos`.
 * Table `tab:classical-problems`: `bcastSpec` (reliable broadcast),
   `prefixSpec` (causal broadcast, global snapshot), `counterSpec` (grow-only
@@ -166,19 +166,28 @@ theorem bounded_values {sp : Spec I O} {V : Type} (dec : O → V → Prop)
       ⟨u, hu, fun r => hall _ (List.mem_map.2 ⟨r, List.mem_finRange r, rfl⟩)⟩
   exact ⟨hce, fun h => hce ((liftedMono_iff_commonExpansion sp).1 h)⟩
 
-/-- Lemma `lem:ruling-out`: an output that rules out an input fact contained
-in some input extension has no output extension there, so Relational
-Monotonicity, and with it Lifted Monotonicity, fails. -/
-theorem ruling_out {sp : Spec I O} {F : Type} (has : I → F → Prop) (rules : O → F → Prop)
-    (hmono : ∀ o u f, o ≼ u → rules o f → rules u f)
-    (hsafe : ∀ j u f, sp.P j u → has j f → ¬ rules u f)
-    {i j : I} {o : O} {f : F} (hrow : sp.P i o) (hij : i ≼ j) (hr : rules o f)
-    (hj : has j f) : ¬ sp.RelMono ∧ ¬ sp.LiftedMono := by
-  have hR : ¬ sp.RelMono := by
-    intro hR
-    obtain ⟨u, hu, hou⟩ := hR i j o hij hrow
-    exact hsafe j u f hu hj (hmono o u f hou hr)
-  exact ⟨hR, fun hL => hR ((liftedMono_iff_relMono_directed sp).1 hL).1⟩
+/-- Lemma `lem:blocking`: outputs carry accepted and blocked facts, both
+growing with the output order, and disjoint in every output at `j`.  A row
+blocking `f` and a row at `j` accepting `f`, with `i ≼ j`, have no common
+output extension at `j`, so the common-extension condition and Lifted
+Monotonicity fail.  The paper's outputs are pairs of sets under componentwise
+inclusion; here `acc`/`blk` are any two families that grow with `≼`. -/
+theorem blocking {sp : Spec I O} {F : Type} (acc blk : O → F → Prop)
+    (hacc : ∀ o u f, o ≼ u → acc o f → acc u f)
+    (hblk : ∀ o u f, o ≼ u → blk o f → blk u f) {j : I}
+    (hdisj : ∀ u f, sp.P j u → acc u f → ¬ blk u f)
+    {i : I} {o o' : O} {f : F} (h1 : sp.P i o) (h2 : sp.P j o') (hij : i ≼ j)
+    (hb : blk o f) (ha : acc o' f) :
+    (¬ ∃ u, sp.P j u ∧ o ≼ u ∧ o' ≼ u) ∧ ¬ sp.CommonExpansion ∧ ¬ sp.LiftedMono := by
+  have hno : ¬ ∃ u, sp.P j u ∧ o ≼ u ∧ o' ≼ u := by
+    rintro ⟨u, hu, hou, hou'⟩
+    exact hdisj u f hu (hacc _ _ _ hou' ha) (hblk _ _ _ hou hb)
+  have hce : ¬ sp.CommonExpansion := by
+    intro hC
+    obtain ⟨u, hu, hall⟩ := hC [(i, o), (j, o')] (by simp [h1, h2]) j
+      (by simp [hij, PO.refl])
+    exact hno ⟨u, hu, hall (i, o) (by simp), hall (j, o') (by simp)⟩
+  exact ⟨hno, hce, fun h => hce ((liftedMono_iff_commonExpansion sp).1 h)⟩
 
 /-- The negative side of Complete CAP (`E = P`), from `CC.CAP.complete_cap`. -/
 theorem no_cap_of_not_liftedMono {sp : Spec I O} (h : ¬ sp.LiftedMono) (D : Type) :
