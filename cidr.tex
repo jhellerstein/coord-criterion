@@ -460,64 +460,62 @@ $\Spec$ is \emph{monotone} if
 
 The election is monotone: for example, the input sequence
 $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$ produces the output sequence
-$\bot\OutputOrd\bot\OutputOrd a$.  We say that a row $(k,u)$ of a relation
-$R\subseteq I\times O$ is \emph{at input} $k$.  To describe tables compactly, a
-predicate in square brackets selects rows, and commas separate conjuncts:
-$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ holds the rows whose
-input \inrel $j$ and whose output \outrel $o$.  As in relational algebra,
-$\pi_{\mathrm{out}}(R)$ is the set of outputs in $R$.
+$\bot\OutputOrd\bot\OutputOrd a$.
 
 \paragraph{States and input events.}
 Each panel of Figure~\ref{fig:election-frames} shows what is still possible at
-one point in a run: the input received so far, and the rows that can still be
-reached from it.  Formally, a \emph{specification state} $\sigma=(i,R)$ records
-the \emph{current input} $i$ and the \emph{remainder table} $R\subseteq P$.
-The table $R$ contains a row at $i$ and only rows at \indescs of $i$.  An input
-$k$ is \emph{legal} when $R$ contains a row at $k$.  Rows are never added
-during execution.  The \emph{canonical state at $i$} has received $i$, emitted
-nothing, and removed no rows:
+one point in a run: the ballots received so far, and the rows that can still
+be reached from them.  When $v_2$'s ballot for $b$ arrives, the rows whose
+inputs do not extend $ab\cdot$, such as $aa\cdot$, are lost: the world has
+moved on, and panel~(b) results.
+
+\begin{definition}[Specification state, input event]
+\label{def:state}
+A row $(k,u)$ of a table $R\subseteq I\times O$ is \emph{at input} $k$;
+$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ selects the rows whose
+input \inrel $j$ and whose output \outrel $o$, and $\pi_{\mathrm{out}}(R)$ is
+the set of outputs in $R$.  A \emph{specification state} $\sigma=(i,R)$ pairs
+the \emph{current input} $i$ with a \emph{remainder table} $R\subseteq P$ that
+contains a row at $i$ and only rows at \indescs of $i$; an input is
+\emph{legal} when $R$ has a row at it.  Rows are never added.  The
+\emph{canonical state at $i$} has received $i$, emitted nothing, and removed no
+rows:
 \begin{equation}
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
     \label{eq:canonical-state}
 \end{equation}
-
-When $v_2$'s ballot for $b$ arrives, the table passively loses the rows whose
-inputs do not extend $ab\cdot$, such as $aa\cdot$: the world has moved on, and
-panel~(b) results.  Each event applies a selection predicate on one column of
-the remainder table.  For a state $(i,R)$ and a legal input $j$, the
-\emph{input event}
+For a legal input $j$, the \emph{input event}
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{input}(j)}
   \bigl(j,\ R[\mathrm{in}\InputGe j]\bigr)
   \label{eq:input-event}
 \end{equation}
-makes $j$ current and drops the rows whose input does not
-\inrelbase $j$.  Because each input contains the ones before it, $\mathsf{input}(j)$ then
-$\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
+makes $j$ current and drops the rows whose input does not \inrelbase $j$.
+\end{definition}
 
-Two sets of outputs recur throughout our discussion: those a table permits at
-a given input, and those it still permits there or once more input arrives.  In
-panel~(b), the first is $\{\bot\}$ at $ab\cdot$, and the second, shaded, is
-$\{\bot,a,b\}$.  We name them as follows.
+Because each input contains the ones before it, $\mathsf{input}(j)$ then
+$\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.  In panel~(b),
+$\bot$ is the only output permitted at $ab\cdot$ itself, while the shaded
+outputs $\{\bot,a,b\}$ are still possible once more ballots arrive.
 
 \begin{definition}[Fiber, upper fiber]
 \label{def:fiber}
 Let $R$ be a table and $k$ an input.  The \emph{fiber} of $R$ at $k$ is
 $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
 \emph{upper fiber} of $R$ at $k$ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe
-k])$, the outputs paired with $k$ or any of its \indescs.
+k])$, the outputs paired with $k$ or any of its \indescs.  A state $(i,R)$ is
+\emph{determined} when its upper fiber at $i$, which is $\pi_{\mathrm{out}}(R)$,
+has one element.
 \end{definition}
 
-For a state $(i,R)$, the upper fiber at $i$ is $\pi_{\mathrm{out}}(R)$: every
-output still possible.  The state is \emph{determined} when its upper fiber at
-$i$ has one element.  If $v_2$ instead votes for $a$ (panel~(c)), the upper
-fiber is $\{a\}$: input alone has determined the outcome, without \commitment.
+If $v_2$ instead votes for $a$ (panel~(c)), only $a$ remains possible: input
+alone has determined the outcome, without \commitment.
 
 \paragraph{Output events and \commitments.}
 Inputs arrive from the environment, but outputs are the system's to choose, and
-once emitted they cannot be retracted: later outputs must \outrelbase earlier
-ones.  An output is safe to emit when everything still possible already builds
-on it.  To avoid ambiguity, we name this condition.
+once emitted they cannot be retracted.  Emitting $\bot$ in panel~(b) is safe,
+since every output still possible builds on it; emitting $a$ there would not
+be, since $b$ is still possible.
 
 \begin{definition}[Legal output]
 \label{def:exposable}
@@ -526,11 +524,10 @@ output $o$ is \emph{legal} when every output in the upper fiber \outrel
 $o$.
 \end{definition}
 
-Thus $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  When $o$ is
-not legal, a \commitment makes it legal by removing the rows whose outputs
+So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  When $o$ is
+not legal, a \commitment can make it legal by removing the rows whose outputs
 conflict with $o$.  Emitting $o$ only once it is legal keeps a run from
 contradicting $o$ later on, when the environment may already have acted on it.
-An output event makes that removal when it is needed:
 
 \begin{definition}[Output event, canonical \commitment]
 \label{def:output-event}
@@ -547,11 +544,10 @@ after which $o$ is legal.  In a functional table each input has only one row,
 so $x_o$ rules out those rows' inputs.
 \end{definition}
 
-An output event therefore always emits a legal output; it applies a
-\commitment exactly when its output was not already legal.  At a determined
-state the current output is the only future output, so it is legal; an event
-from a determined state always leads to another determined state with the same
-output.
+An output event thus always emits a legal output, and applies a \commitment
+exactly when its output was not already legal.  At a determined state the
+current output is the only future output, so it is legal, and every event
+leads to another determined state with the same output.
 
 \begin{figure}[t]
   \centering
@@ -611,7 +607,7 @@ output events.
 
 \paragraph{Runs and consistency.}
 Runs are the foundation of the consistency side of CALM.  A spec's runs are
-sequences of its events, like those that produce panels~(a)--(c).  Formally:
+sequences of its events, like those that produce panels~(a)--(c).
 
 \begin{definition}[Specification event, canonical run, \commitment-free]
 \label{def:run}
@@ -622,10 +618,9 @@ canonical state $\sigma_P(i)$ at some input $i$.  It is
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
-Input and output events are both relational selections, and selections
-commute; successive input selections reduce to the last, since each input
-extends the one before.  So a run's remainder table depends only on its last
-input and the outputs it emitted:
+Both kinds of event are relational selections, and selections commute, so a
+run's remainder table depends only on its last input and the outputs it
+emitted:
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -641,8 +636,7 @@ $aba$ \outrel both $\bot$ and $a$.  A run that emits $\bot$ at $ab\cdot$
 applies $x_\bot$ and keeps no row at $aba$, while a run that receives $aba$ and
 emits $a$ keeps $(aba,a)$, so the two runs can never be reconciled at $aba$.
 The argument uses only the table, its orders, and canonical runs, so the need
-for the \commitment is a property of the spec, not of any system.  We say when
-runs can be reconciled as follows.
+for the \commitment is a property of the spec, not of any system.
 
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
