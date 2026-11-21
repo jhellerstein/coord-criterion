@@ -421,53 +421,63 @@ later output reconciles the two.
 
 \begin{lemma}[Ordering concurrent events]
 \label{lem:order-commitment}
-Suppose that each output $o$ of an \spectype determines, for each pair of
-events $a$ and $b$, whether $o$ \emph{places $a$ before $b$}; that if
-$o\OutputOrd u$ and $o$ places $a$ before $b$, so does $u$; and that no output
-permitted at an input $j$ places two events in both orders.  If rows
-$(i_1,o_1)$ and $(i_2,o_2)$ have $j$ as a common \indesc, $o_1$ places $a$
-before $b$, and $o_2$ places $b$ before $a$, then the spec is not monotone.  If
+Fix an input $j$.  Suppose that each output $o$ of an \spectype has a relation
+$<_o$ on events, the pairs that $o$ places in order, such that
+\begin{enumerate}
+  \item $o\OutputOrd u$ implies ${<_o}\subseteq{<_u}$, and
+  \item no $u\in\fiber{j}$ has both $a<_u b$ and $b<_u a$.
+\end{enumerate}
+If rows $(i_1,o_1)$ and $(i_2,o_2)$ with $i_1\InputOrd j$ and $i_2\InputOrd j$
+have $a<_{o_1}b$ and $b<_{o_2}a$, then the spec is not monotone.  If
 $i_1=i_2=j$, the fiber at $j$ is not directed.
 \end{lemma}
 
 \begin{proof}
-A common \outnoun of $o_1$ and $o_2$ in $\fiber{j}$ would place $a$ before $b$
-and $b$ before $a$.  So the common-extension condition fails, and by
-Proposition~\ref{prop:common-expansion-form} so does Lifted Monotonicity.  When
-$i_1=i_2=j$, the same argument shows that $o_1$ and $o_2$ are incompatible in
-$\fiber{j}$.
+A common \outnoun $u$ of $o_1$ and $o_2$ in $\fiber{j}$ would have $a<_u b$
+and $b<_u a$ by~(1), which contradicts~(2).  So the common-extension condition
+fails, and by Proposition~\ref{prop:common-expansion-form} so does Lifted
+Monotonicity.  When $i_1=i_2=j$, the same argument shows that $o_1$ and $o_2$
+are incompatible in $\fiber{j}$.
 \end{proof}
 
 \begin{lemma}[Bounded number of values]
 \label{lem:bounded-values}
-Suppose that each output $o$ of an \spectype determines a set of values that
-$o$ \emph{decides}; that if $o\OutputOrd u$, then $u$ decides every value that
-$o$ decides; and that every output permitted at an input $j$ decides at most
-$k$ values.  If $k+1$ rows each decide a different value, and their inputs all
-\ingrow to $j$, then they cannot all grow to one output at $j$, so the spec is
+Fix an input $j$ and a number $k$.  Suppose that each output $o$ of an
+\spectype has a set $D(o)$ of values it decides, such that
+\begin{enumerate}
+  \item $o\OutputOrd u$ implies $D(o)\subseteq D(u)$, and
+  \item every $u\in\fiber{j}$ has at most $k$ values in $D(u)$.
+\end{enumerate}
+If $k+1$ rows $(i_r,o_r)$ with $i_r\InputOrd j$ each decide a different value
+$v_r\in D(o_r)$, then they cannot all grow to one output at $j$, so the spec is
 not monotone.
 \end{lemma}
 
 \begin{proof}
-A common \outnoun of the $k+1$ outputs in $\fiber{j}$ would decide all $k+1$
-values.  So the common-extension condition fails, and
-Proposition~\ref{prop:common-expansion-form} applies.
+A common \outnoun $u$ of the $k+1$ outputs in $\fiber{j}$ would have all
+$k+1$ values in $D(u)$ by~(1), which contradicts~(2).  So the common-extension
+condition fails, and Proposition~\ref{prop:common-expansion-form} applies.
 \end{proof}
 
 \begin{lemma}[Ruling out inputs]
 \label{lem:ruling-out}
-Suppose that each input of an \spectype determines a set of facts that it
-\emph{contains}, and each output $o$ a set of facts that $o$ \emph{rules out};
-that if $o\OutputOrd u$, then $u$ rules out every fact that $o$ rules out; and
-that no output permitted at an input rules out a fact that the input contains.
-If a row $(i,o)$ has an \indesc $j$ that contains a fact $o$ rules out, then
-the spec fails Relational Monotonicity, so it is not monotone.
+Let $F$ be a set of facts.  Suppose that each input $i$ of an \spectype has a
+set $C(i)\subseteq F$ of facts it contains, and each output $o$ a set
+$N(o)\subseteq F$ of facts it rules out, such that
+\begin{enumerate}
+  \item $o\OutputOrd u$ implies $N(o)\subseteq N(u)$, and
+  \item every row $(i,o)$ of the table has $N(o)\cap C(i)=\varnothing$.
+\end{enumerate}
+If a row $(i,o)$ and an input $j$ with $i\InputOrd j$ have
+$N(o)\cap C(j)\neq\varnothing$, then the spec fails Relational Monotonicity,
+so it is not monotone.
 \end{lemma}
 
 \begin{proof}
-An \outnoun of $o$ in $\fiber{j}$ would rule out a fact that $j$ contains, so
-none exists, and Relational Monotonicity fails at $i\InputOrd j$.  Lifted
-Monotonicity with $X=\{o\}$ is Relational Monotonicity, so it fails too.
+Suppose some $u\in\fiber{j}$ has $o\OutputOrd u$.  By~(1), $N(o)\subseteq
+N(u)$, so $N(u)$ meets $C(j)$, which contradicts~(2) for the row $(j,u)$.  So
+Relational Monotonicity fails at $i\InputOrd j$.  Lifted Monotonicity with
+$X=\{o\}$ is Relational Monotonicity, so it fails too.
 \end{proof}
 
 Consider a variant of the election in which the registrar may also announce

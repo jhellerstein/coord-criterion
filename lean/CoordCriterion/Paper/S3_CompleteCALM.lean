@@ -522,18 +522,18 @@ theorem «sec:patterns/accumulating-join» {I O : Type} [PO I] [PO O]
     sp.LiftedMono :=
   liftedMono_of_join join hl hr hc hR
 
-/-- **Lemma `lem:order-commitment`** (Ordering concurrent events).  "Suppose
-that each output `o` of an I/O specification determines, for each pair of
-events `a` and `b`, whether `o` places `a` before `b`; that if `o ⪯ u` and `o`
-places `a` before `b`, so does `u`; and that no output permitted at an input
-`j` places two events in both orders.  If rows `(i₁,o₁)` and `(i₂,o₂)` have `j`
-as a common input extension, `o₁` places `a` before `b`, and `o₂` places `b`
-before `a`, then the spec is not monotone.  If `i₁ = i₂ = j`, the fiber at `j`
-is not directed."  Proof: "A common output extension of `o₁` and `o₂` in
-`P(j)` would place `a` before `b` and `b` before `a`.  So the common-extension
-condition fails, and by Proposition `prop:common-expansion-form` so does Lifted
-Monotonicity.  When `i₁ = i₂ = j`, the same argument shows that `o₁` and `o₂`
-are incompatible in `P(j)`." -/
+/-- **Lemma `lem:order-commitment`** (Ordering concurrent events).  "Fix an
+input `j`.  Suppose that each output `o` of an I/O specification has a
+relation `<_o` on events, the pairs that `o` places in order, such that (1)
+`o ⪯ u` implies `<_o ⊆ <_u`, and (2) no `u ∈ P(j)` has both `a <_u b` and
+`b <_u a`.  If rows `(i₁,o₁)` and `(i₂,o₂)` with `i₁ ⊑ j` and `i₂ ⊑ j` have
+`a <_{o₁} b` and `b <_{o₂} a`, then the spec is not monotone.  If
+`i₁ = i₂ = j`, the fiber at `j` is not directed."  Proof: "A common output
+extension `u` of `o₁` and `o₂` in `P(j)` would have `a <_u b` and `b <_u a` by
+(1), which contradicts (2).  So the common-extension condition fails, and by
+Proposition `prop:common-expansion-form` so does Lifted Monotonicity.  When
+`i₁ = i₂ = j`, the same argument shows that `o₁` and `o₂` are incompatible in
+`P(j)`."  `<_o` is `before o`. -/
 theorem «lem:order-commitment» {I O E : Type} [PO I] [PO O] {sp : Spec I O}
     (before : O → E → E → Prop) (hmono : ∀ o u a b, o ≼ u → before o a b → before u a b)
     {j : I} (hasym : ∀ u a b, sp.P j u → before u a b → ¬ before u b a)
@@ -548,16 +548,17 @@ theorem «lem:order-commitment» {I O E : Type} [PO I] [PO O] {sp : Spec I O}
      subst e1; subst e2
      exact (order_conflict_fiber before hmono hasym h1 h2 hb1 hb2).1⟩
 
-/-- **Lemma `lem:bounded-values`** (Bounded number of values).  "Suppose that
-each output `o` of an I/O specification determines a set of values that `o`
-decides; that if `o ⪯ u`, then `u` decides every value that `o` decides; and
-that every output permitted at an input `j` decides at most `k` values.  If
-`k+1` rows each decide a different value, and their inputs all grow to `j`,
-then they cannot all grow to one output at `j`, so the spec is not
-monotone."  Proof: "A common output
-extension of the `k+1` outputs in `P(j)` would decide all `k+1` values.  So the
-common-extension condition fails, and Proposition `prop:common-expansion-form`
-applies."  "At most `k` values": covered by a list of length `≤ k`. -/
+/-- **Lemma `lem:bounded-values`** (Bounded number of values).  "Fix an input
+`j` and a number `k`.  Suppose that each output `o` of an I/O specification has
+a set `D(o)` of values it decides, such that (1) `o ⪯ u` implies
+`D(o) ⊆ D(u)`, and (2) every `u ∈ P(j)` has at most `k` values in `D(u)`.  If
+`k+1` rows `(i_r,o_r)` with `i_r ⊑ j` each decide a different value
+`v_r ∈ D(o_r)`, then they cannot all grow to one output at `j`, so the spec is
+not monotone."  Proof: "A common output extension `u` of the `k+1` outputs in
+`P(j)` would have all `k+1` values in `D(u)` by (1), which contradicts (2).  So
+the common-extension condition fails, and Proposition
+`prop:common-expansion-form` applies."  `D(o)` is `dec o`; "at most `k`
+values": covered by a list of length `≤ k`. -/
 theorem «lem:bounded-values» {I O V : Type} [PO I] [PO O] {sp : Spec I O}
     (dec : O → V → Prop) (hmono : ∀ o u v, o ≼ u → dec o v → dec u v) {k : Nat} {j : I}
     (hbound : ∀ u, sp.P j u → ∃ l : List V, l.length ≤ k ∧ ∀ v, dec u v → v ∈ l)
@@ -568,18 +569,19 @@ theorem «lem:bounded-values» {I O V : Type} [PO I] [PO O] {sp : Spec I O}
   ⟨bounded_no_common dec hmono hbound o v hv hd,
    bounded_values dec hmono hbound i o v hv hrow hj hd⟩
 
-/-- **Lemma `lem:ruling-out`** (Ruling out inputs).  "Suppose that each input
-of an I/O specification determines a set of facts that it contains, and each
-output `o` a set of facts that `o` rules out; that if `o ⪯ u`, then `u` rules
-out every fact that `o` rules out; and that no output permitted at an input
-rules out a fact that the input contains.  If a row `(i,o)` has an input
-extension `j` that contains a fact `o` rules out, then the spec fails
-Relational Monotonicity, so it is not monotone."  Proof: "An output extension
-of `o` in `P(j)` would rule out a fact that `j` contains, so none exists, and
-Relational Monotonicity fails at `i ⊑ j`.  Lifted Monotonicity with `X = {o}`
-is Relational Monotonicity, so it fails too."  The election example that
-follows (a final tally at `ab·`, closing the polls, and the list of all
-participants) is prose and is not formalized. -/
+/-- **Lemma `lem:ruling-out`** (Ruling out inputs).  "Let `F` be a set of
+facts.  Suppose that each input `i` of an I/O specification has a set
+`C(i) ⊆ F` of facts it contains, and each output `o` a set `N(o) ⊆ F` of facts
+it rules out, such that (1) `o ⪯ u` implies `N(o) ⊆ N(u)`, and (2) every row
+`(i,o)` of the table has `N(o) ∩ C(i) = ∅`.  If a row `(i,o)` and an input `j`
+with `i ⊑ j` have `N(o) ∩ C(j) ≠ ∅`, then the spec fails Relational
+Monotonicity, so it is not monotone."  Proof: "Suppose some `u ∈ P(j)` has
+`o ⪯ u`.  By (1), `N(o) ⊆ N(u)`, so `N(u)` meets `C(j)`, which contradicts (2)
+for the row `(j,u)`.  So Relational Monotonicity fails at `i ⊑ j`.  Lifted
+Monotonicity with `X = {o}` is Relational Monotonicity, so it fails too."
+`C(i)` is `has i`, `N(o)` is `rules o`, and the shared fact is `f`.  The
+election example that follows (a final tally at `ab·`, closing the polls, and
+the list of all participants) is prose and is not formalized. -/
 theorem «lem:ruling-out» {I O F : Type} [PO I] [PO O] {sp : Spec I O}
     (has : I → F → Prop) (rules : O → F → Prop)
     (hmono : ∀ o u f, o ≼ u → rules o f → rules u f)
