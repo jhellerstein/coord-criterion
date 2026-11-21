@@ -4,6 +4,7 @@
 \usepackage{enumitem}
 \usepackage{xspace}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{tikz}
 \usepackage{colortbl}
 
@@ -1060,23 +1061,6 @@ two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
 so does every finite family of such rows, by replacing two rows at a time with
 one row at $j$ that \outrel both.
 
-Four patterns cover many specs.  When outputs report facts that only
-accumulate, and two outputs permitted at one input can be combined, the spec
-is lifted monotone, as the route sets above are.  When an output orders two
-events that the input leaves unordered and the spec permits either order, the
-two orders have no common extension, so the spec is not lifted monotone, as
-the serial orders above show.  When outputs decide values and the spec allows
-at most $k$ distinct values to be decided, the spec is not lifted monotone.
-Any $k+1$ rows that each decide a different value cannot all grow to one
-output once their inputs are combined.  Consensus is the case $k=1$.  When an
-output blocks an input before it arrives, as a registrar that blocks $v_3$'s
-ballot at $ab\cdot$ does, it conflicts with an output that accepts that input
-when it arrives, so the spec is not lifted monotone.  Accepting a ballot on
-arrival reports evidence; blocking it before arrival claims that it will not
-count.  Closing the polls blocks every ballot not yet received, and it is a
-\commitment.  Once every listed voter has voted, no ballot remains to arrive,
-and closing the polls blocks nothing.
-
 % ======================================================================
 \section{Distributed Execution}
 \label{sec:distributed-execution}
@@ -1580,6 +1564,26 @@ applying either CALM theorem.  The full paper~\cite{hellerstein2026completecalmf
 gives each mapping in detail, with deployments, response
 obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
 and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.
+Many of these mappings follow one of four patterns, which
+Table~\ref{tab:patterns} lists with the design options each leaves.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{.2\columnwidth}>{\raggedright\arraybackslash}p{.27\columnwidth}c>{\raggedright\arraybackslash}p{.38\columnwidth}@{}}
+    \toprule
+    Outputs that\ldots & Examples & Mon. & Design options \\
+    \midrule
+    accumulate facts & route sets, broadcast, CRDT counters & yes & emit as evidence arrives \\
+    order concurrent events & serial schedules, total-order broadcast, Lost Update & no & report only the causal order, or let one participant order \\
+    decide at most $k$ values & consensus ($k=1$), leader election, unique IDs & no & let one authority make each decision \\
+    block an input before it arrives & closing the polls, a final tally & no & wait for a report from every listed participant, or commit \\
+    \bottomrule
+  \end{tabular}
+  \caption{Four patterns that settle Lifted Monotonicity (Mon.) in many specs.}
+  \label{tab:patterns}
+\end{table}
 
 \subsection{Query monotonicity}
 \label{sec:query-instance}
@@ -1680,7 +1684,8 @@ The failure takes two transactions on different sides of a partition that
 each read the initial version of an item and then write it.  Each side can
 answer its read only with that version, since neither has received the
 other's write, and no complete history containing both answers avoids Lost
-Update.
+Update: each answer places its own transaction's write first, the ordering
+pattern of Table~\ref{tab:patterns}.
 
 The timestamp condition in the theorem is required, correcting an error in
 the extended HAT paper~\cite{bailis2013hatextended}.  That paper's pseudocode
@@ -1740,7 +1745,8 @@ In Bailis et al.'s payroll example, employee IDs must be unique, yet two
 replicas can concurrently assign the same unused ID (say, 7) to two employees.
 The history with both assignments \inrel each history with only one.  But every state that \outrel both single-assignment
 states has two employees with ID~7, violating the invariant, so $T$ is not
-invariant confluent.
+invariant confluent.  Each ID decides at most one employee, the case $k=1$ of
+Table~\ref{tab:patterns}.
 
 \subsection{Operational models and scope}
 \label{sec:scope}
