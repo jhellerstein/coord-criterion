@@ -154,7 +154,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 91 & 10851\\
+unclassified & 91 & 10859\\
 explanation & 4 & 344\\
 signposting & 7 & 273\\
 formal caution & 1 & 188\\
@@ -168,9 +168,9 @@ related-work detail & 1 & 61\\
 5. unclassified, 553 words: \textit{This is proper coordination in which the upstream itself needs ...}\par
 6. unclassified, 220 words: \textit{events only remove rows, so dropping them can only keep ...}\par
 7. unclassified, 215 words: \textit{The environment observes nothing from a event.}\par
-8. formal caution, 188 words: \textit{The current row [math] remains, since [math] itself, so the ...}\par
-9. unclassified, 184 words: \textit{In any history of a monotone functional specification, every participant ...}\par
-10. unclassified, 184 words: \textit{The theorem has two parts.}\par
+8. unclassified, 192 words: \textit{The theorem has two parts.}\par
+9. formal caution, 188 words: \textit{The current row [math] remains, since [math] itself, so the ...}\par
+10. unclassified, 184 words: \textit{In any history of a monotone functional specification, every participant ...}\par
 11. unclassified, 182 words: \textit{A system's strategies select the events of an actual execution; ...}\par
 12. signposting, 166 words: \textit{See Appendix .}\par
 }\par\medskip
@@ -664,7 +664,7 @@ so $x_o$ rules out those rows' inputs.}
 \end{definition}
 
 An output event therefore always emits a legal output; it applies a
-\commitment exactly when its output was not already legal. \removednote{\textbf{formal caution}, 188 words, rank 8; \textit{The current row [math] remains, since [math] itself, so the event always ends at a specification ...}} \removednote{\textbf{unclassified}, 86 words, rank 31; \textit{Input and output events move a spec from state to state.}; labels def:specification-event, def:transition-system} \textcolor{newblue}{For example, under the equality order of Figure~\ref{fig:nonmonotone-frame},
+\commitment exactly when its output was not already legal. \removednote{\textbf{formal caution}, 188 words, rank 9; \textit{The current row [math] remains, since [math] itself, so the event always ends at a specification ...}} \removednote{\textbf{unclassified}, 86 words, rank 31; \textit{Input and output events move a spec from state to state.}; labels def:specification-event, def:transition-system} \textcolor{newblue}{For example, under the equality order of Figure~\ref{fig:nonmonotone-frame},
 $x_\bot$ at $ab\cdot$ removes $(aba,a)$ and $(abb,b)$.} \textcolor{newblue}{At a
 determined state the current output is the only future output, so it is legal;
 an event from a determined state always leads to another determined state
@@ -1143,7 +1143,7 @@ to the system (\S\ref{sec:systems}).}
 \textcolor{newblue}{For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
-arrival order, or outputs emitted.} \removednote{\textbf{unclassified}, 184 words, rank 9; \textit{In any history of a monotone functional specification, every participant whose current input at a consistent ...}; labels cor:convergence} \textcolor{newblue}{This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
+arrival order, or outputs emitted.} \removednote{\textbf{unclassified}, 184 words, rank 10; \textit{In any history of a monotone functional specification, every participant whose current input at a consistent ...}; labels cor:convergence} \textcolor{newblue}{This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
 asks of replicated state.} \textcolor{newblue}{The semilattice merge of CRDTs suffices for it but
 is not needed: it follows directly from any monotone functional
 spec.}
@@ -1560,12 +1560,15 @@ Complete CALM provides a unified lens for many results across literatures. For t
 applying either CALM theorem. \textcolor{newblue}{The full paper~\cite{hellerstein2026completecalmfull}
 gives each mapping in detail, with deployments, response
 obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
-and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.} \textcolor{newblue}{Three patterns of non-monotonicity recur in the mappings below and in
-coordinated systems generally: outputs that order concurrent events, as serial
-schedules, total-order broadcast, and Lost Update do; outputs that choose a
-proper subset of competing values, as consensus, leader election, and unique
-IDs do; and outputs that block an input before it arrives, as closing the
-polls and a final tally do.}
+and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.} Three patterns of non-monotonicity recur in the mappings below and in
+coordinated systems generally. \textcolor{newblue}{In each, an output settles something the input
+has not: outputs that order concurrent events, as serial schedules,
+total-order broadcast, and Lost Update do; outputs that choose a proper subset
+of competing values, as consensus, leader election, and unique IDs do; and
+outputs that block an input before it arrives, as closing the polls and a
+final tally do.} A system that emits such an output either enforces it with a
+\commitment, as closing the polls does, or leaves it unenforced, which can
+result in observable inconsistency. The mappings below include both.
 
 \subsection{Query monotonicity}
 \label{sec:query-instance}
@@ -1621,8 +1624,10 @@ receiving more updates never yields an answer that fails to extend an earlier
 one.} \textcolor{newblue}{For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{Exposing an element
-as present blocks its removal before it arrives, the third pattern above.} \removednote{\textbf{unclassified}, 38 words, rank 58; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 14; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 99; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{The CRDT's join is one
+test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{An answer that
+exposes an element as present blocks its removal before it arrives, the third
+pattern above.} \textcolor{newblue}{The two-phase set does not enforce the block: it accepts the
+removal, and the answer is contradicted.} \removednote{\textbf{unclassified}, 38 words, rank 58; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 14; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 99; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).}
 
@@ -1657,7 +1662,7 @@ contains, at each input, the output that the read rule gives. \removednote{\text
 Suppose each transaction's timestamp exceeds that of every version it reads. \textcolor{newblue}{For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so some system for $\Spec_L$ has
 Availability for $E$ and Partition Consistency.} \textcolor{newblue}{For any level that proscribes
-Lost Update, such as snapshot isolation, repeatable read, and serializability, $\Spec_L$ does not satisfy Lifted Monotonicity for any explicit relation $E$ answering every read; hence no system has Availability for such an $E$ and Partition Consistency.} \removednote{\textbf{unclassified}, 184 words, rank 10; \textit{The theorem has two parts.}}
+Lost Update, such as snapshot isolation, repeatable read, and serializability, $\Spec_L$ does not satisfy Lifted Monotonicity for any explicit relation $E$ answering every read; hence no system has Availability for such an $E$ and Partition Consistency.} \removednote{\textbf{unclassified}, 192 words, rank 8; \textit{The theorem has two parts.}}
 \end{theorem}
 \textcolor{newblue}{\proofinfull}
 
@@ -1666,7 +1671,8 @@ each read the initial version of an item and then write it.} \textcolor{newblue}
 answer its read only with that version, since neither has received the
 other's write, and no complete history containing both answers avoids Lost
 Update: each answer orders its own transaction before the other's write, the
-first pattern of \S\ref{sec:instances}.}
+first pattern of \S\ref{sec:instances}, and the read rule enforces no single
+order.}
 
 The timestamp condition in the theorem is required, correcting an error in
 the extended HAT paper~\cite{bailis2013hatextended}. That paper's pseudocode
@@ -1723,8 +1729,10 @@ Monotonicity, that is, if and only if the runs of $\Spec_{\mathcal I}$ are consi
 \textcolor{newblue}{In Bailis et al.'s payroll example, employee IDs must be unique, yet two
 replicas can concurrently assign the same unused ID (say, 7) to two employees.} \textcolor{newblue}{The history with both assignments \inrel each history with only one.} \textcolor{newblue}{But every state that \outrel both single-assignment
 states has two employees with ID~7, violating the invariant, so $T$ is not
-invariant confluent.} \textcolor{newblue}{Assigning ID~7 chooses one employee among those competing
-for it, the second pattern of \S\ref{sec:instances}.} \removednote{\textbf{unclassified}, 2535 words, rank 1; \textit{A system must reserve IDs, reject one creation, or weaken the invariant.}; labels sec:operational-models, def:projection, prop:projection, def:automaton-system, prop:automaton-system, def:confluent-automaton, prop:automaton-confluence, prop:declared-specification}
+invariant confluent.} \textcolor{newblue}{Unique IDs ask each assignment of ID~7 to choose one
+employee among those competing for it, the second pattern of
+\S\ref{sec:instances}.} Without a \commitment, each replica chooses its own,
+and the merged state violates the invariant. \removednote{\textbf{unclassified}, 2535 words, rank 1; \textit{A system must reserve IDs, reject one creation, or weaken the invariant.}; labels sec:operational-models, def:projection, prop:projection, def:automaton-system, prop:automaton-system, def:confluent-automaton, prop:automaton-confluence, prop:declared-specification}
 
 \subsection{Operational models and scope}
 \label{sec:scope}
