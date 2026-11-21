@@ -155,7 +155,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 91 & 9083\\
+unclassified & 91 & 9092\\
 signposting & 7 & 2808\\
 explanation & 4 & 344\\
 formal caution & 1 & 188\\
@@ -167,7 +167,7 @@ related-work detail & 1 & 61\\
 3. unclassified, 909 words: \textit{The registrar shows how a system's own can block a ...}\par
 4. unclassified, 592 words: \textit{The extended paper's algorithm for monotonic atomic view has the ...}\par
 5. unclassified, 553 words: \textit{This is proper coordination in which the upstream itself needs ...}\par
-6. unclassified, 536 words: \textit{The condition that characterizes consistency of runs is a property ...}\par
+6. unclassified, 545 words: \textit{The condition that characterizes consistency of runs is a property ...}\par
 7. unclassified, 246 words: \textit{Consider a variant of the election whose outputs record which ...}\par
 8. unclassified, 220 words: \textit{events only remove rows, so dropping them can only keep ...}\par
 9. unclassified, 215 words: \textit{The environment observes nothing from a event.}\par
@@ -1067,7 +1067,7 @@ asks whether runs can be continued to a common state. Lifted
 Monotonicity is checked on the table itself, and pairs of rows suffice: if every
 two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
 so does every finite family of such rows, by replacing two rows at a time with
-one row at $j$ that \outrel both. \removednote{\textbf{unclassified}, 536 words, rank 6; \textit{The condition that characterizes consistency of runs is a property of the spec alone: Lifted Monotonicity, ...}; labels sec:patterns, lem:accumulating, lem:order-commitment, lem:bounded-values}
+one row at $j$ that \outrel both. \removednote{\textbf{unclassified}, 545 words, rank 6; \textit{The condition that characterizes consistency of runs is a property of the spec alone: Lifted Monotonicity, ...}; labels sec:patterns, lem:accumulating, lem:order-commitment, lem:bounded-values}
 
 
 \section{Distributed Execution}
@@ -1571,7 +1571,7 @@ and applications to distributed-systems protocols such as registers, $k$-set agr
     \toprule
     Outputs that\ldots & Examples & Mon. & Design options \\
     \midrule
-    accumulate facts & route sets, broadcast, CRDT counters & yes & emit as evidence arrives \\
+    grow in a join semilattice & route sets, broadcast, CRDT state, monotone queries & yes & emit as evidence arrives \\
     order concurrent events & serial schedules, total-order broadcast, Lost Update & no & report only the causal order, or let one participant order \\
     decide at most $k$ values & consensus ($k=1$), leader election, unique IDs & no & let one authority make each decision \\
     block an input before it arrives & closing the polls, a final tally & no & wait for a report from every listed participant, or commit \\
@@ -1591,8 +1591,10 @@ and output orders. \textcolor{newblue}{The CALM Theorem of Ameloot et al.\ is st
 particular operational model: a query can be evaluated on a network of
 relational transducers without coordination exactly when it is monotone, under
 that model's assumptions about data placement and
-execution~\cite{ameloot2013relational,ameloot2015weaker}.} \removednote{\textbf{unclassified}, 1054 words, rank 2; \textit{Functional CALM restates the result as a property of a spec, so that it can be ...}} \removednote{\textbf{unclassified}, 56 words, rank 47; \textit{A CRDT uses join semilattices to guarantee that replicas that have received the same updates converge ...}} \textcolor{newblue}{Functional CALM
-restates it as a property of a spec but does not replace those operational
+execution~\cite{ameloot2013relational,ameloot2015weaker}.} \removednote{\textbf{unclassified}, 1054 words, rank 2; \textit{Functional CALM restates the result as a property of a spec, so that it can be ...}} \removednote{\textbf{unclassified}, 56 words, rank 47; \textit{A CRDT uses join semilattices to guarantee that replicas that have received the same updates converge ...}} \textcolor{newblue}{In the positive
+direction, a monotone query's answers grow under set inclusion as input
+arrives (Table~\ref{tab:patterns}).} \textcolor{newblue}{Functional CALM restates the
+theorem as a property of a spec but does not replace those operational
 details.} \textcolor{newblue}{When transducers know how data is placed, more queries become
 coordination-free; Ameloot et al.\ characterized these classes by
 domain-distinct and domain-disjoint
@@ -1628,15 +1630,15 @@ monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}. \removednote{\textbf{unclassified}, 174 words, rank 13; \textit{Their example of an unsafe query uses a two-phase set, whose state [math] merges by componentwise ...}} \removednote{\textbf{unclassified}, 153 words, rank 16; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 99; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{Functional CALM makes the proposed test precise.}
 
 \textcolor{newblue}{We take as input the set of updates a replica has received, ordered by inclusion;
-the replica's state is their join in the semilattice.} \textcolor{newblue}{The output is the answer
+the replica's state is their join in the semilattice, so the state
+only grows (Table~\ref{tab:patterns}).} \textcolor{newblue}{The output is the answer
 to a client's query, so the client-visible spec is a function: query the state
 those updates produce.} \textcolor{newblue}{By Functional CALM, its runs are consistent exactly when
 receiving more updates never yields an answer that fails to extend an earlier
 one.} \textcolor{newblue}{For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{The query for added
-elements, $A$, passes: its answers only accumulate (Table~\ref{tab:patterns}).} \textcolor{newblue}{The CRDT's join is one
+test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).}
 

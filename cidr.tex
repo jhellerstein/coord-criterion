@@ -1575,7 +1575,7 @@ Table~\ref{tab:patterns} lists them with the design options each leaves.
     \toprule
     Outputs that\ldots & Examples & Mon. & Design options \\
     \midrule
-    accumulate facts & route sets, broadcast, CRDT counters & yes & emit as evidence arrives \\
+    grow in a join semilattice & route sets, broadcast, CRDT state, monotone queries & yes & emit as evidence arrives \\
     order concurrent events & serial schedules, total-order broadcast, Lost Update & no & report only the causal order, or let one participant order \\
     decide at most $k$ values & consensus ($k=1$), leader election, unique IDs & no & let one authority make each decision \\
     block an input before it arrives & closing the polls, a final tally & no & wait for a report from every listed participant, or commit \\
@@ -1595,8 +1595,10 @@ and output orders.  The CALM Theorem of Ameloot et al.\ is stated in a
 particular operational model: a query can be evaluated on a network of
 relational transducers without coordination exactly when it is monotone, under
 that model's assumptions about data placement and
-execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
-restates it as a property of a spec but does not replace those operational
+execution~\cite{ameloot2013relational,ameloot2015weaker}.  In the positive
+direction, a monotone query's answers grow under set inclusion as input
+arrives (Table~\ref{tab:patterns}).  Functional CALM restates the
+theorem as a property of a spec but does not replace those operational
 details.  When transducers know how data is placed, more queries become
 coordination-free; Ameloot et al.\ characterized these classes by
 domain-distinct and domain-disjoint
@@ -1633,15 +1635,15 @@ monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
 
 We take as input the set of updates a replica has received, ordered by inclusion;
-the replica's state is their join in the semilattice.  The output is the answer
+the replica's state is their join in the semilattice, so the state
+only grows (Table~\ref{tab:patterns}).  The output is the answer
 to a client's query, so the client-visible spec is a function: query the state
 those updates produce.  By Functional CALM, its runs are consistent exactly when
 receiving more updates never yields an answer that fails to extend an earlier
 one.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.  The query for added
-elements, $A$, passes: its answers only accumulate (Table~\ref{tab:patterns}).  The CRDT's join is one
+test: a later removal grows $R$ and shrinks the answer.  The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).
 

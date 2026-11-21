@@ -150,7 +150,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-733 entries.
+734 entries.
 
 ### §2 Functional CALM
 
@@ -274,8 +274,9 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«prop:exposure-boundary»` | theorem | **Prop. |
 | `«prop:exposure-boundary/common-expansion»` | theorem | Prop. |
 | `«prop:exposure-boundary/functional»` | theorem | After Prop. |
-| `«lem:accumulating»` | theorem | **Lemma `lem:accumulating`** (Accumulating outputs). |
-| `«sec:patterns/accumulating-join»` | theorem | "The proof uses only that each fiber contains, with any two outputs, a common output extension of both. |
+| `«lem:accumulating»` | theorem | **Lemma `lem:accumulating`** (Growth in a semilattice). |
+| `«sec:patterns/accumulating-sets»` | theorem | "The common case is sets of facts ordered by inclusion, with union as the join; counters under `≤`, with the maximum as the join, are another." The set case: |
+| `«sec:patterns/accumulating-join»` | theorem | "The proof uses only that each fiber contains, with any two outputs, a common output extension of both, so the join need not be least." Lean assumes Relation… |
 | `«lem:order-commitment»` | theorem | **Lemma `lem:order-commitment`** (Ordering concurrent events). |
 | `«lem:bounded-values»` | theorem | **Lemma `lem:bounded-values`** (Bounded number of values). |
 | `«lem:blocking»` | theorem | **Lemma `lem:blocking`** (Blocking before arrival). |

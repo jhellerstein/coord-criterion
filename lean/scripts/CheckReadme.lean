@@ -113,6 +113,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:exposure-boundary/common-expansion»
 #check @CC.Paper.«prop:exposure-boundary/functional»
 #check @CC.Paper.«lem:accumulating»
+#check @CC.Paper.«sec:patterns/accumulating-sets»
 #check @CC.Paper.«sec:patterns/accumulating-join»
 #check @CC.Paper.«lem:order-commitment»
 #check @CC.Paper.«lem:bounded-values»

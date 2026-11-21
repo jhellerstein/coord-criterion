@@ -497,25 +497,35 @@ theorem «prop:exposure-boundary/functional» {I O : Type} [PO I] [PO O] {sp : S
 section ThreePatterns
 open CC.Apps
 
-/-- **Lemma `lem:accumulating`** (Accumulating outputs).  "Suppose the outputs
-of an I/O specification are sets of facts ordered by inclusion.  If every
+/-- **Lemma `lem:accumulating`** (Growth in a semilattice).  "Suppose the
+outputs of an I/O specification form a join semilattice under `⪯`.  If every
 output permitted at an input is still permitted at each input extension of
-that input, and the union of two outputs permitted at one input is permitted
+that input, and the join of two outputs permitted at one input is permitted
 there, then the spec is monotone."  Proof: "Take `i ⊑ j` and a nonempty finite
 `X ⊆ P(i)`.  Each member of `X` is permitted at `j`, so by induction on the
-size of `X` their union is permitted at `j`, and it extends every member of
-`X`."  Sets of facts are `ESet F`. -/
-theorem «lem:accumulating» {I F : Type} [PO I] {sp : Spec I (ESet F)}
+size of `X` their join is permitted at `j`, and it extends every member of
+`X`."  `join` is any binary operation giving an upper bound of its arguments
+(`hl`, `hr`); leastness is not used. -/
+theorem «lem:accumulating» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (join : O → O → O) (hl : ∀ a b, a ≼ join a b) (hr : ∀ a b, b ≼ join a b)
+    (hgrow : ∀ i j o, i ≼ j → sp.P i o → sp.P j o)
+    (hjoin : ∀ j a b, sp.P j a → sp.P j b → sp.P j (join a b)) : sp.LiftedMono :=
+  liftedMono_of_join join hl hr hjoin (fun i j o hij ho => ⟨o, hgrow i j o hij ho, PO.refl o⟩)
+
+/-- "The common case is sets of facts ordered by inclusion, with union as the
+join; counters under `≤`, with the maximum as the join, are another."  The set
+case: outputs `ESet F` under inclusion with `ESet.union`
+(`accumulating_monotone`); the counter case is
+`«tab:classical-problems/counter»`. -/
+theorem «sec:patterns/accumulating-sets» {I F : Type} [PO I] {sp : Spec I (ESet F)}
     (hgrow : ∀ i j o, i ≼ j → sp.P i o → sp.P j o)
     (hunion : ∀ j a b, sp.P j a → sp.P j b → sp.P j (ESet.union a b)) : sp.LiftedMono :=
   accumulating_monotone hgrow hunion
 
 /-- "The proof uses only that each fiber contains, with any two outputs, a
-common output extension of both.  The lemma therefore holds for any output
-order and any binary operation with that property, such as the maximum of two
-counter values under `≤`."  Lean assumes Relational Monotonicity in place of
-"still permitted at each input extension", which is weaker; the counter case
-is `«tab:classical-problems/counter»`. -/
+common output extension of both, so the join need not be least."  Lean
+assumes Relational Monotonicity in place of "still permitted at each input
+extension", which is weaker. -/
 theorem «sec:patterns/accumulating-join» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (join : O → O → O) (hl : ∀ a b, a ≼ join a b) (hr : ∀ a b, b ≼ join a b)
     (hc : ∀ j a b, sp.P j a → sp.P j b → sp.P j (join a b)) (hR : sp.RelMono) :

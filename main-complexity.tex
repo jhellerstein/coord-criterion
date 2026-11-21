@@ -1399,8 +1399,9 @@ Proposition~\ref{prop:functional-exposure-boundary}.\color{black}
 \label{sec:patterns}
 
 \color{black}\cxtag{complete-calm:35}{N/M}\cxbar{complete-calm-35}{0.4 0.4 1}{s}Many specs follow one of four patterns, and each pattern settles Lifted
-Monotonicity directly.  In the first, outputs report facts that only
-accumulate, as the route sets of Figure~\ref{fig:ambiguity-frames} do.  In the
+Monotonicity directly.  In the first, outputs grow in a join
+semilattice, as the route sets of Figure~\ref{fig:ambiguity-frames} do under
+union.  In the
 second, an output orders two events that the input leaves unordered, as the
 serial orders of the same figure do.  In the third, outputs decide values, and
 the spec bounds how many distinct values may be decided, as consensus allows
@@ -1409,24 +1410,24 @@ closing the polls blocks every ballot not yet received.  The first pattern gives
 Lifted Monotonicity, and each of the other three gives a witness to its
 failure.\cxbar{complete-calm-35}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\begin{lemma}[Accumulating outputs]
+\color{black}\begin{lemma}[Growth in a semilattice]
 \label{lem:accumulating}
-\cxtag{complete-calm:36}{N/S}Suppose the outputs of an \spectype are sets of facts ordered by inclusion.  If
-every output permitted at an input is still permitted at each \indesc of that
-input, and the union of two outputs permitted at one input is permitted there,
-then the spec is monotone.\color{black}
+\cxtag{complete-calm:36}{N/S}Suppose the outputs of an \spectype form a join semilattice under
+$\OutputOrd$.  If every output permitted at an input is still permitted at each
+\indesc of that input, and the join of two outputs permitted at one input is
+permitted there, then the spec is monotone.\color{black}
 \end{lemma}
 
 \color{black}\begin{proof}
 \cxtag{complete-calm:37}{N/S}Take $i\InputOrd j$ and a nonempty finite $X\subseteq\fiber{i}$.  Each member
-of $X$ is permitted at $j$, so by induction on the size of $X$ their union is
+of $X$ is permitted at $j$, so by induction on the size of $X$ their join is
 permitted at $j$, and it \outrel every member of $X$.\color{black}
 \end{proof}
 
-\color{blue!75!black}\cxtag{complete-calm:38}{B/S}The proof uses only that each fiber contains, with any two outputs, a common
-\outnoun of both.  The lemma therefore holds for any output order and any
-binary operation with that property, such as the maximum of two counter
-values under $\leq$.\color{black}
+\color{blue!75!black}\cxtag{complete-calm:38}{B/S}The common case is sets of facts ordered by inclusion, with union as the join;
+counters under $\leq$, with the maximum as the join, are another.  The proof
+uses only that each fiber contains, with any two outputs, a common \outnoun of
+both, so the join need not be least.\color{black}
 
 \color{black}\cxtag{complete-calm:39}{N/M}\cxbar{complete-calm-39}{0.4 0.4 1}{s}Two events are \emph{concurrent} in an input when the input does not order
 them, as for transactions $A$ and $B$ at input $\{A,B\}$.  If the spec lets an
@@ -5783,8 +5784,8 @@ these specs.  We cite them where they bear on an example.\color{black}
 \label{app:classical-patterns}
 
 \color{black}\cxtag{classical-problems:2}{N/M}\cxbar{classical-problems-2}{0.4 0.4 1}{s}Many classical specs follow one of the four patterns of
-Section~\ref{sec:patterns}: outputs that only accumulate
-(Lemma~\ref{lem:accumulating}), outputs that order concurrent events
+Section~\ref{sec:patterns}: outputs that grow in a join
+semilattice (Lemma~\ref{lem:accumulating}), outputs that order concurrent events
 (Lemma~\ref{lem:order-commitment}), outputs that decide a bounded number of
 values (Lemma~\ref{lem:bounded-values}), and outputs that block inputs before
 they arrive (Lemma~\ref{lem:blocking}).  When one of the last three applies,
@@ -5855,7 +5856,7 @@ closed sets is causally closed, so Lemma~\ref{lem:accumulating} applies.\cxbar{c
 of increments and outputs a count, ordered by $\leq$.  A count is permitted
 when it is at most the number of increments.  A permitted count stays
 permitted as increments arrive, and the larger of two permitted counts is
-permitted, so the maximum form of Lemma~\ref{lem:accumulating} applies.\color{black}
+permitted, so Lemma~\ref{lem:accumulating} applies with the maximum as the join.\color{black}
 
 \color{black}\cxtag{classical-problems:7}{N/M}\cxbar{classical-problems-7}{0.4 0.4 1}{s}\emph{Total-order broadcast}~\cite{defago2004total} has the inputs of reliable
 broadcast, but an output is a delivery sequence of distinct broadcast
