@@ -1,18 +1,28 @@
 # Appendix G (Classical Problems in Distributed Computing): status notes
 
-## Update (later session)
+## Status at merge into main
 
-Branch `classical-problems-2` now has main merged and the author's decisions
-applied: consensus per-slot local commitments; queue outputs as partially
-ordered dequeue histories under prefix; patterns moved to main body §3.4
-("Four patterns", label sec:patterns) with the new Lemma lem:blocking
-(blocking before arrival, §2 election example) and a CIDR paragraph; search
-structures with weakened condition (2), searches stop at occurrences, and
-Prop. prop:blink proving (H) for a B-link model (Lean Appendix/BLink.lean);
-leader election reframed (expected non-monotone spec first, then the known
-population via All, Ameloot, Baccaert–Ketsman, availability caveat);
-shared-memory paragraph reframed (positive half of Herlihy via a monotonicity
-test, impossibility half a translation of the valency proof). The material
+Merged from `classical-problems-2`. Final shape:
+- Main §6 and CIDR §6 open with three patterns of non-monotonicity (ordering
+  concurrent events; choosing a proper subset of competing values; blocking an
+  input before it arrives), enforced with a commitment or left unenforced
+  (observable inconsistency). Mappings name their pattern (Baccaert-Ketsman,
+  CRDT two-phase set, HAT Lost Update, payroll).
+- Appendix G "Patterns and problems" holds the four lemmas (growth in a join
+  semilattice, ordering, proper subset, blocking before arrival), the
+  election example, consequences, and a note that centralizing a commitment
+  changes who makes it, not whether it is required.
+- Consensus: per-slot local commitments under a fixed authority. Shared
+  memory: positive half of Herlihy via monotonicity test (CAS, test-and-set),
+  impossibility half a translation of the valency proof. Leader election:
+  expected spec not monotone; known population (All) commitment-free;
+  availability caveat; Baccaert-Ketsman Prop. 37, Ex. 6, Thm. 1.
+- Queue outputs are partially ordered dequeue histories under prefix.
+- Search structures: weakened condition (2), searches stop at occurrences,
+  Prop. prop:blink ((H) proved for a B-link model, Lean Appendix/BLink.lean).
+- Bib entries for Appendix G verified (Crossref, OpenAlex, USENIX).
+Not done: one-pointer root-growth remark (unverified, omitted).
+The material
 below records the earlier state and is partly superseded.
 
 Recorded 2026-11-21 so nuance from the helper threads is not lost.
