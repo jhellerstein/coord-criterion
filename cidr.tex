@@ -285,8 +285,8 @@ We make contributions in four categories:
 
 \noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
-        \spectype[s], which admit runs of input, output
-        and \commitment events. Consistency is defined as
+        \spectype[s], whose runs are sequences of input and output events;
+        systems add \commitment events of their own. Consistency is defined as
         confluence of a spec's runs, unifying general consistency models,
         application-specific requirements, and their distributed executions.
 
@@ -503,20 +503,18 @@ change in the output order is Functional CALM in miniature: the spec is monotone
 under the original order, so later outputs \outrelbase every earlier one; under
 the equality order it is non-monotone, and some outputs can be emitted only with a \commitment.
 
-To see why, we follow the events.  A \emph{run} is a sequence of input, output and \commitment
-events from a starting state, like the sequences that produce the panels of
-Figure~\ref{fig:election-frames}.  Under the equality order, rows
+To see why, we follow the events.  A spec's \emph{canonical runs}, or just
+\emph{runs}, are sequences of input and output events from a starting state,
+like those that produce panels~(a)--(c).  A system's runs may also contain
+\commitment events of its own, like the registrar's in panel~(d)
+(\S\ref{sec:systems}).  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
 $aba$ \outrel both $\bot$ and $a$.  So a run that emits $\bot$ at $ab\cdot$ and
 a run that receives $aba$ and emits $a$ can never be reconciled at $aba$.
 Emitting $\bot$ requires the \commitment that rules out $aba$ and
 $abb$ to make $\bot$ legal; without it, the two runs would be inconsistent.
-The argument uses only the table and its orders, so the need for the \commitment is a property of the spec, not of any system.
-\jmh{We used to be papering over the fact that the poll-closing example was a commitment event. I added commitment events to
-that discussion. But now the final sentence doesn't work.}
-
-\jmh{This is also a bit problematic in the face of commitment events. Should we introduce the idea
-of canonical runs in the previous sentence, or this one?}
+The argument uses only the table, its orders, and canonical runs, so the need
+for the \commitment is a property of the spec, not of any system.
 Runs are the foundation of the consistency side of CALM.  Input and output
 events form a transition system over specification states, and the runs of a
 spec are \emph{consistent} when they are \emph{confluent}: runs whose inputs have a

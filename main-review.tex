@@ -200,8 +200,8 @@ properly placed.}
 \subsection{The model: \Spectype[s]}
 \textcolor{reviewed}{In systems, as in life, our possibilities narrow over time.} \textcolor{reviewed}{Sometimes the world
 moves on, and possibilities are lost to us.} \textcolor{reviewed}{Sometimes possibilities disappear
-because we must decide among them.} \textcolor{reviewed}{A decision is incidental when
-every possibility it removes is covered by a remaining alternative.} \textcolor{reviewed}{A
+because we must decide among them.} A decision is incidental when
+every possibility it removes is covered by a remaining alternative. \textcolor{reviewed}{A
 decision is fateful when it rules out a possibility that no remaining alternative covers.} \textcolor{reviewed}{When must a system make a fateful decision?}
 
 \textcolor{reviewed}{We ground the problem in a simple model of \emph{\spectype[s]}, or \emph{specs}
@@ -220,13 +220,13 @@ a spec to be faithful.}
 \textcolor{reviewed}{As a system runs, possibilities narrow: the spec's table loses rows.} \textcolor{reviewed}{When new
 input arrives, the world has moved on, and rows that cannot be reached by
 extending that input are lost.} \textcolor{reviewed}{When the system decides among possibilities, it
-makes a controlled decision to remove rows.} \textcolor{reviewed}{The decision is incidental if each
+makes a controlled decision to remove rows.} The decision is incidental if each
 removed output is covered by a remaining output that \outrel it, and fateful if
-not.} \textcolor{reviewed}{Choosing between two candidates in a leader election is fateful: nothing
+not. \textcolor{reviewed}{Choosing between two candidates in a leader election is fateful: nothing
 remaining covers the loser's possibility of a win.} \textcolor{reviewed}{So is closing the polls early,
-ruling out every row with a later ballot.} \textcolor{reviewed}{We call a fateful decision a
+ruling out every row with a later ballot.} We call a fateful decision a
 \emph{\commitment}: an irrevocable decision, enforceable by coordination
-mechanisms such as locks and consensus.}
+mechanisms such as locks and consensus.
 
 An I/O automaton projects onto an \spectype[] that captures the observable
 behavior of all executions of the automaton
@@ -285,9 +285,9 @@ partition.} \textcolor{reviewed}{The Gilbert--Lynch CAP Theorem~\cite{gilbert200
 \subsection{Contributions}
 \textcolor{reviewed}{We make contributions in four categories:}
 
-\textcolor{reviewed}{\noindent
+\noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
-        \spectype[s].} \textcolor{reviewed}{Consistency is defined as
+        \spectype[s]. \textcolor{reviewed}{Consistency is defined as
         confluence of a spec's runs, unifying general consistency models,
         application-specific requirements, and distributed consistency.}
 
@@ -319,8 +319,8 @@ applications; Appendix~\ref{app:notation} collects notation and defined terms.
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-\textcolor{reviewed}{This section focuses on functional specs, in which each input has a
-single specified output.} We walk through the framework informally on an
+This section focuses on functional specs, in which each input has a
+single specified output. We walk through the framework informally on an
 election, state it precisely, and prove Functional CALM, identifying when an
 output can be emitted without \commitment.
 
@@ -444,18 +444,18 @@ states \emph{determined}.} \textcolor{reviewed}{In this case, input alone has de
 without \commitment.}
 
 \paragraph{Output and consistency.}
-\textcolor{reviewed}{Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
-rows whose outputs \outrelbase $o$, since later outputs must not contradict it.} \textcolor{reviewed}{In a functional table, $o$ is a \emph{legal output} when everything in the
-upper fiber already \outrel $o$, so the event removes nothing.} \textcolor{reviewed}{Thus
-$\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).} \textcolor{reviewed}{When $o$ is not
+Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
+rows whose outputs \outrelbase $o$, since later outputs must not contradict it. In a functional table, $o$ is a \emph{legal output} when everything in the
+upper fiber already \outrel $o$, so the event removes nothing. \textcolor{reviewed}{Thus
+$\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).} When $o$ is not
 legal, the event removes the rows that conflict with $o$, ruling out their
-inputs; that removal is a \commitment.}
+inputs; that removal is a \commitment.
 
-\textcolor{reviewed}{Panel~(d), by contrast, adds a decision by the \emph{system}: the implementation
-that receives the ballots and announces the result.} \textcolor{reviewed}{Here
+Panel~(d), by contrast, adds a decision by the \emph{system}: the implementation
+that receives the ballots and announces the result. Here
 the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
-closes the polls.} \textcolor{reviewed}{Closing the polls is a \emph{\commitment}: it removes the
-still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$.} \textcolor{reviewed}{The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result.} \textcolor{reviewed}{The spec did not require this \commitment: emitting $\bot$ removes nothing by itself, since every output still possible extends $\bot$.} \textcolor{reviewed}{Closing the polls is
+closes the polls. Closing the polls is a \emph{\commitment}: it removes the
+still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$. The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result. The spec did not require this \commitment: emitting $\bot$ removes nothing by itself, since every output still possible extends $\bot$. \textcolor{reviewed}{Closing the polls is
 the registrar's own fateful decision.}
 
 \begin{figure}[t]
@@ -495,23 +495,23 @@ the registrar's own fateful decision.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
-\textcolor{reviewed}{Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
+Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
-for no winner.} \textcolor{reviewed}{Under this order (known as the \emph{equality order}), $\bot$ is
+for no winner. \textcolor{reviewed}{Under this order (known as the \emph{equality order}), $\bot$ is
 incompatible with future winners, so emitting it requires a \commitment.} \textcolor{reviewed}{That
 change in the output order is Functional CALM in miniature: the spec is monotone
 under the original order, so later outputs \outrelbase every earlier one; under
 the equality order it is non-monotone, and some outputs can be emitted only with a \commitment.}
 
-\textcolor{reviewed}{To see why, we follow the events.} \textcolor{reviewed}{A \emph{run} is a sequence of input and output
+\textcolor{reviewed}{To see why, we follow the events.} A \emph{run} is a sequence of input and output
 events from a starting state, like the sequences that produce the panels of
-Figure~\ref{fig:election-frames}.} \textcolor{reviewed}{Under the equality order, rows
+Figure~\ref{fig:election-frames}. \textcolor{reviewed}{Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
 $aba$ \outrel both $\bot$ and $a$.} \textcolor{reviewed}{So a run that emits $\bot$ at $ab\cdot$ and
-a run that receives $aba$ and emits $a$ can never be reconciled at $aba$.} \textcolor{reviewed}{Emitting $\bot$ is safe only with the \commitment that rules out $aba$ and
-$abb$; without it, the two runs would diverge for good.} \textcolor{reviewed}{This argument uses only
+a run that receives $aba$ and emits $a$ can never be reconciled at $aba$.} Emitting $\bot$ is safe only with the \commitment that rules out $aba$ and
+$abb$; without it, the two runs would diverge for good. This argument uses only
 the table's rows and its two orders, so the need for the \commitment is a
-property of the spec, not of any system that implements it.}
+property of the spec, not of any system that implements it.
 
 \textcolor{reviewed}{Runs are the foundation of the consistency side of CALM.} \textcolor{reviewed}{Input and output
 events form a transition system over specification states, and the runs of a
