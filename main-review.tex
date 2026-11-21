@@ -258,7 +258,7 @@ output.} \textcolor{reviewed}{We call this property \emph{Lifted Monotonicity}, 
 it \emph{lifted monotone}.} \textcolor{reviewed}{It reduces to standard monotonicity for specs that
 are deterministic functions.}
 
-\textcolor{reviewed}{Confluence is a property of all the runs a spec allows.} \textcolor{reviewed}{Lifted Monotonicity,
+\textcolor{reviewed}{Confluence is an operational property of all the runs a spec allows.} \textcolor{reviewed}{Lifted Monotonicity,
 by contrast, is a static property of the spec's table: it can be checked on
 pairs of rows, without exploring runs.} \textcolor{reviewed}{\emph{Functional CALM}
 (Section~\ref{sec:functional-calm-theorem}) and \emph{Complete CALM}
@@ -319,13 +319,18 @@ applications; Appendix~\ref{app:notation} collects notation and defined terms.
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-This section focuses on functional specs, in which each input has a
-single specified output. We walk through the framework informally on an
-election, state it precisely, and prove Functional CALM, identifying when an
-output can be emitted without \commitment.
+\textcolor{reviewed}{We begin with the simplified case of functional specs, in which each input has a
+single specified output.} \textcolor{reviewed}{We develop the framework on a small election,
+introducing each definition when the example first needs it
+(Section~\ref{sec:election-story}), and then prove Functional CALM
+(Section~\ref{sec:functional-calm-theorem}), identifying when an output can be
+emitted without \commitment.}
 
 \subsection{The framework by example}
 \label{sec:election-story}
+\label{sec:functional-specifications}
+\label{sec:functional-events}
+\label{sec:executions}
 
 \begin{figure*}[t]
   \centering
@@ -399,7 +404,7 @@ output can be emitted without \commitment.
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
-  \caption{The election specification and three states reached from it, limited to rows
+  \caption{The election spec and states reached from it, limited to rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its upper fiber.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
@@ -409,118 +414,18 @@ output can be emitted without \commitment.
 \end{figure*}
 
 \textcolor{reviewed}{We introduce the framework with a small election, illustrated in
-Figure~\ref{fig:election-frames}.} Each row of the possibility table pairs
-the ballots received so far with the permitted result; the column orders say how inputs \ingrow and which later outputs \outrelbase earlier ones.
+Figure~\ref{fig:election-frames}.} \textcolor{reviewed}{Three voters each cast at most one immutable
+ballot for $a$ or $b$.} \textcolor{reviewed}{The output is whichever candidate has a majority, or
+$\bot$ while there is none.} \textcolor{reviewed}{An input is a vector of the ballots received so
+far, one entry per voter, with a dot for a ballot not yet received.} \textcolor{reviewed}{We write
+it as a string: $ab\cdot$ means $v_1$ voted $a$, $v_2$ voted $b$, and $v_3$'s
+ballot has not arrived.} \textcolor{reviewed}{Each row of the figure's tables pairs the ballots
+received so far with the permitted result.} \textcolor{reviewed}{For brevity, the figure shows only
+inputs \inrelpart $a\cdot\cdot$.}
 
-\textcolor{reviewed}{Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
-$b$.} \textcolor{reviewed}{The output is whichever candidate has two ballots, or $\bot$ while there
-is no winner.} \textcolor{reviewed}{An input is a vector of the ballots received so far, one entry per voter, with a
-dot for a ballot not yet received.} \textcolor{reviewed}{We write it as a string: $ab\cdot$ means
-$v_1$ voted $a$, $v_2$ voted $b$, and $v_3$'s ballot has not arrived.} \textcolor{reviewed}{For brevity,
-the figure shows only inputs \inrelpart $a\cdot\cdot$.}
-
-\textcolor{reviewed}{The two orders require thoughtful design.} The \emph{input order}
-must record accumulated ballots: $ab\cdot$ \inrel $a\cdot\cdot$, while
-$aa\cdot$ and $ab\cdot$ are incomparable. The \emph{output order} says which
-announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$. $\bot$ claims nothing, so either winner
-\outrel it, while $a$ and $b$ are incomparable. In general, the functional table is \emph{monotone}
-when
-\[
-  i\InputOrd j\quad\Longrightarrow\quad f(i)\OutputOrd f(j).
-\]
-\textcolor{reviewed}{Here, for example, the input sequence $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$
-monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.}
-
-\paragraph{Input and determination.}
-Each panel of Figure~\ref{fig:election-frames} shows a \emph{specification
-state}: the \emph{current input} and the \emph{remainder table} of rows still
-possible from it. When $v_2$'s ballot for $b$ arrives, the input event
-$\mathsf{input}(ab\cdot)$ produces panel~(b). The table passively loses the rows
-whose inputs do not extend $ab\cdot$, such as $aa\cdot$: those possibilities are
-lost. The \emph{upper fiber} (Definition~\ref{def:fiber}) is the set of outputs still possible in the
-remainder table: $\{\bot,a,b\}$ in panel~(b). If $v_2$ instead votes for $a$
-(panel~(c)), the upper fiber is a singleton, $\{a\}$, and we call such
-states \emph{determined}. In this case, input alone has determined an outcome,
-without \commitment.
-
-\paragraph{Output and consistency.}
-Emitting $o$ is an \emph{output event} $\mathsf{output}(o)$: it keeps only the
-rows whose outputs \outrelbase $o$, since later outputs must not contradict it. In a functional table, $o$ is a \emph{legal output} when everything in the
-upper fiber already \outrel $o$, so the event removes nothing. \textcolor{reviewed}{Thus
-$\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).} When $o$ is not
-legal, the event removes the rows that conflict with $o$, ruling out their
-inputs; that removal is a \commitment.
-
-Panel~(d), by contrast, adds a decision by the \emph{system}: the implementation
-that receives the ballots and announces the result. Here
-the system acts as a registrar that, when it emits $\bot$ at $ab\cdot$, also
-closes the polls. Closing the polls is a \emph{\commitment}: it removes the
-still-possible rows $aba$ and $abb$, though the current input stays $ab\cdot$. The upper fiber becomes $\{\bot\}$, so $\bot$ is the determined result. The spec did not require this \commitment: emitting $\bot$ removes nothing by itself, since every output still possible extends $\bot$. \textcolor{reviewed}{Closing the polls is
-the registrar's own fateful decision.}
-
-\begin{figure}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6pt}
-  \begin{minipage}{0.86\columnwidth}
-  (e) As (b), all outputs incomparable, $\bot$ emitted\par\smallskip
-  \begin{minipage}[t]{0.44\linewidth}
-    \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}c@{}}
-      \toprule
-      $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-      \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
-      \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
-      \grayrow{$aba$} & \grayrow{$a$} \\ \strikerow
-      \grayrow{$abb$} & \grayrow{$b$} \\ \strikerow
-      \grayrow{$aa\cdot$} & \grayrow{$a$} \\
-      
-    \end{tabular*}
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.44\linewidth}
-    \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}c@{}}
-      \toprule
-      $\mathrm{in}$ (cont.) & $\mathrm{out}$ (cont.) \\ \midrule
-      
-      \grayrow{$aaa$} & \grayrow{$a$} \\
-      \grayrow{$aab$} & \grayrow{$a$} \\
-      \grayrow{$a\cdot a$} & \grayrow{$a$} \\
-      \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
-      \bottomrule
-    \end{tabular*}
-    {\footnotesize upper fiber $\{\bot\}$; determined}
-  \end{minipage}\par\smallskip
-  \end{minipage}
-  \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
-  to preserve space.  The registrar's \commitment in Figure~\ref{fig:election-frames}(d) is required here.}
-  \label{fig:nonmonotone-frame}
-\end{figure}
-
-Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
-changes only the output order: all outputs are incomparable, including $\bot$
-for no winner. Under this order (known as the \emph{equality order}), $\bot$ is
-incompatible with future winners, so emitting it requires a \commitment. \textcolor{reviewed}{That
-change in the output order is Functional CALM in miniature: the spec is monotone
-under the original order, so later outputs \outrelbase every earlier one; under
-the equality order it is non-monotone, and some outputs can be emitted only with a \commitment.}
-
-To see why, we follow the events. A \emph{run} is a sequence of input and output
-events from a starting state, like the sequences that produce the panels of
-Figure~\ref{fig:election-frames}. Under the equality order, rows
-$(ab\cdot,\bot)$ and $(aba,a)$ have the common \indesc $aba$, but no output at
-$aba$ \outrel both $\bot$ and $a$. So a run that emits $\bot$ at $ab\cdot$ and
-a run that receives $aba$ and emits $a$ can never be reconciled at $aba$. Emitting $\bot$ is safe only with the \commitment that rules out $aba$ and
-$abb$; without it, the two runs would diverge for good. This argument uses only
-the table's rows and its two orders, so the need for the \commitment is a
-property of the spec, not of any system that implements it.
-
-\textcolor{reviewed}{Runs are the foundation of the consistency side of CALM.} Input and output
-events form a transition system over specification states, and the runs of a
-spec are \emph{consistent} when they are \emph{confluent}: runs whose inputs have a
-common \indesc can always be continued to a common state there. Section~\ref{sec:functional-calm-theorem} shows that for functional tables the
-runs are consistent exactly when the spec is monotone. Appendix~\ref{app:notation} collects the notation for reference.
-
-\subsection{Specifications and states}
-\label{sec:functional-specifications}
+\paragraph{Specs and monotonicity.}
+\textcolor{reviewed}{A spec is a possibility table for a function over ordered types.} \textcolor{reviewed}{To avoid
+ambiguity, we state this precisely.}
 
 \begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
@@ -542,23 +447,15 @@ runs are consistent exactly when the spec is monotone. Appendix~\ref{app:notatio
 \textcolor{reviewed}{The unique output paired with $i$ induces the function}
 \[f:(I,\InputOrd)\to(O,\OutputOrd)\]
 with $P=\{(i,f(i)):i\in I\}.$
-We call $\InputOrd$ the \emph{input order}. Inputs are \emph{cumulative}, since an
-output may depend on everything a system has received: an input
-records everything received so far, not a single message, and $i\InputOrd j$
-means that $j$ contains at least the input information in $i$. We say that $j$
-\emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself. We call $\OutputOrd$ the
-\emph{output order}: $o\OutputOrd u$ means that $u$ subsumes every
-externally visible claim in $o$ and may add more, and we say that $u$
-\emph{\outrel} $o$. In either domain, an element above another is an extension of it. We write $\InputGe$ and $\OutputGe$ for the converse orders.
 
-A \emph{common \indesc} $j$ of
-$i_1,\ldots,i_k$ is an input that \inrel every $i_r$, and a
-\emph{common \outnoun} of $o_1,\ldots,o_k$ is an output that \outrel each $o_r$.
+\textcolor{reviewed}{The two orders require thoughtful design.} \textcolor{reviewed}{Inputs grow as ballots arrive: $i\InputOrd j$, read ``$j$ \emph{\inrel} $i$'', means that
+$j$ has everything $i$ has and possibly more.} \textcolor{reviewed}{So $ab\cdot$ \inrel $a\cdot\cdot$,
+while $aa\cdot$ and $ab\cdot$ are incomparable.} \textcolor{reviewed}{Outputs grow as announcements
+say more: $o\OutputOrd u$, read ``$u$ \outrel $o$'', means that $u$ makes every
+claim $o$ makes.} \textcolor{reviewed}{Either winner \outrel $\bot$, which claims nothing, while $a$
+and $b$ are incomparable.} \textcolor{reviewed}{A functional spec is monotone when growing input only
+ever extends its output:}
 
-A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
-when $w$ \outrel $u$.
-
-\textcolor{reviewed}{A functional spec is monotone when growing input only ever extends its output.}
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -572,22 +469,15 @@ A functional \spectype $\Spec$, with induced function $f$, is
 \end{equation}
 \end{definition}
 
-In a monotone functional spec, if an output is emitted at some input, the
-remainder table contains only rows whose input is an \indesc, and whose output
-is an \outnoun. So no output is ever contradicted at a later input.
+\textcolor{reviewed}{The election is monotone: for example, the input sequence
+$a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$ produces the output sequence
+$\bot\OutputOrd\bot\OutputOrd a$.}
 
-\paragraph{Relational notation.}
-For a relation $R\subseteq I\times O$, we say that a row $(k,u)$ is
-\emph{at input} $k$. To describe tables compactly, a predicate on the columns
-$\mathrm{in}$ and $\mathrm{out}$ in square brackets selects rows, and commas
-separate conjuncts: $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the
-table of rows whose input \inrel $j$ and whose output \outrel $o$. As in
-relational algebra, $\pi_{\mathrm{out}}(R)$ is the set of outputs in $R$.
-
-A spec describes every permitted input/output pair. During execution,
-input arrives and outputs are emitted, so only some of those pairs remain
-possible. The changing state of the spec, illustrated by the non-gray text in
-the panels of Figure~\ref{fig:election-frames}, is defined as follows.
+\paragraph{States and input events.}
+\textcolor{reviewed}{As a run proceeds, the possibilities narrow.} \textcolor{reviewed}{Each panel of
+Figure~\ref{fig:election-frames} shows one moment: the ballots received so
+far, and the rows that can still be reached from them.} \textcolor{reviewed}{We call such a moment
+a state.}
 
 \begin{definition}[Specification state, current input, remainder table]
 \label{def:residual-state}
@@ -596,72 +486,74 @@ pair $\sigma=(i,R)$, where $i\in I$ is the \emph{current input} and
 $R\subseteq P$ is the \emph{remainder table}, such that:
 \begin{enumerate}
 \item
-$R$ contains a row at $i$; and
+$R$ contains a row with input $i$; and
 \item
-$R$ contains only rows at \indescs of $i$: every row $(k,o)\in R$ satisfies $i\InputOrd k$.
+every row $(k,o)\in R$ satisfies $i\InputOrd k$.
 \end{enumerate}
 \end{definition}
+
+\textcolor{reviewed}{The events defined below only ever remove rows.} We say that a row $(k,u)$ is
+\emph{at input} $k$. \textcolor{reviewed}{To write remainder tables compactly, we borrow selection
+from relational algebra: a predicate on the columns $\mathrm{in}$ and
+$\mathrm{out}$ in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$
+holds the rows of $P$ whose input \inrel $i$, and commas separate conjuncts, as
+in $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$.} Here $\InputGe$ and
+$\OutputGe$ are the converse orders. \textcolor{reviewed}{We write $\pi_{\mathrm{out}}(R)$ for the
+set of outputs in $R$.} Not every input can still arrive in a state:
 
 \begin{definition}[Legal input]
 \label{def:legal-input}
 An input $k$ is \emph{legal} at a state $\sigma=(i,R)$ when $R$ contains a row at $k$.
 \end{definition}
 
-Rows are never added during execution. The \emph{canonical state at $i$} is
-the state at $i$ with no rows removed: it keeps every row of $P$ at $i$ and its
-\indescs, and it is the state of a system that has received $i$ and emitted
-nothing:
+A run starts from the \emph{canonical state} at its first input $i$, which
+keeps every row of $P$ whose input \inrel $i$: it is the state of a system that
+has received $i$ and emitted nothing,
 \begin{equation}
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
-An input event from a canonical state leads to another canonical state.
 
-Two sets of outputs recur throughout: those a table permits at a given input,
-and those it still permits there or once more input arrives. In panel~(b) of
-Figure~\ref{fig:election-frames}, the first is $\{\bot\}$ at $ab\cdot$, and the
-second, shaded, is $\{\bot,a,b\}$.
+\textcolor{reviewed}{When $v_2$'s ballot for $b$ arrives, rows such as $aa\cdot$ no longer extend
+the input, and they are lost: the world has moved on, and panel~(b) results.} For a state $(i,R)$ and a legal input $j$ with $i\InputOrd j$, the \emph{input
+event}
+\begin{equation}
+  (i,R)\xrightarrow{\mathsf{input}(j)}
+  \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr)
+  \label{eq:input-event}
+\end{equation}
+makes $j$ current and drops the rows whose input does not \inrelbase $j$,
+which we call \emph{input loss}. An input event names the cumulative input
+$j$: everything received so far, including all of $i$. Thus
+$\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the effect of
+$\mathsf{input}(k)$ alone, $\mathsf{input}(i)$ at $(i,R)$ has no effect, and an
+input event from a canonical state leads to another canonical state.
+
+\textcolor{reviewed}{Two sets of outputs matter in every state: those permitted at the current
+input, and those still possible once more input arrives.} \textcolor{reviewed}{In panel~(b), the
+first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.}
 
 \begin{definition}[Fiber, upper fiber]
 \label{def:fiber}
 \textcolor{reviewed}{Let $R$ be a table and $k$ an input.} \textcolor{reviewed}{The \emph{fiber} of $R$ at $k$ is
 $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.} \textcolor{reviewed}{The
 \emph{upper fiber} of $R$ at $k$ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe
-k])$, the outputs paired with $k$ or any of its \indescs.}
+k])$, the outputs paired with $k$ or with any input that \inrel $k$.}
 \end{definition}
 
-A functional fiber has at most one value. For a state $\sigma=(i,R)$, the
-upper fiber at $i$ is $\pi_{\mathrm{out}}(R)$: every output still possible.
+A functional fiber has at most one value. \textcolor{reviewed}{In a state $(i,R)$, the upper fiber
+at $i$ is $\pi_{\mathrm{out}}(R)$, every output still possible, and we say that
+the state is \emph{determined} when that set has one element: one result
+remains, whatever legal input still arrives.} \textcolor{reviewed}{If $v_2$ instead votes for $a$ as
+in panel~(c), it is $\{a\}$: input alone has settled the outcome.}
 
-\subsection{Input and output events}
-\label{sec:functional-events}
-
-Two events change state: input events incorporate new information, while
-output events record what the system has emitted. Each may remove rows from
-the remainder table.
-
-\paragraph{Input events.}
-Each event applies a selection predicate on one column of the remainder table. For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
-\begin{equation}
-  (i,R)\xrightarrow{\mathsf{input}(j)}
-  \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr).
-  \label{eq:input-event}
-\end{equation}
-It makes $j$ current and drops the rows whose input does not \inrelbase $j$,
-which we call \emph{input loss}.
-
-An input event names the cumulative input $j$: everything received so far,
-including all of $i$, not just what arrived since $i$. Thus $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the
-effect of $\mathsf{input}(k)$ alone; $\mathsf{input}(i)$ at
-$(i,R)$ has no effect.
-
-\paragraph{Output events.}
-Inputs arrive from the environment, but outputs are the system's to choose, and
-once emitted they cannot be retracted: later outputs must \outrelbase earlier
-ones.
-
-At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.
+\paragraph{Output events and \commitments.}
+\textcolor{reviewed}{Inputs arrive from the environment, but outputs are the system's to choose, and
+once emitted they cannot be retracted.} At a state $(i,R)$, the current input
+has a unique row $(i,o)$, so $o$, the \emph{current output}, is the only output
+the system may emit. \textcolor{reviewed}{Emitting $\bot$ in panel~(b) is safe, since every output
+still possible builds on it; emitting $a$ there would not be, since $b$ is
+still possible.}
 
 \begin{definition}[Legal output]
 \label{def:exposable}
@@ -669,7 +561,11 @@ The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
 upper fiber \outrel $o$.
 \end{definition}
 
-Emitting an output can require removing rows that no remaining output covers. We call such a removal a \commitment:
+\textcolor{reviewed}{So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).} \textcolor{reviewed}{Possibilities
+can also be removed deliberately.} \textcolor{reviewed}{Closing the polls in panel~(d) rules out
+$aba$ and $abb$, and no remaining row covers them: this is the fateful
+decision of the introduction.} A row $(k,u)$ is \emph{\outrelpast} by another
+row $(k,w)$ at the same input when $w$ \outrel $u$.
 
 \begin{definition}[\Commitment]
 \label{def:commitment}
@@ -687,12 +583,10 @@ It leaves the current input unchanged: $j=i$.
 \end{definition}
 
 \textcolor{reviewed}{In a functional spec each input has one row, so the last condition always
-holds: a \commitment rules out the inputs of the rows it removes.}
-
-Since every later output must \outrelbase $o$, a system cannot simply emit a
-non-legal $o$. It must emit $o$ atomically with a \commitment that removes every
-row whose output does not \outrelbase $o$. In a functional spec each such row
-is the only row at its input, so the \commitment rules out those inputs.
+holds: a \commitment rules out the inputs of the rows it removes.} \textcolor{reviewed}{When $o$ is
+not legal, a \commitment can make it legal by removing the rows whose outputs
+conflict with $o$.} \textcolor{reviewed}{Emitting $o$ only once it is legal keeps a run from
+contradicting $o$ later on, when the environment may already have acted on it.}
 
 \begin{definition}[Output event]
 \label{def:output-event}
@@ -713,32 +607,73 @@ removes the rows whose outputs do not \outrelbase $o$; this removal is the
 input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a \commitment).}
 \end{definition}
 
-\textcolor{reviewed}{An output event therefore always emits a legal output; it applies a
-\commitment exactly when its output was not already legal.} The
-current row $(i,o)$ remains, since $o$ \outrel itself, so the event always ends
-at a specification state with current input $i$. A \commitment removes rows that input alone would
-keep; after the canonical \commitment, the inputs of the removed rows are no
-longer legal. This section uses only canonical \commitments. Systems
-may issue more \commitments than an output requires, as the registrar does in
-Figure~\ref{fig:election-frames}(d), but such extra \commitments are a
-system's choice, not the spec's (Section~\ref{sec:systems}).
+\textcolor{reviewed}{An output event thus always emits a legal output, and applies a \commitment
+exactly when its output was not already legal.} The current row $(i,o)$
+remains, since $o$ \outrel itself, so the event always ends at a specification
+state with current input $i$. \emph{Determination} is the process of reaching
+a determined state. An input event can achieve it through input loss, as in
+panel~(c), and a \commitment can do so by ruling out inputs that would
+otherwise remain possible, as in panel~(d). An event from a determined state
+always leads to another determined state with the same output: events only
+remove rows, and a row at the current input always remains.
 
-\paragraph{Determination.}
-A spec with multiple distinct outputs can have undetermined states, as in panel~(b) of
-Figure~\ref{fig:election-frames}. A state is \emph{determined} when its upper fiber has one element: one result
-remains, whatever legal input still arrives. This is a property of the state
-alone. \emph{Determination} is the process of reaching a determined state. An input event can achieve determination through input loss, as in panel~(c), and a
-\commitment can do so by ruling out inputs that would otherwise remain possible,
-as in panel~(d). An event from a determined state always leads to another determined state with the same output:
-events only remove rows, and a row at the current input always remains.
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \begin{minipage}{0.86\columnwidth}
+  (e) As (b), all outputs incomparable, $\bot$ emitted\par\smallskip
+  \begin{minipage}[t]{0.44\linewidth}
+    \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}c@{}}
+      \toprule
+      $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
+      \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
+      \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
+      \grayrow{$aba$} & \grayrow{$a$} \\ \strikerow
+      \grayrow{$abb$} & \grayrow{$b$} \\ \strikerow
+      \grayrow{$aa\cdot$} & \grayrow{$a$} \\
+    \end{tabular*}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.44\linewidth}
+    \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}c@{}}
+      \toprule
+      $\mathrm{in}$ (cont.) & $\mathrm{out}$ (cont.) \\ \midrule
+      \grayrow{$aaa$} & \grayrow{$a$} \\
+      \grayrow{$aab$} & \grayrow{$a$} \\
+      \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+      \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
+      \bottomrule
+    \end{tabular*}
+    {\footnotesize upper fiber $\{\bot\}$; determined}
+  \end{minipage}\par\smallskip
+  \end{minipage}
+  \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
+  to preserve space.  The registrar's \commitment in
+  Figure~\ref{fig:election-frames}(d) is required here.}
+  \label{fig:nonmonotone-frame}
+\end{figure}
 
-\subsection{Executions and consistency}
-\label{sec:executions}
+\textcolor{reviewed}{Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
+changes only the output order $\OutputOrd$: now all outputs are incomparable.} \textcolor{reviewed}{Under this order (called the \emph{equality order}), $\bot$ is incompatible
+with future winners, so it is not legal at $ab\cdot$, and emitting it applies
+$x_\bot$, which removes $(aba,a)$ and $(abb,b)$.} \textcolor{reviewed}{That change in the output
+order is Functional CALM in miniature: the spec is monotone under the original
+order, so later outputs \outrelbase every earlier one; under the equality order
+it is non-monotone, and some outputs can be emitted only with a \commitment.}
 
-Input and output events move a spec from state to state. We now consider
-sequences of them, which we call runs, and ask when runs that took different
-paths can still be brought to a common state. The answer turns on the
-existence of one row: some row at a common \indesc must survive in every run.
+\textcolor{reviewed}{Panel~(d) of Figure~\ref{fig:election-frames}, by contrast, reflects a
+\commitment that the spec does not require.} \textcolor{reviewed}{A \emph{system} that implements a
+spec may make one through a \emph{\commitment event}.} \textcolor{reviewed}{Here the system acts as
+a registrar that, when it emits $\bot$ at $ab\cdot$, also closes the polls,
+removing the still-possible rows $aba$ and $abb$ and keeping the current input
+unchanged.} \textcolor{reviewed}{The output was already legal; every output still possible
+\outrelpast $\bot$.} \textcolor{reviewed}{After the event, the upper fiber is determined at
+$\{\bot\}$.} \textcolor{reviewed}{Closing the polls was the registrar's own fateful decision.} Section~\ref{sec:systems} models such choices; a spec itself has only input and
+output events, and this section uses only canonical \commitments.
+
+\paragraph{Runs and consistency.}
+\textcolor{reviewed}{Runs are the foundation of the consistency side of CALM.} \textcolor{reviewed}{A spec's runs are
+sequences of its events, like those that produce panels~(a)--(c).}
 
 \begin{definition}[Specification event]
 \label{def:specification-event}
@@ -761,11 +696,59 @@ canonical state $\sigma_P(i)$ at some input $i$.}
 Runs range over every behavior the spec permits, not only the behaviors a
 particular system happens to produce. A system that never uses some of the
 spec's latitude is better described by a narrower spec. For the spec as
-written, we assume that any permitted behavior may occur.
+written, we assume that any permitted behavior may occur. A run is
+\emph{\commitment-free} when none of its output events applies a
+\commitment. A state is \emph{reachable without \commitment} when some
+\commitment-free run reaches it.
 
-A run is \emph{\commitment-free} when none of its output events applies a
-\commitment. A state is \emph{reachable without \commitment} when
-some \commitment-free run reaches it.
+\textcolor{reviewed}{Different runs may retain different rows.} \textcolor{reviewed}{Under the equality order, rows
+$(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
+that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$
+and $a$: none is a \emph{common \outnoun} of them.} \textcolor{reviewed}{A run that emits $\bot$ at
+$ab\cdot$ applies $x_\bot$ and keeps no row at $aba$, while a run that receives
+$aba$ and emits $a$ keeps $(aba,a)$, so the two runs can never be reconciled at
+$aba$.} \textcolor{reviewed}{The argument uses only the table, its orders, and canonical runs, so
+the need for the \commitment is a property of the spec, not of any system.} To
+compare runs that end at different inputs, we consider a common \indesc of
+those inputs.
+
+\begin{definition}[Confluence at an input]
+\label{def:confluence}
+\textcolor{reviewed}{A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{confluent at} $j$, a common \indesc of their current inputs, when each can be continued to a common state with current input $j$.}
+\end{definition}
+
+\begin{definition}[Consistency]
+\label{def:consistency}
+\textcolor{reviewed}{The runs of an \spectype are \emph{consistent} when every finite family of
+them is confluent at every common \indesc of their current inputs.}
+\end{definition}
+
+Consistency requires confluence at every common \indesc of the runs' current
+inputs, not just at some larger common \indesc that arrives later. Otherwise
+the runs could emit conflicting outputs before that larger input arrives, and
+waiting cannot retract either output from the environment. Even when later
+input could bring the runs to a common state, the environment may already have
+acted on the outputs through channels the system does not see, as in Lamport's
+``anomalous behavior''~\cite{lamport1978time}. And even when such a larger
+input exists, it might never arrive. Appendix~\ref{app:notation} collects the
+notation for reference.
+
+\textcolor{reviewed}{The election shows the arc in miniature.} \textcolor{reviewed}{Input narrows the possibilities, and
+an output that everything remaining builds on is legal and needs nothing more.} \textcolor{reviewed}{An output that is not legal needs a \commitment; otherwise, runs that emit it
+would diverge for good.} \textcolor{reviewed}{Next, we establish when that happens: when the spec is
+not monotone.}
+
+\subsection{The Functional CALM theorem}
+\label{sec:functional-calm-theorem}
+
+\textcolor{reviewed}{We now have both sides that the introduction promised.} \textcolor{reviewed}{Monotonicity is a
+static property of the spec's table, and consistency is an operational property
+of the runs it allows.} \textcolor{reviewed}{Functional CALM bridges the two: the runs are
+consistent exactly when the spec is monotone.}
+
+\textcolor{reviewed}{Three facts about runs drive the proof.} \textcolor{reviewed}{First, events are relational
+selections, and selections commute, so a run's remainder table depends only on
+its last input and the outputs it emitted:}
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -790,33 +773,8 @@ Figure~\ref{fig:nonmonotone-frame}, a run that emits $\bot$ at $ab\cdot$ keeps
 $P[\mathrm{in}\InputGe ab\cdot,\ \mathrm{out}\OutputGe\bot]$: the single row
 $(ab\cdot,\bot)$, as the figure shows.
 
-To compare runs that end at different inputs, we consider a common \indesc
-of those inputs.
-
-\begin{definition}[Confluence at an input]
-\label{def:confluence}
-\textcolor{reviewed}{A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{confluent at} $j$, a common \indesc of their current inputs, when each can be continued to a common state with current input $j$.}
-\end{definition}
-
-\begin{definition}[Consistency]
-\label{def:consistency}
-\textcolor{reviewed}{The runs of an \spectype are \emph{consistent} when every finite family of
-them is confluent at every common \indesc of their current inputs.}
-\end{definition}
-
-Consistency requires confluence at every common \indesc of the runs' current
-inputs, not just at some larger common \indesc that arrives later. Otherwise
-the runs could emit conflicting outputs before that larger input arrives. In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
-incomparable. One run can emit $\bot$ at $ab\cdot$, while another accepts
-$aba$ and can emit $a$. The two runs are not confluent at their common \indesc $aba$, and waiting cannot
-retract either output from the environment. More generally, even when later
-input could bring the runs to a common state, the environment may already have
-acted on the outputs through channels the system does not see, as in Lamport's
-``anomalous behavior''~\cite{lamport1978time}. And even when such a larger input exists, it might
-never arrive.
-
-We can now state the condition promised above: some row at the common
-\indesc must survive in every run.
+\textcolor{reviewed}{Second, a set of runs can be continued to a common state exactly when their
+current remainder tables share a row at the target input:}
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
@@ -846,10 +804,7 @@ identifies it. Consistency is a safety property of the spec's runs: it guarantee
 state exists, not that a system reaches it
 (Section~\ref{sec:commitment-conflict}). Reaching it takes an algorithm,
 message delivery, and a termination argument, which belong to the operational
-model in which a spec is realized.
-
-Whether runs are consistent depends on the outputs they emit. Confluence
-fails exactly when some run's output event must apply a \commitment:
+model in which a spec is realized. \textcolor{reviewed}{Third, consistency comes down to legality:}
 
 \begin{lemma}[Confluence and legality]
 \label{lem:confluence-legality}
@@ -871,14 +826,13 @@ $u_r$, and the Survivor test gives confluence. Full proof in
 Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-\subsection{The Functional CALM theorem}
-\label{sec:functional-calm-theorem}
 
-Monotonicity is defined by a spec's table and orders alone, consistency by its
-runs. Functional CALM shows that one holds exactly when the other does. In
-the functional case, monotonicity has a strong
-consequence: emitting outputs never changes the state, which depends only on
-the input.
+\textcolor{reviewed}{In the election under the equality order, emitting $\bot$ at $ab\cdot$ applies
+a \commitment, since $\bot$ is not legal there, and the two runs of
+Section~\ref{sec:election-story} share no row at $aba$.}
+
+In the functional case, monotonicity has a strong consequence: emitting outputs
+never changes the state, which depends only on the input.
 
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
