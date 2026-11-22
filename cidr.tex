@@ -493,7 +493,9 @@ We say that a row $(k,u)$ is
 remainder tables compactly, we borrow selection from relational algebra: a
 predicate in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$ holds
 the rows of $P$ whose input \inrel $i$, and commas separate conjuncts, as in
-$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$.  We write
+$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$.  In
+Figure~\ref{fig:election-frames}(b), $P[\mathrm{in}\InputGe ab\cdot]$ is the
+three rows not grayed out.  We write
 $\pi_{\mathrm{out}}(R)$ for the set of outputs in $R$.  A run starts from the
 \emph{canonical state} at its first input, which has received $i$, emitted
 nothing, and removed no rows:
@@ -656,6 +658,10 @@ canonical state $\sigma_P(i)$ at some input $i$.  It is
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
+Each event must be enabled where it occurs: an input event needs a legal
+input, so inputs only grow, and an output event emits the current output,
+applying its canonical \commitment if that output is not legal.
+
 Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$ and
@@ -706,7 +712,8 @@ depends only on its last input and the outputs it emitted:
 \label{lem:run-residual}
 If a run ends with the current input $i$ after emitting
 $o_1,\ldots,o_m$, its remainder table is \(P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
-  \mathrm{out}\OutputGe o_m].\)
+  \mathrm{out}\OutputGe o_m]\): the rows whose input \inrel $i$ and whose
+output \outrel each $o_r$.
 \end{lemma}
 \proofinfull
 
