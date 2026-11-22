@@ -1371,7 +1371,7 @@ and $b$ is a \commitment: voting $a$ rules out every set of ballots in which it
 votes $b$.  But it is a single-voter \commitment involving no communication, so
 the voter can make it and emit its ballot during a partition.  Ballots on
 different sides never conflict, since each is cast by a different voter (the
-full paper formalizes this placement as a deployment~\extended), so every set of ballots an observer may collect is compatible.
+full paper formalizes this placement as a \emph{deployment}~\extended), so every set of ballots an observer may collect is compatible.
 
 A partition does not change the intrinsic \commitments a spec needs; it
 prevents separated participants from jointly enforcing them through
@@ -1434,10 +1434,11 @@ is more non-monotonicity! Why does it work?
 That puzzle is explained by our framework.  As we'll see, two specs compose by equijoin,
 and the composition of two monotone specs is also monotone. Moreover, for non-monotone specs,
 as in our puzzle, we
-can reason about which stage actually makes \commitments under composition.  When the
-upstream stage makes every \commitment the composition needs, and the
-downstream needs none on the inputs the upstream offers, we say the pipeline's
-coordination is \emph{proper}
+can reason about which stage actually makes \commitments under composition
+% .  When the
+% upstream stage makes every \commitment the composition needs, and the
+% downstream needs none on the inputs the upstream offers, we say the pipeline's
+% coordination is \emph{proper}
 (\S\ref{sec:proper-coordination}).
 \label{sec:sequential-composition}
 
@@ -1454,7 +1455,7 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.  Their
 \end{split}
   \label{eq:spec-composition}
 \end{equation}
-where $\pi$ and $\Join$ are relational projection and equijoin.  Every $i\in I$
+where $\pi$ and $\Join$ are relational projection and equijoin.  The composition is well-defined: every $i\in I$
 has a nonempty fiber in $P_2\circ P_1$, since $P_1$ is total on $I$ and $P_2$ is
 total on $M$.  We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
 its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.  In the
@@ -1844,31 +1845,29 @@ or protocol in mind.
 % C. What analysis at the level of specs gives (the two composition paragraphs
 % merged):
 
-Raising the level to specs also enables deeper analysis.
-Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs and
-conservatively injected coordination code in front of it. Coordination code is
-itself non-monotone, so this only adds more non-monotone syntax, leaving the
-puzzle of Section~\ref{sec:composition}. Later tools moved from syntax to
-declared contracts and invariants in specific
+Raising the level to specs also enables more refined analysis.
+Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs,
+and recommended more non-monotone coordination code in front of it: the puzzle of
+Section~\ref{sec:composition}. Later tools moved from syntax to declared
+contracts and invariants in specific
 contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
-operation the weakest consistency or isolation level a store offers that still
-satisfies them. We ask what a spec itself requires, independent of any menu of
-levels, and by observable equivalence (Lemma~\ref{lem:canonical-equivalent}) the
-answer holds for every mechanism.
+operation the weakest consistency or isolation level a storage system offers that still
+satisfies them. Proper Coordination
+helps minimize \commitments generally, without a fixed menu of levels.
 
-Underlying these issues is a reassessment of Codd's tradition: how
+Underlying these issues is a reassessment of Codd's lesson of declarativity: how
 little structure must be declared to be
 useful? The question is timely. Coding agents today translate from natural
-language to imperative code, which is often rife with bugs. This has renewed
-interest in formal specification languages like
-Lean~\cite{demoura2021lean4} as targets for agents~\cite{hellerstein2023codd},
+language to imperative code that is often rife with bugs. This has renewed
+interest in formal languages like
+Lean~\cite{demoura2021lean4} as targets for agents,
 coupling AI-driven heuristics to deterministic proofs of
-correctness~\cite{an2025neurosymbolic}. 
+correctness~\cite{hellerstein2023codd,an2025neurosymbolic}. 
 % This presents a renewed
 % opportunity for declarative programming languages, but, as in declarative networking,
 % such languages still require a relatively high degree of detail.
-Our \spectype[s] and composition point to the possibility of
-synthesizing programs at an even higher level.
+\spectype[s] and composition point to the possibility of
+formally specifying programs at an even higher level.
 % , suggesting we could declare far less detail
 % and still get the neurosymbolic advantage of heuristic search for
 % provably correct implementations.
