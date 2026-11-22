@@ -1506,11 +1506,16 @@ needs.  If commands $A$ and $B$ commute and the store reports only its state,
 emitting the log $[A]$ rules out $[B,A]$ by \commitment, though both logs
 yield the same output.
 
-To compare the two stages, we say that an order $\preceq'_M$ on $M$
-\emph{separates} rows $(i,m)$ and $(k,x)$ of $P_1$ when $i\InputOrd k$ and no
-$m'\in P_1(k)$ has $m\preceq'_M m'$ and $x\preceq'_M m'$.  Under $\preceq_M$ these are the
-pairs in which emitting $m$ at $\sigma_{P_1}(i)$ removes $(k,x)$ by
-\commitment; the composite separates its rows likewise under $\OutputOrd$.
+To compare the two stages, we need to say when emitting an output commits
+against a row.  Take rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$:
+the upstream emits $m$ at input $i$, and $k$ is an input that may still
+arrive.  If some row at $k$ covers both outputs, that is, some $m'\in P_1(k)$
+has $m\preceq_M m'$ and $x\preceq_M m'$, then emitting $m$ either keeps $(k,x)$
+or subsumes it, and nothing is lost.  If none does, emitting $m$ at $\sigma_{P_1}(i)$ removes
+$(k,x)$ by \commitment, and we say that $\preceq_M$ \emph{separates} the two
+rows.  The
+same test makes sense with any order $\preceq'_M$ on $M$ in place of
+$\preceq_M$, and for rows of the composite under $\OutputOrd$.
 
 \begin{definition}[Tight pipeline, Proper Coordination]
 \label{def:tight}
