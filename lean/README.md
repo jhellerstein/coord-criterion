@@ -420,7 +420,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:proper-coordination/locks-overhead»` | theorem | "This answers the opening puzzle. |
 | `«sec:proper-coordination/nesting»` | theorem | "Longer pipelines nest: |
 | `«sec:proper-coordination/components»` | theorem | "A downstream implementation may still take commitments the specs do not require, as a store that takes locks behind a log would. |
-| `«sec:proper-coordination/separates»` | theorem | "To compare the two stages, we say that an order `≼'_M` on `M` *separates* rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁(k)` has `m ≼'_M m'`… |
+| `«sec:proper-coordination/separates»` | theorem | "To compare the two stages, we say that a relation `≼'_M` on `M`, such as an order, *separates* rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁… |
 | `«def:tight»` | theorem | **Definition `def:tight`** (Tight pipeline): |
 | `«def:proper-coordination»` | def | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/downstream-order»` | theorem | "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common output extension in `P₂(m')`. |

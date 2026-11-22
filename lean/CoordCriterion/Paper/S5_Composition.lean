@@ -276,7 +276,7 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 
 /-! ### Tight and proper pipelines -/
 
-/-- "To compare the two stages, we say that an order `≼'_M` on `M` *separates*
+/-- "To compare the two stages, we say that a relation `≼'_M` on `M`, such as an order, *separates*
 rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁(k)` has
 `m ≼'_M m'` and `x ≼'_M m'`.  Under `≼_M` these are the pairs in which emitting `m`
 at `σ_{P₁}(i)` removes `(k,x)` by commitment (Definition
@@ -306,7 +306,7 @@ def «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I
 /-- "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common
 output extension in `P₂(m')`.  For a functional downstream `f`, `m ⊑ m'`
 exactly when `f(m) ≼ f(m')`.  The relation `⊑` is transitive but need not be
-antisymmetric."  Lean: `⊑` is `Tight.dle`; `Tight.graph_dle_iff`,
+an order."  Lean: `⊑` is `Tight.dle`; `Tight.graph_dle_iff`,
 `Tight.dle_trans`. -/
 theorem «sec:proper-coordination/downstream-order» {M O : Type} [PO M] [PO O] (g : M → O)
     (P₂ : Table M O) :
