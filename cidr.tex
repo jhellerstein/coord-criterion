@@ -1637,7 +1637,7 @@ stages with inputs of their own and arbitrary acyclic graphs of stages, checked 
 by node much as types are~\cite{hellerstein2026completecalmfull}.
 
 % ======================================================================
-\section{Related Work and Mappings}
+\section{Mappings and Related Work}
 \label{sec:instances}
 \label{sec:related}
 
@@ -1674,7 +1674,7 @@ Several CALM results for deterministic queries share one form: a function can
 be computed without coordination exactly when it is monotone under some input
 order.  Functional CALM states that form at the level of a spec, for any input
 and output orders.  The CALM Theorem of Ameloot et al.\ is stated in a
-particular operational model: a query can be evaluated on a network of
+particular operational model: a query (which is a function) can be evaluated on a network of
 relational transducers without coordination exactly when it is monotone, under
 that model's assumptions about data placement and
 execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM restates the
@@ -1688,8 +1688,12 @@ domain-distinct (or domain-disjoint) from $I$; under these orders each form is
 functional monotonicity, so Functional CALM gives their characterizations.  Li
 and Lee prove CALM for replicated objects with write, merge, and query
 operations~\cite{li2025coordinationfree}; in our terms, theirs is the case of
-set inputs ordered by inclusion and arbitrary partially ordered outputs, with a
-coordination-free implementation in place of consistency.
+set inputs ordered by inclusion and arbitrary partially ordered outputs, with the
+goal being a
+coordination-free implementation in place of consistency. \jmh{this reworded last
+line suggests that we're not capturing a real distinction: our consistency goal is also
+coordination-free consistency. What distinction do we intend (beyond limitations on 
+input/output types)?}
 
 Baccaert and Ketsman were the first to consider nondeterministic specs in a
 CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}, which
@@ -1714,6 +1718,8 @@ replica that has not yet received every update.  Such a query risks Lamport's an
 monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
 
+\jmh{The discussion makes no use of composition, which seems like a lost opportunity
+to illustrate that material.}
 We take as input the set of updates a replica has received, ordered by inclusion;
 the replica's state is their join in the semilattice.  The output is the answer
 to a client's query, so the client-visible spec is a function: query the state
@@ -1848,7 +1854,9 @@ an output $o$ for a given input $i$ in one execution, even though $(i,o)$ is
 within spec from another execution.  Modeling the automaton as a system, with
 its choices as \commitment events, captures the executions precisely: the
 automaton is confluent exactly when its \commitments never remove every row
-its canonical runs could still agree on.  Model checkers can refute
+its canonical runs could still agree on.  Standard techniques
+can be used to map automata to specs.
+Model checkers can refute
 consistency on bounded inputs~\cite{newcombe2015aws}, and mechanized
 proofs~\cite{hawblitzel2015ironfleet} can show, by the standard obligations of
 refinement~\cite{abadi1991refinement}, that a declared spec stands in for the
@@ -1946,8 +1954,8 @@ coordination literature. It also clarifies the intrinsic purpose of
 coordination: removing possibilities via \commitments. This simplicity
 leads to the generality of Complete CALM: a spec's runs are consistent exactly
 when it is lifted monotone, which reduces to textbook monotonicity for
-functional specs, and Complete CAP follows as a corollary. \Commitments lead to Proper Coordination, explaining how non-monotone specs are handled
-consistently.
+functional specs. Complete CAP follows as a corollary. \Commitments
+lead to Proper Coordination, explaining how to make the right commitments in non-monotone specs.
 %  A totally ordered log
 % and a key-value store are each non-monotone on their own, yet when the log
 % guards the store, the log's \commitments are all the composition needs, and
