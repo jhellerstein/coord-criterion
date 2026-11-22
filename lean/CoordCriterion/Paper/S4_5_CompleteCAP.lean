@@ -51,8 +51,7 @@ conjecture more broadly: which specifications are subject to the CAP
 conjecture, and which are not?
 
 To pose the question, we separate the outputs that participants emit from
-the conclusions an observer, such as a client, may draw by combining them.  The
-spec must permit such combinations, but no participant emits them, and
+the conclusions an observer, such as a client, may draw by combining them.  The spec permits such combinations, but no participant emits them, and
 availability does not need them."  Lean: Theorem `thm:complete-cap`,
 `«thm:complete-cap/E-eq-P»`, and Corollary `cor:complete-cap-any-system`
 below, in their existential form: some system has the two properties iff the
