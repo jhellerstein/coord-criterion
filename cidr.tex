@@ -490,7 +490,7 @@ $i$ and otherwise only rows whose inputs \inrelbase $i$.
 We say that a row $(k,u)$ is
 \emph{at input} $k$, and that an input is
 \emph{legal} in a state when the remainder table has a row at it.  To write
-remainder tables compactly, we borrow selection from relational algebra: a
+remainder tables compactly, we use a shorthand for relational selection: a
 predicate in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$ holds
 the rows of $P$ whose input \inrel $i$, and commas separate conjuncts, as in
 $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$.  In
@@ -653,14 +653,10 @@ sequences of its events, like those that produce panels~(a)--(c).
 \label{def:run}
 Input and output events are \emph{specification events}, or just \emph{events}.  A \emph{canonical run}, or just \emph{run}, is a
 finite sequence of events from the
-canonical state $\sigma_P(i)$ at some input $i$.  It is
+canonical state $\sigma_P(i)$ at some input $i$, each applied to the state the one before it produced.  It is
 \emph{\commitment-free} when no output event in it applies a \commitment; the
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
-
-Each event must be enabled where it occurs: an input event needs a legal
-input, so inputs only grow, and an output event emits the current output,
-applying its canonical \commitment if that output is not legal.
 
 Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
