@@ -148,7 +148,7 @@ availability.  CALM, CAP, and CRDTs each answer the question for one class of
 programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.
 
-We put them on common ground, in a formalism that clarifies the literature and
+We provide a simple formalism that unifies the literature and
 offers new results.  A minimalist \spectype (spec) is a \emph{possibility table} containing, for
 each input, every output a system may produce, with partial orders on inputs and
 outputs.  Its runs are \emph{consistent} when they are confluent.
@@ -163,7 +163,7 @@ map into the same framework.
 Prior CALM results stop at monotonicity: for non-monotone
 specs, they say only that coordination is needed somewhere.  Our
 unified framework offers constructive results on both sides: it says exactly
-how much coordination a spec needs, and where.  A non-monotone
+what coordination a spec needs, and when.  A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
 \emph{Proper Coordination} identifies which stage of a composition must make the
@@ -217,8 +217,8 @@ networks~\cite{ameloot2013relational,hellerstein2020keeping}.  The CAP
 Conjecture proposed a related question: which consistency guarantees can remain
 available when participants cannot
 communicate~\cite{brewer2000towards,brewer2012cap}?  Its original proof
-answered it for only one guarantee: linearizable registers cannot remain
-available~\cite{gilbert2002cap}.  Both results are invoked broadly: CALM as a
+provided the answer for only one guarantee: linearizable
+registers~\cite{gilbert2002cap}.  Yet both results are invoked broadly: CALM as a
 rule that monotone programs need no coordination, CAP as a general constraint
 on distributed systems. The folklore outgrew the proofs.\color{black}
 
@@ -287,24 +287,23 @@ Despite its simplicity, our model supports not only application invariants,
 but also general-purpose consistency definitions (Appendix~\ref{app:registers},
 Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).\cxbar{introduction-8}{0.4 0.4 1}{e}\color{black}
 
-\subsection{The criterion: Lifted Monotonicity}
+\subsection{Consistency and a criterion for achieving it}
 \color{black!45}\cxtag{introduction:9}{C}The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity.  Our Consistency definition is general: the runs of a spec are
 \emph{consistent} when they are \emph{confluent}, so that states reached along
 different paths can be brought to a common state.  Applied to different specs,
-this one definition captures classical consistency models, from
-linearizability, through serializability and other isolation levels, to the
-eventual consistency of replicated data.  It also captures consistency of
+this one definition captures classical consistency models, from eventual
+consistency of replicated data through linearizability, serializability and
+other isolation levels.  It also captures consistency of
 application specs.\color{black}
 
-\color{black!45}\cxtag{introduction:10}{C}For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
+\color{black!45}\cxtag{introduction:10}{C}A spec with one output per input is a function, and its monotonicity is standard: $i\InputOrd j$
 implies $f(i)\OutputOrd f(j)$.  Nondeterministic specs, such as leader election
 and transaction scheduling, need a richer monotonicity property that ensures
 not only that outputs grow as inputs grow, but also that different output
 choices for the same input can grow by $\OutputOrd$ to a common permitted
 output.  We call this property \emph{Lifted Monotonicity}, and a spec that has
-it \emph{lifted monotone}.  It reduces to standard monotonicity for specs that
-are deterministic functions.\color{black}
+it \emph{lifted monotone}.  It reduces to standard monotonicity for functional specs.\color{black}
 
 \color{black!45}\cxtag{introduction:11}{C}Confluence is an operational property of all the runs a spec allows.  Lifted Monotonicity,
 by contrast, is a static property of the spec's table: it can be checked on
@@ -312,12 +311,11 @@ pairs of rows, without exploring runs.  \emph{Functional CALM}
 (Section~\ref{sec:functional-calm-theorem}) and \emph{Complete CALM}
 (Section~\ref{sec:complete-calm-theorem}) show that the two coincide: the runs a spec allows are consistent exactly when the spec is
 lifted monotone.  Hence Consistency As Lifted Monotonicity, a new reading of the
-CALM acronym.
-Functional CALM covers prior CALM work and CRDT state.\color{black}
+CALM acronym.\color{black}
 
 \subsection{Coordination is for \commitment}
 \color{black!45}\cxtag{introduction:12}{C}What of coordination?  A \commitment isolates the contract a coordination
-mechanism achieves, apart from how it achieves it: locks, consensus,
+mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
 In a composition of specs, \emph{Proper Coordination}
@@ -327,9 +325,9 @@ makes every \commitment; the replicated store makes none, whether it employs
 coordination or not (Section~\ref{sec:composition}).\color{black}
 
 \color{black!45}\cxtag{introduction:13}{C}Distributed histories are captured under the same consistency criteria as
-centralized ones (Section~\ref{sec:distributed-execution}).  Complete CAP
+sequential runs (Section~\ref{sec:distributed-execution}).  Complete CAP
 (Section~\ref{sec:complete-cap}) says Lifted Monotonicity exactly characterizes specs
-that can keep every permitted output available and confluent during a
+that can keep every permitted output both available and consistent during a
 partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.\color{black}
 
 \subsection{Contributions}
@@ -464,7 +462,7 @@ emitted without \commitment.\color{black}
   \label{fig:election-frames}
 \end{figure*}
 
-\color{black!45}\cxtag{functional-calm:2}{C}We introduce the framework with a small election, illustrated in
+\color{black!45}\cxtag{functional-calm:2}{C}Consider the election illustrated in
 Figure~\ref{fig:election-frames}.  Three voters each cast at most one immutable
 ballot for $a$ or $b$.  The output is whichever candidate has a majority, or
 $\bot$ while there is none.  An input is a vector of the ballots received so
@@ -521,7 +519,7 @@ ever extends its output:\color{black}
 \end{equation}
 \end{definition}
 
-\color{black!45}\cxtag{functional-calm:8}{C}The election is monotone: for example, the input sequence
+\color{black!45}\cxtag{functional-calm:8}{C}The election is monotone: to give an example, the input sequence
 $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$ produces the output sequence
 $\bot\OutputOrd\bot\OutputOrd a$.\color{black}
 
@@ -529,7 +527,7 @@ $\bot\OutputOrd\bot\OutputOrd a$.\color{black}
 \color{black!45}\cxtag{functional-calm:9}{C}As a run proceeds, the possibilities narrow.  Each panel of
 Figure~\ref{fig:election-frames} shows one moment: the ballots received so
 far, and the rows that can still be reached from them.  We call such a moment
-a state.\color{black}
+a specification state.\color{black}
 
 \color{black}\begin{definition}[Specification state, current input, remainder table]
 \label{def:residual-state}
@@ -542,7 +540,7 @@ $R\subseteq P$ is the \emph{remainder table}, such that:
 \end{enumerate}
 \end{definition}
 
-\color{black!45}\cxtag{functional-calm:11}{C}The events defined below only ever remove rows.  We say that a row $(k,u)$ is
+\color{black!45}\cxtag{functional-calm:11}{C}We say that a row $(k,u)$ is
 \emph{at input} $k$.  To write remainder tables compactly, we borrow selection
 from relational algebra: a predicate on the columns $\mathrm{in}$ and
 $\mathrm{out}$ in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$
@@ -580,9 +578,10 @@ $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the effect of
 $\mathsf{input}(k)$ alone, $\mathsf{input}(i)$ at $(i,R)$ has no effect, and an
 input event from a canonical state leads to another canonical state.\cxbar{functional-calm-14}{0.4 0.4 1}{e}\color{black}
 
-\color{black!45}\cxtag{functional-calm:15}{C}Two sets of outputs matter in every state: those permitted at the current
-input, and those still possible once more input arrives.  In panel~(b), the
-first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.\color{black}
+\color{black!45}\cxtag{functional-calm:15}{C}Two sets of outputs matter in every state: those at the current
+input (its \emph{fiber}), and those at the current input or any input that
+\inrel it (its \emph{upper fiber}).  In panel~(b), the
+first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.  Formally:\color{black}
 
 \color{black!45}\begin{definition}[Fiber, upper fiber]
 \label{def:fiber}
@@ -592,14 +591,19 @@ $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
 k])$, the outputs paired with $k$ or with any input that \inrel $k$.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{functional-calm:17}{C}A functional fiber has at most one value.  In a state $(i,R)$, the upper fiber
-at $i$ is $\pi_{\mathrm{out}}(R)$, every output still possible, and we say that
-the state is \emph{determined} when that set has one element: one result
-remains, whatever legal input still arrives.  If $v_2$ instead votes for $a$ as
-in panel~(c), it is $\{a\}$: input alone has settled the outcome.\color{black}
+\color{black!45}\cxtag{functional-calm:17}{C}A functional fiber has at most one value.  A state is determined when only one
+output remains possible, as in panel~(c), where input alone has settled the
+outcome.\color{black}
+
+\color{black!45}\begin{definition}[Determined state]
+\label{def:determined}
+\cxtag{functional-calm:18}{C}Let $\sigma = (i, R)$ be a specification state.  The upper fiber of $\sigma$
+is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe i]) = \pi_{\mathrm{out}}(R)$.
+We say $\sigma$ is \emph{determined} when $|\pi_{\mathrm{out}}(R)|=1$.\color{black}
+\end{definition}
 
 \paragraph{Output events and \commitments.}
-\color{black!45}\cxtag{functional-calm:18}{C}Inputs arrive from the environment, but outputs are the system's to choose, and
+\color{black!45}\cxtag{functional-calm:19}{C}Inputs arrive from the environment, but outputs are the system's to choose, and
 once emitted they cannot be retracted.  At a state $(i,R)$, the current input
 has a unique row $(i,o)$, so $o$, the \emph{current output}, is the only output
 the system may emit.  Emitting $\bot$ in panel~(b) is safe, since every output
@@ -608,11 +612,11 @@ still possible.\color{black}
 
 \color{black}\begin{definition}[Legal output]
 \label{def:exposable}
-\cxtag{functional-calm:19}{N/M}\cxbar{functional-calm-19}{0.4 0.4 1}{s}The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
-upper fiber \outrel $o$.\cxbar{functional-calm-19}{0.4 0.4 1}{e}\color{black}
+\cxtag{functional-calm:20}{N/M}\cxbar{functional-calm-20}{0.4 0.4 1}{s}The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
+upper fiber \outrel $o$.\cxbar{functional-calm-20}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{functional-calm:20}{C}So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  Possibilities
+\color{black!45}\cxtag{functional-calm:21}{C}So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  Possibilities
 can also be removed deliberately.  Closing the polls in panel~(d) rules out
 $aba$ and $abb$, and no remaining row covers them: this is the fateful
 decision of the introduction.  A row $(k,u)$ is \emph{\outrelpast} by another
@@ -620,7 +624,7 @@ row $(k,w)$ at the same input when $w$ \outrel $u$.\color{black}
 
 \color{black}\begin{definition}[\Commitment]
 \label{def:commitment}
-\cxtag{functional-calm:21}{N/M}\cxbar{functional-calm-21}{0.4 0.4 1}{s}A \emph{\commitment} is a partial function $e$ on specification states that
+\cxtag{functional-calm:22}{N/M}\cxbar{functional-calm-22}{0.4 0.4 1}{s}A \emph{\commitment} is a partial function $e$ on specification states that
 removes a nonempty set of rows, none of which is \outrelpast by a row that
 remains at the same input.  That is, whenever $e(i,R)=(j,R')$, we have
 $R'\subsetneq R$ and
@@ -630,18 +634,18 @@ $R'\subsetneq R$ and
   u\not\OutputOrd w.
   \label{eq:commitment-unsubsumed}
 \end{equation}
-It leaves the current input unchanged: $j=i$.\cxbar{functional-calm-21}{0.4 0.4 1}{e}\color{black}
+It leaves the current input unchanged: $j=i$.\cxbar{functional-calm-22}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{functional-calm:22}{C}In a functional spec each input has one row, so the last condition always
-holds: a \commitment rules out the inputs of the rows it removes.  When $o$ is
-not legal, a \commitment can make it legal by removing the rows whose outputs
-conflict with $o$.  Emitting $o$ only once it is legal keeps a run from
+\color{black!45}\cxtag{functional-calm:23}{C}In a functional spec each input has one row, so the last condition always
+holds: a \commitment rules out the inputs of the rows it removes.  When $o$ is not legal,
+we make it legal via a \commitment that removes the rows whose outputs conflict
+with $o$.  Emitting $o$ only once it is legal keeps a run from
 contradicting $o$ later on, when the environment may already have acted on it.\color{black}
 
 \color{black}\begin{definition}[Output event]
 \label{def:output-event}
-\cxtag{functional-calm:23}{N/S}At a state $(i,R)$ with current output $o$, the \emph{output event}
+\cxtag{functional-calm:24}{N/S}At a state $(i,R)$ with current output $o$, the \emph{output event}
 $\mathsf{output}(o)$ atomically keeps only the rows whose outputs \outrelbase $o$,
 and then emits $o$:
 \color{black}\begin{equation}
@@ -652,21 +656,21 @@ and then emits $o$:
 
 \color{black}\begin{definition}[Canonical \commitment]
 \label{def:canonical-commitment-functional}
-\cxtag{functional-calm:24}{N/S}When $o$ is not legal at $(i,R)$, equivalently $R'\neq R$, the event first
-removes the rows whose outputs do not \outrelbase $o$; this removal is the
-\emph{canonical \commitment} $x_o(i,R)=(i,R')$, after which $o$ is legal.  In a functional table each
+\cxtag{functional-calm:25}{N/S}When $o$ is not legal at $(i,R)$, equivalently $R'\neq R$, the event first
+removes the rows whose outputs do not \outrelbase $o$; this removal is
+$o$'s \emph{canonical \commitment} $x_o(i,R)=(i,R')$, after which $o$ is legal.  In a functional table each
 input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a \commitment).\color{black}
 \end{definition}
 
-\color{black}\cxtag{functional-calm:25}{N/M}\cxbar{functional-calm-25}{0.4 0.4 1}{s}An output event thus always emits a legal output, and applies a \commitment
+\color{black}\cxtag{functional-calm:26}{N/M}\cxbar{functional-calm-26}{0.4 0.4 1}{s}An output event thus always emits a legal output, and applies a \commitment
 exactly when its output was not already legal.  The current row $(i,o)$
 remains, since $o$ \outrel itself, so the event always ends at a specification
 state with current input $i$.  \emph{Determination} is the process of reaching
 a determined state.  An input event can achieve it through input loss, as in
 panel~(c), and a \commitment can do so by ruling out inputs that would
 otherwise remain possible, as in panel~(d).  An event from a determined state
-always leads to another determined state with the same output: events only
-remove rows, and a row at the current input always remains.\cxbar{functional-calm-25}{0.4 0.4 1}{e}\color{black}
+always leads to another determined state with that output: events only
+remove rows, and a row at the current input always remains.\cxbar{functional-calm-26}{0.4 0.4 1}{e}\color{black}
 
 \begin{figure}[t]
   \centering
@@ -704,8 +708,9 @@ remove rows, and a row at the current input always remains.\cxbar{functional-cal
   \label{fig:nonmonotone-frame}
 \end{figure}
 
-\color{black!45}\cxtag{functional-calm:26}{C}Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
-changes only the output order $\OutputOrd$: now all outputs are incomparable.
+\color{black!45}\cxtag{functional-calm:27}{C}Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
+changes only the output order $\OutputOrd$: it defines a new spec in which all
+outputs are incomparable.
 Under this order (called the \emph{equality order}), $\bot$ is incompatible
 with future winners, so it is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.  That change in the output
@@ -713,7 +718,7 @@ order is Functional CALM in miniature: the spec is monotone under the original
 order, so later outputs \outrelbase every earlier one; under the equality order
 it is non-monotone, and some outputs can be emitted only with a \commitment.\color{black}
 
-\color{black!45}\cxtag{functional-calm:27}{C}Panel~(d) of Figure~\ref{fig:election-frames}, by contrast, reflects a
+\color{black!45}\cxtag{functional-calm:28}{C}Panel~(d) of Figure~\ref{fig:election-frames}, by contrast, reflects a
 \commitment that the spec does not require.  A \emph{system} that implements a
 spec may make one through a \emph{\commitment event}.  Here the system acts as
 a registrar that, when it emits $\bot$ at $ab\cdot$, also closes the polls,
@@ -725,58 +730,59 @@ Section~\ref{sec:systems} models such choices; a spec itself has only input and
 output events, and this section uses only canonical \commitments.\color{black}
 
 \paragraph{Runs and consistency.}
-\color{black!45}\cxtag{functional-calm:28}{C}Runs are the foundation of the consistency side of CALM.  A spec's runs are
+\color{black!45}\cxtag{functional-calm:29}{C}Runs are the foundation of the consistency side of CALM.  A spec's runs are
 sequences of its events, like those that produce panels~(a)--(c).\color{black}
 
 \color{black}\begin{definition}[Specification event]
 \label{def:specification-event}
-\cxtag{functional-calm:29}{N/M}\cxbar{functional-calm-29}{0.4 0.4 1}{s}Input and output events are \emph{specification events}: they change the
-specification state.  We call them simply \emph{events} when unambiguous.\cxbar{functional-calm-29}{0.4 0.4 1}{e}\color{black}
+\cxtag{functional-calm:30}{N/M}\cxbar{functional-calm-30}{0.4 0.4 1}{s}Input and output events are \emph{specification events}: they change the
+specification state.  We call them simply \emph{events} when unambiguous.\cxbar{functional-calm-30}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{definition}[Transition system]
 \label{def:transition-system}
-\cxtag{functional-calm:30}{N/M}\cxbar{functional-calm-30}{0.4 0.4 1}{s}The \emph{transition system} consists of specification states and
-specification events.\cxbar{functional-calm-30}{0.4 0.4 1}{e}\color{black}
+\cxtag{functional-calm:31}{N/M}\cxbar{functional-calm-31}{0.4 0.4 1}{s}The \emph{transition system} consists of specification states and
+specification events.\cxbar{functional-calm-31}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
 \color{black}\begin{definition}[Canonical run]
 \label{def:run}
-\cxtag{functional-calm:31}{N/S}A \emph{canonical run}, or just \emph{run}, is any finite transition sequence of the transition system from the
+\cxtag{functional-calm:32}{N/S}A \emph{canonical run}, or just \emph{run}, is any finite transition sequence of the transition system from the
 canonical state $\sigma_P(i)$ at some input $i$.\color{black}
 \end{definition}
 
-\color{black}\cxtag{functional-calm:32}{N/M}\cxbar{functional-calm-32}{0.4 0.4 1}{s}Runs range over every behavior the spec permits, not only the behaviors a
+\color{black}\cxtag{functional-calm:33}{N/M}\cxbar{functional-calm-33}{0.4 0.4 1}{s}Runs range over every behavior the spec permits, not only the behaviors a
 particular system happens to produce.  A system that never uses some of the
 spec's latitude is better described by a narrower spec.  For the spec as
 written, we assume that any permitted behavior may occur.  A run is
 \emph{\commitment-free} when none of its output events applies a
 \commitment.  A state is \emph{reachable without \commitment} when some
-\commitment-free run reaches it.\cxbar{functional-calm-32}{0.4 0.4 1}{e}\color{black}
+\commitment-free run reaches it.\cxbar{functional-calm-33}{0.4 0.4 1}{e}\color{black}
 
-\color{black!45}\cxtag{functional-calm:33}{C}Different runs may retain different rows.  Under the equality order, rows
+\color{black!45}\cxtag{functional-calm:34}{C}Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$
-and $a$: none is a \emph{common \outnoun} of them.  A run that emits $\bot$ at
-$ab\cdot$ applies $x_\bot$ and keeps no row at $aba$, while a run that receives
-$aba$ and emits $a$ keeps $(aba,a)$, so the two runs can never be reconciled at
-$aba$.  The argument uses only the table, its orders, and canonical runs, so
-the need for the \commitment is a property of the spec, not of any system.  To
-compare runs that end at different inputs, we consider a common \indesc of
-those inputs.\color{black}
+and $a$: none is a \emph{common \outnoun} of them.  So a run that emits $\bot$ at
+$ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
+that receives $aba$ and emits $a$.  Under the equality order this removal is
+$\bot$'s canonical \commitment, required by the spec; in panel~(d), under the
+original order, the registrar made the same removal by choice.\color{black}
+
+\color{black!45}\cxtag{functional-calm:35}{C}Having extracted canonical runs from a spec, we are now ready to define
+consistency.\color{black}
 
 \color{black}\begin{definition}[Confluence at an input]
 \label{def:confluence}
-\cxtag{functional-calm:34}{N/S}A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{confluent at} $j$, a common \indesc of their current inputs, when each can be continued to a common state with current input $j$.\color{black}
+\cxtag{functional-calm:36}{N/S}A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{confluent at} $j$, a common \indesc of their current inputs, when each can be continued to a common state with current input $j$.\color{black}
 \end{definition}
 
 \color{black}\begin{definition}[Consistency]
 \label{def:consistency}
-\cxtag{functional-calm:35}{N/S}The runs of an \spectype are \emph{consistent} when every finite family of
+\cxtag{functional-calm:37}{N/S}The runs of an \spectype are \emph{consistent} when every finite family of
 them is confluent at every common \indesc of their current inputs.\color{black}
 \end{definition}
 
-\color{black}\cxtag{functional-calm:36}{N/M}\cxbar{functional-calm-36}{0.4 0.4 1}{s}Consistency requires confluence at every common \indesc of the runs' current
+\color{black}\cxtag{functional-calm:38}{N/M}\cxbar{functional-calm-38}{0.4 0.4 1}{s}Consistency requires confluence at every common \indesc of the runs' current
 inputs, not just at some larger common \indesc that arrives later.  Otherwise
 the runs could emit conflicting outputs before that larger input arrives, and
 waiting cannot retract either output from the environment.  Even when later
@@ -784,9 +790,9 @@ input could bring the runs to a common state, the environment may already have
 acted on the outputs through channels the system does not see, as in Lamport's
 ``anomalous behavior''~\cite{lamport1978time}.  And even when such a larger
 input exists, it might never arrive.  Appendix~\ref{app:notation} collects the
-notation for reference.\cxbar{functional-calm-36}{0.4 0.4 1}{e}\color{black}
+notation for reference.\cxbar{functional-calm-38}{0.4 0.4 1}{e}\color{black}
 
-\color{black!45}\cxtag{functional-calm:37}{C}The election shows the arc in miniature.  Input narrows the possibilities, and
+\color{black!45}\cxtag{functional-calm:39}{C}The election shows the arc in miniature.  Input narrows the possibilities, and
 an output that everything remaining builds on is legal and needs nothing more.
 An output that is not legal needs a \commitment; otherwise, runs that emit it
 would diverge for good.  Next, we establish when that happens: when the spec is
@@ -795,18 +801,18 @@ not monotone.\color{black}
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-\color{black!45}\cxtag{functional-calm:38}{C}We now have both sides that the introduction promised.  Monotonicity is a
+\color{black!45}\cxtag{functional-calm:40}{C}We now have both sides that the introduction promised.  Monotonicity is a
 static property of the spec's table, and consistency is an operational property
 of the runs it allows.  Functional CALM bridges the two: the runs are
 consistent exactly when the spec is monotone.\color{black}
 
-\color{black!45}\cxtag{functional-calm:39}{C}Three facts about runs drive the proof.  First, events are relational
+\color{black!45}\cxtag{functional-calm:41}{C}Three facts about runs drive the proof.  First, events are relational
 selections, and selections commute, so a run's remainder table depends only on
 its last input and the outputs it emitted:\color{black}
 
 \color{black}\begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
-\cxtag{functional-calm:40}{N/S}If a run ends at current input $i$ after emitting
+\cxtag{functional-calm:42}{N/S}If a run ends at current input $i$ after emitting
 $o_1,\ldots,o_m$, its remainder table is
 \begin{equation}
   P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
@@ -817,22 +823,22 @@ the rows whose input \inrel $i$ and whose output \outrel each $o_r$.\color{black
 \end{lemma}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{functional-calm:41}{N/M}\cxbar{functional-calm-41}{0.4 0.4 1}{s}Input and output events are both relational selections, and selections
+\cxtag{functional-calm:43}{N/M}\cxbar{functional-calm-43}{0.4 0.4 1}{s}Input and output events are both relational selections, and selections
 commute; successive input selections reduce to the last, since each input
-extends the one before.  Full proof in Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-41}{0.4 0.4 1}{e}\color{black}
+extends the one before.  Full proof in Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-43}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{functional-calm:42}{N/S}For example, in the equality-order variant of
+\color{black}\cxtag{functional-calm:44}{N/S}For example, in the equality-order variant of
 Figure~\ref{fig:nonmonotone-frame}, a run that emits $\bot$ at $ab\cdot$ keeps
 $P[\mathrm{in}\InputGe ab\cdot,\ \mathrm{out}\OutputGe\bot]$: the single row
 $(ab\cdot,\bot)$, as the figure shows.\color{black}
 
-\color{black!45}\cxtag{functional-calm:43}{C}Second, a set of runs can be continued to a common state exactly when their
+\color{black!45}\cxtag{functional-calm:45}{C}Second, a set of runs can be continued to a common state exactly when their
 current remainder tables share a row at the target input:\color{black}
 
 \color{black!45}\begin{proposition}[Survivor test]
 \label{prop:confluence}
-\cxtag{functional-calm:44}{C}Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent at a common
+\cxtag{functional-calm:46}{C}Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent at a common
 \indesc $j$ of their current inputs if and only if some row $(j,u)$ is in every
 $R_r$.  For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$
 brings every run to the same state,
@@ -840,17 +846,17 @@ $\bigl(j,\ P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.\color{blac
 \end{proposition}
 
 \color{black!45}\begin{proof}[Proof sketch]
-\cxtag{functional-calm:45}{C}First assume the runs are confluent at $j$.  Rows are never added, so a row of
+\cxtag{functional-calm:47}{C}First assume the runs are confluent at $j$.  Rows are never added, so a row of
 the common state at $j$ was already in every $R_r$.  Now assume $(j,u)$ is in
 every $R_r$.  Then $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ brings
 every run to the same state, so the runs are confluent at $j$.  Full proof in
 Appendix~\ref{app:proofs-sec2}.\color{black}
 \end{proof}
 
-\color{black}\cxtag{functional-calm:46}{N/S}In a functional spec the only row at $j$ is $(j,f(j))$, so the test
+\color{black}\cxtag{functional-calm:48}{N/S}In a functional spec the only row at $j$ is $(j,f(j))$, so the test
 asks whether $(j,f(j))$ survives in every run.\color{black}
 
-\color{black}\cxtag{functional-calm:47}{N/M}\cxbar{functional-calm-47}{0.4 0.4 1}{s}Consistency thus ensures that runs never diverge irreparably: there is no
+\color{black}\cxtag{functional-calm:49}{N/M}\cxbar{functional-calm-49}{0.4 0.4 1}{s}Consistency thus ensures that runs never diverge irreparably: there is no
 ``split brain.''  Whatever events a finite collection of runs contains, at any
 common \indesc of their current inputs, some state is reachable by every run
 and contradicts none of their outputs; Proposition~\ref{prop:confluence}
@@ -858,16 +864,16 @@ identifies it.  Consistency is a safety property of the spec's runs: it guarante
 state exists, not that a system reaches it
 (Section~\ref{sec:commitment-conflict}).  Reaching it takes an algorithm,
 message delivery, and a termination argument, which belong to the operational
-model in which a spec is realized.  Third, consistency comes down to legality:\cxbar{functional-calm-47}{0.4 0.4 1}{e}\color{black}
+model in which a spec is realized.  Third, consistency comes down to legality:\cxbar{functional-calm-49}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\begin{lemma}[Confluence and legality]
 \label{lem:confluence-legality}
-\cxtag{functional-calm:48}{C}The runs of an \spectype are consistent if and only if no output event of any
+\cxtag{functional-calm:50}{C}The runs of an \spectype are consistent if and only if no output event of any
 run applies a \commitment.\color{black}
 \end{lemma}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{functional-calm:49}{N/M}\cxbar{functional-calm-49}{0.4 0.4 1}{s}First assume the runs are consistent, and suppose some run's output event
+\cxtag{functional-calm:51}{N/M}\cxbar{functional-calm-51}{0.4 0.4 1}{s}First assume the runs are consistent, and suppose some run's output event
 $\mathsf{output}(o)$ applies $x_o$.  It removes some row $(k,x)$ such that no
 row at $k$ \outrel both $x$ and $o$.  Compare that run with one from the state
 before that event that instead takes $\mathsf{input}(k)$ and then emits $x$:
@@ -878,59 +884,59 @@ $(i_r,u_r)$ at its current input whose output \outrel everything it emitted
 (Lemma~\ref{lem:run-residual}), and $u_r$ is legal at $\sigma_P(i_r)$.
 Applying that legality one run at a time gives $u\in P(j)$ that \outrel every
 $u_r$, and the Survivor test gives confluence.  Full proof in
-Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-49}{0.4 0.4 1}{e}\color{black}
+Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-51}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
 
-\color{black!45}\cxtag{functional-calm:50}{C}In the election under the equality order, emitting $\bot$ at $ab\cdot$ applies
+\color{black!45}\cxtag{functional-calm:52}{C}In the election under the equality order, emitting $\bot$ at $ab\cdot$ applies
 a \commitment, since $\bot$ is not legal there, and the two runs of
 Section~\ref{sec:election-story} share no row at $aba$.\color{black}
 
-\color{black}\cxtag{functional-calm:51}{N/M}\cxbar{functional-calm-51}{0.4 0.4 1}{s}In the functional case, monotonicity has a strong consequence: emitting outputs
-never changes the state, which depends only on the input.\cxbar{functional-calm-51}{0.4 0.4 1}{e}\color{black}
+\color{black}\cxtag{functional-calm:53}{N/M}\cxbar{functional-calm-53}{0.4 0.4 1}{s}In the functional case, monotonicity has a strong consequence: emitting outputs
+never changes the state, which depends only on the input.\cxbar{functional-calm-53}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
-\cxtag{functional-calm:52}{C}In a monotone functional specification, every run ending at current
+\cxtag{functional-calm:54}{C}In a monotone functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.\color{black}
 \end{corollary}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{functional-calm:53}{N/S}By monotonicity, the outputs a run emits remove no row at an \indesc
+\cxtag{functional-calm:55}{N/S}By monotonicity, the outputs a run emits remove no row at an \indesc
 of $i$ (Lemma~\ref{lem:run-residual}).  Full proof in Appendix~\ref{app:proofs-sec2}.\color{black}
 \end{proof}
 
-\color{black}\cxtag{functional-calm:54}{N/S}To be confluent at a common \indesc $j$, each run therefore needs only the
+\color{black}\cxtag{functional-calm:56}{N/S}To be confluent at a common \indesc $j$, each run therefore needs only the
 single event $\mathsf{input}(j)$, which takes it to $\sigma_P(j)$, the state of a
 run that starts with all of the input.  Knowing the input is enough to know the state, and with it the one
 output $f(j)$.\color{black}
 
-\color{black}\cxtag{functional-calm:55}{N/S}Monotonicity also governs legality:\color{black}
+\color{black}\cxtag{functional-calm:57}{N/S}Monotonicity also governs legality:\color{black}
 
 \color{black}\begin{proposition}[No-\commitment test]
 \label{prop:functional-exposure-boundary}
-\cxtag{functional-calm:56}{N/S}A functional \spectype is monotone if and only if every output at
+\cxtag{functional-calm:58}{N/S}A functional \spectype is monotone if and only if every output at
 every state reachable without \commitment is legal.\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{functional-calm:57}{N/M}\cxbar{functional-calm-57}{0.4 0.4 1}{s}First assume $f$ is monotone.  By Corollary~\ref{cor:state-by-input}, runs
+\cxtag{functional-calm:59}{N/M}\cxbar{functional-calm-59}{0.4 0.4 1}{s}First assume $f$ is monotone.  By Corollary~\ref{cor:state-by-input}, runs
 reach only canonical states, and at $\sigma_P(i)$ the output $f(i)$ is legal
 because $f$ is monotone at $i$.  Now assume every output at every state
 reachable without \commitment is legal.  In particular $f(i)$ is legal at
 $\sigma_P(i)$, which input alone reaches, and that holds exactly when $f$ is
-monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-57}{0.4 0.4 1}{e}\color{black}
+monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-59}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
 \color{black!45}\begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
-\cxtag{functional-calm:58}{C}The runs of a functional \spectype are consistent if and only if the spec is
+\cxtag{functional-calm:60}{C}The runs of a functional \spectype are consistent if and only if the spec is
 monotone.\color{black}
 \end{theorem}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{functional-calm:59}{N/M}\cxbar{functional-calm-59}{0.4 0.4 1}{s}By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
+\cxtag{functional-calm:61}{N/M}\cxbar{functional-calm-61}{0.4 0.4 1}{s}By Lemma~\ref{lem:confluence-legality}, the runs are consistent exactly when
 no output event of a run applies a \commitment.  First assume they are
 consistent, and suppose $f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$.  At
 $\sigma_P(i)$ the event $\mathsf{output}(f(i))$ then applies $x_{f(i)}$ and
@@ -938,10 +944,10 @@ rules out input $k$, a contradiction, so the spec is monotone.  Now assume the
 spec is monotone.  It can emit every current output without \commitment
 (Proposition~\ref{prop:functional-exposure-boundary}), so by induction on its
 length every run is \commitment-free, and consistency follows.  Full proof in
-Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-59}{0.4 0.4 1}{e}\color{black}
+Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-61}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black!45}\cxtag{functional-calm:60}{C}Functional CALM restates the familiar CALM dichotomy at the level of the spec
+\color{black!45}\cxtag{functional-calm:62}{C}Functional CALM restates the familiar CALM dichotomy at the level of the spec
 rather than inside a particular programming language.
 Classical CALM fits, with inputs $J$ as sets of facts ordered by
 inclusion and output views $Q(J)$ ordered by inclusion.  Functional

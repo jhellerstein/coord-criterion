@@ -95,7 +95,7 @@ emitted without \commitment.
   \label{fig:election-frames}
 \end{figure*}
 
-We introduce the framework with a small election, illustrated in
+Consider the election illustrated in
 Figure~\ref{fig:election-frames}.  Three voters each cast at most one immutable
 ballot for $a$ or $b$.  The output is whichever candidate has a majority, or
 $\bot$ while there is none.  An input is a vector of the ballots received so
@@ -152,7 +152,7 @@ A functional \spectype $\Spec$, with induced function $f$, is
 \end{equation}
 \end{definition}
 
-The election is monotone: for example, the input sequence
+The election is monotone: to give an example, the input sequence
 $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$ produces the output sequence
 $\bot\OutputOrd\bot\OutputOrd a$.
 
@@ -160,7 +160,7 @@ $\bot\OutputOrd\bot\OutputOrd a$.
 As a run proceeds, the possibilities narrow.  Each panel of
 Figure~\ref{fig:election-frames} shows one moment: the ballots received so
 far, and the rows that can still be reached from them.  We call such a moment
-a state.
+a specification state.
 
 \begin{definition}[Specification state, current input, remainder table]
 \label{def:residual-state}
@@ -173,7 +173,7 @@ $R\subseteq P$ is the \emph{remainder table}, such that:
 \end{enumerate}
 \end{definition}
 
-The events defined below only ever remove rows.  We say that a row $(k,u)$ is
+We say that a row $(k,u)$ is
 \emph{at input} $k$.  To write remainder tables compactly, we borrow selection
 from relational algebra: a predicate on the columns $\mathrm{in}$ and
 $\mathrm{out}$ in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$
@@ -211,9 +211,10 @@ $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the effect of
 $\mathsf{input}(k)$ alone, $\mathsf{input}(i)$ at $(i,R)$ has no effect, and an
 input event from a canonical state leads to another canonical state.
 
-Two sets of outputs matter in every state: those permitted at the current
-input, and those still possible once more input arrives.  In panel~(b), the
-first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.
+Two sets of outputs matter in every state: those at the current
+input (its \emph{fiber}), and those at the current input or any input that
+\inrel it (its \emph{upper fiber}).  In panel~(b), the
+first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.  Formally:
 
 \begin{definition}[Fiber, upper fiber]
 \label{def:fiber}
@@ -223,11 +224,16 @@ $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
 k])$, the outputs paired with $k$ or with any input that \inrel $k$.
 \end{definition}
 
-A functional fiber has at most one value.  In a state $(i,R)$, the upper fiber
-at $i$ is $\pi_{\mathrm{out}}(R)$, every output still possible, and we say that
-the state is \emph{determined} when that set has one element: one result
-remains, whatever legal input still arrives.  If $v_2$ instead votes for $a$ as
-in panel~(c), it is $\{a\}$: input alone has settled the outcome.
+A functional fiber has at most one value.  A state is determined when only one
+output remains possible, as in panel~(c), where input alone has settled the
+outcome.
+
+\begin{definition}[Determined state]
+\label{def:determined}
+Let $\sigma = (i, R)$ be a specification state.  The upper fiber of $\sigma$
+is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe i]) = \pi_{\mathrm{out}}(R)$.
+We say $\sigma$ is \emph{determined} when $|\pi_{\mathrm{out}}(R)|=1$.
+\end{definition}
 
 \paragraph{Output events and \commitments.}
 Inputs arrive from the environment, but outputs are the system's to choose, and
@@ -265,9 +271,9 @@ It leaves the current input unchanged: $j=i$.
 \end{definition}
 
 In a functional spec each input has one row, so the last condition always
-holds: a \commitment rules out the inputs of the rows it removes.  When $o$ is
-not legal, a \commitment can make it legal by removing the rows whose outputs
-conflict with $o$.  Emitting $o$ only once it is legal keeps a run from
+holds: a \commitment rules out the inputs of the rows it removes.  When $o$ is not legal,
+we make it legal via a \commitment that removes the rows whose outputs conflict
+with $o$.  Emitting $o$ only once it is legal keeps a run from
 contradicting $o$ later on, when the environment may already have acted on it.
 
 \begin{definition}[Output event]
@@ -284,8 +290,8 @@ and then emits $o$:
 \begin{definition}[Canonical \commitment]
 \label{def:canonical-commitment-functional}
 When $o$ is not legal at $(i,R)$, equivalently $R'\neq R$, the event first
-removes the rows whose outputs do not \outrelbase $o$; this removal is the
-\emph{canonical \commitment} $x_o(i,R)=(i,R')$, after which $o$ is legal.  In a functional table each
+removes the rows whose outputs do not \outrelbase $o$; this removal is
+$o$'s \emph{canonical \commitment} $x_o(i,R)=(i,R')$, after which $o$ is legal.  In a functional table each
 input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a \commitment).
 \end{definition}
 
@@ -296,7 +302,7 @@ state with current input $i$.  \emph{Determination} is the process of reaching
 a determined state.  An input event can achieve it through input loss, as in
 panel~(c), and a \commitment can do so by ruling out inputs that would
 otherwise remain possible, as in panel~(d).  An event from a determined state
-always leads to another determined state with the same output: events only
+always leads to another determined state with that output: events only
 remove rows, and a row at the current input always remains.
 
 \begin{figure}[t]
@@ -336,7 +342,8 @@ remove rows, and a row at the current input always remains.
 \end{figure}
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
-changes only the output order $\OutputOrd$: now all outputs are incomparable.
+changes only the output order $\OutputOrd$: it defines a new spec in which all
+outputs are incomparable.
 Under this order (called the \emph{equality order}), $\bot$ is incompatible
 with future winners, so it is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.  That change in the output
@@ -388,13 +395,14 @@ written, we assume that any permitted behavior may occur.  A run is
 Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$
-and $a$: none is a \emph{common \outnoun} of them.  A run that emits $\bot$ at
-$ab\cdot$ applies $x_\bot$ and keeps no row at $aba$, while a run that receives
-$aba$ and emits $a$ keeps $(aba,a)$, so the two runs can never be reconciled at
-$aba$.  The argument uses only the table, its orders, and canonical runs, so
-the need for the \commitment is a property of the spec, not of any system.  To
-compare runs that end at different inputs, we consider a common \indesc of
-those inputs.
+and $a$: none is a \emph{common \outnoun} of them.  So a run that emits $\bot$ at
+$ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
+that receives $aba$ and emits $a$.  Under the equality order this removal is
+$\bot$'s canonical \commitment, required by the spec; in panel~(d), under the
+original order, the registrar made the same removal by choice.
+
+Having extracted canonical runs from a spec, we are now ready to define
+consistency.
 
 \begin{definition}[Confluence at an input]
 \label{def:confluence}

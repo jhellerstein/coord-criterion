@@ -135,7 +135,7 @@ theorem «def:functional-monotonicity/via-f» {I O : Type} [PO I] [PO O]
   ⟨fun h i j hij => h i j _ _ hij ((hf i _).2 rfl) ((hf j _).2 rfl),
    fun h i j o u hij ho hu => by rw [(hf i o).1 ho, (hf j u).1 hu]; exact h i j hij⟩
 
-/-- "The election is monotone: for example, the input sequence
+/-- "The election is monotone: to give an example, the input sequence
 `a·· ≼ ab· ≼ aba` produces the output sequence `⊥ ≼ ⊥ ≼ a`."  The election
 (output-extension order) is monotone, and the chain is as stated. -/
 theorem «sec:election-story/monotone» :
@@ -148,8 +148,7 @@ theorem «sec:election-story/monotone» :
 /-! ### States and input events -/
 
 /-- "Each panel of Figure `fig:election-frames` shows one moment: the ballots
-received so far, and the rows that can still be reached from them.  We call
-such a moment a state."
+received so far, and the rows that can still be reached from them.  We call such a moment a specification state."
 
 **Def. `def:residual-state`** (Specification state, current input, remainder
 table).  "Given a specification `Spec = (I,≼,O,≼,P)`, a *specification state*
@@ -241,8 +240,10 @@ theorem «eq:canonical-state/input-moves-canonical» {I O : Type} [PO I] [PO O]
     τ = canon sp j :=
   input_canon h
 
-/-- "Two sets of outputs matter in every state: those permitted at the current
-input, and those still possible once more input arrives."
+/-- "Two sets of outputs matter in every state: those at the current
+input (its *fiber*), and those at the current input or any input that extends
+it (its *upper fiber*).  In panel (b), the first is `{⊥}` and the second,
+shaded, is `{⊥,a,b}`."
 
 **Def. `def:fiber`** (Fiber, upper fiber).  "Let `R` be a table and `k` an
 input.  The *fiber* of `R` at `k` is `R(k) = π_out(R[in = k])`, the outputs
@@ -257,18 +258,21 @@ abbrev «def:fiber» {I O : Type} (R : Table I O) (k : I) : O → Prop := R k
 abbrev «def:fiber/upper» {I O : Type} [PO I] (R : Table I O) (k : I) : O → Prop :=
   fun o => ∃ k', k ≼ k' ∧ R k' o
 
-/-- After Def. `def:fiber`: "In a state `(i,R)`, the upper fiber at `i` is
-`π_out(R)`, every output still possible."  Every row of a state's table is at
+/-- Def. `def:determined`: "The upper fiber of `σ` is `π_out(R[in ⪰ i]) =
+π_out(R)`."  Every row of a state's table is at
 an input that extends its current input, so the two descriptions agree. -/
 theorem «def:fiber/state» {I O : Type} [PO I] [PO O] {sp : Spec I O} (σ : State sp)
     (o : O) : «def:fiber/upper» σ.R σ.cur o ↔ ∃ k, σ.R k o :=
   ⟨fun ⟨k, _, h⟩ => ⟨k, h⟩, fun ⟨k, h⟩ => ⟨k, σ.above k o h, h⟩⟩
 
-/-- "… we say that the state is *determined* when that set has one element:
-one result remains, whatever legal input still arrives."  Lean:
+/-- **Def. `def:determined`** (Determined state).  "A state is determined when
+only one output remains possible, as in panel (c), where input alone has
+settled the outcome."  "Let `σ = (i, R)` be a specification state.  The upper
+fiber of `σ` is `π_out(R[in ⪰ i]) = π_out(R)`.  We say `σ` is *determined*
+when `|π_out(R)| = 1`."  Lean:
 `CALM.Determined σ` is `∃ o, ∀ k x, σ.R k x → x = o`; the upper fiber
 `π_out(R)` is nonempty, so this is "has exactly one element". -/
-abbrev «sec:functional-events/determined» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+abbrev «def:determined» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) : Prop :=
   Determined σ
 
@@ -279,8 +283,9 @@ theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO
   determined_upper_fiber σ
 
 /-- Fig. `fig:election-frames`(c): "After `input(aa·)` instead … upper fiber
-`{a}`; determined; `a` needs no commitment."  Text: "If `v₂` instead votes for
-`a` as in panel (c), it is `{a}`: input alone has settled the outcome." -/
+`{a}`; determined; `a` needs no commitment."  Text: "A state is determined when
+only one output remains possible, as in panel (c), where input alone has
+settled the outcome." -/
 theorem «fig:election-frames/c» :
     Step (canon elec bad) (.input baa) (canon elec baa) ∧
       (∀ o, (∃ k, (canon elec baa).R k o) ↔ o = .win .a) ∧
@@ -355,8 +360,8 @@ theorem «def:commitment/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   subst this
   exact hnu hw
 
-/-- "When `o` is not legal, a commitment can make it legal by removing the rows
-whose outputs conflict with `o`.  Emitting `o` only once it is legal keeps a
+/-- "When `o` is not legal, we make it legal via a commitment that removes the
+rows whose outputs conflict with `o`.  Emitting `o` only once it is legal keeps a
 run from contradicting `o` later on, when the environment may already have
 acted on it."
 
@@ -390,8 +395,7 @@ theorem «def:output-event/commitment-iff-excluded» {I O : Type} [PO I] [PO O] 
 
 /-- **Def. `def:canonical-commitment-functional`** (Canonical commitment).
 "When `o` is not legal at `(i,R)`, equivalently `R' ≠ R`, the event first
-removes the rows whose outputs do not extend `o`; this removal is the
-*canonical commitment* `x_o(i,R) = (i,R')`, after which `o` is legal.  In a
+removes the rows whose outputs do not extend `o`; this removal is `o`'s *canonical commitment* `x_o(i,R) = (i,R')`, after which `o` is legal.  In a
 functional table each input has only one row, so `x_o` rules out those rows'
 inputs (`x_o` is a commitment)."  Following text: "An output event thus always
 emits a legal output, and applies a commitment exactly when its output was not
@@ -424,8 +428,7 @@ theorem «sec:functional-events/determination-examples» :
   ⟨elec_functional, elec_panel_b_undetermined, elec_panel_c_determined,
    Figures.Elec.panelD_determined.1⟩
 
-/-- "An event from a determined state always leads to another determined state
-with the same output: events only remove rows, and a row at the current input
+/-- "An event from a determined state always leads to another determined state with that output: events only remove rows, and a row at the current input
 always remains."  Lean: the next state is determined (first two conjuncts), and
 every row it keeps has the determined output `o` of the previous state (third
 conjunct). -/
@@ -568,11 +571,11 @@ theorem «sec:election-story/obstruction» :
   ⟨by show _ = _; rw [winner_bab], by show _ = _; rw [winner_baba], bab_le_baba, PO.refl _,
    fun ⟨_, _, h₁, h₂⟩ => by cases (show (⟨.bot⟩ : ResE) = ⟨.win .a⟩ from h₁.trans h₂.symm)⟩
 
-/-- "A run that emits `⊥` at `ab·` applies `x_⊥` and keeps no row at `aba`,
-while a run that receives `aba` and emits `a` keeps `(aba,a)`, so the two runs
-can never be reconciled at `aba`.  The argument uses only the table, its
-orders, and canonical runs, so the need for the commitment is a property of the
-spec, not of any system."  (Equality order.)  The two runs end at
+/-- "So a run that emits `⊥` at `ab·` must apply `x_⊥`, and can never be
+reconciled at `aba` with a run that receives `aba` and emits `a`.  Under the
+equality order this removal is `⊥`'s canonical commitment, required by the
+spec; in panel (d), under the original order, the registrar made the same
+removal by choice."  (Equality order.)  The two runs end at
 `(ab·, P[in ⪰ ab·, out ⪰ ⊥])` and `σ_P(aba)`.  Lean takes the second run
 before it emits `a`; emitting `a` only removes rows, so the paper's pair is
 not confluent either. -/
@@ -581,8 +584,8 @@ theorem «sec:election-story/not-reconciled» :
         ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba] baba :=
   elecEq_not_confluent
 
-/-- "To compare runs that end at different inputs, we consider a common input
-extension of those inputs."
+/-- "Having extracted canonical runs from a spec, we are now ready to define
+consistency."
 
 **Def. `def:confluence`** (Confluence at an input).  "A finite family of runs
 ending at states `(i₁,R₁),…,(i_k,R_k)` is *confluent at* `j`, a common input

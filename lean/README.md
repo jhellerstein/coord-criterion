@@ -180,8 +180,8 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:canonical-state/input-moves-canonical»` | theorem | "… and an input event from a canonical state leads to another canonical state." |
 | `«def:fiber»` | abbrev | "Two sets of outputs matter in every state: |
 | `«def:fiber/upper»` | abbrev | Def. |
-| `«def:fiber/state»` | theorem | After Def. |
-| `«sec:functional-events/determined»` | abbrev | "… we say that the state is *determined* when that set has one element: |
+| `«def:fiber/state»` | theorem | Def. |
+| `«def:determined»` | abbrev | **Def. |
 | `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
 | `«fig:election-frames/c»` | theorem | Fig. |
 | `«def:exposable»` | abbrev | "At a state `(i,R)`, the current input has a unique row `(i,o)`, so `o`, the *current output*, is the only output the system may emit. |
@@ -190,13 +190,13 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:commitment»` | abbrev | "Possibilities can also be removed deliberately. |
 | `«eq:commitment-unsubsumed»` | theorem | **Eq. |
 | `«def:commitment/functional»` | theorem | After Def. |
-| `«def:output-event»` | abbrev | "When `o` is not legal, a commitment can make it legal by removing the rows whose outputs conflict with `o`. |
+| `«def:output-event»` | abbrev | "When `o` is not legal, we make it legal via a commitment that removes the rows whose outputs conflict with `o`. |
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commitment-iff-excluded»` | theorem | Def. |
 | `«def:canonical-commitment-functional»` | abbrev | **Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a specification state with current input `i`." |
 | `«sec:functional-events/determination-examples»` | theorem | "*Determination* is the process of reaching a determined state. |
-| `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state with the same output: |
+| `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state with that output: |
 | `«fig:nonmonotone-frame»` | theorem | Fig. |
 | `«sec:election-story/equality-order-commitment»` | theorem | "Under this order (called the *equality order*), `⊥` is incompatible with future winners, so it is not legal at `ab·`, and emitting it applies `x_⊥`, which r… |
 | `«fig:election-frames/d»` | theorem | Fig. |
@@ -209,8 +209,8 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:run»` | abbrev | **Def. |
 | `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment. |
 | `«sec:election-story/obstruction»` | theorem | "Different runs may retain different rows. |
-| `«sec:election-story/not-reconciled»` | theorem | "A run that emits `⊥` at `ab·` applies `x_⊥` and keeps no row at `aba`, while a run that receives `aba` and emits `a` keeps `(aba,a)`, so the two runs can ne… |
-| `«def:confluence»` | abbrev | "To compare runs that end at different inputs, we consider a common input extension of those inputs." **Def. |
+| `«sec:election-story/not-reconciled»` | theorem | "So a run that emits `⊥` at `ab·` must apply `x_⊥`, and can never be reconciled at `aba` with a run that receives `aba` and emits `a`. |
+| `«def:confluence»` | abbrev | "Having extracted canonical runs from a spec, we are now ready to define consistency." **Def. |
 | `«def:consistency»` | abbrev | **Def. |
 | `«sec:election-story/consistency»` | theorem | Closing paragraph of §2.1: |
 | `«lem:run-residual»` | theorem | "Three facts about runs drive the proof. |

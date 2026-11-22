@@ -102,7 +102,7 @@ availability.} \textcolor{reviewed}{CALM, CAP, and CRDTs each answer the questio
 programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.}
 
-\textcolor{reviewed}{We put them on common ground, in a formalism that clarifies the literature and
+\textcolor{reviewed}{We provide a simple formalism that unifies the literature and
 offers new results.} \textcolor{reviewed}{A minimalist \spectype (spec) is a \emph{possibility table} containing, for
 each input, every output a system may produce, with partial orders on inputs and
 outputs.} \textcolor{reviewed}{Its runs are \emph{consistent} when they are confluent.} \textcolor{reviewed}{\emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
@@ -115,7 +115,7 @@ map into the same framework.}
 \textcolor{reviewed}{Prior CALM results stop at monotonicity: for non-monotone
 specs, they say only that coordination is needed somewhere.} Our
 unified framework offers constructive results on both sides: it says exactly
-how much coordination a spec needs, and where. \textcolor{reviewed}{A non-monotone
+what coordination a spec needs, and when. \textcolor{reviewed}{A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.} \textcolor{reviewed}{\emph{Proper Coordination} identifies which stage of a composition must make the
 \commitments and certifies that later stages need none, validating designs such
@@ -170,8 +170,8 @@ networks~\cite{ameloot2013relational,hellerstein2020keeping}.} \textcolor{review
 Conjecture proposed a related question: which consistency guarantees can remain
 available when participants cannot
 communicate~\cite{brewer2000towards,brewer2012cap}?} \textcolor{reviewed}{Its original proof
-answered it for only one guarantee: linearizable registers cannot remain
-available~\cite{gilbert2002cap}.} \textcolor{reviewed}{Both results are invoked broadly: CALM as a
+provided the answer for only one guarantee: linearizable
+registers~\cite{gilbert2002cap}.} \textcolor{reviewed}{Yet both results are invoked broadly: CALM as a
 rule that monotone programs need no coordination, CAP as a general constraint
 on distributed systems.} \textcolor{reviewed}{The folklore outgrew the proofs.}
 
@@ -239,24 +239,23 @@ does not require? Despite its simplicity, our model supports not only applicatio
 but also general-purpose consistency definitions (Appendix~\ref{app:registers},
 Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
-\subsection{The criterion: Lifted Monotonicity}
+\subsection{Consistency and a criterion for achieving it}
 \textcolor{reviewed}{The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity.} \textcolor{reviewed}{Our Consistency definition is general: the runs of a spec are
 \emph{consistent} when they are \emph{confluent}, so that states reached along
 different paths can be brought to a common state.} \textcolor{reviewed}{Applied to different specs,
-this one definition captures classical consistency models, from
-linearizability, through serializability and other isolation levels, to the
-eventual consistency of replicated data.} \textcolor{reviewed}{It also captures consistency of
+this one definition captures classical consistency models, from eventual
+consistency of replicated data through linearizability, serializability and
+other isolation levels.} \textcolor{reviewed}{It also captures consistency of
 application specs.}
 
-\textcolor{reviewed}{For a spec with one output per input, monotonicity is standard: $i\InputOrd j$
+\textcolor{reviewed}{A spec with one output per input is a function, and its monotonicity is standard: $i\InputOrd j$
 implies $f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{Nondeterministic specs, such as leader election
 and transaction scheduling, need a richer monotonicity property that ensures
 not only that outputs grow as inputs grow, but also that different output
 choices for the same input can grow by $\OutputOrd$ to a common permitted
 output.} \textcolor{reviewed}{We call this property \emph{Lifted Monotonicity}, and a spec that has
-it \emph{lifted monotone}.} \textcolor{reviewed}{It reduces to standard monotonicity for specs that
-are deterministic functions.}
+it \emph{lifted monotone}.} \textcolor{reviewed}{It reduces to standard monotonicity for functional specs.}
 
 \textcolor{reviewed}{Confluence is an operational property of all the runs a spec allows.} \textcolor{reviewed}{Lifted Monotonicity,
 by contrast, is a static property of the spec's table: it can be checked on
@@ -264,11 +263,11 @@ pairs of rows, without exploring runs.} \textcolor{reviewed}{\emph{Functional CA
 (Section~\ref{sec:functional-calm-theorem}) and \emph{Complete CALM}
 (Section~\ref{sec:complete-calm-theorem}) show that the two coincide: the runs a spec allows are consistent exactly when the spec is
 lifted monotone.} \textcolor{reviewed}{Hence Consistency As Lifted Monotonicity, a new reading of the
-CALM acronym.} \textcolor{reviewed}{Functional CALM covers prior CALM work and CRDT state.}
+CALM acronym.}
 
 \subsection{Coordination is for \commitment}
 \textcolor{reviewed}{What of coordination?} \textcolor{reviewed}{A \commitment isolates the contract a coordination
-mechanism achieves, apart from how it achieves it: locks, consensus,
+mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments.} \textcolor{reviewed}{Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.} \textcolor{reviewed}{In a composition of specs, \emph{Proper Coordination}
 identifies which stage must make the \commitments and certifies that later
@@ -277,9 +276,9 @@ makes every \commitment; the replicated store makes none, whether it employs
 coordination or not (Section~\ref{sec:composition}).}
 
 \textcolor{reviewed}{Distributed histories are captured under the same consistency criteria as
-centralized ones (Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{Complete CAP
+sequential runs (Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{Complete CAP
 (Section~\ref{sec:complete-cap}) says Lifted Monotonicity exactly characterizes specs
-that can keep every permitted output available and confluent during a
+that can keep every permitted output both available and consistent during a
 partition.} \textcolor{reviewed}{The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.}
 
 \subsection{Contributions}
@@ -413,7 +412,7 @@ emitted without \commitment.}
   \label{fig:election-frames}
 \end{figure*}
 
-\textcolor{reviewed}{We introduce the framework with a small election, illustrated in
+\textcolor{reviewed}{Consider the election illustrated in
 Figure~\ref{fig:election-frames}.} \textcolor{reviewed}{Three voters each cast at most one immutable
 ballot for $a$ or $b$.} \textcolor{reviewed}{The output is whichever candidate has a majority, or
 $\bot$ while there is none.} \textcolor{reviewed}{An input is a vector of the ballots received so
@@ -469,7 +468,7 @@ A functional \spectype $\Spec$, with induced function $f$, is
 \end{equation}
 \end{definition}
 
-\textcolor{reviewed}{The election is monotone: for example, the input sequence
+\textcolor{reviewed}{The election is monotone: to give an example, the input sequence
 $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba$ produces the output sequence
 $\bot\OutputOrd\bot\OutputOrd a$.}
 
@@ -477,7 +476,7 @@ $\bot\OutputOrd\bot\OutputOrd a$.}
 \textcolor{reviewed}{As a run proceeds, the possibilities narrow.} \textcolor{reviewed}{Each panel of
 Figure~\ref{fig:election-frames} shows one moment: the ballots received so
 far, and the rows that can still be reached from them.} \textcolor{reviewed}{We call such a moment
-a state.}
+a specification state.}
 
 \begin{definition}[Specification state, current input, remainder table]
 \label{def:residual-state}
@@ -492,7 +491,7 @@ every row $(k,o)\in R$ satisfies $i\InputOrd k$.
 \end{enumerate}
 \end{definition}
 
-\textcolor{reviewed}{The events defined below only ever remove rows.} We say that a row $(k,u)$ is
+We say that a row $(k,u)$ is
 \emph{at input} $k$. \textcolor{reviewed}{To write remainder tables compactly, we borrow selection
 from relational algebra: a predicate on the columns $\mathrm{in}$ and
 $\mathrm{out}$ in square brackets selects rows, so $P[\mathrm{in}\InputGe i]$
@@ -529,9 +528,10 @@ $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the effect of
 $\mathsf{input}(k)$ alone, $\mathsf{input}(i)$ at $(i,R)$ has no effect, and an
 input event from a canonical state leads to another canonical state.
 
-\textcolor{reviewed}{Two sets of outputs matter in every state: those permitted at the current
-input, and those still possible once more input arrives.} \textcolor{reviewed}{In panel~(b), the
-first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.}
+\textcolor{reviewed}{Two sets of outputs matter in every state: those at the current
+input (its \emph{fiber}), and those at the current input or any input that
+\inrel it (its \emph{upper fiber}).} \textcolor{reviewed}{In panel~(b), the
+first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$.} Formally:
 
 \begin{definition}[Fiber, upper fiber]
 \label{def:fiber}
@@ -541,11 +541,15 @@ $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.} \text
 k])$, the outputs paired with $k$ or with any input that \inrel $k$.}
 \end{definition}
 
-A functional fiber has at most one value. \textcolor{reviewed}{In a state $(i,R)$, the upper fiber
-at $i$ is $\pi_{\mathrm{out}}(R)$, every output still possible, and we say that
-the state is \emph{determined} when that set has one element: one result
-remains, whatever legal input still arrives.} \textcolor{reviewed}{If $v_2$ instead votes for $a$ as
-in panel~(c), it is $\{a\}$: input alone has settled the outcome.}
+A functional fiber has at most one value. \textcolor{reviewed}{A state is determined when only one
+output remains possible, as in panel~(c), where input alone has settled the
+outcome.}
+
+\begin{definition}[Determined state]
+\label{def:determined}
+\textcolor{reviewed}{Let $\sigma = (i, R)$ be a specification state.} \textcolor{reviewed}{The upper fiber of $\sigma$
+is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe i]) = \pi_{\mathrm{out}}(R)$.} \textcolor{reviewed}{We say $\sigma$ is \emph{determined} when $|\pi_{\mathrm{out}}(R)|=1$.}
+\end{definition}
 
 \paragraph{Output events and \commitments.}
 \textcolor{reviewed}{Inputs arrive from the environment, but outputs are the system's to choose, and
@@ -583,9 +587,9 @@ It leaves the current input unchanged: $j=i$.
 \end{definition}
 
 \textcolor{reviewed}{In a functional spec each input has one row, so the last condition always
-holds: a \commitment rules out the inputs of the rows it removes.} \textcolor{reviewed}{When $o$ is
-not legal, a \commitment can make it legal by removing the rows whose outputs
-conflict with $o$.} \textcolor{reviewed}{Emitting $o$ only once it is legal keeps a run from
+holds: a \commitment rules out the inputs of the rows it removes.} \textcolor{reviewed}{When $o$ is not legal,
+we make it legal via a \commitment that removes the rows whose outputs conflict
+with $o$.} \textcolor{reviewed}{Emitting $o$ only once it is legal keeps a run from
 contradicting $o$ later on, when the environment may already have acted on it.}
 
 \begin{definition}[Output event]
@@ -602,8 +606,8 @@ and then emits $o$:}
 \begin{definition}[Canonical \commitment]
 \label{def:canonical-commitment-functional}
 \textcolor{reviewed}{When $o$ is not legal at $(i,R)$, equivalently $R'\neq R$, the event first
-removes the rows whose outputs do not \outrelbase $o$; this removal is the
-\emph{canonical \commitment} $x_o(i,R)=(i,R')$, after which $o$ is legal.} \textcolor{reviewed}{In a functional table each
+removes the rows whose outputs do not \outrelbase $o$; this removal is
+$o$'s \emph{canonical \commitment} $x_o(i,R)=(i,R')$, after which $o$ is legal.} \textcolor{reviewed}{In a functional table each
 input has only one row, so $x_o$ rules out those rows' inputs ($x_o$ is a \commitment).}
 \end{definition}
 
@@ -614,7 +618,7 @@ state with current input $i$. \emph{Determination} is the process of reaching
 a determined state. An input event can achieve it through input loss, as in
 panel~(c), and a \commitment can do so by ruling out inputs that would
 otherwise remain possible, as in panel~(d). An event from a determined state
-always leads to another determined state with the same output: events only
+always leads to another determined state with that output: events only
 remove rows, and a row at the current input always remains.
 
 \begin{figure}[t]
@@ -654,7 +658,8 @@ remove rows, and a row at the current input always remains.
 \end{figure}
 
 \textcolor{reviewed}{Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
-changes only the output order $\OutputOrd$: now all outputs are incomparable.} \textcolor{reviewed}{Under this order (called the \emph{equality order}), $\bot$ is incompatible
+changes only the output order $\OutputOrd$: it defines a new spec in which all
+outputs are incomparable.} \textcolor{reviewed}{Under this order (called the \emph{equality order}), $\bot$ is incompatible
 with future winners, so it is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.} \textcolor{reviewed}{That change in the output
 order is Functional CALM in miniature: the spec is monotone under the original
@@ -704,13 +709,14 @@ written, we assume that any permitted behavior may occur. A run is
 \textcolor{reviewed}{Different runs may retain different rows.} \textcolor{reviewed}{Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$
-and $a$: none is a \emph{common \outnoun} of them.} \textcolor{reviewed}{A run that emits $\bot$ at
-$ab\cdot$ applies $x_\bot$ and keeps no row at $aba$, while a run that receives
-$aba$ and emits $a$ keeps $(aba,a)$, so the two runs can never be reconciled at
-$aba$.} \textcolor{reviewed}{The argument uses only the table, its orders, and canonical runs, so
-the need for the \commitment is a property of the spec, not of any system.} To
-compare runs that end at different inputs, we consider a common \indesc of
-those inputs.
+and $a$: none is a \emph{common \outnoun} of them.} \textcolor{reviewed}{So a run that emits $\bot$ at
+$ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
+that receives $aba$ and emits $a$.} \textcolor{reviewed}{Under the equality order this removal is
+$\bot$'s canonical \commitment, required by the spec; in panel~(d), under the
+original order, the registrar made the same removal by choice.}
+
+\textcolor{reviewed}{Having extracted canonical runs from a spec, we are now ready to define
+consistency.}
 
 \begin{definition}[Confluence at an input]
 \label{def:confluence}

@@ -26,7 +26,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:fiber»
 #check @CC.Paper.«def:fiber/upper»
 #check @CC.Paper.«def:fiber/state»
-#check @CC.Paper.«sec:functional-events/determined»
+#check @CC.Paper.«def:determined»
 #check @CC.Paper.«sec:functional-events/determined-one-element»
 #check @CC.Paper.«fig:election-frames/c»
 #check @CC.Paper.«def:exposable»
