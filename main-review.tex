@@ -2015,15 +2015,15 @@ in their model as well (Appendix~\ref{app:cap-response}).
 non-monotone, and its replicas can diverge without coordination~\cite{alvaro2011bloom}.} \textcolor{reviewed}{The pragmatic solution is
 to impose a consensus-driven log upstream of the replicas, \`a la
 Multi-Paxos~\cite{lamport2001paxos}, so all replicas execute the same commands
-in the same order.} \textcolor{reviewed}{But consensus is itself non-monotone: when two commands
+in the same order.} But consensus is itself non-monotone: when two commands
 arrive concurrently, either may be appended next, and the two alternative orders
-have no common \outnoun.} \textcolor{reviewed}{In essence, the standard solution to non-monotonicity
+have no common \outnoun. \textcolor{reviewed}{In essence, the standard solution to non-monotonicity
 is more non-monotonicity!} \textcolor{reviewed}{Why does it work?}
 
-\textcolor{reviewed}{That puzzle is explained by our framework.} \textcolor{reviewed}{As we'll see, two specs compose by equijoin,
-and the composition of two monotone specs is also monotone.} \textcolor{reviewed}{Moreover, for non-monotone specs,
+That puzzle is explained by our framework. As we'll see, two specs compose by equijoin,
+and the composition of two monotone specs is also monotone. Moreover, for non-monotone specs,
 as in our puzzle, we
-can reason about which stage actually makes \commitments under composition.} When the
+can reason about which stage actually makes \commitments under composition. When the
 downstream needs no \commitment on the inputs the upstream offers, we say the
 pipeline is \emph{guarded}, and the upstream's \commitments then suffice for
 the whole pipeline. When, in addition, the upstream makes no \commitment the
@@ -2077,9 +2077,9 @@ monotone (\S\ref{sec:lifted-monotonicity}).
 
 We return to the replicated store of the opening. The key-value store is not
 monotone on its own, but it is monotone on what the log offers: a log fixes
-the order of commands, and a longer log only extends the responses. \textcolor{reviewed}{The log
+the order of commands, and a longer log only extends the responses. The log
 issues a \commitment to offer only such inputs, so the store need make no
-\commitments.}
+\commitments.
 
 More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own. \textcolor{reviewed}{Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
@@ -2250,22 +2250,22 @@ the price of splitting the work into stages.
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-\textcolor{reviewed}{Guarded pipelines show how an upstream
-stage can discharge a pipeline's \commitment obligations.} \textcolor{reviewed}{\emph{Composite CALM} asks a stronger question: when does a pipeline need no
-\commitment at any stage?} \textcolor{reviewed}{If every stage is monotone, the answer is immediate:
+Guarded pipelines show how an upstream
+stage can discharge a pipeline's \commitment obligations. \emph{Composite CALM} asks a stronger question: when does a pipeline need no
+\commitment at any stage? If every stage is monotone, the answer is immediate:
 by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
-a \commitment.} \textcolor{reviewed}{The interesting case has a non-monotone stage, and it raises a
-simpler puzzle than our opening one.}
+a \commitment. The interesting case has a non-monotone stage, and it raises a
+simpler puzzle than our opening one.
 
-\textcolor{reviewed}{Consider the spec for an incrementing counter that is capped at $9$, and
+Consider the spec for an incrementing counter that is capped at $9$, and
 compose it with a downstream spec for a double-digit threshold test, which
-outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.} Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
-is only a lower bound, and the test is monotone. \textcolor{reviewed}{Suppose instead that every
-answer must be final: unchanging in the face of more input.} \textcolor{reviewed}{Then the output order is equality, and the test cannot
+outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on. Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
+is only a lower bound, and the test is monotone. Suppose instead that every
+answer must be final: unchanging in the face of more input. Then the output order is equality, and the test cannot
 emit \textsf{false} without a \commitment, since a later count of $10$ would
-contradict it.} \textcolor{reviewed}{Yet when composed after the capped counter, the pair of
-stages needs no \commitment.} \textcolor{reviewed}{When do composed specs erase the need for
-\commitment entirely?}
+contradict it. Yet when composed after the capped counter, the pair of
+stages needs no \commitment. When do composed specs erase the need for
+\commitment entirely?
 
 The composite is itself an \spectype. By Complete CALM, its runs are
 consistent exactly when it satisfies Lifted Monotonicity, and then no output needs a
@@ -2282,13 +2282,13 @@ compositions of monotone functions are monotone, so monotonicity of $q$ on the
 whole state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
-monotone. \textcolor{reviewed}{In the example above, the test fails monotonicity only when the
+monotone. In the example above, the test fails monotonicity only when the
 count passes from single to double digits, and the capped counter never does
-so.} \textcolor{reviewed}{Restricted to the counts it does produce, the test always answers
+so. Restricted to the counts it does produce, the test always answers
 \textsf{false}; it is constant, and so monotone under any output order,
-including equality.} \textcolor{reviewed}{By Proposition~\ref{prop:guard-test}, the pipeline
+including equality. By Proposition~\ref{prop:guard-test}, the pipeline
 is guarded, and since the capped counter is itself monotone, neither stage needs
-a \commitment (Proposition~\ref{prop:joint-monotone}(2)).} This is proper
+a \commitment (Proposition~\ref{prop:joint-monotone}(2)). This is proper
 coordination in which the upstream itself needs no \commitment.
 
 Third, a different order on $M$ can make two non-monotone stages monotone. Consider two stages that each negate a boolean, so that their composite is the
@@ -4528,8 +4528,8 @@ the replicated store with bare reads.
 \subsection{Sequential composition}
 
 \begin{proof}[Proof of Lemma~\ref{lem:composition}]
-\textcolor{reviewed}{We verify the common-extension condition
-(Proposition~\ref{prop:common-expansion-form}).} Let rows $(i_r,o_r)$ of
+We verify the common-extension condition
+(Proposition~\ref{prop:common-expansion-form}). Let rows $(i_r,o_r)$ of
 $P_2\circ P_1$, finitely many, have common \indesc $j$, and choose $m_r$ with
 $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$. The condition for $\Spec_1$ gives
 $m\in P_1(j)$ \outrelpart every $m_r$. Then $m$ is a common \indesc of the
