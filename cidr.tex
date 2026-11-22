@@ -1263,22 +1263,22 @@ Complete CAP addresses the conjecture more broadly:
 which specifications are subject to the CAP
 conjecture, and which are not?
 
-To pose the question properly, note that the outputs that each participant emits---and
-needs to keep available---are not enough to judge consistency. The spec
-must also model what an observer (e.g., a client) can eventually conclude by collecting
-outputs from multiple participants.
+To pose the question properly, we must distinguish the outputs that individual
+participants emit locally from the conclusions that clients and other observers
+may draw from a more global view. The latter may be \outrelbase the explicit
+outputs of individual participants, representing the full implicit semantics of
+the distributed system.
 
-Like Gilbert and Lynch, we use a replicated register, a key-value store with a
-single key, as an example.  The register starts at $v_0$, and a read and a
-write race at different participants.  Participant $p$ receives write $w(v)$
-and emits its acknowledgment; concurrently, participant $q$ receives the read
-$r$ and emits $v_0$.  A client may later collect both responses.  A
-linearizable register spec has a row for this situation: its input is the pair
-of requests, its output the pair of responses, and the spec permits it because
-a linearization may place the concurrent read before the write.  No
-participant emits this combined output, and availability does not need it.
-Still, it \outrel both local outputs, which shows that the two are compatible,
-so the spec must contain it.
+Like Gilbert and Lynch, we examine a replicated register: a key-value store with
+a single key.  The register starts at $v_0$, and a read and a write can race at
+different participants.  Participant $p$ receives write $w(v)$ and emits its
+acknowledgment; concurrently, participant $q$ receives the read $r$ and emits
+$v_0$.  A client may later collect both responses.  A linearizable register spec
+has a row for this situation: its input is the pair of requests, its output the
+pair of responses, and the spec permits it because a linearization may place the
+concurrent read before the write.  No participant emits this combined output,
+and availability does not need it. Still, it \outrel both local outputs, which
+shows that the two are compatible, so the spec must contain it.
 
 We therefore pair a spec with an explicit possibility relation $E\subseteq P$,
 or explicit relation for short.
