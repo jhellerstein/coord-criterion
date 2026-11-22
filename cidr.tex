@@ -1263,37 +1263,25 @@ Complete CAP addresses the conjecture more broadly:
 which specifications are subject to the CAP
 conjecture, and which are not?
 
-To pose the question properly, we must distinguish the outputs that individual
-participants emit locally from the conclusions that clients and other observers
-may draw from a more global view. The latter may be \outrelbase the explicit
-outputs of individual participants, representing the full implicit semantics of
-the distributed system.
-
-Like Gilbert and Lynch, we examine a replicated register: a key-value store with
-a single key.  The register starts at $v_0$, and a read and a write can race at
-different participants.  Participant $p$ receives write $w(v)$ and emits its
-acknowledgment; concurrently, participant $q$ receives the read $r$ and emits
-$v_0$.  A client may later collect both responses.  A linearizable register spec
-has a row for this situation: its input is the pair of requests, its output the
-pair of responses, and the spec permits it because a linearization may place the
-concurrent read before the write.  No participant emits this combined output,
-and availability does not need it. Still, it \outrel both local outputs, which
-shows that the two are compatible, so the spec must contain it.
-
-We therefore pair a spec with an explicit possibility relation $E\subseteq P$,
-or explicit relation for short.
+To pose the question, we separate the outputs that participants emit from
+the conclusions an observer may draw by combining them.  The spec must permit
+such combinations, but no participant emits them, and availability does not
+need them.
 
 \begin{definition}[Explicit possibility relation]
 \label{def:explicit-relation}
-An \emph{explicit possibility relation} $E\subseteq P$ is a set of rows whose
-outputs participants actually emit.  Write $E(i)$ for its outputs at input
-$i$.
+An \emph{explicit possibility relation}, or \emph{explicit relation}, is a set
+$E\subseteq P$ of rows whose outputs participants actually emit.  Write $E(i)$
+for its outputs at input $i$.
 \end{definition}
 
-Outputs in $P\setminus E$ are not emitted by participants; they remain
-permitted in $P$ to capture implicit combinations of emitted outputs.  In the
-register, $E$ holds $p$'s acknowledgment and $q$'s answer $v_0$; their combined
-pair is in $P\setminus E$.
+Like Gilbert and Lynch, we examine a replicated register: a key-value store
+with a single key, starting at $v_0$.  Participant $p$ receives write $w(v)$
+and emits its acknowledgment; concurrently, participant $q$ receives the read
+$r$ and emits $v_0$.  These two outputs are in $E$.  A client that collects
+both responses sees the pair, which is in $P\setminus E$: a linearizable
+register spec permits it, since a linearization may place the read before the
+write, and must, since the pair \outrel both local outputs.
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.

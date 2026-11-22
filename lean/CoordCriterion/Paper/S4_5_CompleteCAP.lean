@@ -50,27 +50,10 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 conjecture more broadly: which specifications are subject to the CAP
 conjecture, and which are not?
 
-To pose the question properly, note that the outputs that each participant
-emits—and needs to keep available—are not enough to judge consistency.  The
-spec must also model what an observer (e.g., a client) can eventually conclude
-by collecting outputs from multiple participants.
-
-Like Gilbert and Lynch, we use a replicated register as an example.  A
-register is a key-value store with a single key, which is enough to reason
-about one object.  The register starts at `v₀`, and a read and a write race at
-different participants.  Participant `p` receives write `w(v)` and emits its
-acknowledgment; concurrently, participant `q` receives the read `r` and emits
-`v₀`.  A client may later collect both responses.  A linearizable register
-spec has a row for this situation: its input is the pair of requests, and its
-output is the pair of responses.  The spec permits the row because a
-linearization may place the concurrent read before the write.  No participant
-emits this combined output, and availability does not need it.  Still, it
-extends both local outputs, which shows that the two are compatible, so the
-spec must contain it.  Had the write finished before the read began, no such
-combined output would exist.
-
-We therefore pair a spec with an explicit possibility relation `E ⊆ P`, or
-explicit relation for short."  Lean: Theorem `thm:complete-cap`,
+To pose the question, we separate the outputs that participants emit from
+the conclusions an observer, such as a client, may draw by combining them.  The
+spec must permit such combinations, but no participant emits them, and
+availability does not need them."  Lean: Theorem `thm:complete-cap`,
 `«thm:complete-cap/E-eq-P»`, and Corollary `cor:complete-cap-any-system`
 below, in their existential form: some system has the two properties iff the
 spec satisfies Lifted Monotonicity for `E` (resp. Lifted Monotonicity). -/
@@ -110,11 +93,11 @@ theorem «def:partitioned-history/unfolded» (H : History sp D n) (comp : Fin n 
 /-! ### Definition `def:explicit-relation` (Explicit possibility relation) -/
 
 /-- **Def. `def:explicit-relation`** (Explicit possibility relation).  "An
-*explicit possibility relation* `E ⊆ P` is a set of rows whose outputs
-participants actually emit.  Write `E(i)` for its outputs at input `i`."
-The paper follows the definition with "Outputs in `P ∖ E` are not emitted by
-participants; they remain permitted in `P` to capture implicit combinations of
-emitted outputs."  The voters of the election, later in the subsection,
+*explicit possibility relation*, or *explicit relation*, is a set `E ⊆ P` of
+rows whose outputs participants actually emit.  Write `E(i)` for its outputs at
+input `i`."  The paper follows the definition with the register: "These two
+outputs are in `E`.  A client that collects both responses sees the pair,
+which is in `P ∖ E`."  The voters of the election, later in the subsection,
 illustrate it (`«def:explicit-relation/election-voters»`).
 
 Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
