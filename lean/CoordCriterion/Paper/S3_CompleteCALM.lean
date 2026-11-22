@@ -202,15 +202,15 @@ theorem «def:relational-monotonicity/functional» {I O : Type} [PO I] [PO O] {s
     (hf : sp.Functional) : sp.RelMono ↔ sp.MonotoneF :=
   relMono_iff_monoF hf
 
-/-- "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in
-`F`* if some `u ∈ F` extends all of them."  Lean: `CompatibleIn F X`, with
-the outputs as a list `X`. -/
+/-- Helper for Def. `def:fiber-directedness`: outputs `o₁,…,o_k` have a common
+extension in `F` ("some `u ∈ F` extends all of them").  Lean: `CompatibleIn F X`,
+with the outputs as a list `X`. -/
 abbrev «sec:lifted-monotonicity/compatible» {O : Type} [PO O] (F : O → Prop) (X : List O) : Prop :=
   CompatibleIn F X
 
 /-- **Def. `def:fiber-directedness`** (Directed fiber, directed fibers).  "A
-fiber `F ⊆ O` is *directed* when every nonempty finite `X ⊆ F` is compatible in
-`F`.  A spec has *directed fibers* when every fiber is directed."  Lean: `F` is
+fiber `F ⊆ O` is *directed* when every nonempty finite `X ⊆ F` has a common
+extension in `F`.  A spec has *directed fibers* when every fiber is directed."  Lean: `F` is
 directed iff `JointLift F F`; the second sentence is `«def:directed-outputs»`. -/
 abbrev «def:fiber-directedness» {O : Type} [PO O] (F : O → Prop) : Prop :=
   JointLift F F
@@ -266,7 +266,7 @@ theorem «sec:lifted-monotonicity/figure-fibers» :
 
 /-- **Eq. `eq:joint-output-order`** (joint refinement lift).  "To state both
 requirements at once, we lift `≼` from outputs to sets of outputs.  For
-nonempty `A,B ⊆ O`, `A ⊑ B ⟺ every nonempty finite X ⊆ A is compatible in B`
+nonempty `A,B ⊆ O`, `A ⊑ B ⟺ every nonempty finite X ⊆ A has a common extension in B`
 … the joint refinement lift of `≼`.  Lifted Monotonicity, defined next, asks
 that `P(i) ⊑ P(j)` whenever `i ≼ j`."  Lean:
 `JointLift A B`, with `X` a nonempty list. -/
@@ -345,8 +345,8 @@ theorem «def:lifted-monotonicity/not-reflexive» :
 
 /-- Before Def. `def:common-expansion-condition`: "In the traceroute spec, one
 run may trace from `s` and emit `{s→s1}`, while another traces from a second
-source `t` and emits `{t→s2}`.  At their common input extension `{s,t}`, the
-route set `{s→s1, t→s2}` is a common output extension of both."  Lean: the
+source `t` and emits `{t→s2}`.  At `{s,t}`, which extends both inputs, the
+route set `{s→s1, t→s2}` extends both outputs."  Lean: the
 concrete instance (`Figures.Trace.common_extension_example`), and in general
 the union of any route set permitted at `{s}` with any permitted at `{t}`
 (`Figures.Trace.common_extension`).  The CIDR version quotes the same
@@ -361,8 +361,10 @@ theorem «sec:lifted-monotonicity/traceroute-common-extension» (x y : Figures.T
   ⟨Figures.Trace.common_extension_example, Figures.Trace.common_extension x y hx hy⟩
 
 /-- **Def. `def:common-expansion-condition`** (Common-extension condition).
-"For every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of `P` and every common
-input extension `j` of `i₁,…,i_k`, some `u ∈ P(j)` extends every `o_r`."  Lean:
+"An I/O specification satisfies the common-extension condition when every
+finite set of rows of `P` is consistent at every common input extension of
+their inputs."  Rows are consistent at `j` when some `u ∈ P(j)` extends every
+`o_r`.  Lean:
 `Spec.CommonExpansion`, the rows as a list. -/
 abbrev «def:common-expansion-condition» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.CommonExpansion
@@ -466,13 +468,13 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 
 /-- Prop. `prop:exposure-boundary`, proof sketch: "First assume Lifted
 Monotonicity, in its common-extension form (Proposition
-`prop:common-expansion-form`).  At a state reachable without commitment, an
-output `o` and each output remaining at a legal input extension `j` have a
-common output extension at `j`, which the state keeps (Lemma
-`lem:run-residual`), so `o` is legal.  Now assume every such output is legal,
-and take rows `(i_r,o_r)` with a common input extension `j`.  Each `o_r` is
-legal at `σ_P(i_r)`, so, taking the rows one at a time, some `u ∈ P(j)` extends
-every `o_r`, and Lifted Monotonicity follows."  (The legal-output test, Prop.
+`prop:common-expansion-form`).  At a state reachable without commitment, the
+row of an output `o` and each remaining row at a legal input `j` are consistent
+at `j`, through a row the state keeps (Lemma `lem:run-residual`), so `o` is
+legal.  Now assume every such output is legal, and take rows `(i_r,o_r)` with
+a common extension `j` of their inputs.  Each `o_r` is legal at `σ_P(i_r)`, so,
+taking the rows one at a time, they are consistent at `j`, and Lifted Monotonicity
+follows."  (Consistent at `j`: some `u ∈ P(j)` extends every `o_r`.)  (The legal-output test, Prop.
 `prop:exposability`, is the step "so `o` is legal".)
 The common-extension form of the proposition; its forward direction
 (`commonExpansion_exposable`) uses the rows-remaining lemma directly, not

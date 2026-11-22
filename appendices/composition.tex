@@ -472,47 +472,47 @@ enforce it by routing reads through the log.
 \subsection{Tight and proper pipelines}
 \label{app:tight}
 
-Throughout, $\Spec_1$ guards $\Spec_2$.  For a relation $\preceq'_M$ on $M$, rows
-$(i,m)$ and $(k,x)$ of $P_1$ are separated as in
-Section~\ref{sec:proper-coordination}, and the composite separates rows of
-$P_2\circ P_1$ in the same way under $\OutputOrd$.  At a canonical state
-these are exactly the rows that canonical \commitments remove: for
+Throughout, $\Spec_1$ guards $\Spec_2$.  Consistency of rows at an input is
+as in Section~\ref{sec:functional-calm}, read under $\preceq_M$, under
+$\sqsubseteq$, or under any other relation on $M$ put in its place; rows of
+$P_2\circ P_1$ are read under $\OutputOrd$.  At a canonical state, inconsistent
+pairs are exactly the rows that canonical \commitments remove: for
 $(i,m)\in P_1$, emitting $m$ at $\sigma_{P_1}(i)$ puts $(k,x)$ in
-$\Excluded_m$ exactly when $\preceq_M$ separates $(i,m)$ and $(k,x)$.  Indeed
-$(k,x)$ is subsumed exactly when some $m'\in R(k)$ \outrel both $m$ and $x$,
-and at $\sigma_{P_1}(i)$ the fiber $R(k)$ is $P_1(k)$.  So a spec satisfies
-Lifted Monotonicity exactly when its order separates no pair of its rows
-(Proposition~\ref{prop:common-expansion-form}).
+$\Excluded_m$ exactly when $(i,m)$ and $(k,x)$ are inconsistent at $k$.
+Indeed $(k,x)$ is subsumed exactly when it is consistent with $(i,m)$ at $k$
+in the state's table, and at $\sigma_{P_1}(i)$ that table has the fiber
+$P_1(k)$ at $k$.  So a spec satisfies Lifted Monotonicity exactly when no two
+of its rows are inconsistent (Proposition~\ref{prop:common-expansion-form}).
 
 \begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
 (1) By Proposition~\ref{prop:guard-test}, the pipeline is guarded exactly when
 $\Spec_2$ satisfies the common-extension condition on the outputs of
 $\Spec_1$.  For outputs $m\preceq_M m'$, that condition at $m'$ for finitely
 many rows of $P_2(m)$ is the statement $m\sqsubseteq m'$, and conversely,
-finitely many rows $(m_r,o_r)$ with a common \indesc $m'$ are covered by
-$m_r\sqsubseteq m'$ together with directedness of $P_2(m')$, which is
-$m'\sqsubseteq m'$.
+finitely many rows $(m_r,o_r)$ with a common extension $m'$ of their inputs
+are consistent at $m'$ by $m_r\sqsubseteq m'$ together with directedness of
+$P_2(m')$, which is $m'\sqsubseteq m'$.
 
 (2) Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
-$(k,x)$ of $P_1$, and suppose $\sqsubseteq$ does not separate $(i,m)$ and
-$(k,x)$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$.  Then $o$ and $y$ each
-have an \outnoun in $P_2(m')$, and since $P_2(m')$ is directed by (1), some
-$u\in P_2(m')$ \outrel both.  The row $(k,u)$ of $P_2\circ P_1$ shows that the
-composite does not separate $(i,o)$ and $(k,y)$.  For the second claim, an
+$(k,x)$ of $P_1$, and suppose $(i,m)$ and $(k,x)$ are consistent at $k$ under
+$\sqsubseteq$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$.  Then $o$ and $y$
+each have an extension in $P_2(m')$, and since $P_2(m')$ is directed by (1),
+some $u\in P_2(m')$ \outrel both.  The row $(k,u)$ of $P_2\circ P_1$ shows
+that $(i,o)$ and $(k,y)$ are consistent at $k$.  For the second claim, an
 order under which the pipeline is guarded is contained in $\sqsubseteq$ on the
-outputs of $\Spec_1$ by (1), and a smaller order has fewer common \outnouns,
-so it separates every pair that $\sqsubseteq$ separates.
+outputs of $\Spec_1$ by (1), and a smaller order has fewer common extensions,
+so every pair inconsistent under $\sqsubseteq$ is inconsistent under it.
 
 (3) Let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$.  If
-the composite does not separate $(i,t)$ and $(k,s)$, some row $(k,u)$ of
-$P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
+$(i,t)$ and $(k,s)$ are consistent at $k$ in the composite, some row $(k,u)$
+of $P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
 $m'\in P_1(k)$.  Every finite set of outputs in $P_2(m)$ lies below $t$, and
 so below $u$, so $m\sqsubseteq m'$, and likewise $x\sqsubseteq m'$.  So
-separation under $\sqsubseteq$ implies separation of $(i,t)$ and $(k,s)$, and
-(2) gives the converse for any answers.  For the last claim, a guarded
-pipeline is tight exactly when every pair that $\preceq_M$ separates is
-separated by $\sqsubseteq$, and by (2) every pair that $\sqsubseteq$
-separates is separated by $\preceq_M$.
+inconsistency under $\sqsubseteq$ implies inconsistency of $(i,t)$ and
+$(k,s)$, and (2) gives the converse for any answers.  For the last claim, a
+guarded pipeline is tight exactly when every pair inconsistent under
+$\preceq_M$ is inconsistent under $\sqsubseteq$, and by (2) every pair
+inconsistent under $\sqsubseteq$ is inconsistent under $\preceq_M$.
 \end{proof}
 
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd
@@ -521,22 +521,23 @@ f(m')$, and (3) holds without assuming the pipeline guarded.
 The commuting log of Section~\ref{sec:proper-coordination} is formalized with
 two increments $A$ and $B$, inputs the sets of commands proposed so far, logs
 ordered by prefix, and the store answering a log with its length.  The
-pipeline is guarded, since length is monotone in the prefix order.  Emitting
-$[A]$ at $\{A\}$ separates the row $(\{A,B\},[B,A])$ under the prefix order,
-but the composite answers both logs with $1$ and $2$, which have the common
-\outnoun $2$, and $\sqsubseteq$, which compares lengths, does not separate
-them.  So the pipeline is guarded but not tight.  The log does not satisfy
-Lifted Monotonicity, while the composite does.
+pipeline is guarded, since length is monotone in the prefix order.  The rows
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
+prefix order, so emitting $[A]$ at $\{A\}$ removes $(\{A,B\},[B,A])$ by
+\commitment.  But the composite answers both logs with $1$ and $2$, which have
+the common extension $2$, and under $\sqsubseteq$, which compares lengths, the
+rows are consistent.  So the pipeline is guarded but not tight.  The log does
+not satisfy Lifted Monotonicity, while the composite does.
 
 In the gap example, $M=\{z\}\cup\{n_k:k\in\mathbb N\}$ under equality, with
 $P_1(\mathit{lo})=\{z\}$, $P_1(\mathit{hi})=\{n_k\}$, $P_2(z)=\mathbb N$, and
 $P_2(n_k)=\{k\}$, where $\mathbb N$ has its usual order.  The pipeline is
 guarded, since $\mathbb N$ is directed and singletons are.  No $n_k$ has
-$z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no \outnoun in
-$\{k\}$, so $\sqsubseteq$ separates $(\mathit{lo},z)$ from every row at
-$\mathit{hi}$, and by (2) so does every order on $M$ under which the pipeline
-is guarded.  The composite has the fiber $\mathbb N$ at both inputs and
-satisfies Lifted Monotonicity, so the pipeline is not tight under any such
+$z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no extension in
+$\{k\}$, so $(\mathit{lo},z)$ is inconsistent with every row at $\mathit{hi}$
+under $\sqsubseteq$, and by (2) under every order on $M$ for which the
+pipeline is guarded.  The composite has the fiber $\mathbb N$ at both inputs
+and satisfies Lifted Monotonicity, so the pipeline is not tight under any such
 order.
 
 \subsection{Intersection}

@@ -344,8 +344,7 @@ remove rows, and a row at the current input always remains.
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order $\OutputOrd$: it defines a new spec in which all
 outputs are incomparable.
-Under this order (called the \emph{equality order}), $\bot$ is incompatible
-with future winners, so it is not legal at $ab\cdot$, and emitting it applies
+Under this order (called the \emph{equality order}), no output \outrel both $\bot$ and a future winner, so it is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.  That change in the output
 order is Functional CALM in miniature: the spec is monotone under the original
 order, so later outputs \outrelbase every earlier one; under the equality order
@@ -395,7 +394,11 @@ written, we assume that any permitted behavior may occur.  A run is
 Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$
-and $a$: none is a \emph{common \outnoun} of them.  So a run that emits $\bot$ at
+and $a$: none is a \emph{common \outnoun} of them at $aba$.  Rows with a
+common \outnoun at $j$ are \emph{consistent at} $j$, and \emph{inconsistent at}
+$j$ otherwise: \commitment-free runs that emit their outputs can be reconciled
+at $j$ exactly when the rows are consistent there.  These two rows are
+inconsistent at $aba$.  So a run that emits $\bot$ at
 $ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
 that receives $aba$ and emits $a$.  Under the equality order this removal is
 $\bot$'s canonical \commitment, required by the spec; in panel~(d), under the
@@ -415,8 +418,8 @@ The runs of an \spectype are \emph{consistent} when every finite family of
 them is confluent at every common \indesc of their current inputs.
 \end{definition}
 
-Consistency requires confluence at every common \indesc of the runs' current
-inputs, not just at some larger common \indesc that arrives later.  Otherwise
+Consistency requires confluence at every common extension of the runs' current
+inputs, not just at some larger common extension that arrives later.  Otherwise
 the runs could emit conflicting outputs before that larger input arrives, and
 waiting cannot retract either output from the environment.  Even when later
 input could bring the runs to a common state, the environment may already have
@@ -490,8 +493,7 @@ In a functional spec the only row at $j$ is $(j,f(j))$, so the test
 asks whether $(j,f(j))$ survives in every run.
 
 Consistency thus ensures that runs never diverge irreparably: there is no
-``split brain.''  Whatever events a finite collection of runs contains, at any
-common \indesc of their current inputs, some state is reachable by every run
+``split brain.''  Whatever events a finite collection of runs contains, at any common extension of their current inputs, some state is reachable by every run
 and contradicts none of their outputs; Proposition~\ref{prop:confluence}
 identifies it.  Consistency is a safety property of the spec's runs: it guarantees that a common
 state exists, not that a system reaches it
@@ -507,16 +509,14 @@ run applies a \commitment.
 
 \begin{proof}[Proof sketch]
 First assume the runs are consistent, and suppose some run's output event
-$\mathsf{output}(o)$ applies $x_o$.  It removes some row $(k,x)$ such that no
-row at $k$ \outrel both $x$ and $o$.  Compare that run with one from the state
+$\mathsf{output}(o)$ applies $x_o$.  It removes some row $(k,x)$ inconsistent with $(i,o)$ at $k$.  Compare that run with one from the state
 before that event that instead takes $\mathsf{input}(k)$ and then emits $x$:
 the two share no row at $k$, so by the Survivor test they are not confluent at
 $k$, a contradiction.  Now assume no output event applies a \commitment, and
-take a family of runs and a common \indesc $j$.  Each run keeps a row
+take a family of runs and a common extension $j$ of their current inputs.  Each run keeps a row
 $(i_r,u_r)$ at its current input whose output \outrel everything it emitted
 (Lemma~\ref{lem:run-residual}), and $u_r$ is legal at $\sigma_P(i_r)$.
-Applying that legality one run at a time gives $u\in P(j)$ that \outrel every
-$u_r$, and the Survivor test gives confluence.  Full proof in
+Applying that legality one run at a time shows that these rows are consistent at $j$, and the Survivor test gives confluence.  Full proof in
 Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
@@ -536,11 +536,10 @@ along the way.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
-By monotonicity, the outputs a run emits remove no row at an \indesc
-of $i$ (Lemma~\ref{lem:run-residual}).  Full proof in Appendix~\ref{app:proofs-sec2}.
+By monotonicity, the outputs a run emits remove no row at an extension of $i$ (Lemma~\ref{lem:run-residual}).  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-To be confluent at a common \indesc $j$, each run therefore needs only the
+To be confluent at a common extension $j$, each run therefore needs only the
 single event $\mathsf{input}(j)$, which takes it to $\sigma_P(j)$, the state of a
 run that starts with all of the input.  Knowing the input is enough to know the state, and with it the one
 output $f(j)$.

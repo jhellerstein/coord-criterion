@@ -7,7 +7,7 @@ to impose a consensus-driven log upstream of the replicas, \`a la
 Multi-Paxos~\cite{lamport2001paxos}, so all replicas execute the same commands
 in the same order. But consensus is itself non-monotone: when two commands
 arrive concurrently, either may be appended next, and the two alternative orders
-have no common \outnoun.  In essence, the standard solution to non-monotonicity
+have no common extension.  In essence, the standard solution to non-monotonicity
 is more non-monotonicity! Why does it work?
 
 That puzzle is explained by our framework.  As we'll see, two specs compose by equijoin,
@@ -49,13 +49,7 @@ If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the \specty
 
 \begin{proof}[Proof sketch]
 By Proposition~\ref{prop:common-expansion-form}, it suffices to check the
-common-extension condition.  Let finitely many rows $(i_r,o_r)$ of
-$P_2\circ P_1$ have a common \indesc $j$.  Each row comes from an intermediate
-value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The condition for
-$\Spec_1$ gives some $m\in P_1(j)$ that \outrel every $m_r$.  So $m$ is a
-common \indesc of the inputs $m_r$ of $\Spec_2$, and the condition for
-$\Spec_2$ gives some $o\in P_2(m)$ that \outrel every $o_r$.  Then $(j,o)$ is a
-row of $P_2\circ P_1$, and $o$ is the common \outnoun.  Full proof
+common-extension condition.  Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs.  Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The rows $(i_r,m_r)$ are consistent at $j$ in $P_1$, through some $m\in P_1(j)$.  So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are consistent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are consistent at $j$.  Full proof
 in Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -163,25 +157,29 @@ state.  Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
 yet the composite needs no \commitment there, since both logs lead to the same
 output.
 
-To compare the two stages, we say that a relation $\preceq'_M$ on $M$, such as an order,
-\emph{separates} rows $(i,m)$ and $(k,x)$ of $P_1$ when $i\InputOrd k$ and no
-$m'\in P_1(k)$ has $m\preceq'_M m'$ and $x\preceq'_M m'$.  Under $\preceq_M$ these are the
-pairs in which emitting $m$ at $\sigma_{P_1}(i)$ removes $(k,x)$ by
-\commitment (Definition~\ref{def:subsumed-excluded}).  The composite separates
-rows of $P_2\circ P_1$ in the same way under $\OutputOrd$.
+An unnecessary \commitment is one that prevents a failure of Lifted
+Monotonicity in the upstream that leads to no failure in the composite.
+Suppose rows $(i,m)$ and $(k,x)$ of $P_1$, with $i\InputOrd k$, are
+inconsistent at $k$.  Emitting $m$ at $\sigma_{P_1}(i)$ then requires a
+\commitment that removes $(k,x)$ (Definition~\ref{def:subsumed-excluded}).  If
+every pair of answers $(i,o)$ and $(k,y)$, with $o\in P_2(m)$ and
+$y\in P_2(x)$, is consistent at $k$ in the composite, the composite needs no
+such \commitment, and the upstream's is unnecessary.
 
 \begin{definition}[Tight pipeline, Proper Coordination]
 \label{def:tight}
 \label{def:proper-coordination}
-A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when every pair
-of rows $(i,m)$ and $(k,x)$ of $P_1$ that $\preceq_M$ separates has answers
-$o\in P_2(m)$ and $y\in P_2(x)$ such that the composite separates $(i,o)$ and
-$(k,y)$.  Its coordination is \emph{proper} when it is guarded and tight.
+A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
+upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$ of
+$P_1$ are inconsistent at $k$, some answers $o\in P_2(m)$ and $y\in P_2(x)$ are
+inconsistent at $k$ in the composite.  Its coordination is \emph{proper} when
+it is guarded and tight.
 \end{definition}
 
-The downstream supplies the comparison against which to measure the upstream.
-Write $m\sqsubseteq m'$ when every finite set of outputs in $P_2(m)$ has a
-common \outnoun in $P_2(m')$.  For a functional downstream $f$, $m\sqsubseteq
+To measure the upstream against the downstream, write $m\sqsubseteq m'$ when
+every finite set of outputs in $P_2(m)$ has a common extension in $P_2(m')$, and
+read consistency of rows of $P_1$ \emph{under} $\sqsubseteq$ by using
+$\sqsubseteq$ in place of $\preceq_M$.  For a functional downstream $f$, $m\sqsubseteq
 m'$ exactly when $f(m)\OutputOrd f(m')$.  The relation $\sqsubseteq$ is
 transitive but need not be an order: logs that the store answers alike
 are equivalent under it.
@@ -192,35 +190,36 @@ Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
   \item The pipeline is guarded exactly when $m\preceq_M m'$ implies
         $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.
-  \item If the pipeline is guarded, every pair of rows of $P_1$ whose answers
-        the composite separates is separated by $\sqsubseteq$, and every pair
-        that $\sqsubseteq$ separates is separated by every order on $M$ under
-        which the pipeline is guarded, including $\preceq_M$.
+    \item If the pipeline is guarded, two rows of $P_1$ with answers
+        inconsistent in the composite are inconsistent under $\sqsubseteq$,
+        and rows inconsistent under $\sqsubseteq$ are inconsistent under every
+        order on $M$ for which the pipeline is guarded, including $\preceq_M$.
   \item If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
         of $\Spec_1$ has a greatest element, as when $\Spec_2$ is functional,
-        then $\sqsubseteq$ separates exactly the pairs whose answers the
-        composite separates.  So the coordination is proper exactly when
-        $\preceq_M$ and $\sqsubseteq$ separate the same pairs of rows.
+        then two rows are inconsistent under $\sqsubseteq$ exactly when some
+        of their answers are inconsistent in the composite.  So the
+        coordination is proper exactly when $\preceq_M$ and $\sqsubseteq$ make
+        the same pairs of rows inconsistent.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
 (1) restates Proposition~\ref{prop:guard-test} through the common-extension
 condition.  (2) Suppose $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then
-answers $o\in P_2(m)$ and $y\in P_2(x)$ have \outnouns in $P_2(m')$, which is
-directed by (1), so some $u\in P_2(m')$ \outrel both, and the composite does
-not separate $(i,o)$ and $(k,y)$.  Any order under which the pipeline is
-guarded is contained in $\sqsubseteq$ by (1), so it separates at least as
-much.  (3) With
-greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, an \outnoun of $t$ and $s$
-in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
+answers $o\in P_2(m)$ and $y\in P_2(x)$ have extensions in $P_2(m')$, which is
+directed by (1), so some $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$
+are consistent at $k$ in the composite.  Any order under which the pipeline is
+guarded is contained in $\sqsubseteq$ by (1), so it makes at least as many
+pairs inconsistent.  (3) With
+greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
+and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
 By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
 upstream commit less than $\sqsubseteq$ does.  The commuting log is guarded but
-not tight: $\preceq_M$ separates $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and
-$\sqsubseteq$ does not.  Generalized Paxos~\cite{lamport2005generalized} and
+not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$
+under the prefix order but consistent under $\sqsubseteq$.  Generalized Paxos~\cite{lamport2005generalized} and
 EPaxos~\cite{moraru2013epaxos} avoid such \commitments: they order only
 commands that do not commute.  When the store's outputs do not record the
 order of commuting commands, they bring the log closer to a tight pipeline.  Reversing the order
@@ -228,9 +227,9 @@ on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
 greatest answers, a gap can remain.  Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
 answer $z$ with any number and $n_k$ with $k$.  No single $n_k$ covers every number the
-downstream may answer to $z$, so $\sqsubseteq$ separates $(\mathit{lo},z)$
-from each row at $\mathit{hi}$, and by (2) so does every order on $M$ under
-which the pipeline is guarded.  Yet the composite permits every number at both
+downstream may answer to $z$, so $(\mathit{lo},z)$ is inconsistent with each row at $\mathit{hi}$ under
+$\sqsubseteq$, and by (2) under every order on $M$ for which the pipeline is
+guarded.  Yet the composite permits every number at both
 inputs and needs no \commitment: a single implementation could answer at
 $\mathit{lo}$ and later give the same answer at $\mathit{hi}$.  The upstream
 must commit before it sees the downstream's answer, and the remaining gap is

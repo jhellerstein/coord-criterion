@@ -250,7 +250,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«eq:relational-monotonicity»` | theorem | **Eq. |
 | `«sec:lifted-monotonicity/traceroute-relational»` | theorem | After Def. |
 | `«def:relational-monotonicity/functional»` | theorem | After Def. |
-| `«sec:lifted-monotonicity/compatible»` | abbrev | "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in `F`* if some `u ∈ F` extends all of them." Lean: |
+| `«sec:lifted-monotonicity/compatible»` | abbrev | Helper for Def. |
 | `«def:fiber-directedness»` | abbrev | **Def. |
 | `«def:directed-outputs»` | abbrev | Def. |
 | `«def:fiber-directedness/singleton»` | theorem | After Def. |
@@ -420,10 +420,10 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:proper-coordination/locks-overhead»` | theorem | "This answers the opening puzzle. |
 | `«sec:proper-coordination/nesting»` | theorem | "Longer pipelines nest: |
 | `«sec:proper-coordination/components»` | theorem | "A downstream implementation may still take commitments the specs do not require, as a store that takes locks behind a log would. |
-| `«sec:proper-coordination/separates»` | theorem | "To compare the two stages, we say that a relation `≼'_M` on `M`, such as an order, *separates* rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁… |
+| `«sec:proper-coordination/inconsistent-rows»` | theorem | "Suppose rows `(i,m)` and `(k,x)` of `P₁`, with `i ≼ k`, are inconsistent at `k`. |
 | `«def:tight»` | theorem | **Definition `def:tight`** (Tight pipeline): |
 | `«def:proper-coordination»` | def | **Definition `def:proper-coordination`** (Proper Coordination): |
-| `«sec:proper-coordination/downstream-order»` | theorem | "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common output extension in `P₂(m')`. |
+| `«sec:proper-coordination/downstream-order»` | theorem | "To measure the upstream against the downstream, write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read cons… |
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
 | `«thm:proper-coordination/any-order»` | theorem | Theorem `thm:proper-coordination`(2), second half, for an arbitrary order: |
 | `«sec:proper-coordination/commuting-log»` | theorem | "The commuting log is guarded but not tight: |

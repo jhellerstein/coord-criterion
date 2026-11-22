@@ -706,8 +706,7 @@ remove rows, and a row at the current input always remains.\cxbar{functional-cal
 \color{black!45}\cxtag{functional-calm:27}{C}Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order $\OutputOrd$: it defines a new spec in which all
 outputs are incomparable.
-Under this order (called the \emph{equality order}), $\bot$ is incompatible
-with future winners, so it is not legal at $ab\cdot$, and emitting it applies
+Under this order (called the \emph{equality order}), no output \outrel both $\bot$ and a future winner, so it is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.  That change in the output
 order is Functional CALM in miniature: the spec is monotone under the original
 order, so later outputs \outrelbase every earlier one; under the equality order
@@ -757,7 +756,11 @@ written, we assume that any permitted behavior may occur.  A run is
 \color{black!45}\cxtag{functional-calm:34}{C}Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$
-and $a$: none is a \emph{common \outnoun} of them.  So a run that emits $\bot$ at
+and $a$: none is a \emph{common \outnoun} of them at $aba$.  Rows with a
+common \outnoun at $j$ are \emph{consistent at} $j$, and \emph{inconsistent at}
+$j$ otherwise: \commitment-free runs that emit their outputs can be reconciled
+at $j$ exactly when the rows are consistent there.  These two rows are
+inconsistent at $aba$.  So a run that emits $\bot$ at
 $ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
 that receives $aba$ and emits $a$.  Under the equality order this removal is
 $\bot$'s canonical \commitment, required by the spec; in panel~(d), under the
@@ -777,8 +780,8 @@ consistency.\color{black}
 them is confluent at every common \indesc of their current inputs.\color{black}
 \end{definition}
 
-\color{black}\cxtag{functional-calm:38}{N/M}\cxbar{functional-calm-38}{0.4 0.4 1}{s}Consistency requires confluence at every common \indesc of the runs' current
-inputs, not just at some larger common \indesc that arrives later.  Otherwise
+\color{black}\cxtag{functional-calm:38}{N/M}\cxbar{functional-calm-38}{0.4 0.4 1}{s}Consistency requires confluence at every common extension of the runs' current
+inputs, not just at some larger common extension that arrives later.  Otherwise
 the runs could emit conflicting outputs before that larger input arrives, and
 waiting cannot retract either output from the environment.  Even when later
 input could bring the runs to a common state, the environment may already have
@@ -852,8 +855,7 @@ Appendix~\ref{app:proofs-sec2}.\color{black}
 asks whether $(j,f(j))$ survives in every run.\color{black}
 
 \color{black}\cxtag{functional-calm:49}{N/M}\cxbar{functional-calm-49}{0.4 0.4 1}{s}Consistency thus ensures that runs never diverge irreparably: there is no
-``split brain.''  Whatever events a finite collection of runs contains, at any
-common \indesc of their current inputs, some state is reachable by every run
+``split brain.''  Whatever events a finite collection of runs contains, at any common extension of their current inputs, some state is reachable by every run
 and contradicts none of their outputs; Proposition~\ref{prop:confluence}
 identifies it.  Consistency is a safety property of the spec's runs: it guarantees that a common
 state exists, not that a system reaches it
@@ -869,16 +871,14 @@ run applies a \commitment.\color{black}
 
 \color{black}\begin{proof}[Proof sketch]
 \cxtag{functional-calm:51}{N/M}\cxbar{functional-calm-51}{0.4 0.4 1}{s}First assume the runs are consistent, and suppose some run's output event
-$\mathsf{output}(o)$ applies $x_o$.  It removes some row $(k,x)$ such that no
-row at $k$ \outrel both $x$ and $o$.  Compare that run with one from the state
+$\mathsf{output}(o)$ applies $x_o$.  It removes some row $(k,x)$ inconsistent with $(i,o)$ at $k$.  Compare that run with one from the state
 before that event that instead takes $\mathsf{input}(k)$ and then emits $x$:
 the two share no row at $k$, so by the Survivor test they are not confluent at
 $k$, a contradiction.  Now assume no output event applies a \commitment, and
-take a family of runs and a common \indesc $j$.  Each run keeps a row
+take a family of runs and a common extension $j$ of their current inputs.  Each run keeps a row
 $(i_r,u_r)$ at its current input whose output \outrel everything it emitted
 (Lemma~\ref{lem:run-residual}), and $u_r$ is legal at $\sigma_P(i_r)$.
-Applying that legality one run at a time gives $u\in P(j)$ that \outrel every
-$u_r$, and the Survivor test gives confluence.  Full proof in
+Applying that legality one run at a time shows that these rows are consistent at $j$, and the Survivor test gives confluence.  Full proof in
 Appendix~\ref{app:proofs-sec2}.\cxbar{functional-calm-51}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
@@ -897,12 +897,11 @@ input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.\color{black}
 \end{corollary}
 
-\color{black}\begin{proof}[Proof sketch]
-\cxtag{functional-calm:55}{N/S}By monotonicity, the outputs a run emits remove no row at an \indesc
-of $i$ (Lemma~\ref{lem:run-residual}).  Full proof in Appendix~\ref{app:proofs-sec2}.\color{black}
+\color{black!45}\begin{proof}[Proof sketch]
+\cxtag{functional-calm:55}{C}By monotonicity, the outputs a run emits remove no row at an extension of $i$ (Lemma~\ref{lem:run-residual}).  Full proof in Appendix~\ref{app:proofs-sec2}.\color{black}
 \end{proof}
 
-\color{black}\cxtag{functional-calm:56}{N/S}To be confluent at a common \indesc $j$, each run therefore needs only the
+\color{black}\cxtag{functional-calm:56}{N/S}To be confluent at a common extension $j$, each run therefore needs only the
 single event $\mathsf{input}(j)$, which takes it to $\sigma_P(j)$, the state of a
 run that starts with all of the input.  Knowing the input is enough to know the state, and with it the one
 output $f(j)$.\color{black}
@@ -1095,7 +1094,7 @@ Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study richer tran
 \end{figure*}
 
 \color{black!45}\cxtag{complete-calm:6}{C}The two specs behave differently when an output is emitted.  In the transaction
-spec, no output \outrel both $[A,B]$ and $[B,A]$, so emitting either requires a
+spec, $[A,B]$ and $[B,A]$ have no common extension, so emitting either requires a
 \commitment that removes the other.  In the traceroute spec, by contrast, each
 removed row has a remaining row at its input whose route set contains both the
 removed route set and the emitted observation, so the removal is an
@@ -1124,32 +1123,27 @@ input from $\{\texttt{s}\}$ to $\{\texttt{s},\texttt{t}\}$
 $\{\texttt{s}\}$ is still permitted at $\{\texttt{s},\texttt{t}\}$, so
 Relational Monotonicity holds.\color{black}
 
-\color{black!45}\cxtag{complete-calm:10}{C}For singleton fibers this is functional monotonicity,
+\color{black}\cxtag{complete-calm:10}{N/S}For singleton fibers this is functional monotonicity,
 Equation~\ref{eq:functional-monotonicity}.  Relational Monotonicity compares fibers across inputs, so it does not
-require the outputs within one fiber to have a common \outnoun.
-For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
-\emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
-\emph{incompatible in $F$} otherwise.\color{black}
+require the outputs within one fiber to have a common extension.\color{black}
 
 \color{blue!75!black}\begin{definition}[Directed fiber, directed fibers]
 \label{def:fiber-directedness}\label{def:directed-outputs}
 \cxtag{complete-calm:11}{B/M}\cxbar{complete-calm-11}{0.4 0.4 1}{s}A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
-$X\subseteq F$ is compatible in $F$.  A spec has \emph{directed fibers} when
+$X\subseteq F$ has a common extension in $F$.  A spec has \emph{directed fibers} when
 every fiber is directed.\cxbar{complete-calm-11}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
 \color{black!45}\cxtag{complete-calm:12}{C}A singleton fiber is trivially directed.  Each traceroute fiber of
 Figure~\ref{fig:ambiguity-frames}(g) is directed too: the union of finitely
 many permitted route sets is itself a permitted route set, and it contains each
-of them.  The two transaction orders in panel~(f), by contrast, are
-incompatible.\color{black}
+of them.  The two transaction orders in panel~(f), by contrast, have no common extension.\color{black}
 
 \color{black!45}\cxtag{complete-calm:13}{C}Directedness is more permissive than a join-semilattice.  It asks only that
-each finite set of outputs in a fiber have some common \outnoun within the
+each finite set of outputs in a fiber have some common extension within the
 fiber, while a join-semilattice requires a least one.  For example, the fiber
 $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
-since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least
-common \outnoun: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal.\color{black}
+since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least common extension: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal.\color{black}
 
 \paragraph{Lifted Monotonicity.}
 \color{black}\cxtag{complete-calm:14}{N/M}\cxbar{complete-calm-14}{0.4 0.4 1}{s}To state both requirements at once, we lift $\OutputOrd$ from outputs to sets
@@ -1158,7 +1152,7 @@ $A,B\subseteq O$, define
         \begin{equation}
   A\LiftedOrd B
   \;\Longleftrightarrow\;
-  \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
+  \text{every nonempty finite }X\subseteq A\text{ has a common extension in }B,
   \label{eq:joint-output-order}
         \end{equation}
 the \emph{joint refinement lift} of $\OutputOrd$.  Lifted Monotonicity, defined
@@ -1183,16 +1177,14 @@ that is, $i\mapsto\fiber{i}$ is monotone under the joint refinement lift:
 Relational Monotonicity together with directed fibers.  Taking $X$ to be a
 single output gives Relational Monotonicity, and taking $j=i$ gives directed
 fibers.  Conversely, take $i\InputOrd j$ and a finite nonempty
-$X\subseteq\fiber{i}$.  Relational Monotonicity gives each member of $X$ an
-\outnoun in $\fiber{j}$, and since $\fiber{j}$ is directed, those \outnouns
-have a common \outnoun there.  Lifted Monotonicity therefore constrains a spec
+$X\subseteq\fiber{i}$.  Relational Monotonicity gives each member of $X$ an extension in $\fiber{j}$, and since $\fiber{j}$ is directed, those extensions have a common extension there.  Lifted Monotonicity therefore constrains a spec
 even at $j=i$, where it asks that each fiber be directed.  The transaction
 fiber of Figure~\ref{fig:ambiguity-frames}(f) is not, so that spec fails
 Lifted Monotonicity already at $j=i$.\cxbar{complete-calm-16}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{complete-calm:17}{N/M}\cxbar{complete-calm-17}{0.4 0.4 1}{s}In powerdomain terms, Relational Monotonicity is monotonicity of
 $i\mapsto\fiber{i}$ under the Hoare preorder~\cite{abramsky1994domain}, which
-asks only that each output in $A$ have an \outnoun in $B$.  The joint
+asks only that each output in $A$ have an extension in $B$.  The joint
 refinement lift asks that every finite set of them have a common one, and the
 two agree when $B$ is directed.  Unlike the Hoare preorder, the joint
 refinement lift is not reflexive: $A\LiftedOrd A$ holds only when $A$ is
@@ -1201,22 +1193,14 @@ directed.\cxbar{complete-calm-17}{0.4 0.4 1}{e}\color{black}
 \paragraph{The common-extension condition.}
 \color{black!45}\cxtag{complete-calm:18}{C}Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
-Such runs can be reconciled only at a common \indesc $j$ of both, which calls
-for a condition on rows at different inputs: a common \outnoun of $o_1$ and
-$o_2$ in the fiber at $j$.  The two conditions turn out to be equivalent.
+Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls for a condition on rows at different inputs: they must be consistent at $j$.  The two conditions turn out to be equivalent.
 In the traceroute spec, one run may trace from \texttt{s} and emit
 $\{\texttt{s}{\to}\texttt{s1}\}$, while another traces from a second source
-\texttt{t} and emits $\{\texttt{t}{\to}\texttt{s2}\}$.  At their common
-\indesc $\{\texttt{s},\texttt{t}\}$, the route set
-$\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ is a common
-\outnoun of both.\color{black}
+\texttt{t} and emits $\{\texttt{t}{\to}\texttt{s2}\}$.  At $\{\texttt{s},\texttt{t}\}$, which \inrel both inputs, the route set $\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ \outrel both outputs.\color{black}
 
 \color{black!45}\begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
-\cxtag{complete-calm:19}{C}An \spectype satisfies the \emph{common-extension condition} when,
-for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
-common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
-$o_r$.\color{black}
+\cxtag{complete-calm:19}{C}An \spectype satisfies the \emph{common-extension condition} when every finite set of rows of $P$ is consistent at every common \indesc of their inputs.\color{black}
 \end{definition}
 
 \color{black}\cxtag{complete-calm:20}{N/M}\cxbar{complete-calm-20}{0.4 0.4 1}{s}For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
@@ -1229,13 +1213,9 @@ if it satisfies the common-extension condition.\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{complete-calm:22}{N/M}\cxbar{complete-calm-22}{0.4 0.4 1}{s}First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common
-\indesc $j$.  Lifted Monotonicity gives Relational Monotonicity, which carries
-each $o_r$ to some \outnoun in the fiber at $j$, and that fiber is directed, so
-those \outnouns have a common \outnoun there.  Now assume the common-extension
+\cxtag{complete-calm:22}{N/M}\cxbar{complete-calm-22}{0.4 0.4 1}{s}First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$ to some extension in the fiber at $j$, and that fiber is directed, so those extensions have a common extension there.  Now assume the common-extension
 condition, and take $i\InputOrd j$ and a finite $X\subseteq\fiber{i}$.  The
-rows $(i,x)$ for $x\in X$ have $j$ as a common \indesc, so the condition gives
-the common \outnoun that Lifted Monotonicity asks for.  Full proof in
+rows $(i,x)$ for $x\in X$ are then consistent at $j$, which is what Lifted Monotonicity asks for.  Full proof in
 Appendix~\ref{app:proofs-sec3}.\cxbar{complete-calm-22}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
@@ -1249,16 +1229,14 @@ functional case: at a state $(i,R)$ with $o\in R(i)$, $\mathsf{output}(o)$ emits
 $o$ and keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).\color{black}
 
-\color{black}\cxtag{complete-calm:24}{N/M}\cxbar{complete-calm-24}{0.4 0.4 1}{s}Removing a row $(k,x)$ does not always lose the information in its output.  If
-some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
-nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
+\color{black}\cxtag{complete-calm:24}{N/M}\cxbar{complete-calm-24}{0.4 0.4 1}{s}Removing a row $(k,x)$ does not always lose the information in its output.  If $(k,x)$ is consistent with $(i,o)$ at $k$ in $R$, through some $u\in R(k)$, then removing $(k,x)$ loses nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
 would have.  This is output subsumption, and we put $(k,x)$ in $\Subsumed_o$.
 Every other removed row goes in $\Excluded_o$.  With several outputs at an
 input, the canonical \commitment $x_o(i,R)=(i,R\setminus\Excluded_o)$ removes
 only the rows in $\Excluded_o$; the output event still removes the rows in
 $\Subsumed_o$, but that removal is not a \commitment.  This is where the last
 condition of Definition~\ref{def:commitment} matters: each row in
-$\Subsumed_o$ has a remaining \outnoun at its input.  If $x_o$ removes
+$\Subsumed_o$ has a remaining extension at its input.  If $x_o$ removes
 every row at $k$, it rules out the input $k$; otherwise it rules out only the
 excluded outputs at $k$.  In the functional case every removed row is excluded,
 so $x_o$ is as before.\cxbar{complete-calm-24}{0.4 0.4 1}{e}\color{black}
@@ -1270,9 +1248,7 @@ Appendix~\ref{app:lifted-output-events} gives the formal definitions.\color{blac
 $\mathsf{output}(o)$ then applies no \commitment.  With several
 outputs at one input, this is more permissive than in the functional case,
 since an output event may remove rows by output subsumption without a
-\commitment.  Equivalently, at every legal
-\indesc $j$ of $i$, $o$ and each remaining output at $j$ have a common
-\outnoun at $j$ (Appendix~\ref{app:lifted-output-events}).\cxbar{complete-calm-26}{0.4 0.4 1}{e}\color{black}
+\commitment.  Equivalently, at every legal input $j$, the row $(i,o)$ and each remaining row at $j$ are consistent at $j$ (Appendix~\ref{app:lifted-output-events}).\cxbar{complete-calm-26}{0.4 0.4 1}{e}\color{black}
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1297,12 +1273,9 @@ if every output at every state reachable without \commitment is legal.\color{bla
 \color{black!45}\begin{proof}[Proof sketch]
 \cxtag{complete-calm:29}{C}First assume Lifted Monotonicity, in its common-extension form
 (Proposition~\ref{prop:common-expansion-form}).  At a state reachable without
-\commitment, an output $o$ and each output remaining at a legal \indesc $j$
-have a common \outnoun at $j$, which the state keeps
+\commitment, the row of an output $o$ and each remaining row at a legal input $j$ are consistent at $j$, through a row the state keeps
 (Lemma~\ref{lem:run-residual}), so $o$ is legal.  Now assume every such output
-is legal, and take rows $(i_r,o_r)$ with a common \indesc $j$.  Each $o_r$ is
-legal at $\sigma_P(i_r)$, so, taking the rows one at a time, some $u\in P(j)$
-\outrel every $o_r$, and Lifted Monotonicity follows.  Full proof in
+is legal, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Each $o_r$ is legal at $\sigma_P(i_r)$, so, taking the rows one at a time, they are consistent at $j$, and Lifted Monotonicity follows.  Full proof in
 Appendix~\ref{app:proofs-sec3}.\color{black}
 \end{proof}
 
@@ -1324,12 +1297,9 @@ induction on its length every run is \commitment-free, and consistency
 follows.  Full proof in Appendix~\ref{app:proofs-sec3}.\color{black}
 \end{proof}
 
-\color{black}\cxtag{complete-calm:32}{N/M}\cxbar{complete-calm-32}{0.4 0.4 1}{s}Complete CALM also changes how consistency can be checked.  Its definition
+\color{black!45}\cxtag{complete-calm:32}{C}Complete CALM also changes how consistency can be checked.  Its definition
 asks whether runs can be continued to a common state.  Lifted
-Monotonicity is checked on the table itself, and pairs of rows suffice: if every
-two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
-so does every finite family of such rows, by replacing two rows at a time with
-one row at $j$ that \outrel both.\cxbar{complete-calm-32}{0.4 0.4 1}{e}\color{black}
+Monotonicity is checked on the table itself, and pairs of rows suffice: if every two rows are consistent at each common extension of their inputs, so is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a smaller family, until one row remains.\color{black}
 
 \color{black}\cxtag{complete-calm:33}{N/M}\cxbar{complete-calm-33}{0.4 0.4 1}{s}The condition that characterizes consistency of runs is a property of the spec
 alone: Lifted Monotonicity, which for a function is ordinary monotonicity.
@@ -1795,7 +1765,7 @@ $(i,\widehat R)$, let $\Delta(\rho)$ be the rows of $\widehat R$ that a
 ends at $(i_r,R_r)$ and its canonical run ends at $(i_r,\widehat R_r)$.
 \begin{enumerate}
   \item $R_r=\widehat R_r\setminus\Delta(\rho_r)$.
-  \item Let $k$ be a common \indesc of $i_1,\ldots,i_n$.  The runs are
+  \item Let $k$ be a common extension of $i_1,\ldots,i_n$.  The runs are
         confluent at $k$, by continuations whose output and \commitment events
         may apply any \commitments, if and only if some row at $k$ lies in
         every $\widehat R_r$ and in no $\Delta(\rho_r)$.\cxbar{distributed-26}{0.4 0.4 1}{e}\color{black}
@@ -1971,13 +1941,12 @@ canonical runs and emit only outputs of $E$.\color{black}
 Availability for $E$ and Partition Consistency.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{distributed:52}{C}Whether the canonical system's answers stay compatible across sides depends on
+\color{black!45}\cxtag{distributed:52}{C}Whether the canonical system's answers stay consistent across sides depends on
 one condition.\color{black}
 
 \color{black!45}\begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
-\cxtag{distributed:53}{C}$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
-a common \indesc $j$ has a common \outnoun in $\fiber{j}$.\color{black}
+\cxtag{distributed:53}{C}$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ is consistent at every common \indesc of their inputs.\color{black}
 \end{definition}
 
 \color{black}\begin{theorem}[Complete CAP]
@@ -1992,14 +1961,12 @@ $(i_r,o_r)$ of $E$ and an input $j$ that \inrel every $i_r$.  In a partitioned
 history, put each participant $r$ alone on a side with input $i_r$, so
 Availability lets it emit $o_r$.  Partition Consistency makes the final cut
 confluent at $j$, so some row $(j,u)$ survives in every participant's state
-(Proposition~\ref{prop:confluence}).  That $u$ \outrel every $o_r$
-(Lemma~\ref{lem:run-residual}), which is Lifted Monotonicity for $E$.\color{black}
+(Proposition~\ref{prop:confluence}).  By Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are consistent at $j$, which is Lifted Monotonicity for $E$.\color{black}
 
 \color{black}\cxtag{distributed:56}{N/M}\cxbar{distributed-56}{0.4 0.4 1}{s}Now assume Lifted Monotonicity for $E$.  The canonical system's participants
 never wait: each can emit any output of $E$ that its state allows, so the
 system has Availability for $E$.  Let $j$ be an input that \inrel every
-participant's current input.  The outputs emitted on all sides are outputs of
-$E$, so some output $u$ at $j$ \outrel all of them.  Each participant makes no
+participant's current input.  The rows emitted on all sides are rows of $E$, so they are consistent at $j$, through some row $(j,u)$.  Each participant makes no
 \commitments of its own and $u$ \outrel every output it emitted, so it still
 has $(j,u)$ (Lemma~\ref{lem:run-residual}).  All participants can therefore
 continue to one state at $j$, which is Partition Consistency.  Full proof in
@@ -2020,7 +1987,7 @@ communication, so the voter can make it and produce output during a partition.
 Each ballot is cast by a different voter, so ballots emitted on different
 sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this
 placement as a deployment), and every set of ballots an
-observer may collect is compatible.\cxbar{distributed-58}{0.4 0.4 1}{e}\color{black}
+observer may collect is consistent.\cxbar{distributed-58}{0.4 0.4 1}{e}\color{black}
 
 \color{black!45}\cxtag{distributed:59}{C}A partition does not change the intrinsic \commitments a spec needs; it
 prevents separated participants from jointly enforcing them through
@@ -2037,7 +2004,7 @@ second~\cite{herlihy1990linearizability}.  In the register example, suppose the
 write finishes before the read begins.  Every linearization then puts the write
 first, so the read must return $v$.  But each of $p$ and $q$ sees only its own
 request, and Availability requires $p$ to acknowledge the write and $q$ to
-answer $v_0$.  No output for the two requests together \outrel both answers, so
+answer $v_0$.  These two rows are inconsistent at the input with both requests, so
 the spec does not satisfy Lifted Monotonicity for them.  Their theorem
 concerns every system, not only the canonical one, so it needs one more step.\color{black}
 
@@ -2050,8 +2017,7 @@ then so does the spec's canonical system for $E$.\color{black}
 \color{black}\begin{proof}[Proof sketch]
 \cxtag{distributed:62}{N/S}By Theorem~\ref{thm:complete-cap}, it suffices to show that if Lifted
 Monotonicity for $E$ fails, the system loses Partition Consistency.  Then some
-rows of $E$ share a common \indesc $j$, but no output in
-$\fiber{j}$ \outrel all of their outputs.  We place each row's participant on
+rows of $E$ are inconsistent at a common extension $j$ of their inputs.  We place each row's participant on
 its own side of a partition, and Availability lets each one emit its row's
 output.  By Observable equivalence, a participant keeps no more rows than its
 canonical run, so each row it keeps at $j$ \outrel its own output.  A common
@@ -2072,7 +2038,7 @@ theorem.\color{black}
 In general our Availability and Partition Consistency are stronger than their
 availability and consistency, but in the register example they coincide.  Each
 fiber holds a single output, so emitting every permitted output is the same as
-responding, and a common \outnoun of the two answers is a single linearization
+responding, and a common extension of the two answers is a single linearization
 that explains both.  We also put the real-time order of the write and the read
 in the input, while their model takes it from the execution; the theorem holds
 in their model as well (Appendix~\ref{app:cap-response}).\cxbar{distributed-65}{0.4 0.4 1}{e}\color{black}
@@ -2087,7 +2053,7 @@ to impose a consensus-driven log upstream of the replicas, \`a la
 Multi-Paxos~\cite{lamport2001paxos}, so all replicas execute the same commands
 in the same order. But consensus is itself non-monotone: when two commands
 arrive concurrently, either may be appended next, and the two alternative orders
-have no common \outnoun.  In essence, the standard solution to non-monotonicity
+have no common extension.  In essence, the standard solution to non-monotonicity
 is more non-monotonicity! Why does it work?\color{black}
 
 \color{black}\cxtag{composition:3}{N/M}\cxbar{composition-3}{0.4 0.4 1}{s}That puzzle is explained by our framework.  As we'll see, two specs compose by equijoin,
@@ -2129,13 +2095,7 @@ of its own as well, as when a store serves reads that bypass the log.\color{blac
 
 \color{black}\begin{proof}[Proof sketch]
 \cxtag{composition:6}{N/M}\cxbar{composition-6}{0.4 0.4 1}{s}By Proposition~\ref{prop:common-expansion-form}, it suffices to check the
-common-extension condition.  Let finitely many rows $(i_r,o_r)$ of
-$P_2\circ P_1$ have a common \indesc $j$.  Each row comes from an intermediate
-value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The condition for
-$\Spec_1$ gives some $m\in P_1(j)$ that \outrel every $m_r$.  So $m$ is a
-common \indesc of the inputs $m_r$ of $\Spec_2$, and the condition for
-$\Spec_2$ gives some $o\in P_2(m)$ that \outrel every $o_r$.  Then $(j,o)$ is a
-row of $P_2\circ P_1$, and $o$ is the common \outnoun.  Full proof
+common-extension condition.  Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs.  Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The rows $(i_r,m_r)$ are consistent at $j$ in $P_1$, through some $m\in P_1(j)$.  So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are consistent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are consistent at $j$.  Full proof
 in Appendix~\ref{app:composition}.\cxbar{composition-6}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
@@ -2243,25 +2203,29 @@ state.  Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
 yet the composite needs no \commitment there, since both logs lead to the same
 output.\cxbar{composition-23}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{composition:24}{N/M}\cxbar{composition-24}{0.4 0.4 1}{s}To compare the two stages, we say that a relation $\preceq'_M$ on $M$, such as an order,
-\emph{separates} rows $(i,m)$ and $(k,x)$ of $P_1$ when $i\InputOrd k$ and no
-$m'\in P_1(k)$ has $m\preceq'_M m'$ and $x\preceq'_M m'$.  Under $\preceq_M$ these are the
-pairs in which emitting $m$ at $\sigma_{P_1}(i)$ removes $(k,x)$ by
-\commitment (Definition~\ref{def:subsumed-excluded}).  The composite separates
-rows of $P_2\circ P_1$ in the same way under $\OutputOrd$.\cxbar{composition-24}{0.4 0.4 1}{e}\color{black}
+\color{black!45}\cxtag{composition:24}{C}An unnecessary \commitment is one that prevents a failure of Lifted
+Monotonicity in the upstream that leads to no failure in the composite.
+Suppose rows $(i,m)$ and $(k,x)$ of $P_1$, with $i\InputOrd k$, are
+inconsistent at $k$.  Emitting $m$ at $\sigma_{P_1}(i)$ then requires a
+\commitment that removes $(k,x)$ (Definition~\ref{def:subsumed-excluded}).  If
+every pair of answers $(i,o)$ and $(k,y)$, with $o\in P_2(m)$ and
+$y\in P_2(x)$, is consistent at $k$ in the composite, the composite needs no
+such \commitment, and the upstream's is unnecessary.\color{black}
 
 \color{black!45}\begin{definition}[Tight pipeline, Proper Coordination]
 \label{def:tight}
 \label{def:proper-coordination}
-\cxtag{composition:25}{C}A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when every pair
-of rows $(i,m)$ and $(k,x)$ of $P_1$ that $\preceq_M$ separates has answers
-$o\in P_2(m)$ and $y\in P_2(x)$ such that the composite separates $(i,o)$ and
-$(k,y)$.  Its coordination is \emph{proper} when it is guarded and tight.\color{black}
+\cxtag{composition:25}{C}A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
+upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$ of
+$P_1$ are inconsistent at $k$, some answers $o\in P_2(m)$ and $y\in P_2(x)$ are
+inconsistent at $k$ in the composite.  Its coordination is \emph{proper} when
+it is guarded and tight.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{composition:26}{C}The downstream supplies the comparison against which to measure the upstream.
-Write $m\sqsubseteq m'$ when every finite set of outputs in $P_2(m)$ has a
-common \outnoun in $P_2(m')$.  For a functional downstream $f$, $m\sqsubseteq
+\color{black!45}\cxtag{composition:26}{C}To measure the upstream against the downstream, write $m\sqsubseteq m'$ when
+every finite set of outputs in $P_2(m)$ has a common extension in $P_2(m')$, and
+read consistency of rows of $P_1$ \emph{under} $\sqsubseteq$ by using
+$\sqsubseteq$ in place of $\preceq_M$.  For a functional downstream $f$, $m\sqsubseteq
 m'$ exactly when $f(m)\OutputOrd f(m')$.  The relation $\sqsubseteq$ is
 transitive but need not be an order: logs that the store answers alike
 are equivalent under it.\color{black}
@@ -2272,35 +2236,36 @@ are equivalent under it.\color{black}
 \begin{enumerate}
   \item The pipeline is guarded exactly when $m\preceq_M m'$ implies
         $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.
-  \item If the pipeline is guarded, every pair of rows of $P_1$ whose answers
-        the composite separates is separated by $\sqsubseteq$, and every pair
-        that $\sqsubseteq$ separates is separated by every order on $M$ under
-        which the pipeline is guarded, including $\preceq_M$.
+    \item If the pipeline is guarded, two rows of $P_1$ with answers
+        inconsistent in the composite are inconsistent under $\sqsubseteq$,
+        and rows inconsistent under $\sqsubseteq$ are inconsistent under every
+        order on $M$ for which the pipeline is guarded, including $\preceq_M$.
   \item If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
         of $\Spec_1$ has a greatest element, as when $\Spec_2$ is functional,
-        then $\sqsubseteq$ separates exactly the pairs whose answers the
-        composite separates.  So the coordination is proper exactly when
-        $\preceq_M$ and $\sqsubseteq$ separate the same pairs of rows.\cxbar{composition-27}{0.4 0.4 1}{e}\color{black}
+        then two rows are inconsistent under $\sqsubseteq$ exactly when some
+        of their answers are inconsistent in the composite.  So the
+        coordination is proper exactly when $\preceq_M$ and $\sqsubseteq$ make
+        the same pairs of rows inconsistent.\cxbar{composition-27}{0.4 0.4 1}{e}\color{black}
 \end{enumerate}
 \end{theorem}
 
 \color{black}\begin{proof}[Proof sketch]
 \cxtag{composition:28}{N/M}\cxbar{composition-28}{0.4 0.4 1}{s}(1) restates Proposition~\ref{prop:guard-test} through the common-extension
 condition.  (2) Suppose $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then
-answers $o\in P_2(m)$ and $y\in P_2(x)$ have \outnouns in $P_2(m')$, which is
-directed by (1), so some $u\in P_2(m')$ \outrel both, and the composite does
-not separate $(i,o)$ and $(k,y)$.  Any order under which the pipeline is
-guarded is contained in $\sqsubseteq$ by (1), so it separates at least as
-much.  (3) With
-greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, an \outnoun of $t$ and $s$
-in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
+answers $o\in P_2(m)$ and $y\in P_2(x)$ have extensions in $P_2(m')$, which is
+directed by (1), so some $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$
+are consistent at $k$ in the composite.  Any order under which the pipeline is
+guarded is contained in $\sqsubseteq$ by (1), so it makes at least as many
+pairs inconsistent.  (3) With
+greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
+and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
 Appendix~\ref{app:composition}.\cxbar{composition-28}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
 \color{black}\cxtag{composition:29}{N/M}\cxbar{composition-29}{0.4 0.4 1}{s}By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
 upstream commit less than $\sqsubseteq$ does.  The commuting log is guarded but
-not tight: $\preceq_M$ separates $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and
-$\sqsubseteq$ does not.  Generalized Paxos~\cite{lamport2005generalized} and
+not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$
+under the prefix order but consistent under $\sqsubseteq$.  Generalized Paxos~\cite{lamport2005generalized} and
 EPaxos~\cite{moraru2013epaxos} avoid such \commitments: they order only
 commands that do not commute.  When the store's outputs do not record the
 order of commuting commands, they bring the log closer to a tight pipeline.  Reversing the order
@@ -2308,9 +2273,9 @@ on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
 greatest answers, a gap can remain.  Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
 answer $z$ with any number and $n_k$ with $k$.  No single $n_k$ covers every number the
-downstream may answer to $z$, so $\sqsubseteq$ separates $(\mathit{lo},z)$
-from each row at $\mathit{hi}$, and by (2) so does every order on $M$ under
-which the pipeline is guarded.  Yet the composite permits every number at both
+downstream may answer to $z$, so $(\mathit{lo},z)$ is inconsistent with each row at $\mathit{hi}$ under
+$\sqsubseteq$, and by (2) under every order on $M$ for which the pipeline is
+guarded.  Yet the composite permits every number at both
 inputs and needs no \commitment: a single implementation could answer at
 $\mathit{lo}$ and later give the same answer at $\mathit{hi}$.  The upstream
 must commit before it sees the downstream's answer, and the remaining gap is
@@ -3313,6 +3278,7 @@ rows at $k$.\cxbar{notation-3}{0.4 0.4 1}{e}\color{black}
   $o\OutputOrd u$; $u$ \outrel $o$ & $u$ subsumes every externally visible claim in $o$; $u$ is an \outnoun of $o$ & Sec.~\ref{sec:functional-specifications}\\
   common \indesc & an input that \inrel each given input & Sec.~\ref{sec:functional-specifications}\\
   common \outnoun & an output that \outrel each given output & Sec.~\ref{sec:functional-specifications}\\
+  consistent at $j$ (rows) & the rows have a common \outnoun at $j$, a common \indesc of their inputs & Sec.~\ref{sec:functional-specifications}\\
   $(k,u)$ \outrelpast by $(k,w)$ & $w$ \outrel $u$, for two rows at the same input & Sec.~\ref{sec:functional-specifications}\\
   monotone (functional) & $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity}\\
   selection $R[\ldots]$ & the rows of $R$ that satisfy a predicate on $\mathrm{in}$ and $\mathrm{out}$; commas separate conjuncts & Sec.~\ref{sec:functional-specifications}\\
@@ -3349,10 +3315,9 @@ rows at $k$.\cxbar{notation-3}{0.4 0.4 1}{e}\color{black}
   \spectype & $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$ total on $I$ & Def.~\ref{def:relational-specification}\\
   nondeterministic & some fiber has more than one output & Def.~\ref{def:nondeterministic}\\
   Relational Monotonicity & every output keeps an \outnoun as input \ingrows & Def.~\ref{def:relational-monotonicity}\\
-  compatible in $F$ & outputs that some $u\in F$ \outrel all at once & Sec.~\ref{sec:lifted-monotonicity}\\
-  directed fiber & every nonempty finite subset is compatible in the fiber & Def.~\ref{def:fiber-directedness}\\
+  directed fiber & every nonempty finite subset has a common extension in the fiber & Def.~\ref{def:fiber-directedness}\\
   directed fibers & every fiber of the spec is directed & Def.~\ref{def:fiber-directedness}\\
-  joint refinement lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ is compatible in $B$ & Eq.~\ref{eq:joint-output-order}\\
+  joint refinement lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ has a common extension in $B$ & Eq.~\ref{eq:joint-output-order}\\
   Lifted Monotonicity (monotone) & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
   common-extension condition & rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$ & Def.~\ref{def:common-expansion-condition}\\
   ruled out by $o$ & a row whose output does not \outrelbase $o$ & App.~\ref{app:lifted-output-events}\\
@@ -5115,47 +5080,47 @@ enforce it by routing reads through the log.\cxbar{composition-50}{0.4 0.4 1}{e}
 \subsection{Tight and proper pipelines}
 \label{app:tight}
 
-\color{black}\cxtag{composition:51}{N/M}\cxbar{composition-51}{0.4 0.4 1}{s}Throughout, $\Spec_1$ guards $\Spec_2$.  For a relation $\preceq'_M$ on $M$, rows
-$(i,m)$ and $(k,x)$ of $P_1$ are separated as in
-Section~\ref{sec:proper-coordination}, and the composite separates rows of
-$P_2\circ P_1$ in the same way under $\OutputOrd$.  At a canonical state
-these are exactly the rows that canonical \commitments remove: for
+\color{black}\cxtag{composition:51}{N/M}\cxbar{composition-51}{0.4 0.4 1}{s}Throughout, $\Spec_1$ guards $\Spec_2$.  Consistency of rows at an input is
+as in Section~\ref{sec:functional-calm}, read under $\preceq_M$, under
+$\sqsubseteq$, or under any other relation on $M$ put in its place; rows of
+$P_2\circ P_1$ are read under $\OutputOrd$.  At a canonical state, inconsistent
+pairs are exactly the rows that canonical \commitments remove: for
 $(i,m)\in P_1$, emitting $m$ at $\sigma_{P_1}(i)$ puts $(k,x)$ in
-$\Excluded_m$ exactly when $\preceq_M$ separates $(i,m)$ and $(k,x)$.  Indeed
-$(k,x)$ is subsumed exactly when some $m'\in R(k)$ \outrel both $m$ and $x$,
-and at $\sigma_{P_1}(i)$ the fiber $R(k)$ is $P_1(k)$.  So a spec satisfies
-Lifted Monotonicity exactly when its order separates no pair of its rows
-(Proposition~\ref{prop:common-expansion-form}).\cxbar{composition-51}{0.4 0.4 1}{e}\color{black}
+$\Excluded_m$ exactly when $(i,m)$ and $(k,x)$ are inconsistent at $k$.
+Indeed $(k,x)$ is subsumed exactly when it is consistent with $(i,m)$ at $k$
+in the state's table, and at $\sigma_{P_1}(i)$ that table has the fiber
+$P_1(k)$ at $k$.  So a spec satisfies Lifted Monotonicity exactly when no two
+of its rows are inconsistent (Proposition~\ref{prop:common-expansion-form}).\cxbar{composition-51}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
 \cxtag{composition:52}{N/M}\cxbar{composition-52}{0.4 0.4 1}{s}(1) By Proposition~\ref{prop:guard-test}, the pipeline is guarded exactly when
 $\Spec_2$ satisfies the common-extension condition on the outputs of
 $\Spec_1$.  For outputs $m\preceq_M m'$, that condition at $m'$ for finitely
 many rows of $P_2(m)$ is the statement $m\sqsubseteq m'$, and conversely,
-finitely many rows $(m_r,o_r)$ with a common \indesc $m'$ are covered by
-$m_r\sqsubseteq m'$ together with directedness of $P_2(m')$, which is
-$m'\sqsubseteq m'$.\cxbar{composition-52}{0.4 0.4 1}{e}\color{black}
+finitely many rows $(m_r,o_r)$ with a common extension $m'$ of their inputs
+are consistent at $m'$ by $m_r\sqsubseteq m'$ together with directedness of
+$P_2(m')$, which is $m'\sqsubseteq m'$.\cxbar{composition-52}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{composition:53}{N/M}\cxbar{composition-53}{0.4 0.4 1}{s}(2) Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
-$(k,x)$ of $P_1$, and suppose $\sqsubseteq$ does not separate $(i,m)$ and
-$(k,x)$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$.  Then $o$ and $y$ each
-have an \outnoun in $P_2(m')$, and since $P_2(m')$ is directed by (1), some
-$u\in P_2(m')$ \outrel both.  The row $(k,u)$ of $P_2\circ P_1$ shows that the
-composite does not separate $(i,o)$ and $(k,y)$.  For the second claim, an
+$(k,x)$ of $P_1$, and suppose $(i,m)$ and $(k,x)$ are consistent at $k$ under
+$\sqsubseteq$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$.  Then $o$ and $y$
+each have an extension in $P_2(m')$, and since $P_2(m')$ is directed by (1),
+some $u\in P_2(m')$ \outrel both.  The row $(k,u)$ of $P_2\circ P_1$ shows
+that $(i,o)$ and $(k,y)$ are consistent at $k$.  For the second claim, an
 order under which the pipeline is guarded is contained in $\sqsubseteq$ on the
-outputs of $\Spec_1$ by (1), and a smaller order has fewer common \outnouns,
-so it separates every pair that $\sqsubseteq$ separates.\cxbar{composition-53}{0.4 0.4 1}{e}\color{black}
+outputs of $\Spec_1$ by (1), and a smaller order has fewer common extensions,
+so every pair inconsistent under $\sqsubseteq$ is inconsistent under it.\cxbar{composition-53}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{composition:54}{N/M}\cxbar{composition-54}{0.4 0.4 1}{s}(3) Let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$.  If
-the composite does not separate $(i,t)$ and $(k,s)$, some row $(k,u)$ of
-$P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
+$(i,t)$ and $(k,s)$ are consistent at $k$ in the composite, some row $(k,u)$
+of $P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
 $m'\in P_1(k)$.  Every finite set of outputs in $P_2(m)$ lies below $t$, and
 so below $u$, so $m\sqsubseteq m'$, and likewise $x\sqsubseteq m'$.  So
-separation under $\sqsubseteq$ implies separation of $(i,t)$ and $(k,s)$, and
-(2) gives the converse for any answers.  For the last claim, a guarded
-pipeline is tight exactly when every pair that $\preceq_M$ separates is
-separated by $\sqsubseteq$, and by (2) every pair that $\sqsubseteq$
-separates is separated by $\preceq_M$.\cxbar{composition-54}{0.4 0.4 1}{e}\color{black}
+inconsistency under $\sqsubseteq$ implies inconsistency of $(i,t)$ and
+$(k,s)$, and (2) gives the converse for any answers.  For the last claim, a
+guarded pipeline is tight exactly when every pair inconsistent under
+$\preceq_M$ is inconsistent under $\sqsubseteq$, and by (2) every pair
+inconsistent under $\sqsubseteq$ is inconsistent under $\preceq_M$.\cxbar{composition-54}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
 \color{black}\cxtag{composition:55}{N/M}\cxbar{composition-55}{0.4 0.4 1}{s}For a functional downstream $f$, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd
@@ -5164,22 +5129,23 @@ f(m')$, and (3) holds without assuming the pipeline guarded.\cxbar{composition-5
 \color{black}\cxtag{composition:56}{N/M}\cxbar{composition-56}{0.4 0.4 1}{s}The commuting log of Section~\ref{sec:proper-coordination} is formalized with
 two increments $A$ and $B$, inputs the sets of commands proposed so far, logs
 ordered by prefix, and the store answering a log with its length.  The
-pipeline is guarded, since length is monotone in the prefix order.  Emitting
-$[A]$ at $\{A\}$ separates the row $(\{A,B\},[B,A])$ under the prefix order,
-but the composite answers both logs with $1$ and $2$, which have the common
-\outnoun $2$, and $\sqsubseteq$, which compares lengths, does not separate
-them.  So the pipeline is guarded but not tight.  The log does not satisfy
-Lifted Monotonicity, while the composite does.\cxbar{composition-56}{0.4 0.4 1}{e}\color{black}
+pipeline is guarded, since length is monotone in the prefix order.  The rows
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
+prefix order, so emitting $[A]$ at $\{A\}$ removes $(\{A,B\},[B,A])$ by
+\commitment.  But the composite answers both logs with $1$ and $2$, which have
+the common extension $2$, and under $\sqsubseteq$, which compares lengths, the
+rows are consistent.  So the pipeline is guarded but not tight.  The log does
+not satisfy Lifted Monotonicity, while the composite does.\cxbar{composition-56}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\cxtag{composition:57}{N/M}\cxbar{composition-57}{0.4 0.4 1}{s}In the gap example, $M=\{z\}\cup\{n_k:k\in\mathbb N\}$ under equality, with
 $P_1(\mathit{lo})=\{z\}$, $P_1(\mathit{hi})=\{n_k\}$, $P_2(z)=\mathbb N$, and
 $P_2(n_k)=\{k\}$, where $\mathbb N$ has its usual order.  The pipeline is
 guarded, since $\mathbb N$ is directed and singletons are.  No $n_k$ has
-$z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no \outnoun in
-$\{k\}$, so $\sqsubseteq$ separates $(\mathit{lo},z)$ from every row at
-$\mathit{hi}$, and by (2) so does every order on $M$ under which the pipeline
-is guarded.  The composite has the fiber $\mathbb N$ at both inputs and
-satisfies Lifted Monotonicity, so the pipeline is not tight under any such
+$z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no extension in
+$\{k\}$, so $(\mathit{lo},z)$ is inconsistent with every row at $\mathit{hi}$
+under $\sqsubseteq$, and by (2) under every order on $M$ for which the
+pipeline is guarded.  The composite has the fiber $\mathbb N$ at both inputs
+and satisfies Lifted Monotonicity, so the pipeline is not tight under any such
 order.\cxbar{composition-57}{0.4 0.4 1}{e}\color{black}
 
 \subsection{Intersection}

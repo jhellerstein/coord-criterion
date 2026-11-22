@@ -237,7 +237,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:proper-coordination/locks-overhead»
 #check @CC.Paper.«sec:proper-coordination/nesting»
 #check @CC.Paper.«sec:proper-coordination/components»
-#check @CC.Paper.«sec:proper-coordination/separates»
+#check @CC.Paper.«sec:proper-coordination/inconsistent-rows»
 #check @CC.Paper.«def:tight»
 #check @CC.Paper.«def:proper-coordination»
 #check @CC.Paper.«sec:proper-coordination/downstream-order»

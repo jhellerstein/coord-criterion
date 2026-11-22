@@ -276,21 +276,20 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 
 /-! ### Tight and proper pipelines -/
 
-/-- "To compare the two stages, we say that a relation `≼'_M` on `M`, such as an order, *separates*
-rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁(k)` has
-`m ≼'_M m'` and `x ≼'_M m'`.  Under `≼_M` these are the pairs in which emitting `m`
-at `σ_{P₁}(i)` removes `(k,x)` by commitment (Definition
-`def:subsumed-excluded`)."  Lean: separation under `r` is `Tight.Conf P r`;
-the second sentence is `Tight.excluded_canon_iff`. -/
-theorem «sec:proper-coordination/separates» {I M : Type} [PO I] [PO M] (sp : Spec I M)
+/-- "Suppose rows `(i,m)` and `(k,x)` of `P₁`, with `i ≼ k`, are inconsistent at
+`k`.  Emitting `m` at `σ_{P₁}(i)` then requires a commitment that removes
+`(k,x)` (Definition `def:subsumed-excluded`)."  Lean: rows inconsistent at `k`
+under a relation `r` on `M` is `Tight.Conf P r` (with `r = ≼_M` here, `⊑` in
+the theorem); the removal by commitment is `Tight.excluded_canon_iff`. -/
+theorem «sec:proper-coordination/inconsistent-rows» {I M : Type} [PO I] [PO M] (sp : Spec I M)
     {i : I} {m : M} (hm : sp.P i m) (k : I) (x : M) :
     Excluded (canon sp i) m k x ↔ Tight.Conf sp.P PO.le i m k x :=
   Tight.excluded_canon_iff sp hm k x
 
 /-- **Definition `def:tight`** (Tight pipeline): "A pipeline in which `𝒮₁`
-guards `𝒮₂` is tight when every pair of rows `(i,m)` and `(k,x)` of `P₁` that
-`≼_M` separates has answers `o ∈ P₂(m)` and `y ∈ P₂(x)` such that the
-composite separates `(i,o)` and `(k,y)`."  Lean: `Tight.Tight`, unfolded; in
+guards `𝒮₂` is tight when its upstream makes no unnecessary commitment:
+whenever rows `(i,m)` and `(k,x)` of `P₁` are inconsistent at `k`, some answers
+`o ∈ P₂(m)` and `y ∈ P₂(x)` are inconsistent at `k` in the composite."  Lean: `Tight.Tight`, unfolded; in
 terms of canonical commitments it is `Tight.tight_iff_excluded`. -/
 theorem «def:tight» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M) (sk : Spec M O) :
     Tight.Tight sp sk ↔ ∀ i m k x, Tight.Conf sp.P PO.le i m k x →
@@ -303,8 +302,9 @@ def «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I
     (sk : Spec M O) : Prop :=
   Guard.Proper sp sk ∧ Tight.Tight sp sk
 
-/-- "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common
-output extension in `P₂(m')`.  For a functional downstream `f`, `m ⊑ m'`
+/-- "To measure the upstream against the downstream, write `m ⊑ m'` when every
+finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read
+consistency of rows of `P₁` under `⊑` by using `⊑` in place of `≼_M`.  For a functional downstream `f`, `m ⊑ m'`
 exactly when `f(m) ≼ f(m')`.  The relation `⊑` is transitive but need not be
 an order."  Lean: `⊑` is `Tight.dle`; `Tight.graph_dle_iff`,
 `Tight.dle_trans`. -/
@@ -317,13 +317,14 @@ theorem «sec:proper-coordination/downstream-order» {M O : Type} [PO M] [PO O] 
 /-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Let `𝒮₁`
 guard `𝒮₂`.  (1) The pipeline is guarded exactly when `m ≼_M m'` implies
 `m ⊑ m'` for all outputs `m, m'` of `𝒮₁`.  (2) If the pipeline is guarded,
-every pair of rows of `P₁` whose answers the composite separates is separated
-by `⊑`, and every pair that `⊑` separates is separated by every order on `M`
-under which the pipeline is guarded, including `≼_M`.  (3) If the pipeline is
-guarded and every fiber `P₂(m)` at an output `m` of `𝒮₁` has a greatest
-element, as when `𝒮₂` is functional, then `⊑` separates exactly the pairs
-whose answers the composite separates.  So the coordination is proper exactly
-when `≼_M` and `⊑` separate the same pairs of rows."  Lean: (1)
+two rows of `P₁` with answers inconsistent in the composite are inconsistent
+under `⊑`, and rows inconsistent under `⊑` are inconsistent under every order
+on `M` for which the pipeline is guarded, including `≼_M`.  (3) If the
+pipeline is guarded and every fiber `P₂(m)` at an output `m` of `𝒮₁` has a
+greatest element, as when `𝒮₂` is functional, then two rows are inconsistent
+under `⊑` exactly when some of their answers are inconsistent in the
+composite.  So the coordination is proper exactly when `≼_M` and `⊑` make the
+same pairs of rows inconsistent."  Lean: (1)
 `Tight.proper_iff_le_dle`; (2) `Tight.dleConf_of_compConf` and
 `Tight.conf_of_dleConf`, with every other order in
 `«thm:proper-coordination/any-order»`; (3) `Tight.dleConf_iff_compConf` and
@@ -349,8 +350,8 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
      ⟨fun h => (Tight.tight_iff hP htop).1 h.2, fun h => ⟨hP, (Tight.tight_iff hP htop).2 h⟩⟩⟩⟩
 
 /-- Theorem `thm:proper-coordination`(2), second half, for an arbitrary order:
-"every pair that `⊑` separates is separated by every order on `M` under which
-the pipeline is guarded."  Lean: `Tight.conf_of_dleConf_under`; `inst` is the
+"rows inconsistent under `⊑` are inconsistent under every order on `M` for
+which the pipeline is guarded."  Lean: `Tight.conf_of_dleConf_under`; `inst` is the
 other order on `M`, and `Joint.underOut`/`Joint.underIn` are the same tables
 with `M` ordered by it. -/
 theorem «thm:proper-coordination/any-order» {I M O : Type} [PO I] [PO O] {_instM : PO M}
@@ -361,8 +362,9 @@ theorem «thm:proper-coordination/any-order» {I M O : Type} [PO I] [PO O] {_ins
   Tight.conf_of_dleConf_under inst sp sk hP h
 
 open Tight Tight.Log Comp Guard in
-/-- "The commuting log is guarded but not tight: `≼_M` separates
-`({A},[A])` from `({A,B},[B,A])`, and `⊑` does not."  With the motivating
+/-- "The commuting log is guarded but not tight: `({A},[A])` and
+`({A,B},[B,A])` are inconsistent at `{A,B}` under the prefix order but
+consistent under `⊑`."  With the motivating
 paragraph: "Suppose two commands `A` and `B` commute, and the store's outputs
 do not record their order, as when it reports its state."  Lean:
 `Tight.Log.commuting`, with two increments and the store answering a log with
@@ -377,7 +379,7 @@ theorem «sec:proper-coordination/commuting-log» :
 open Tight Tight.Gap Comp Guard in
 /-- "Without greatest answers, a gap can remain.  Let `𝒮₁` emit `z` at input
 `lo` and any `n_k` at a larger input `hi`, and let `𝒮₂` answer `z` with any
-number and `n_k` with `k`. … by (2) so does every order on `M` under which the
+number and `n_k` with `k`. … and by (2) under every order on `M` for which the
 pipeline is guarded.  Yet the composite permits every number at both inputs
 and needs no commitment."  Lean: `Tight.Gap.gap` (Appendix `app:tight`). -/
 theorem «sec:proper-coordination/gap» :

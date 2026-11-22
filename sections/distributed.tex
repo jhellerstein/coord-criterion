@@ -238,7 +238,7 @@ Let $\rho_1,\ldots,\rho_n$ be runs under any \commitment bases, where $\rho_r$
 ends at $(i_r,R_r)$ and its canonical run ends at $(i_r,\widehat R_r)$.
 \begin{enumerate}
   \item $R_r=\widehat R_r\setminus\Delta(\rho_r)$.
-  \item Let $k$ be a common \indesc of $i_1,\ldots,i_n$.  The runs are
+  \item Let $k$ be a common extension of $i_1,\ldots,i_n$.  The runs are
         confluent at $k$, by continuations whose output and \commitment events
         may apply any \commitments, if and only if some row at $k$ lies in
         every $\widehat R_r$ and in no $\Delta(\rho_r)$.
@@ -414,13 +414,12 @@ A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
 Availability for $E$ and Partition Consistency.
 \end{definition}
 
-Whether the canonical system's answers stay compatible across sides depends on
+Whether the canonical system's answers stay consistent across sides depends on
 one condition.
 
 \begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
-$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
-a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
+$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ is consistent at every common \indesc of their inputs.
 \end{definition}
 
 \begin{theorem}[Complete CAP]
@@ -435,14 +434,12 @@ $(i_r,o_r)$ of $E$ and an input $j$ that \inrel every $i_r$.  In a partitioned
 history, put each participant $r$ alone on a side with input $i_r$, so
 Availability lets it emit $o_r$.  Partition Consistency makes the final cut
 confluent at $j$, so some row $(j,u)$ survives in every participant's state
-(Proposition~\ref{prop:confluence}).  That $u$ \outrel every $o_r$
-(Lemma~\ref{lem:run-residual}), which is Lifted Monotonicity for $E$.
+(Proposition~\ref{prop:confluence}).  By Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are consistent at $j$, which is Lifted Monotonicity for $E$.
 
 Now assume Lifted Monotonicity for $E$.  The canonical system's participants
 never wait: each can emit any output of $E$ that its state allows, so the
 system has Availability for $E$.  Let $j$ be an input that \inrel every
-participant's current input.  The outputs emitted on all sides are outputs of
-$E$, so some output $u$ at $j$ \outrel all of them.  Each participant makes no
+participant's current input.  The rows emitted on all sides are rows of $E$, so they are consistent at $j$, through some row $(j,u)$.  Each participant makes no
 \commitments of its own and $u$ \outrel every output it emitted, so it still
 has $(j,u)$ (Lemma~\ref{lem:run-residual}).  All participants can therefore
 continue to one state at $j$, which is Partition Consistency.  Full proof in
@@ -463,7 +460,7 @@ communication, so the voter can make it and produce output during a partition.
 Each ballot is cast by a different voter, so ballots emitted on different
 sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this
 placement as a deployment), and every set of ballots an
-observer may collect is compatible.
+observer may collect is consistent.
 
 A partition does not change the intrinsic \commitments a spec needs; it
 prevents separated participants from jointly enforcing them through
@@ -480,7 +477,7 @@ second~\cite{herlihy1990linearizability}.  In the register example, suppose the
 write finishes before the read begins.  Every linearization then puts the write
 first, so the read must return $v$.  But each of $p$ and $q$ sees only its own
 request, and Availability requires $p$ to acknowledge the write and $q$ to
-answer $v_0$.  No output for the two requests together \outrel both answers, so
+answer $v_0$.  These two rows are inconsistent at the input with both requests, so
 the spec does not satisfy Lifted Monotonicity for them.  Their theorem
 concerns every system, not only the canonical one, so it needs one more step.
 
@@ -493,8 +490,7 @@ then so does the spec's canonical system for $E$.
 \begin{proof}[Proof sketch]
 By Theorem~\ref{thm:complete-cap}, it suffices to show that if Lifted
 Monotonicity for $E$ fails, the system loses Partition Consistency.  Then some
-rows of $E$ share a common \indesc $j$, but no output in
-$\fiber{j}$ \outrel all of their outputs.  We place each row's participant on
+rows of $E$ are inconsistent at a common extension $j$ of their inputs.  We place each row's participant on
 its own side of a partition, and Availability lets each one emit its row's
 output.  By Observable equivalence, a participant keeps no more rows than its
 canonical run, so each row it keeps at $j$ \outrel its own output.  A common
@@ -515,7 +511,7 @@ Two differences from Gilbert and Lynch's setting do not affect the conclusion.
 In general our Availability and Partition Consistency are stronger than their
 availability and consistency, but in the register example they coincide.  Each
 fiber holds a single output, so emitting every permitted output is the same as
-responding, and a common \outnoun of the two answers is a single linearization
+responding, and a common extension of the two answers is a single linearization
 that explains both.  We also put the real-time order of the write and the read
 in the input, while their model takes it from the execution; the theorem holds
 in their model as well (Appendix~\ref{app:cap-response}).
