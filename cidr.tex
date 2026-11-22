@@ -515,7 +515,8 @@ Because each input contains the ones before it, $\mathsf{input}(j)$ then
 $\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
 
 Two sets of outputs matter in every state: those at the current
-input (its \emph{fiber}), and those at all \indescs of the current input (its \emph{upper fiber}).  In panel~(b), the
+input (its \emph{fiber}), and those at the current input or any input that
+\inrel it (its \emph{upper fiber}).  In panel~(b), the
 first is $\{\bot\}$ and the second, shaded, is $\{\bot,a,b\}$. Formally:
 
 \begin{definition}[Fiber, upper fiber]
@@ -526,10 +527,11 @@ $R(k)=\pi_{\mathrm{out}}(R[\mathrm{in}=k])$, the outputs paired with $k$.  The
 k])$, the outputs paired with $k$ or with any input that \inrel $k$.
 \end{definition}
 
-We say that a state is \emph{determined} when it has only one possible output remaining.
+A state is determined when only one output remains possible, as in panel~(c),
+where input alone has settled the outcome.
 
-\begin{definition}[Determined State]
-\label{def:fiber}
+\begin{definition}[Determined state]
+\label{def:determined}
 Let $\sigma = (i, R)$ be a specification state.  The upper fiber of $\sigma$
 is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe i]) = \pi_{\mathrm{out}}(R)$.
 We say $\sigma$ is \emph{determined} when $|\pi_{\mathrm{out}}(R)|=1$.
@@ -654,17 +656,13 @@ canonical state $\sigma_P(i)$ at some input $i$.  It is
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
-\jmh{This is a bit redundant to the Panel~(d) discussion a few paragraphs earlier.}
 Different runs may retain different rows.  Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
-that \inrel both of their inputs, but no output at
-$aba$ \outrel both $\bot$ and $a$: none is a \emph{common \outnoun} of them.
-A run that emits $\bot$ at $ab\cdot$
-applies $x_\bot$ and keeps no row at $aba$; a run that receives $aba$ loses the possibility of 
-output $\bot$ due to the environment and emits $a$ without commitment, keeping $(aba,a)$. 
-These two runs can never be reconciled at $aba$.
-The argument uses only the table, its orders, and canonical runs, so the need
-for the \commitment is a property of the spec, not of any system.
+that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$
+and $a$: none is a \emph{common \outnoun} of them.  So a run that emits $\bot$
+at $ab\cdot$, applying $x_\bot$, can never be reconciled at $aba$ with a run
+that receives $aba$ and emits $a$.  Unlike the registrar's in panel~(d), this
+\commitment comes from the spec itself.
 
 Having extracted canonical runs from a spec, we are now ready to define consistency.
 
