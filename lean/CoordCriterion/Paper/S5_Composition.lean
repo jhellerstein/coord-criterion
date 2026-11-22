@@ -276,9 +276,9 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 
 /-! ### Tight and proper pipelines -/
 
-/-- "To compare the two stages, we say that an order `≤` on `M` *separates*
+/-- "To compare the two stages, we say that an order `≼'_M` on `M` *separates*
 rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁(k)` has
-`m ≤ m'` and `x ≤ m'`.  Under `≼_M` these are the pairs in which emitting `m`
+`m ≼'_M m'` and `x ≼'_M m'`.  Under `≼_M` these are the pairs in which emitting `m`
 at `σ_{P₁}(i)` removes `(k,x)` by commitment (Definition
 `def:subsumed-excluded`)."  Lean: separation under `r` is `Tight.Conf P r`;
 the second sentence is `Tight.excluded_canon_iff`. -/
