@@ -1264,11 +1264,11 @@ follows.} Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
 Complete CALM also changes how consistency can be checked. Its definition
-asks whether runs can be continued to a common state. \textcolor{reviewed}{Lifted
+asks whether runs can be continued to a common state. Lifted
 Monotonicity is checked on the table itself, and pairs of rows suffice: if every
 two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
 so does every finite family of such rows, by replacing two rows at a time with
-one row at $j$ that \outrel both.}
+one row at $j$ that \outrel both.
 
 The condition that characterizes consistency of runs is a property of the spec
 alone: Lifted Monotonicity, which for a function is ordinary monotonicity. Both theorems also hold for distributed histories
@@ -2023,12 +2023,12 @@ is more non-monotonicity!} \textcolor{reviewed}{Why does it work?}
 \textcolor{reviewed}{That puzzle is explained by our framework.} \textcolor{reviewed}{As we'll see, two specs compose by equijoin,
 and the composition of two monotone specs is also monotone.} \textcolor{reviewed}{Moreover, for non-monotone specs,
 as in our puzzle, we
-can reason about which stage actually makes \commitments under composition.} \textcolor{reviewed}{When the
+can reason about which stage actually makes \commitments under composition.} When the
 downstream needs no \commitment on the inputs the upstream offers, we say the
 pipeline is \emph{guarded}, and the upstream's \commitments then suffice for
-the whole pipeline.} \textcolor{reviewed}{When, in addition, the upstream makes no \commitment the
+the whole pipeline. When, in addition, the upstream makes no \commitment the
 composition does not need, the pipeline's coordination is \emph{proper}
-(\S\ref{sec:proper-coordination}).} Proofs are in
+(\S\ref{sec:proper-coordination}). Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
 
@@ -2081,8 +2081,8 @@ the order of commands, and a longer log only extends the responses. \textcolor{r
 issues a \commitment to offer only such inputs, so the store need make no
 \commitments.}
 
-\textcolor{reviewed}{More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
-let $\Spec_2$ run under a system of its own.} \textcolor{reviewed}{Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
+More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
+let $\Spec_2$ run under a system of its own. \textcolor{reviewed}{Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
 $\Spec_1$.} We say that $P_2$ satisfies Lifted Monotonicity \emph{on} a set
 $D\subseteq M$ when its restriction to inputs in $D$ does.
 
@@ -2093,8 +2093,8 @@ $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
 reaches without \commitment is legal.}
 \end{definition}
 
-\textcolor{reviewed}{Applying the No-\commitment test (Proposition~\ref{prop:exposure-boundary})
-to $\Spec_2|_{\Spec_1}$ gives a static test.}
+Applying the No-\commitment test (Proposition~\ref{prop:exposure-boundary})
+to $\Spec_2|_{\Spec_1}$ gives a static test.
 
 \begin{proposition}[Guard test]
 \label{prop:guard-test}
@@ -2107,7 +2107,7 @@ Apply the No-\commitment test to $\Spec_2|_{\Spec_1}$, whose inputs are the
 outputs of $\Spec_1$. Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-\textcolor{reviewed}{A guarded pipeline leaves every \commitment to the upstream stage.}
+A guarded pipeline leaves every \commitment to the upstream stage.
 
 \begin{theorem}[Guarded pipelines]
 \label{thm:guarded-pipelines}
@@ -2147,13 +2147,13 @@ composite of $\Spec_1$ and $\Spec_2|_{\Spec_1}$, and it satisfies Lifted
 Monotonicity by Lemma~\ref{lem:composition}, a contradiction.
 \end{proof}
 
-\textcolor{reviewed}{This answers the opening puzzle.} \textcolor{reviewed}{By Proposition~\ref{prop:guard-test}, the
+\textcolor{reviewed}{This answers the opening puzzle.} By Proposition~\ref{prop:guard-test}, the
 store restricted to logs needs no \commitment, so locks in the store would be
 pure overhead, and by Theorem~\ref{thm:guarded-pipelines} the pipeline is
-consistent whenever the log is.} \textcolor{reviewed}{The store as a whole is not monotone, so by
+consistent whenever the log is. The store as a whole is not monotone, so by
 Corollary~\ref{cor:upstream-commitments} some output of the log needs a
 \commitment: the upstream log is where that belongs, and consensus provides
-it.}
+it.
 
 Longer pipelines nest: the composite $P_2\circ P_1$ of a guarded pipeline can
 itself guard a third stage, and the theorem applies again
@@ -2165,19 +2165,19 @@ $\Spec_2$ alone, rather than of $\Spec_2|_{\Spec_1}$, may also fail to answer
 some upstream outputs (Appendix~\ref{app:components}).
 
 \paragraph{Tight and proper pipelines.}
-\textcolor{reviewed}{A guarded pipeline's \commitments suffice, but the upstream may make more of
-them than the composition needs.} \textcolor{reviewed}{Suppose two commands $A$ and $B$ commute,
+A guarded pipeline's \commitments suffice, but the upstream may make more of
+them than the composition needs. Suppose two commands $A$ and $B$ commute,
 and the store's outputs do not record their order, as when it reports its
-state.} \textcolor{reviewed}{Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
+state. Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
 yet the composite needs no \commitment there, since both logs lead to the same
-output.}
+output.
 
 \textcolor{reviewed}{To compare the two stages, we say that an order $\le$ on $M$
 \emph{separates} rows $(i,m)$ and $(k,x)$ of $P_1$ when $i\InputOrd k$ and no
 $m'\in P_1(k)$ has $m\le m'$ and $x\le m'$.} Under $\preceq_M$ these are the
 pairs in which emitting $m$ at $\sigma_{P_1}(i)$ removes $(k,x)$ by
-\commitment (Definition~\ref{def:subsumed-excluded}). \textcolor{reviewed}{The composite separates
-rows of $P_2\circ P_1$ in the same way under $\OutputOrd$.}
+\commitment (Definition~\ref{def:subsumed-excluded}). The composite separates
+rows of $P_2\circ P_1$ in the same way under $\OutputOrd$.
 
 \begin{definition}[Tight pipeline, Proper Coordination]
 \label{def:tight}
@@ -2188,7 +2188,7 @@ $o\in P_2(m)$ and $y\in P_2(x)$ such that the composite separates $(i,o)$ and
 $(k,y)$.} \textcolor{reviewed}{Its coordination is \emph{proper} when it is guarded and tight.}
 \end{definition}
 
-\textcolor{reviewed}{The downstream supplies the comparison against which to measure the upstream.} \textcolor{reviewed}{Write $m\sqsubseteq m'$ when every finite set of outputs in $P_2(m)$ has a
+The downstream supplies the comparison against which to measure the upstream. \textcolor{reviewed}{Write $m\sqsubseteq m'$ when every finite set of outputs in $P_2(m)$ has a
 common \outnoun in $P_2(m')$.} \textcolor{reviewed}{For a functional downstream $f$, $m\sqsubseteq
 m'$ exactly when $f(m)\OutputOrd f(m')$.} The relation $\sqsubseteq$ is
 transitive but need not be antisymmetric: logs that the store answers alike
@@ -2202,16 +2202,16 @@ are equivalent under it.
 \textcolor{reviewed}{The pipeline is guarded exactly when $m\preceq_M m'$ implies
         $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.}
 \item
-\textcolor{reviewed}{If the pipeline is guarded, every pair of rows of $P_1$ whose answers
+If the pipeline is guarded, every pair of rows of $P_1$ whose answers
         the composite separates is separated by $\sqsubseteq$, and every pair
         that $\sqsubseteq$ separates is separated by every order on $M$ under
-        which the pipeline is guarded, including $\preceq_M$.}
+        which the pipeline is guarded, including $\preceq_M$.
 \item
-\textcolor{reviewed}{If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
+If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
         of $\Spec_1$ has a greatest element, as when $\Spec_2$ is functional,
         then $\sqsubseteq$ separates exactly the pairs whose answers the
-        composite separates.} \textcolor{reviewed}{So the coordination is proper exactly when
-        $\preceq_M$ and $\sqsubseteq$ separate the same pairs of rows.}
+        composite separates. So the coordination is proper exactly when
+        $\preceq_M$ and $\sqsubseteq$ separate the same pairs of rows.
 \end{enumerate}
 \end{theorem}
 
@@ -2228,13 +2228,13 @@ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$. Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
-\textcolor{reviewed}{By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
-upstream commit less than $\sqsubseteq$ does.} \textcolor{reviewed}{The commuting log is guarded but
+By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
+upstream commit less than $\sqsubseteq$ does. \textcolor{reviewed}{The commuting log is guarded but
 not tight: $\preceq_M$ separates $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and
 $\sqsubseteq$ does not.} \textcolor{reviewed}{Generalized Paxos~\cite{lamport2005generalized} and
 EPaxos~\cite{moraru2013epaxos} avoid such \commitments: they order only
-commands that do not commute.} \textcolor{reviewed}{When the store's outputs do not record the
-order of commuting commands, they bring the log closer to a tight pipeline.} Reversing the order
+commands that do not commute.} When the store's outputs do not record the
+order of commuting commands, they bring the log closer to a tight pipeline. Reversing the order
 on $M$ in the boolean toggle below is reordering by $\sqsubseteq$. Without
 greatest answers, a gap can remain. Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
@@ -2421,8 +2421,8 @@ functional monotonicity is exactly domain-distinct- and
 domain-disjoint-monotonicity, so Functional CALM gives their
 characterizations.
 
-Li and Lee prove CALM for replicated objects with write, merge, and query
-operations~\cite{li2025coordinationfree}. In our terms, they prove a
+\textcolor{reviewed}{Li and Lee prove CALM for replicated objects with write, merge, and query
+operations~\cite{li2025coordinationfree}.} In our terms, they prove a
 counterpart of Functional CALM for input domains of sets ordered by inclusion
 and arbitrary partially ordered output domains, with the existence of a
 coordination-free implementation in place of consistency.
