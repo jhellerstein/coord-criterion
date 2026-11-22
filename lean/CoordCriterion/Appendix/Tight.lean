@@ -1,12 +1,13 @@
 import CoordCriterion.Appendix.JointMono
 
 /-!
-# Tight pipelines (not in the paper; exploration)
+# Tight pipelines (paper §5.2 and Appendix `app:tight`)
 
-Proper Coordination (`Guard.Proper`, Def. `def:proper-coordination`) says the
-downstream `𝒮₂|_{𝒮₁}` needs no commitment, and Theorem
-`thm:proper-coordination`(3) says the upstream must commit whenever the
-composite `P₂ ∘ P₁` does.  This file asks the converse question: does the
+A guarded pipeline (`Guard.Proper`, Def. `def:guarded`) is one whose
+downstream `𝒮₂|_{𝒮₁}` needs no commitment, and Corollary
+`cor:upstream-commitments` says the upstream must commit whenever the
+composite `P₂ ∘ P₁` does.  The paper's Proper Coordination
+(Def. `def:proper-coordination`) is guarded and tight.  This file asks the converse question: does the
 upstream commit *more* than the composite needs?
 
 **Unit of comparison.**  At the canonical state `σ_P(i)`, emitting `a` removes

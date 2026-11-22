@@ -1623,7 +1623,8 @@ end General
 
 `𝒮₁ = sp` guards `𝒮₂ = sk`.  `𝒮₂|_{𝒮₁}` is `rest sp sk`, the downstream
 restricted to the outputs of the upstream (`Joint.restrictTo (Joint.Img sp)`).
-The pipeline is proper when `𝒮₂|_{𝒮₁}` needs no commitment.  The definition
+The pipeline is proper (the paper's *guarded*, Def. `def:guarded`) when
+`𝒮₂|_{𝒮₁}` needs no commitment.  The definition
 does not mention the system that runs `𝒮₁`, so every result below holds for
 every system for `𝒮₁`. -/
 

@@ -2,6 +2,7 @@ import CoordCriterion.Appendix.Guarded
 import CoordCriterion.Appendix.JointMono
 import CoordCriterion.Appendix.Components
 import CoordCriterion.Appendix.Intersection
+import CoordCriterion.Appendix.Tight
 
 /-!
 # Paper §5, "Composition and Proper Coordination" (`sections/composition.tex`)
@@ -102,9 +103,10 @@ theorem «sec:proper-coordination/kvs-on-logs» {Cmd Stt R : Type} (δ : Stt →
   let h := Guard.smr_proper δ σ0 hne
   ⟨h.2.1, h.2.2.1, h.1⟩
 
-/-- **Definition `def:proper-coordination`** (Proper Coordination): "A pipeline
-in which `𝒮₁` guards `𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no commitment:
-every output at every state it reaches without commitment is a legal output."  And,
+/-- **Definition `def:guarded`** (Guarded pipeline): "A pipeline in which `𝒮₁`
+guards `𝒮₂` is guarded when `𝒮₂|_{𝒮₁}` needs no commitment: every output at
+every state it reaches without commitment is legal."  (Lean's name for this
+property is `Guard.Proper`.)  And,
 just before: "Write `𝒮₂|_{𝒮₁}` for `𝒮₂` restricted to the outputs of `𝒮₁`.
 We say that `P₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when its
 restriction to inputs in `D` does."  "On `D`" is `Joint.CEOn`, equivalent to
@@ -113,7 +115,7 @@ Lean: `𝒮₂|_{𝒮₁}` is `Guard.rest sp sk = Joint.restrictTo (Joint.Img sp
 whose inputs are the outputs of `sp` (a subtype of `M` with the order of `M`);
 "needs no commitment" is `Guard.NeedsNoCommit`.  The definition does not
 mention the system for `𝒮₁`. -/
-theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
+theorem «def:guarded» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
     (Guard.Proper sp sk ↔
       ∀ τ : State (Guard.rest sp sk), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o) ∧
@@ -121,33 +123,37 @@ theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
       ∀ (m : {m // Joint.Img sp m}) o, (Guard.rest sp sk).P m o ↔ sk.P m.1 o :=
   ⟨Iff.rfl, rfl, fun _ _ => Iff.rfl⟩
 
-/-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Let `𝒮₁`
-guard `𝒮₂` in a pipeline.  (1) The pipeline is proper exactly when `𝒮₂`
-satisfies Lifted Monotonicity on the outputs of `𝒮₁`.  (2) Suppose the
-pipeline is proper, and fix any system for `𝒮₁`.  Then `𝒮₂|_{𝒮₁}` can take
-each output of a run `ρ` of that system as its next input and answer it without
-commitment.  Replacing each output of `ρ` by these answers, and dropping the
-commitment events of `ρ`, gives a canonical run of `P₂ ∘ P₁`.  Such runs are
-confluent whenever the runs of the chosen system for `𝒮₁` are.  (3) If the pipeline is proper
-and `P₂ ∘ P₁` does not satisfy Lifted Monotonicity, some output of `𝒮₁` needs
-a commitment."
-Lean: (1) `Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`),
-with `Guard.proper_iff_consistent` (Complete CALM on `𝒮₂|_{𝒮₁}`).  (2) For
-every run of `𝒮₁` under any basis `B` emitting `m :: ms`:
-`Guard.proper_follows` (the empty-basis `𝒮₂|_{𝒮₁}` starts at `σ(m)`, answers
-`m`, and receives and answers each later output, and the result, `Guard.merge`,
-is a run of `P₂ ∘ P₁`; `merge` keeps the input events of `ρ`, replaces each
-output by its answers, and drops commitment events); `Guard.proper_run` (more generally, any empty-basis
-run of `𝒮₂|_{𝒮₁}` that receives each output and answers it any number of
-times gives a run of `P₂ ∘ P₁` whose table contains the join); and
-`Guard.proper_confluent`.  (3) `Guard.proper_needs_commit` ("needs a commitment": no
-such `m'` is a legal output at `σ_{𝒮₁}(i)`, and under the empty basis no output
-event there emits one).  The system for `𝒮₁` enters only through its basis,
-which is arbitrary. -/
-theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
+/-- **Proposition `prop:guard-test`** (Guard test): "A pipeline in which `𝒮₁`
+guards `𝒮₂` is guarded exactly when `𝒮₂` satisfies Lifted Monotonicity on the
+outputs of `𝒮₁`."  Lead-in: "Applying the No-commitment test (Proposition
+`prop:exposure-boundary`) to `𝒮₂|_{𝒮₁}` gives a static test."  Lean:
+`Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`), with
+`Guard.proper_iff_consistent` (Complete CALM on `𝒮₂|_{𝒮₁}`). -/
+theorem «prop:guard-test» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
     (Guard.Proper sp sk ↔ Joint.CEOn sk (Joint.Img sp)) ∧
-    (Guard.Proper sp sk ↔ (Guard.rest sp sk).Consistent) ∧
+    (Guard.Proper sp sk ↔ (Guard.rest sp sk).Consistent) :=
+  ⟨Guard.proper_iff, Guard.proper_iff_consistent⟩
+
+/-- **Theorem `thm:guarded-pipelines`** (Guarded pipelines): "Suppose a
+pipeline in which `𝒮₁` guards `𝒮₂` is guarded, and fix any system for `𝒮₁`.
+Then `𝒮₂|_{𝒮₁}` answers each output of a run `ρ` of that system without
+commitment, and the pipeline's runs are consistent whenever those of the
+system for `𝒮₁` are.  Specifically, replacing each output of `ρ` by its
+answers, and dropping the commitment events of `ρ`, gives a canonical run of
+`P₂ ∘ P₁`, and such runs are confluent whenever the runs of the system for
+`𝒮₁` are."  Lead-in: "A guarded pipeline leaves every commitment to the
+upstream stage."  Lean, for every run of `𝒮₁` under any basis `B` emitting
+`m :: ms`: `Guard.proper_follows` (the empty-basis `𝒮₂|_{𝒮₁}` starts at
+`σ(m)`, answers `m`, and receives and answers each later output, and the
+result, `Guard.merge`, is a run of `P₂ ∘ P₁`; `merge` keeps the input events
+of `ρ`, replaces each output by its answers, and drops commitment events);
+`Guard.proper_run` (more generally, any empty-basis run of `𝒮₂|_{𝒮₁}` that
+receives each output and answers it any number of times gives a run of
+`P₂ ∘ P₁` whose table contains the join); and `Guard.proper_confluent`.  The
+system for `𝒮₁` enters only through its basis, which is arbitrary. -/
+theorem «thm:guarded-pipelines» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
+    (sk : Spec M O) :
     (Guard.Proper sp sk → ∀ (B : CommitmentBasis sp) i es (ρ : State sp) m ms,
       SysExec B (canon sp i) es ρ → Guard.emitted es = m :: ms →
       ∃ (hm : Joint.Img sp m) (o : O) (ps : List ({m // Joint.Img sp m} × O))
@@ -174,28 +180,40 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
       ∀ j : I, (∀ p ∈ fam, p.2.2.cur ≼ j) →
       (∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
         SysExec B p.1 es τ) →
-      ConfluentAt (fam.map fun p => p.2.2) j) ∧
+      ConfluentAt (fam.map fun p => p.2.2) j) :=
+  ⟨fun hP _ _ _ _ _ _ hx he => Guard.proper_follows hP hx he,
+    fun hP _ _ _ _ _ _ _ _ _ _ hx he hps hK htr => Guard.proper_run hP hx he hps hK htr,
+    fun hP fam h1 h2 h3 h4 j hj hS => Guard.proper_confluent hP fam h1 h2 h3 h4 j hj hS⟩
+
+/-- **Corollary `cor:upstream-commitments`** (Upstream commitments): "If a
+guarded pipeline's composite `P₂ ∘ P₁` is not lifted monotone, some output of
+`𝒮₁` needs a commitment."  Lead-in: "Conversely, the upstream cannot do
+without commitments when the composite is not monotone."  Lean proves the
+stronger form of Appendix `app:composition` ("the output of `𝒮₁` that needs a
+commitment can be taken at a canonical state"): `Guard.proper_needs_commit`
+gives `i`, `m`, and an answer `o` not legal at the composite's canonical state
+`σ_{P₂∘P₁}(i)`, such that no `m'` that the store answers with `o` is legal at
+`σ_{𝒮₁}(i)`, and under the empty basis no output event there emits one. -/
+theorem «cor:upstream-commitments» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
+    (sk : Spec M O) :
     (Guard.Proper sp sk → ¬ (Comp.seq sp sk).LiftedMono →
       ∃ i m o, sp.P i m ∧ sk.P m o ∧ ¬ Exposable (canon (Comp.seq sp sk) i) o ∧
         (∀ m', sp.P i m' → sk.P m' o → ¬ Exposable (canon sp i) m') ∧
         ∀ m' τ, SysStep (fun _ => False) (canon sp i) (.output m') τ → ¬ sk.P m' o) :=
-  ⟨Guard.proper_iff, Guard.proper_iff_consistent,
-    fun hP _ _ _ _ _ _ hx he => Guard.proper_follows hP hx he,
-    fun hP _ _ _ _ _ _ _ _ _ _ hx he hps hK htr => Guard.proper_run hP hx he hps hK htr,
-    fun hP fam h1 h2 h3 h4 j hj hS => Guard.proper_confluent hP fam h1 h2 h3 h4 j hj hS,
-    fun hP hnot => Guard.proper_needs_commit hP hnot⟩
+  fun hP hnot => Guard.proper_needs_commit hP hnot
 
-/-- "This answers the opening puzzle.  By (1), the store restricted to logs
-needs no commitment, so locks in the store would be pure overhead.  By (3),
-since the replicated store as a whole is not monotone, some output of the log
-needs a commitment: the upstream log is where that belongs, and consensus
-provides it."  Lean: for the log `𝒫 = Inst.smrS1` and execution
+/-- "This answers the opening puzzle.  By Proposition `prop:guard-test`, the
+store restricted to logs needs no commitment, so locks in the store would be
+pure overhead, and by Theorem `thm:guarded-pipelines` the pipeline is
+consistent whenever the log is.  The store as a whole is not monotone, so by
+Corollary `cor:upstream-commitments` some output of the log needs a commitment:
+the upstream log is where that belongs, and consensus provides it."  Lean: for the log `𝒫 = Inst.smrS1` and execution
 `Inst.execF δ σ₀`, every log is an output of the log, and the pipeline is
-proper, so the store restricted to logs needs no commitment (item (1)); the
+guarded, so the store restricted to logs needs no commitment (Proposition `prop:guard-test`); the
 composite store is not Lifted-Monotone, and some output `m` of the log at a
 canonical state is not exposable there, while every log output `m'` that the
 store answers the same way is not exposable at the log's canonical state
-either: that output of the log needs a commitment (item (3),
+either: that output of the log needs a commitment (Corollary `cor:upstream-commitments`,
 `Guard.proper_needs_commit` via `Guard.smr_proper`).  "Consensus provides it"
 names the mechanism and is prose. -/
 theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R)
@@ -211,13 +229,13 @@ theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt 
   let h := Guard.smr_proper δ σ0 hne
   ⟨h.2.2.2.1, h.2.2.2.2.1, h.2.1, h.2.2.2.2.2⟩
 
-/-- "Longer pipelines nest: the composite `P₂ ∘ P₁` of a proper pipeline can
+/-- "Longer pipelines nest: the composite `P₂ ∘ P₁` of a guarded pipeline can
 itself guard a third stage, and the theorem applies again (Appendix
 `app:composition`)."  The appendix result is Corollary `cor:pipelines`.  (Full
 paper only; in the CIDR version this is folded into
-the closing pointer to the full paper.)  Lean: the pipeline of a proper guard
+the closing pointer to the full paper.)  Lean: the pipeline of a guarded pipeline
 emits only canonical runs of `P₂ ∘ P₁` (`Guard.proper_pipeline_step`), so the
-composite is again a guard, and the theorem's item (1) applies to the next
+composite is again a guard, and Proposition `prop:guard-test` applies to the next
 stage (`Guard.proper_iff`); this is `«cor:pipelines»`. -/
 theorem «sec:proper-coordination/nesting» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q]
     {s1 : Spec I M} {s2 : Spec M O} (s3 : Spec O Q) (h12 : Guard.Proper s1 s2)
@@ -231,12 +249,12 @@ theorem «sec:proper-coordination/nesting» {I M O Q : Type} [PO I] [PO M] [PO O
 require, as a store that takes locks behind a log would.  An implementation of
 `𝒮₂` alone, rather than of `𝒮₂|_{𝒮₁}`, may also fail to answer some upstream
 outputs (Appendix `app:components`)."  The components vocabulary (component,
-admitted run, typed pipeline, contract- and implementation-properness) is
+admitted run, typed pipeline, contract- and implementation-guardedness) is
 defined only in Appendix `app:components`.
 Lean: `Components.Component` (Def. `def:component`; systems as components are
 `«app:components/system-is-component»`), `Components.Pipeline.sound` for the
-rows; contract properness is `Components.Pipeline.ContractProper`, equivalent
-to `Guard.Proper` and stated on the specifications; implementation properness
+rows; contract guardedness is `Components.Pipeline.ContractProper`, equivalent
+to `Guard.Proper` and stated on the specifications; implementation guardedness
 is `Components.Pipeline.ImplementationProper`; the locking store is
 `Components.early_lock_component`, a downstream admitting too few runs is
 `Components.threshold_component`; the empty-basis component for `𝒮₂|_{𝒮₁}`
@@ -255,6 +273,120 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
           CoordFree (canon (Guard.rest sp sk) w.downRun.input) w.downRun.events) :=
   ⟨fun p _ h => p.sound h, Components.contractProper_iff_guardProper,
     fun hP C1 _ h => Components.offered_available hP C1 h⟩
+
+/-! ### Tight and proper pipelines -/
+
+/-- "To compare the two stages, we say that an order `≤` on `M` *separates*
+rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁(k)` has
+`m ≤ m'` and `x ≤ m'`.  Under `≼_M` these are the pairs in which emitting `m`
+at `σ_{P₁}(i)` removes `(k,x)` by commitment (Definition
+`def:subsumed-excluded`)."  Lean: separation under `r` is `Tight.Conf P r`;
+the second sentence is `Tight.excluded_canon_iff`. -/
+theorem «sec:proper-coordination/separates» {I M : Type} [PO I] [PO M] (sp : Spec I M)
+    {i : I} {m : M} (hm : sp.P i m) (k : I) (x : M) :
+    Excluded (canon sp i) m k x ↔ Tight.Conf sp.P PO.le i m k x :=
+  Tight.excluded_canon_iff sp hm k x
+
+/-- **Definition `def:tight`** (Tight pipeline): "A pipeline in which `𝒮₁`
+guards `𝒮₂` is tight when every pair of rows `(i,m)` and `(k,x)` of `P₁` that
+`≼_M` separates has answers `o ∈ P₂(m)` and `y ∈ P₂(x)` such that the
+composite separates `(i,o)` and `(k,y)`."  Lean: `Tight.Tight`, unfolded; in
+terms of canonical commitments it is `Tight.tight_iff_excluded`. -/
+theorem «def:tight» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M) (sk : Spec M O) :
+    Tight.Tight sp sk ↔ ∀ i m k x, Tight.Conf sp.P PO.le i m k x →
+      ∃ o y, sk.P m o ∧ sk.P x y ∧ Tight.Conf (Comp.seq sp sk).P PO.le i o k y :=
+  Iff.rfl
+
+/-- **Definition `def:proper-coordination`** (Proper Coordination): "Its
+coordination is proper when it is guarded and tight." -/
+def «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
+    (sk : Spec M O) : Prop :=
+  Guard.Proper sp sk ∧ Tight.Tight sp sk
+
+/-- "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common
+output extension in `P₂(m')`.  For a functional downstream `f`, `m ⊑ m'`
+exactly when `f(m) ≼ f(m')`.  The relation `⊑` is transitive but need not be
+antisymmetric."  Lean: `⊑` is `Tight.dle`; `Tight.graph_dle_iff`,
+`Tight.dle_trans`. -/
+theorem «sec:proper-coordination/downstream-order» {M O : Type} [PO M] [PO O] (g : M → O)
+    (P₂ : Table M O) :
+    (∀ a b, Tight.dle (Comp.graph g).P a b ↔ g a ≼ g b) ∧
+      (∀ a b c, Tight.dle P₂ a b → Tight.dle P₂ b c → Tight.dle P₂ a c) :=
+  ⟨fun _ _ => Tight.graph_dle_iff, fun _ _ _ h1 h2 => Tight.dle_trans h1 h2⟩
+
+/-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Let `𝒮₁`
+guard `𝒮₂`.  (1) The pipeline is guarded exactly when `m ≼_M m'` implies
+`m ⊑ m'` for all outputs `m, m'` of `𝒮₁`.  (2) If the pipeline is guarded,
+every pair of rows of `P₁` whose answers the composite separates is separated
+by `⊑`, and every pair that `⊑` separates is separated by every order on `M`
+under which the pipeline is guarded, including `≼_M`.  (3) If the pipeline is
+guarded and every fiber `P₂(m)` at an output `m` of `𝒮₁` has a greatest
+element, as when `𝒮₂` is functional, then `⊑` separates exactly the pairs
+whose answers the composite separates.  So the coordination is proper exactly
+when `≼_M` and `⊑` separate the same pairs of rows."  Lean: (1)
+`Tight.proper_iff_le_dle`; (2) `Tight.dleConf_of_compConf` and
+`Tight.conf_of_dleConf`, with every other order in
+`«thm:proper-coordination/any-order»`; (3) `Tight.dleConf_iff_compConf` and
+`Tight.tight_iff` (a greatest element is `Tight.HasTop`).  The functional
+case of (3) needs no guardedness: `Tight.graph_conf_iff`. -/
+theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
+    (sk : Spec M O) :
+    (Guard.Proper sp sk ↔ ∀ m m', Joint.Img sp m → Joint.Img sp m' → m ≼ m' →
+      Tight.dle sk.P m m') ∧
+    (Guard.Proper sp sk → ∀ i m k x o y, sp.P i m → sp.P k x → sk.P m o → sk.P x y →
+      Tight.Conf (Comp.seq sp sk).P PO.le i o k y → Tight.Conf sp.P (Tight.dle sk.P) i m k x) ∧
+    (Guard.Proper sp sk → ∀ i m k x, Tight.Conf sp.P (Tight.dle sk.P) i m k x →
+      Tight.Conf sp.P PO.le i m k x) ∧
+    (Guard.Proper sp sk → (∀ m, Joint.Img sp m → ∃ t, Tight.HasTop sk.P m t) →
+      (∀ i m k x, sp.P i m → sp.P k x → (Tight.Conf sp.P (Tight.dle sk.P) i m k x ↔
+        ∃ o y, sk.P m o ∧ sk.P x y ∧ Tight.Conf (Comp.seq sp sk).P PO.le i o k y)) ∧
+      («def:proper-coordination» sp sk ↔
+        ∀ i m k x, Tight.Conf sp.P PO.le i m k x ↔ Tight.Conf sp.P (Tight.dle sk.P) i m k x)) :=
+  ⟨Tight.proper_iff_le_dle sp sk,
+   fun hP _ _ _ _ _ _ hi hk hm hx hc => Tight.dleConf_of_compConf hP hi hk hm hx hc,
+   fun hP _ _ _ _ h => Tight.conf_of_dleConf hP h,
+   fun hP htop => ⟨fun _ _ _ _ hi hk => Tight.dleConf_iff_compConf hP htop hi hk,
+     ⟨fun h => (Tight.tight_iff hP htop).1 h.2, fun h => ⟨hP, (Tight.tight_iff hP htop).2 h⟩⟩⟩⟩
+
+/-- Theorem `thm:proper-coordination`(2), second half, for an arbitrary order:
+"every pair that `⊑` separates is separated by every order on `M` under which
+the pipeline is guarded."  Lean: `Tight.conf_of_dleConf_under`; `inst` is the
+other order on `M`, and `Joint.underOut`/`Joint.underIn` are the same tables
+with `M` ordered by it. -/
+theorem «thm:proper-coordination/any-order» {I M O : Type} [PO I] [PO O] {_instM : PO M}
+    (inst : PO M) (sp : @Spec I M _ _instM) (sk : @Spec M O _instM _)
+    (hP : @Guard.Proper I M O _ inst _ (Joint.underOut inst sp) (Joint.underIn inst sk))
+    {i m k x} (h : Tight.Conf (@Spec.P I M _ _instM sp) (Tight.dle (@Spec.P M O _instM _ sk)) i m k x) :
+    Tight.Conf (@Spec.P I M _ _instM sp) (@PO.le M inst) i m k x :=
+  Tight.conf_of_dleConf_under inst sp sk hP h
+
+open Tight Tight.Log Comp Guard in
+/-- "The commuting log is guarded but not tight: `≼_M` separates
+`({A},[A])` from `({A,B},[B,A])`, and `⊑` does not."  With the motivating
+paragraph: "Suppose two commands `A` and `B` commute, and the store's outputs
+do not record their order, as when it reports its state."  Lean:
+`Tight.Log.commuting`, with two increments and the store answering a log with
+its length (Appendix `app:tight`). -/
+theorem «sec:proper-coordination/commuting-log» :
+    Proper log (graph len) ∧ Conf log.P PO.le .a .a .ab .ba ∧
+      ¬ Conf (seq log (graph len)).P PO.le .a 1 .ab 2 ∧
+      ¬ Conf log.P (fun m m' => len m ≼ len m') .a .a .ab .ba ∧
+      ¬ Tight log (graph len) ∧ ¬ log.LiftedMono ∧ (seq log (graph len)).LiftedMono :=
+  Tight.Log.commuting
+
+open Tight Tight.Gap Comp Guard in
+/-- "Without greatest answers, a gap can remain.  Let `𝒮₁` emit `z` at input
+`lo` and any `n_k` at a larger input `hi`, and let `𝒮₂` answer `z` with any
+number and `n_k` with `k`. … by (2) so does every order on `M` under which the
+pipeline is guarded.  Yet the composite permits every number at both inputs
+and needs no commitment."  Lean: `Tight.Gap.gap` (Appendix `app:tight`). -/
+theorem «sec:proper-coordination/gap» :
+    Proper up down ∧ Conf up.P (dle down.P) .lo .z .hi (.n 0) ∧
+      (∀ inst : PO Mid, @Proper Lv Mid Nat _ inst _ (@Joint.underOut Lv Mid _ midPO inst up)
+          (@Joint.underIn Mid Nat _ midPO inst down) →
+        Conf upP (@PO.le Mid inst) .lo .z .hi (.n 0)) ∧
+      (seq up down).LiftedMono ∧ ¬ Tight up down :=
+  Tight.Gap.gap
 
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
@@ -314,7 +446,7 @@ not monotone.  In the example above, the test fails monotonicity only when the
 count passes from single to double digits, and the capped counter never does
 so.  Restricted to the counts it does produce, the test always answers `false`;
 it is constant, and so monotone under any output order, including equality.  By
-Theorem `thm:proper-coordination`(1), the pipeline is proper, and since the
+Proposition `prop:guard-test`, the pipeline is guarded, and since the
 capped counter is itself monotone, neither stage needs a commitment
 (Proposition `prop:joint-monotone`(2)).  This is proper coordination in which
 the upstream itself needs no commitment."  And, from the subsection's puzzle:
@@ -328,7 +460,7 @@ of stages needs no commitment."
 Lean: `Joint.threshold`
 (the test is not Lifted-Monotone, the composite is).  Lean also proves the
 Appendix `app:composition` treatment of the test: it cannot emit under the empty basis below
-`10`, and the pipeline is proper (`Guard.Proper`). -/
+`10`, and the pipeline is guarded (`Guard.Proper`). -/
 theorem «sec:composite-calm/filtering» :
     ¬ Joint.thr.LiftedMono ∧
       (∀ m, m ≤ 9 → ∀ o τ, ¬ SysStep (fun _ => False) (canon Joint.thr m) (.output o) τ) ∧
@@ -342,8 +474,8 @@ monotone under any output order, including equality."  Lean: `Joint.twoDigit_ord
 (`Joint.boolPO`, `false` below `true`) the test `n ↦ [10 ≤ n]` is
 Lifted-Monotone, so it needs no commitment; under every partial order on the
 booleans it is Lifted-Monotone on the counts `≤ 9` the capped counter offers
-(`Joint.CEOn`), so by Theorem `thm:proper-coordination`(1) the pipeline is
-proper whatever the output order. -/
+(`Joint.CEOn`), so by Proposition `prop:guard-test` the pipeline is
+guarded whatever the output order. -/
 theorem «sec:composite-calm/output-orders» :
     (Comp.graph (fun n : Nat => decide (10 ≤ n))).LiftedMono ∧
     ∀ inst : PO Bool, letI := inst;
@@ -378,7 +510,7 @@ satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity; `𝒮
 satisfies it on `𝒮₁`'s outputs.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
 Monotonicity via a different order on `M`."  Lean: the hypothesis is the
 disjunction of the three cases; "satisfies it on" is `Joint.CEOn` (defined in
-Section `sec:proper-coordination`; see `«def:proper-coordination»`), and
+Section `sec:proper-coordination`; see `«def:guarded»`), and
 "`𝒮₁`'s outputs" is
 `Joint.Img sp1`.  In (3), `Joint.underOut inst sp1` and `Joint.underIn inst sp2`
 are the same tables with `M` ordered by `inst`; "a different order" is any

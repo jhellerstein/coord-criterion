@@ -171,7 +171,7 @@ $\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[10\le m]$ must remove the
 row $(10,\mathit{true})$ by \commitment.  But $\mathcal S_2$ satisfies Lifted
 Monotonicity on $\{n\le 9\}$, which contains the outputs of $\mathcal S_1$.
 So the composite satisfies Lifted Monotonicity by case (2), the pipeline is
-proper (Theorem~\ref{thm:proper-coordination}(1)), and under the empty basis
+guarded (Proposition~\ref{prop:guard-test}), and under the empty basis
 $\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
 
 The boolean toggle is an instance of case (3).  Let $I$, $M$, and $O$ be the
@@ -196,7 +196,7 @@ to $\mathit{lo}\preceq\mathit{hi}$ makes $\mathcal S_1$ satisfy Lifted
 Monotonicity, since $\mathit{hi}$ subsumes $\mathit{lo}$.  By case (3) the
 composite is unchanged.
 
-\subsection{Proper Coordination}
+\subsection{Guarded pipelines}
 
 Throughout, $\Spec_1$ guards $\Spec_2$, and $\mathcal B$ is the basis of the
 system for $\Spec_1$.  The inputs of $\Spec_2|_{\Spec_1}$ are the outputs of
@@ -215,7 +215,7 @@ $\Spec_2|_{\Spec_1}$, and between these inputs $\Spec_2|_{\Spec_1}$ emits any
 number of outputs, possibly none.  The environment observes
 $\mathsf{input}(j)$ and the outputs of $\Spec_2|_{\Spec_1}$.
 
-The proofs below rest on three facts about a proper pipeline, in which
+The proofs below rest on three facts about a guarded pipeline, in which
 $\Spec_2|_{\Spec_1}$ satisfies the common-extension condition
 (Propositions~\ref{prop:exposure-boundary}
 and~\ref{prop:common-expansion-form}).  Facts (a) and (b) concern a state $\tau$ that
@@ -226,7 +226,7 @@ $\Spec_2|_{\Spec_1}$ reaches without \commitment.
   the current input.  The row $(j,u)$ survives, since $v$ \outrel every output
   emitted so far.
 \item Every output at the current input of $\tau$ is a legal output, by
-  Definition~\ref{def:proper-coordination}.
+  Definition~\ref{def:guarded}.
 \item If an output $m$ at the current input of a state $\sigma$ of $\Spec_1$
   is a legal output, then every $o\in P_2(m)$ is a legal output at the image
   of $\sigma$.  Each row $(k,x)$ of the image comes from $(k,m')\in R_\sigma$
@@ -238,13 +238,15 @@ $\Spec_2|_{\Spec_1}$ reaches without \commitment.
   $o$ is legal (Proposition~\ref{prop:exposability}).
 \end{enumerate}
 
-\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
-(1) By Proposition~\ref{prop:exposure-boundary}, $\Spec_2|_{\Spec_1}$ needs
+\begin{proof}[Proof of Proposition~\ref{prop:guard-test}]
+By Proposition~\ref{prop:exposure-boundary}, $\Spec_2|_{\Spec_1}$ needs
 no \commitment exactly when it satisfies Lifted Monotonicity.  Its inputs are
 the outputs of $\Spec_1$, so this is Lifted Monotonicity of $\Spec_2$ on the
 outputs of $\Spec_1$.
+\end{proof}
 
-(2) After $\mathsf{output}(m)$ every row of $\Spec_1$ \outrel $m$
+\begin{proof}[Proof of Theorem~\ref{thm:guarded-pipelines}]
+After $\mathsf{output}(m)$ every row of $\Spec_1$ \outrel $m$
 (Definition~\ref{def:lifted-output-event}), and later events only remove
 rows, so the outputs $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$
 form a chain.  $\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches
@@ -286,8 +288,13 @@ common-extension condition gives $u\in P_2(m)$ that \outrel every $v_r$, and
 $(m,u)$ survives in every $\tau_r$.  So $(j,u)\in R_{\rho_r}$ for every $r$,
 and the composite runs are confluent at $j$
 (Proposition~\ref{prop:confluence}).
+\end{proof}
 
-(3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
+Corollary~\ref{cor:upstream-commitments} also holds in a stronger form: the
+output of $\Spec_1$ that needs a \commitment can be taken at a canonical state.
+
+\begin{proof}[Proof of the stronger form]
+The proof of Proposition~\ref{prop:exposure-boundary} derives the
 common-extension condition from legality at canonical states alone.  So if
 Lifted Monotonicity fails for $P_2\circ P_1$, some $o$ with $(i,m)\in P_1$ and
 $o\in P_2(m)$ is not a legal output at $\sigma_{P_2\circ P_1}(i)$, the image
@@ -296,7 +303,7 @@ is a legal output at $\sigma_{\Spec_1}(i)$.  In particular, emitting $m$
 there applies a \commitment.
 \end{proof}
 
-Properness is needed in (3).  With $\Spec_1$ the identity on the booleans and
+Guardedness is needed in Corollary~\ref{cor:upstream-commitments}.  With $\Spec_1$ the identity on the booleans and
 $\Spec_2$ negation, the composite is negation, which does not satisfy Lifted
 Monotonicity, yet $\Spec_1$ needs no \commitment.
 
@@ -305,7 +312,7 @@ the same strategy, with its \commitment events dropped.
 
 \begin{corollary}[Empty store]
 \label{cor:empty-store}
-In a proper pipeline, fix any system for $\Spec_2|_{\Spec_1}$.  For every run
+In a guarded pipeline, fix any system for $\Spec_2|_{\Spec_1}$.  For every run
 of the pipeline, the replacement has one with the same run of $\Spec_1$ and
 the same inputs and outputs of $\Spec_2|_{\Spec_1}$.  After each event, the
 replacement's table contains the original's.
@@ -341,22 +348,22 @@ $f([b])$, but the locking store has emptied $[b]$ and cannot receive it.
 
 \begin{corollary}[Pipelines]
 \label{cor:pipelines}
-In a proper pipeline, with any systems for $\Spec_1$ and
+In a guarded pipeline, with any systems for $\Spec_1$ and
 $\Spec_2|_{\Spec_1}$, the outputs of every run of the pipeline are emitted by
 a run of $P_2\circ P_1$ under its canonical basis.  So the pipeline guards a
-further stage $\Spec_3$, and Theorem~\ref{thm:proper-coordination} applies
+further stage $\Spec_3$, and Theorem~\ref{thm:guarded-pipelines} applies
 with $P_2\circ P_1$ in place of $\Spec_1$.
 \end{corollary}
 
 \begin{proof}
 By Corollary~\ref{cor:empty-store}, every run of the pipeline has one with the
 same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis.
-Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
+Theorem~\ref{thm:guarded-pipelines}, applied to it and a prefix of the
 run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs.  The
 canonical basis supplies the canonical \commitment of each output event that
 needs one (Definition~\ref{def:run-under-basis}), so this is a run under the
 canonical basis.  By induction the same holds along a pipeline
-$\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix properly guards the next
+$\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix guards the next
 stage.  Composition is associative, so the bracketing does not matter.
 \end{proof}
 
@@ -431,9 +438,7 @@ next entries are incompatible outputs in one fiber.  So is the key-value store
 $P_2\circ P_1$, since concurrent commands ordered oppositely give incompatible
 responses.  Multi-Paxos runs $\Spec_1$ under its own basis, deciding one log
 slot at a time~\cite{schneider1990smr,lamport2001paxos}.  Since $f$ is
-monotone, the pipeline is proper.  By Theorem~\ref{thm:proper-coordination}(2)
-the store under the empty basis follows every run of the log, and by
-Theorem~\ref{thm:proper-coordination}(3) the log's \commitments cannot be
+monotone, the pipeline is guarded.  By Theorem~\ref{thm:guarded-pipelines} the store under the empty basis follows every run of the log, and by Corollary~\ref{cor:upstream-commitments} the log's \commitments cannot be
 dropped.  By Corollary~\ref{cor:empty-store}, a store that takes locks of its
 own can run with no \commitments at all.
 \end{example}
@@ -464,6 +469,76 @@ then needs a \commitment of the store's own.  Implementations typically
 enforce it by routing reads through the log.
 \end{example}
 
+\subsection{Tight and proper pipelines}
+\label{app:tight}
+
+Throughout, $\Spec_1$ guards $\Spec_2$.  For an order $\le$ on $M$, rows
+$(i,m)$ and $(k,x)$ of $P_1$ are separated as in
+Section~\ref{sec:proper-coordination}, and the composite separates rows of
+$P_2\circ P_1$ in the same way under $\OutputOrd$.  At a canonical state
+these are exactly the rows that canonical \commitments remove: for
+$(i,m)\in P_1$, emitting $m$ at $\sigma_{P_1}(i)$ puts $(k,x)$ in
+$\Excluded_m$ exactly when $\preceq_M$ separates $(i,m)$ and $(k,x)$.  Indeed
+$(k,x)$ is subsumed exactly when some $m'\in R(k)$ \outrel both $m$ and $x$,
+and at $\sigma_{P_1}(i)$ the fiber $R(k)$ is $P_1(k)$.  So a spec satisfies
+Lifted Monotonicity exactly when its order separates no pair of its rows
+(Proposition~\ref{prop:common-expansion-form}).
+
+\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
+(1) By Proposition~\ref{prop:guard-test}, the pipeline is guarded exactly when
+$\Spec_2$ satisfies the common-extension condition on the outputs of
+$\Spec_1$.  For outputs $m\preceq_M m'$, that condition at $m'$ for finitely
+many rows of $P_2(m)$ is the statement $m\sqsubseteq m'$, and conversely,
+finitely many rows $(m_r,o_r)$ with a common \indesc $m'$ are covered by
+$m_r\sqsubseteq m'$ together with directedness of $P_2(m')$, which is
+$m'\sqsubseteq m'$.
+
+(2) Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
+$(k,x)$ of $P_1$, and suppose $\sqsubseteq$ does not separate $(i,m)$ and
+$(k,x)$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$.  Then $o$ and $y$ each
+have an \outnoun in $P_2(m')$, and since $P_2(m')$ is directed by (1), some
+$u\in P_2(m')$ \outrel both.  The row $(k,u)$ of $P_2\circ P_1$ shows that the
+composite does not separate $(i,o)$ and $(k,y)$.  For the second claim, an
+order under which the pipeline is guarded is contained in $\sqsubseteq$ on the
+outputs of $\Spec_1$ by (1), and a smaller order has fewer common \outnouns,
+so it separates every pair that $\sqsubseteq$ separates.
+
+(3) Let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$.  If
+the composite does not separate $(i,t)$ and $(k,s)$, some row $(k,u)$ of
+$P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
+$m'\in P_1(k)$.  Every finite set of outputs in $P_2(m)$ lies below $t$, and
+so below $u$, so $m\sqsubseteq m'$, and likewise $x\sqsubseteq m'$.  So
+separation under $\sqsubseteq$ implies separation of $(i,t)$ and $(k,s)$, and
+(2) gives the converse for any answers.  For the last claim, a guarded
+pipeline is tight exactly when every pair that $\preceq_M$ separates is
+separated by $\sqsubseteq$, and by (2) every pair that $\sqsubseteq$
+separates is separated by $\preceq_M$.
+\end{proof}
+
+For a functional downstream $f$, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd
+f(m')$, and (3) holds without assuming the pipeline guarded.
+
+The commuting log of Section~\ref{sec:proper-coordination} is formalized with
+two increments $A$ and $B$, inputs the sets of commands proposed so far, logs
+ordered by prefix, and the store answering a log with its length.  The
+pipeline is guarded, since length is monotone in the prefix order.  Emitting
+$[A]$ at $\{A\}$ separates the row $(\{A,B\},[B,A])$ under the prefix order,
+but the composite answers both logs with $1$ and $2$, which have the common
+\outnoun $2$, and $\sqsubseteq$, which compares lengths, does not separate
+them.  So the pipeline is guarded but not tight.  The log does not satisfy
+Lifted Monotonicity, while the composite does.
+
+In the gap example, $M=\{z\}\cup\{n_k:k\in\mathbb N\}$ under equality, with
+$P_1(\mathit{lo})=\{z\}$, $P_1(\mathit{hi})=\{n_k\}$, $P_2(z)=\mathbb N$, and
+$P_2(n_k)=\{k\}$, where $\mathbb N$ has its usual order.  The pipeline is
+guarded, since $\mathbb N$ is directed and singletons are.  No $n_k$ has
+$z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no \outnoun in
+$\{k\}$, so $\sqsubseteq$ separates $(\mathit{lo},z)$ from every row at
+$\mathit{hi}$, and by (2) so does every order on $M$ under which the pipeline
+is guarded.  The composite has the fiber $\mathbb N$ at both inputs and
+satisfies Lifted Monotonicity, so the pipeline is not tight under any such
+order.
+
 \subsection{Intersection}
 \label{app:intersection}
 
@@ -485,7 +560,7 @@ state reachable without \commitment is not legal.
 \subsection{Components and typed pipelines}
 \label{app:components}
 
-Theorem~\ref{thm:proper-coordination} concerns specs, with a system fixed only
+Proposition~\ref{prop:guard-test} and Theorem~\ref{thm:guarded-pipelines} concern specs, with a system fixed only
 for the upstream stage.  Here each stage is seen from outside, through the
 runs it admits, so that particular implementations of both stages, each with
 its own basis and participants, can be examined.
@@ -533,11 +608,11 @@ observation} $(i,o)$ of each feed; the value $m$, both runs, and their
 \commitments stay hidden.
 \end{definition}
 
-\begin{definition}[Contract-proper, implementation-proper]
+\begin{definition}[Contract-guarded, implementation-guarded]
 \label{def:proper-pipeline}
-A typed pipeline is \emph{contract-proper} when the pipeline of $\Spec_1$
-and $\Spec_2$ is proper (Definition~\ref{def:proper-coordination}), and
-\emph{implementation-proper} when no downstream run of a feed applies a
+A typed pipeline is \emph{contract-guarded} when the pipeline of $\Spec_1$
+and $\Spec_2$ is guarded (Definition~\ref{def:guarded}), and
+\emph{implementation-guarded} when no downstream run of a feed applies a
 \commitment.
 \end{definition}
 
@@ -552,20 +627,20 @@ their own.
 \begin{enumerate}
 \item Every external observation admitted by a typed pipeline is a row of
       $P_2\circ P_1$.
-\item If a pipeline is implementation-proper, the downstream run of every
+\item If a pipeline is implementation-guarded, the downstream run of every
       feed, with its \commitments erased, is a \commitment-free run of
       $\Spec_2$, in which every output is legal.
-\item Contract properness does not imply implementation properness: behind a
-      log, the early-lock store is contract-proper and still issues
+\item Contract guardedness does not imply implementation guardedness: behind a
+      log, the early-lock store is contract-guarded and still issues
       \commitments.
-\item Contract properness does not guarantee feeds when the downstream
+\item Contract guardedness does not guarantee feeds when the downstream
       component is for $\Spec_2$ rather than $\Spec_2|_{\Spec_1}$: behind the
       capped counter, the maximally permissive empty-basis component for the
       threshold test admits no feed at an offered count.
-\item If, in a contract-proper pipeline, the downstream is instead the
+\item If, in a contract-guarded pipeline, the downstream is instead the
       maximally permissive empty-basis component for $\Spec_2|_{\Spec_1}$,
       every admitted upstream boundary run has a feed, and the pipeline is
-      implementation-proper.
+      implementation-guarded.
 \end{enumerate}
 \end{proposition}
 
@@ -576,12 +651,12 @@ their own.
 output events $\mathsf{output}(o)$ applies no \commitment, which holds exactly
 when $o$ is a legal output.
 
-(3) The early-lock store above, fed by a log, is contract-proper, since the
+(3) The early-lock store above, fed by a log, is contract-guarded, since the
 store's table satisfies Lifted Monotonicity on logs.  From the empty log it
 admits a run whose \commitment event takes the lock.
 
 (4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
-the double-digit threshold test.  The pipeline is contract-proper, since the
+the double-digit threshold test.  The pipeline is contract-guarded, since the
 test satisfies Lifted Monotonicity on the counts the counter offers.  An
 admitted run of the test from an offered count $m\le 9$ must emit
 $\mathit{false}$, its answer at $m$.  While its current count is below $10$,
@@ -589,8 +664,7 @@ its table keeps the row $(10,\mathit{true})$, so $\mathit{false}$ is not a
 legal output.  Once the count reaches $10$, only $\mathit{true}$ remains.  So
 no feed exists.
 
-(5) Let $m$ be the output of an admitted run of $C_1$.  By
-Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
+(5) Let $m$ be the output of an admitted run of $C_1$.  By Proposition~\ref{prop:guard-test}, $\Spec_2|_{\Spec_1}$ satisfies
 Lifted Monotonicity, so every $o\in P_2(m)$ is a legal output at $\sigma(m)$
 (Proposition~\ref{prop:exposure-boundary}).  The one-event run
 $\mathsf{output}(o)$ from $\sigma(m)$ is then an admitted run of $C_2$.
@@ -598,7 +672,7 @@ Under the empty basis no run applies a \commitment.
 \end{proof}
 
 Item (5) covers one upstream output, while
-Theorem~\ref{thm:proper-coordination}(2) follows the entire emitted stream.
+Theorem~\ref{thm:guarded-pipelines} follows the entire emitted stream.
 Item (4) is why (5) uses a component for $\Spec_2|_{\Spec_1}$ rather than for
 $\Spec_2$: its canonical states keep only rows at inputs the upstream offers.
 

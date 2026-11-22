@@ -326,9 +326,7 @@ compare-and-swap, each process applies compare-and-swap with its proposal to
 a location that starts empty, and its response names the value of the first
 compare-and-swap, the same value in every response.  Each process decides the
 value in its response.  That decision stage is a monotone function of the
-object's responses, so by Theorem~\ref{thm:proper-coordination} the pipeline
-from the object to the decisions is proper, and the object's ordering is the
-only \commitment.  Each process decides after one operation of its own, so the
+object's responses, so it needs no \commitment on them (Proposition~\ref{prop:guard-test}), and the object's ordering is the only \commitment the pipeline needs (Theorem~\ref{thm:guarded-pipelines}).  Each process decides after one operation of its own, so the
 algorithm is wait-free for any number of processes.  Test-and-set gives the
 same for two processes: each process first writes its proposal to its own
 register, the winner of test-and-set decides its own proposal, and the loser
@@ -338,7 +336,7 @@ The impossibility half, for example that read/write registers do not solve
 consensus wait-free for two processes, is a termination property, and safety
 alone does not separate the objects.  Over registers, every process can wait
 until one designated process has written its proposal and then decide it.
-That decision stage is also monotone, so the pipeline is proper and never
+That decision stage is also monotone, so it needs no \commitment and never
 decides two values, but the other processes wait forever if the designated
 one crashes.  The specs can represent the termination requirement, by asking
 that each process decide after finitely many of its own steps whatever the

@@ -150,7 +150,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-734 entries.
+744 entries.
 
 ### §2 Functional CALM
 
@@ -413,11 +413,21 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone (Section `sec:lifted-monotonicity`)." Lean: |
 | `«sec:proper-coordination/kvs-on-logs»` | theorem | "We return to the replicated store of the opening. |
-| `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
-| `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
+| `«def:guarded»` | theorem | **Definition `def:guarded`** (Guarded pipeline): |
+| `«prop:guard-test»` | theorem | **Proposition `prop:guard-test`** (Guard test): |
+| `«thm:guarded-pipelines»` | theorem | **Theorem `thm:guarded-pipelines`** (Guarded pipelines): |
+| `«cor:upstream-commitments»` | theorem | **Corollary `cor:upstream-commitments`** (Upstream commitments): |
 | `«sec:proper-coordination/locks-overhead»` | theorem | "This answers the opening puzzle. |
 | `«sec:proper-coordination/nesting»` | theorem | "Longer pipelines nest: |
 | `«sec:proper-coordination/components»` | theorem | "A downstream implementation may still take commitments the specs do not require, as a store that takes locks behind a log would. |
+| `«sec:proper-coordination/separates»` | theorem | "To compare the two stages, we say that an order `≤` on `M` *separates* rows `(i,m)` and `(k,x)` of `P₁` when `i ≼ k` and no `m' ∈ P₁(k)` has `m ≤ m'` and `x… |
+| `«def:tight»` | theorem | **Definition `def:tight`** (Tight pipeline): |
+| `«def:proper-coordination»` | def | **Definition `def:proper-coordination`** (Proper Coordination): |
+| `«sec:proper-coordination/downstream-order»` | theorem | "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common output extension in `P₂(m')`. |
+| `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
+| `«thm:proper-coordination/any-order»` | theorem | Theorem `thm:proper-coordination`(2), second half, for an arbitrary order: |
+| `«sec:proper-coordination/commuting-log»` | theorem | "The commuting log is guarded but not tight: |
+| `«sec:proper-coordination/gap»` | theorem | "Without greatest answers, a gap can remain. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
@@ -730,10 +740,10 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/components-commit»` | theorem | "A monotone composite can also leave a non-monotone upstream unable to emit. |
 | `«app:composition/image-canon»` | theorem | "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write `R ⋈ T = {(k,x) : |
 | `«app:composition/pipeline-run»` | theorem | "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of `𝒮₂\|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`. |
-| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts about a proper pipeline, in which `𝒮₂\|_{𝒮₁}` satisfies the common-extension condition (Propositions `prop:exposure-boun… |
-| `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:proper-coordination`(2): |
-| `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
-| `«app:composition/properness-needed»` | theorem | "Properness is needed in (3). |
+| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts about a guarded pipeline, in which `𝒮₂\|_{𝒮₁}` satisfies the common-extension condition (Propositions `prop:exposure-bou… |
+| `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:guarded-pipelines`: |
+| `«app:composition/canonical-states-suffice»` | theorem | Proof of the stronger form of Corollary `cor:upstream-commitments`: |
+| `«app:composition/guardedness-needed»` | theorem | "Guardedness is needed in Corollary `cor:upstream-commitments`. |
 | `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with its commitment events dropped." Lean: |
 | `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
 | `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
@@ -756,10 +766,10 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component. |
 | `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision discussed after Proposition `prop:commitment-conflict` can take either form. |
 | `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Feed, typed pipeline, external observation). |
-| `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (Contract-proper, implementation-proper). |
+| `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (contract-guarded, implementation-guarded). |
 | `«app:components/feed-is-input»` | theorem | "The value `m` is the downstream run's initial input, so receiving it is not a commitment of `C₂`." Lean: |
 | `«prop:typed-pipelines»` | theorem | **Proposition `prop:typed-pipelines`** (Typed pipelines): |
-| `«app:components/follows»` | theorem | "Item (5) covers one upstream output, while Theorem `thm:proper-coordination`(2) follows the entire emitted stream. |
+| `«app:components/follows»` | theorem | "Item (5) covers one upstream output, while Theorem `thm:guarded-pipelines` follows the entire emitted stream. |
 
 ### Appendix E: Deployment
 

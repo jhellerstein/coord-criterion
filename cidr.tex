@@ -136,8 +136,7 @@ unified framework says exactly
 what coordination a spec needs, and when.  A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
-\emph{Proper Coordination} identifies which stage of a composition must make the
-\commitments and certifies that later stages need none, validating designs such
+\emph{Proper Coordination} identifies which stage of a composition must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs, explaining designs such
 as consensus logs in front of a replicated store.
 \end{abstract}
 
@@ -286,9 +285,8 @@ mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
 In a composition of specs, \emph{Proper Coordination}
-identifies which stage must make the \commitments and certifies that later
-stages need none.  In state-machine replication, for example, the consensus log
-makes every \commitment; the replicated store makes none, whether it employs coordination or not
+identifies which stage must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs.  In state-machine replication, for example, the consensus log
+makes every \commitment; the replicated store needs none, so any coordination it employs is overhead
 (\S\ref{sec:composition}).
 
 \paragraph{Contributions.}
@@ -311,9 +309,7 @@ We make contributions in four categories:
 \emph{3. Constructive results for coordination.} We define \commitments,
         the underlying contracts that coordination mechanisms can enforce,
         and identify exactly the \commitments a non-monotone spec requires.
-        Specs compose by equijoin, and Proper Coordination identifies the stage
-        that must make the \commitments, certifying that later stages need
-        none.
+        Specs compose by equijoin, and Proper Coordination identifies the stage that must make the \commitments, certifying that later stages need none and that it makes no more than the composition needs.
 
 \noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant
@@ -1434,12 +1430,12 @@ is more non-monotonicity! Why does it work?
 That puzzle is explained by our framework.  As we'll see, two specs compose by equijoin,
 and the composition of two monotone specs is also monotone. Moreover, for non-monotone specs,
 as in our puzzle, we
-can reason about which stage actually makes \commitments under composition
-% .  When the
-% upstream stage makes every \commitment the composition needs, and the
-% downstream needs none on the inputs the upstream offers, we say the pipeline's
-% coordination is \emph{proper}
-(\S\ref{sec:proper-coordination}).
+can reason about which stage actually makes \commitments under composition.
+When the downstream needs no \commitment on the inputs the upstream offers, we
+say the pipeline is \emph{guarded}, and the upstream's \commitments then
+suffice for the whole pipeline.  When, in addition, the upstream makes no
+\commitment the composition does not need, the pipeline's coordination is
+\emph{proper} (\S\ref{sec:proper-coordination}).
 \label{sec:sequential-composition}
 
 Formally, consider two \spectype[s]
@@ -1493,45 +1489,115 @@ More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with a
 let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
 $\Spec_1$.
 
-\begin{definition}[Proper Coordination]
-\label{def:proper-coordination}
-A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{proper} when
+\begin{definition}[Guarded pipeline]
+\label{def:guarded}
+A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{guarded} when
 $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
 reaches without \commitment is legal.
 \end{definition}
+
+Applying the No-\commitment test (Proposition~\ref{prop:exposure-boundary})
+to $\Spec_2|_{\Spec_1}$ gives a static test:
+
+\begin{proposition}[Guard test]
+\label{prop:guard-test}
+A pipeline is guarded exactly when $\Spec_2|_{\Spec_1}$ satisfies Lifted
+Monotonicity.
+\end{proposition}
+
+A guarded pipeline leaves every \commitment to the upstream stage.
+
+\begin{theorem}[Guarded pipelines]
+\label{thm:guarded-pipelines}
+In a guarded pipeline, fix any system for $\Spec_1$.  Then
+$\Spec_2|_{\Spec_1}$ answers each of its outputs without \commitment, and the
+pipeline's runs are consistent whenever the system's are.
+\end{theorem}
+\begin{proof}[Proof sketch]
+The outputs of a run of $\Spec_1$ form a chain, which $\Spec_2|_{\Spec_1}$
+answers legally by Proposition~\ref{prop:guard-test}; joining the rows the
+two stages keep yields runs of $P_2\circ P_1$.  \fullproof
+\end{proof}
+
+Conversely, the upstream cannot do without \commitments when the composite is
+not monotone, since otherwise both stages, and hence their composite
+(Lemma~\ref{lem:composition}), would be lifted monotone:
+
+\begin{corollary}[Upstream \commitments]
+\label{cor:upstream-commitments}
+If a guarded pipeline's composite $P_2\circ P_1$ is not lifted monotone, some
+output of $\Spec_1$ needs a \commitment.
+\end{corollary}
+
+This answers the opening puzzle.  By Proposition~\ref{prop:guard-test}, the
+store restricted to logs needs no \commitment, so locks in the store would be
+pure overhead, and by Theorem~\ref{thm:guarded-pipelines} the pipeline is
+consistent whenever the log is.  The store as a whole is not monotone, so by
+Corollary~\ref{cor:upstream-commitments} some output of the log needs a
+\commitment: the upstream log is where that belongs, and consensus provides
+it.
+
+\paragraph{Tight and proper pipelines.}
+A guarded pipeline's \commitments suffice, but the upstream may make more of
+them than the composition needs.  Suppose two commands $A$ and $B$ commute,
+and the store's outputs do not record their order, as when it reports its
+state.  Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
+yet the composite needs no \commitment there, since both logs lead to the same
+output.
+
+To compare the two stages, we say that an order $\le$ on $M$
+\emph{separates} rows $(i,m)$ and $(k,x)$ of $P_1$ when $i\InputOrd k$ and no
+$m'\in P_1(k)$ has $m\le m'$ and $x\le m'$.  Under $\preceq_M$ these are the
+pairs in which emitting $m$ at $\sigma_{P_1}(i)$ removes $(k,x)$ by
+\commitment.  The composite separates rows of $P_2\circ P_1$ in the same way
+under $\OutputOrd$.
+
+\begin{definition}[Tight pipeline, Proper Coordination]
+\label{def:tight}
+\label{def:proper-coordination}
+A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when every pair
+of rows $(i,m)$ and $(k,x)$ of $P_1$ that $\preceq_M$ separates has answers
+$o\in P_2(m)$ and $y\in P_2(x)$ such that the composite separates $(i,o)$ and
+$(k,y)$.  Its coordination is \emph{proper} when it is guarded and tight.
+\end{definition}
+
+The downstream supplies the comparison against which to measure the upstream.
+Write $m\sqsubseteq m'$ when every finite set of outputs in $P_2(m)$ has a
+common \outnoun in $P_2(m')$.  For a functional downstream $f$, $m\sqsubseteq
+m'$ exactly when $f(m)\OutputOrd f(m')$.
 
 \begin{theorem}[Proper Coordination]
 \label{thm:proper-coordination}
 Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item The pipeline is proper exactly when $\Spec_2|_{\Spec_1}$ satisfies
-        Lifted Monotonicity.
-  \item Suppose the pipeline is proper, and fix any system for $\Spec_1$.
-        Then $\Spec_2|_{\Spec_1}$ can take each output of a run $\rho$ of that
-        system as its next input and answer it without \commitment.  Replacing
-        each output of $\rho$ by these answers, and dropping the \commitment
-        events of $\rho$, gives a canonical run of $P_2\circ P_1$.  Such runs are
-        confluent whenever the runs of the chosen system for $\Spec_1$ are.
-  \item If the pipeline is proper and $P_2\circ P_1$ does not satisfy Lifted
-        Monotonicity, some output of $\Spec_1$ needs a \commitment.
+  \item The pipeline is guarded exactly when $m\preceq_M m'$ implies
+        $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.
+  \item If the pipeline is guarded, every pair of rows of $P_1$ whose answers
+        the composite separates is separated by $\sqsubseteq$, and every pair
+        that $\sqsubseteq$ separates is separated by every order on $M$ under
+        which the pipeline is guarded, including $\preceq_M$.
+  \item If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
+        of $\Spec_1$ has a greatest element, as when $\Spec_2$ is functional,
+        then $\sqsubseteq$ separates exactly the pairs whose answers the
+        composite separates.  So the coordination is proper exactly when
+        $\preceq_M$ and $\sqsubseteq$ separate the same pairs of rows.
 \end{enumerate}
 \end{theorem}
+\proofinfull
 
-\begin{proof}[Proof sketch]
-(1) is Proposition~\ref{prop:exposure-boundary} applied to
-$\Spec_2|_{\Spec_1}$; (2) and (3) are proved in \extended.
-\end{proof}
-
-This answers the opening puzzle.  By (1), the store restricted to logs needs
-no \commitment, so locks in the store would be pure overhead.  By (3), since
-the replicated store as a whole is not monotone, some output of the log needs
-a \commitment: the upstream log is where that belongs, and consensus provides
-it.
+By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
+upstream commit less than $\sqsubseteq$ does.  The commuting log is guarded but
+not tight: $\preceq_M$ separates $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and
+$\sqsubseteq$ does not.  Without greatest answers, a gap can remain: when the
+downstream may give any of several answers, the upstream must commit before
+it sees which one, while a single implementation of the composite could
+correlate the two choices~\extended.  That gap is the price of splitting the
+work into stages.
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Proper coordination shows how an upstream
+Guarded pipelines show how an upstream
 stage can discharge a pipeline's \commitment obligations.
 \emph{Composite CALM} asks a stronger question: when does a pipeline need no
 \commitment at any stage?  If every stage is monotone, the answer is immediate:
@@ -1556,8 +1622,8 @@ The answer lies in what the upstream offers.  The test fails monotonicity only
 when the count passes from single to double digits, and the capped counter
 never does so.  Restricted to the counts it does produce, the test always
 answers \textsf{false}; it is constant, and so monotone under any output order,
-including equality.  By Theorem~\ref{thm:proper-coordination}(1), the pipeline
-is proper, and since the capped counter is itself monotone, neither stage needs
+including equality.  By Proposition~\ref{prop:guard-test}, the pipeline
+is guarded, and since the capped counter is itself monotone, neither stage needs
 a \commitment.  In general, an upstream stage can erase a downstream stage's
 need for \commitment by filtering out the inputs on which the downstream is not
 monotone; when the upstream is also monotone, the whole pipeline is
@@ -1565,7 +1631,7 @@ monotone; when the upstream is also monotone, the whole pipeline is
 \extended).
 
 The full paper extends these results to longer pipelines, in which the
-composite of a proper pipeline guards a further stage, and to more complex
+composite of a guarded pipeline guards a further stage, and to more complex
 compositions than sequential stages, including
 stages with inputs of their own and arbitrary acyclic graphs of stages, checked node
 by node much as types are~\cite{hellerstein2026completecalmfull}.
@@ -1852,8 +1918,7 @@ Section~\ref{sec:composition}. Later tools moved from syntax to declared
 contracts and invariants in specific
 contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
 operation the weakest consistency or isolation level a storage system offers that still
-satisfies them. Proper Coordination
-helps minimize \commitments generally, without a fixed menu of levels.
+satisfies them. Proper Coordination instead shows where a composition's \commitments belong and which of them are unnecessary, without a fixed menu of levels.
 
 Underlying these issues is a reassessment of Codd's lesson of declarativity: how
 little structure must be declared to be
@@ -1881,8 +1946,7 @@ coordination literature. It also clarifies the intrinsic purpose of
 coordination: removing possibilities via \commitments. This simplicity
 leads to the generality of Complete CALM: a spec's runs are consistent exactly
 when it is lifted monotone, which reduces to textbook monotonicity for
-functional specs, and Complete CAP follows as a corollary. \Commitments
-lead to Proper Coordination, explaining how non-monotone specs are handled
+functional specs, and Complete CAP follows as a corollary. \Commitments lead to Proper Coordination, explaining how non-monotone specs are handled
 consistently.
 %  A totally ordered log
 % and a key-value store are each non-monotone on their own, yet when the log

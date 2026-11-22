@@ -14,9 +14,10 @@ That puzzle is explained by our framework.  As we'll see, two specs compose by e
 and the composition of two monotone specs is also monotone. Moreover, for non-monotone specs,
 as in our puzzle, we
 can reason about which stage actually makes \commitments under composition.  When the
-upstream stage makes every \commitment the composition needs, and the
-downstream needs none on the inputs the upstream offers, we say the pipeline's
-coordination is \emph{proper}
+downstream needs no \commitment on the inputs the upstream offers, we say the
+pipeline is \emph{guarded}, and the upstream's \commitments then suffice for
+the whole pipeline.  When, in addition, the upstream makes no \commitment the
+composition does not need, the pipeline's coordination is \emph{proper}
 (\S\ref{sec:proper-coordination}).  Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
@@ -76,48 +77,76 @@ let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\S
 $\Spec_1$.  We say that $P_2$ satisfies Lifted Monotonicity \emph{on} a set
 $D\subseteq M$ when its restriction to inputs in $D$ does.
 
-\begin{definition}[Proper Coordination]
-\label{def:proper-coordination}
-A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{proper} when
+\begin{definition}[Guarded pipeline]
+\label{def:guarded}
+A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{guarded} when
 $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
 reaches without \commitment is legal.
 \end{definition}
 
-\begin{theorem}[Proper Coordination]
-\label{thm:proper-coordination}
-Let $\Spec_1$ guard $\Spec_2$ in a pipeline.
-\begin{enumerate}
-  \item The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
-        Monotonicity on the outputs of $\Spec_1$.
-  \item Suppose the pipeline is proper, and fix any system for $\Spec_1$.
-        Then $\Spec_2|_{\Spec_1}$ can take each output of a run $\rho$ of that
-        system as its next input and answer it without \commitment.  Replacing
-        each output of $\rho$ by these answers, and dropping the \commitment
-        events of $\rho$, gives a canonical run of $P_2\circ P_1$.  Such runs are
-        confluent whenever the runs of the chosen system for $\Spec_1$ are.
-  \item If the pipeline is proper and $P_2\circ P_1$ does not satisfy Lifted
-        Monotonicity, some output of $\Spec_1$ needs a \commitment.
-\end{enumerate}
+Applying the No-\commitment test (Proposition~\ref{prop:exposure-boundary})
+to $\Spec_2|_{\Spec_1}$ gives a static test.
+
+\begin{proposition}[Guard test]
+\label{prop:guard-test}
+A pipeline in which $\Spec_1$ guards $\Spec_2$ is guarded exactly when
+$\Spec_2$ satisfies Lifted Monotonicity on the outputs of $\Spec_1$.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Apply the No-\commitment test to $\Spec_2|_{\Spec_1}$, whose inputs are the
+outputs of $\Spec_1$.  Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+A guarded pipeline leaves every \commitment to the upstream stage.
+
+\begin{theorem}[Guarded pipelines]
+\label{thm:guarded-pipelines}
+Suppose a pipeline in which $\Spec_1$ guards $\Spec_2$ is guarded, and fix any
+system for $\Spec_1$.  Then $\Spec_2|_{\Spec_1}$ answers each output of a run
+$\rho$ of that system without \commitment, and the pipeline's runs are
+consistent whenever those of the system for $\Spec_1$ are.  Specifically,
+replacing each output of $\rho$ by its answers, and dropping the \commitment
+events of $\rho$, gives a canonical run of $P_2\circ P_1$, and such runs are
+confluent whenever the runs of the system for $\Spec_1$ are.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) is the no-\commitment test (Proposition~\ref{prop:exposure-boundary})
-applied to $\Spec_2|_{\Spec_1}$.  (2) The outputs of a run of $\Spec_1$ form a
-chain, since each output event keeps only rows above its output, so they are a
-valid input sequence for $\Spec_2|_{\Spec_1}$, which by (1) answers each without
-\commitment.  Each row $(i,m)$ that the run of $\Spec_1$ passes through is a row
-of $P_1$.  It joins with a row $(m,o)$ of $P_2$ to yield the projected row
-$(i,o)$ of $P_2\circ P_1$, and these rows form a run of $P_2\circ P_1$.  Full proofs of (2) and (3) in
+The outputs of a run of $\Spec_1$ form a chain, since each output event keeps
+only rows above its output, so they are a valid input sequence for
+$\Spec_2|_{\Spec_1}$, which answers each without \commitment.  Each row
+$(i,m)$ that the run of $\Spec_1$ passes through is a row of $P_1$.  It joins
+with a row $(m,o)$ of $P_2$ to yield the projected row $(i,o)$ of
+$P_2\circ P_1$, and these rows form a run of $P_2\circ P_1$.  Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
-This answers the opening puzzle.  By (1), the store restricted to logs needs
-no \commitment, so locks in the store would be pure overhead.  By (3), since
-the replicated store as a whole is not monotone, some output of the log needs
-a \commitment: the upstream log is where that belongs, and consensus provides
+Conversely, the upstream cannot do without \commitments when the composite is
+not monotone.
+
+\begin{corollary}[Upstream \commitments]
+\label{cor:upstream-commitments}
+If a guarded pipeline's composite $P_2\circ P_1$ is not lifted monotone, some
+output of $\Spec_1$ needs a \commitment.
+\end{corollary}
+
+\begin{proof}
+Otherwise $\Spec_1$ satisfies Lifted Monotonicity by the No-\commitment test,
+and $\Spec_2|_{\Spec_1}$ does by Proposition~\ref{prop:guard-test}.  The join
+in $P_2\circ P_1$ uses only outputs of $\Spec_1$, so $P_2\circ P_1$ is also the
+composite of $\Spec_1$ and $\Spec_2|_{\Spec_1}$, and it satisfies Lifted
+Monotonicity by Lemma~\ref{lem:composition}, a contradiction.
+\end{proof}
+
+This answers the opening puzzle.  By Proposition~\ref{prop:guard-test}, the
+store restricted to logs needs no \commitment, so locks in the store would be
+pure overhead, and by Theorem~\ref{thm:guarded-pipelines} the pipeline is
+consistent whenever the log is.  The store as a whole is not monotone, so by
+Corollary~\ref{cor:upstream-commitments} some output of the log needs a
+\commitment: the upstream log is where that belongs, and consensus provides
 it.
 
-Longer pipelines nest: the composite $P_2\circ P_1$ of a proper pipeline can
+Longer pipelines nest: the composite $P_2\circ P_1$ of a guarded pipeline can
 itself guard a third stage, and the theorem applies again
 (Appendix~\ref{app:composition}).
 
@@ -126,10 +155,88 @@ require, as a store that takes locks behind a log would.  An implementation of
 $\Spec_2$ alone, rather than of $\Spec_2|_{\Spec_1}$, may also fail to answer
 some upstream outputs (Appendix~\ref{app:components}).
 
+\paragraph{Tight and proper pipelines.}
+A guarded pipeline's \commitments suffice, but the upstream may make more of
+them than the composition needs.  Suppose two commands $A$ and $B$ commute,
+and the store's outputs do not record their order, as when it reports its
+state.  Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
+yet the composite needs no \commitment there, since both logs lead to the same
+output.
+
+To compare the two stages, we say that an order $\le$ on $M$
+\emph{separates} rows $(i,m)$ and $(k,x)$ of $P_1$ when $i\InputOrd k$ and no
+$m'\in P_1(k)$ has $m\le m'$ and $x\le m'$.  Under $\preceq_M$ these are the
+pairs in which emitting $m$ at $\sigma_{P_1}(i)$ removes $(k,x)$ by
+\commitment (Definition~\ref{def:subsumed-excluded}).  The composite separates
+rows of $P_2\circ P_1$ in the same way under $\OutputOrd$.
+
+\begin{definition}[Tight pipeline, Proper Coordination]
+\label{def:tight}
+\label{def:proper-coordination}
+A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when every pair
+of rows $(i,m)$ and $(k,x)$ of $P_1$ that $\preceq_M$ separates has answers
+$o\in P_2(m)$ and $y\in P_2(x)$ such that the composite separates $(i,o)$ and
+$(k,y)$.  Its coordination is \emph{proper} when it is guarded and tight.
+\end{definition}
+
+The downstream supplies the comparison against which to measure the upstream.
+Write $m\sqsubseteq m'$ when every finite set of outputs in $P_2(m)$ has a
+common \outnoun in $P_2(m')$.  For a functional downstream $f$, $m\sqsubseteq
+m'$ exactly when $f(m)\OutputOrd f(m')$.  The relation $\sqsubseteq$ is
+transitive but need not be antisymmetric: logs that the store answers alike
+are equivalent under it.
+
+\begin{theorem}[Proper Coordination]
+\label{thm:proper-coordination}
+Let $\Spec_1$ guard $\Spec_2$.
+\begin{enumerate}
+  \item The pipeline is guarded exactly when $m\preceq_M m'$ implies
+        $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.
+  \item If the pipeline is guarded, every pair of rows of $P_1$ whose answers
+        the composite separates is separated by $\sqsubseteq$, and every pair
+        that $\sqsubseteq$ separates is separated by every order on $M$ under
+        which the pipeline is guarded, including $\preceq_M$.
+  \item If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
+        of $\Spec_1$ has a greatest element, as when $\Spec_2$ is functional,
+        then $\sqsubseteq$ separates exactly the pairs whose answers the
+        composite separates.  So the coordination is proper exactly when
+        $\preceq_M$ and $\sqsubseteq$ separate the same pairs of rows.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+(1) restates Proposition~\ref{prop:guard-test} through the common-extension
+condition.  (2) Suppose $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then
+answers $o\in P_2(m)$ and $y\in P_2(x)$ have \outnouns in $P_2(m')$, which is
+directed by (1), so some $u\in P_2(m')$ \outrel both, and the composite does
+not separate $(i,o)$ and $(k,y)$.  Any order under which the pipeline is
+guarded is contained in $\sqsubseteq$ by (1), so it separates at least as
+much.  (3) With
+greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, an \outnoun of $t$ and $s$
+in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
+Appendix~\ref{app:composition}.
+\end{proof}
+
+By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
+upstream commit less than $\sqsubseteq$ does.  The commuting log is guarded but
+not tight: $\preceq_M$ separates $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and
+$\sqsubseteq$ does not.  Reversing the order
+on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
+greatest answers, a gap can remain.  Let $\Spec_1$ emit $z$ at input
+$\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
+answer $z$ with any number and $n_k$ with $k$.  No single $n_k$ covers every number the
+downstream may answer to $z$, so $\sqsubseteq$ separates $(\mathit{lo},z)$
+from each row at $\mathit{hi}$, and by (2) so does every order on $M$ under
+which the pipeline is guarded.  Yet the composite permits every number at both
+inputs and needs no \commitment: a single implementation could answer at
+$\mathit{lo}$ and later give the same answer at $\mathit{hi}$.  The upstream
+must commit before it sees the downstream's answer, and the remaining gap is
+the price of splitting the work into stages.
+
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Proper coordination shows how an upstream
+Guarded pipelines show how an upstream
 stage can discharge a pipeline's \commitment obligations.
 \emph{Composite CALM} asks a stronger question: when does a pipeline need no
 \commitment at any stage?  If every stage is monotone, the answer is immediate:
@@ -167,8 +274,8 @@ monotone.  In the example above, the test fails monotonicity only when the
 count passes from single to double digits, and the capped counter never does
 so.  Restricted to the counts it does produce, the test always answers
 \textsf{false}; it is constant, and so monotone under any output order,
-including equality.  By Theorem~\ref{thm:proper-coordination}(1), the pipeline
-is proper, and since the capped counter is itself monotone, neither stage needs
+including equality.  By Proposition~\ref{prop:guard-test}, the pipeline
+is guarded, and since the capped counter is itself monotone, neither stage needs
 a \commitment (Proposition~\ref{prop:joint-monotone}(2)).  This is proper
 coordination in which the upstream itself needs no \commitment.
 

@@ -450,13 +450,13 @@ theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I
 sets of requests to request sequences, it is the total-order broadcast spec of
 Section `app:broadcast`, so ordering them is a commitment, and the object
 makes it locally, as the authority of an epoch does above."  And, for the
-register algorithm: "That decision stage is also monotone, so the pipeline is
-proper and never decides two values …"  First conjunct: the queue, as a spec
+register algorithm: "That decision stage is also monotone, so it needs no
+commitment and never decides two values …"  First conjunct: the queue, as a spec
 from sets of requests to request sequences, is `tobSpec`, which is not
 monotone, so some output needs a commitment (`pattern_consequences_neg`).
 Second: `sp` is any upstream stage (for example the memory, whose outputs are
 its responses); `d` is the processes' decisions as a monotone function of
-those outputs (Theorem `thm:proper-coordination` via
+those outputs (Proposition `prop:guard-test` via
 `monotone_stage_proper`).  The modeling of shared memory as a single
 participant, wait-freedom, crashes, and the cited results (Herlihy's
 hierarchy and valency argument, the renaming bounds) are prose and citations,
@@ -475,13 +475,13 @@ theorem «app:additional-applications/shared-memory» {R : Type} [DecidableEq R]
 proposal to a location that starts empty, and its response names the value of
 the first compare-and-swap, the same value in every response.  Each process
 decides the value in its response.  That decision stage is a monotone function
-of the object's responses, so by Theorem `thm:proper-coordination` the
-pipeline from the object to the decisions is proper, and the object's
-ordering is the only commitment."  The object is any upstream stage `sp` whose
+of the object's responses, so it needs no commitment on them (Proposition
+`prop:guard-test`), and the object's ordering is the only commitment the
+pipeline needs (Theorem `thm:guarded-pipelines`)."  The object is any upstream stage `sp` whose
 outputs are response maps (a partial map from processes to the value named in
 their response, ordered by extension) in which all responses name the same
 value; the decision stage is the identity on response maps.  Conclusions: the
-pipeline is proper, and no two processes decide different values.  Wait-free
+decision stage needs no commitment (`Guard.Proper`), and no two processes decide different values.  Wait-free
 termination and the test-and-set algorithm are prose, not formalized. -/
 theorem «app:additional-applications/cas-positive» {I P V : Type} [PO I]
     (sp : Spec I (PMap P V))

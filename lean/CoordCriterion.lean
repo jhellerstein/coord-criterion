@@ -85,7 +85,7 @@ import CoordCriterion.Appendix.RealTimeTies
 import CoordCriterion.Appendix.MahajanRTC
 -- Dataflow graphs of stages (not in the paper; exploration)
 import CoordCriterion.Appendix.Graphs
--- Tight pipelines: does the upstream commit more than the composite needs? (not in the paper; exploration)
+-- Tight pipelines: does the upstream commit more than the composite needs? (paper §5.2)
 import CoordCriterion.Appendix.Tight
 -- Appendix H additional applications
 import CoordCriterion.Appendix.Applications
