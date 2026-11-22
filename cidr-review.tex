@@ -167,7 +167,7 @@ as consensus logs in front of a replicated store.
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
 unclassified & 105 & 11819\\
-signposting & 6 & 355\\
+signposting & 6 & 375\\
 explanation & 2 & 256\\
 formal definition/notation & 6 & 116\\
 formal caution & 1 & 89\\
@@ -336,7 +336,7 @@ We make contributions in four categories: \removednote{\textbf{unclassified}, 13
 
 \textcolor{newblue}{\noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant
-        Confluence, CRDT observation, and later refinements of CALM are all explained via Complete CALM (\S\ref{sec:instances}).} \removednote{\textbf{unclassified}, 36 words, rank 62; \textit{0.5em The paper develops these contributions in order, then relates the criterion to earlier results (Section ...}}
+        Confluence, CRDT observation, and later refinements of CALM are all explained via Complete CALM (\S\ref{sec:instances}).} \removednote{\textbf{unclassified}, 36 words, rank 63; \textit{0.5em The paper develops these contributions in order, then relates the criterion to earlier results (Section ...}}
 
 \textcolor{newblue}{\vspace{0.5em}
 \noindent
@@ -555,7 +555,7 @@ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe i]) = \pi_{\mathrm{out}}(R)$. We sa
 
 \paragraph{Output events and \commitments.}
 Inputs arrive from the environment, but outputs are the system's to choose, and
-once emitted they cannot be retracted. \removednote{\textbf{unclassified}, 25 words, rank 74; \textit{At a state [math], the current input has a unique row [math], so [math], the current ...}} Emitting $\bot$ in panel~(b) is safe,
+once emitted they cannot be retracted. \removednote{\textbf{unclassified}, 25 words, rank 75; \textit{At a state [math], the current input has a unique row [math], so [math], the current ...}} Emitting $\bot$ in panel~(b) is safe,
 since every output still possible builds on it; emitting $a$ there would not
 be, since $b$ is still possible.
 
@@ -659,7 +659,7 @@ output events.}
 
 \paragraph{Runs and consistency.}
 Runs are the foundation of the consistency side of CALM. A spec's runs are
-sequences of its events, like those that produce panels~(a)--(c). \removednote{\textbf{unclassified}, 29 words, rank 69; \textit{Input and output events are specification events : they change the specification state.}; labels def:specification-event, def:transition-system} \removednote{\textbf{unclassified}, 97 words, rank 30; \textit{A canonical run , or just run , is any finite transition sequence of the transition ...}}
+sequences of its events, like those that produce panels~(a)--(c). \removednote{\textbf{unclassified}, 29 words, rank 70; \textit{Input and output events are specification events : they change the specification state.}; labels def:specification-event, def:transition-system} \removednote{\textbf{unclassified}, 97 words, rank 30; \textit{A canonical run , or just run , is any finite transition sequence of the transition ...}}
 
 \begin{definition}[Specification event, canonical run, \commitment-free]
 \label{def:run}
@@ -675,8 +675,10 @@ $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$ and
 $a$: none is a \emph{common \outnoun} of them at $aba$. Rows with a common
 \outnoun at $j$ are \emph{consistent at} $j$, and \emph{inconsistent at} $j$
-otherwise: \commitment-free runs that emit their outputs can be reconciled at
-$j$ exactly when the rows are consistent there. These two rows are
+otherwise: \commitment-free runs that emit their outputs can be reconciled at $j$ exactly when the rows are consistent there. Rows are \emph{row-consistent} when they are consistent at every common
+\indesc of their inputs, and \emph{row-inconsistent} otherwise. When the context is
+clearly about rows, we say simply that they are consistent; otherwise we name
+the scope. These two rows are
 inconsistent at $aba$. So a run that emits $\bot$ at
 $ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
 that receives $aba$ and emits $a$. Under the equality order this removal is
@@ -797,7 +799,7 @@ monotone.
 \textcolor{newblue}{By Lemma~\ref{lem:confluence-legality}, the runs are consistent iff
 no output event of a run applies a \commitment.} First assume they are
 consistent, and suppose $f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$. \removednote{\textbf{unclassified}, 20 words, rank 84; \textit{At [math] the event [math] then applies [math] and rules out input [math], a contradiction, so ...}} \textcolor{newblue}{Emitting $f(i)$ at $\sigma_P(i)$ then applies a \commitment that rules out $k$,
-a contradiction, so the spec is monotone.} Now assume the spec is monotone. \removednote{\textbf{unclassified}, 26 words, rank 73; \textit{It can emit every current output without (Proposition ), so by induction on its length every ...}} \textcolor{newblue}{A
+a contradiction, so the spec is monotone.} Now assume the spec is monotone. \removednote{\textbf{unclassified}, 26 words, rank 74; \textit{It can emit every current output without (Proposition ), so by induction on its length every ...}} \textcolor{newblue}{A
 run at $i$ is in $\sigma_P(i)$ (Corollary~\ref{cor:state-by-input}); every
 output in its upper fiber \outrel $f(i)$, so $f(i)$ is legal, requires no \commitment
 to emit, and consistency follows.} \textcolor{newblue}{\fullproof}
@@ -906,7 +908,7 @@ a condition within the fiber at each input.
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
 An \spectype satisfies \emph{Relational Monotonicity}
-when every output keeps some \outnoun as input \ingrows: \removednote{\textbf{unclassified}, 33 words, rank 64; \textit{In the traceroute spec, tracing from a second source t moves the input from [math] to ...}}
+when every output keeps some \outnoun as input \ingrows: \removednote{\textbf{unclassified}, 33 words, rank 65; \textit{In the traceroute spec, tracing from a second source t moves the input from [math] to ...}}
         \begin{equation}
   i\InputOrd j,\ o\in\fiber{i}
   \quad\Longrightarrow\quad
@@ -940,7 +942,7 @@ Directedness is more permissive than a join-semilattice. \textcolor{newblue}{It 
 each finite set of outputs in a fiber have some common extension within the
 fiber, while a join-semilattice requires a \emph{least} one.} For example, the fiber
 $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
-since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least common extension: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal. \removednote{\textbf{unclassified}, 34 words, rank 63; \textit{To state both requirements at once, we lift [math] from outputs to sets of outputs.}; labels eq:joint-output-order}
+since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least common extension: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal. \removednote{\textbf{unclassified}, 34 words, rank 64; \textit{To state both requirements at once, we lift [math] from outputs to sets of outputs.}; labels eq:joint-output-order}
 
 \paragraph{Lifted Monotonicity.}
 \textcolor{newblue}{The two conditions become one
@@ -966,9 +968,7 @@ emits $\{\texttt{t}{\to}\texttt{s2}\}$.} At $\{\texttt{s},\texttt{t}\}$, which \
 
 \begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
-An \spectype satisfies the \emph{common-extension condition} when every
-finite set of rows of $P$ is consistent at every common \indesc of their
-inputs. \removednote{\textbf{unclassified}, 22 words, rank 80; \textit{For the empty set of rows the condition asks only that [math] be nonempty, which follows ...}}
+An \spectype satisfies the \emph{common-extension condition} when every finite set of rows of $P$ is row-consistent. \removednote{\textbf{unclassified}, 22 words, rank 80; \textit{For the empty set of rows the condition asks only that [math] be nonempty, which follows ...}}
 \end{definition}
 
 \begin{proposition}[Common-extension form of Lifted Monotonicity]
@@ -1063,16 +1063,18 @@ Monotonicity follows (Proposition~\ref{prop:exposure-boundary}).} Now assume
 Lifted Monotonicity. Every output at every state reachable without
 \commitment is then legal (Proposition~\ref{prop:exposure-boundary}), so by
 induction on its length every run is \commitment-free, and consistency
-follows. \removednote{\textbf{signposting}, 25 words, rank 75; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+follows. \removednote{\textbf{signposting}, 45 words, rank 58; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{So the runs of the traceroute spec in Figure~\ref{fig:ambiguity-frames} are
 consistent, while transaction runs that emit $[A,B]$ and $[B,A]$ are not, since
 that fiber is not directed.}
 
-\textcolor{newblue}{Complete CALM allows us to apply Lifted Monotonicity to check consistency
-without assessing runs, and it suffices to check pairs of rows.} \textcolor{newblue}{If every two rows are consistent at each common extension of their inputs, so
-is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a
+\textcolor{newblue}{Complete CALM connects the two scopes of consistency: a spec's runs are
+consistent exactly when every finite set of its rows is row-consistent
+(Proposition~\ref{prop:common-expansion-form}).} \textcolor{newblue}{So we can check consistency
+on the table without assessing runs, and pairs of rows suffice.} \textcolor{newblue}{If every two
+rows are consistent, so is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a
 smaller family, until one row remains.} \removednote{\textbf{unclassified}, 55 words, rank 50; \textit{The condition that characterizes consistency of runs is a property of the spec alone: Lifted Monotonicity, ...}}
 
 
@@ -1122,7 +1124,7 @@ happens before it~\cite{lamport1978time,chandy1985distributed}.}
 is itself a consistent cut, its \emph{final cut}.} \removednote{\textbf{unclassified}, 151 words, rank 19; \textit{Let [math] be a common of the participants' current inputs at a consistent cut [math].}; labels def:distributed-consistency, prop:distributed-consistency} \textcolor{newblue}{At a
 consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, ending in some state
-$\sigma_p$.} \removednote{\textbf{unclassified}, 40 words, rank 59; \textit{The endpoint of a consistent cut [math] is [math].}; labels def:endpoint, fig:participant-runs} \removednote{\textbf{formal definition/notation}, 27 words, rank 71; \textit{A continuation of a history at a consistent cut [math] is a history [math] that extends ...}} \textcolor{newblue}{For a common extension $j$ of the participants' current inputs,
+$\sigma_p$.} \removednote{\textbf{unclassified}, 40 words, rank 60; \textit{The endpoint of a consistent cut [math] is [math].}; labels def:endpoint, fig:participant-runs} \removednote{\textbf{formal definition/notation}, 27 words, rank 72; \textit{A continuation of a history at a consistent cut [math] is a history [math] that extends ...}} \textcolor{newblue}{For a common extension $j$ of the participants' current inputs,
 confluence asks whether the history can be extended so that every participant
 reaches the same state $(j,R)$.}
 
@@ -1320,7 +1322,7 @@ one condition.
 \begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
 $\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of
-rows of $E$ is consistent at every common \indesc of their inputs.
+rows of $E$ is row-consistent.
 \end{definition}
 
 \begin{theorem}[Complete CAP]
@@ -1348,14 +1350,14 @@ therefore continue to one state at $j$, which is Partition Consistency. \removed
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \textcolor{newblue}{\Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.}
 
-Return to the election of Section~\ref{sec:election-story}. \removednote{\textbf{unclassified}, 30 words, rank 68; \textit{That discussion centered on the spec for vote collection, as performed by the registrar.}} \textcolor{newblue}{That discussion
+Return to the election of Section~\ref{sec:election-story}. \removednote{\textbf{unclassified}, 30 words, rank 69; \textit{That discussion centered on the spec for vote collection, as performed by the registrar.}} \textcolor{newblue}{That discussion
 centered on the spec for vote collection, as performed by the registrar; here
 we consider the spec for the voters, which the registrar observes.} \textcolor{newblue}{Each
 voter's ballot is a row of $E$, and the sets of ballots the registrar may
-observe are implicit outputs in $P\setminus E$.} \removednote{\textbf{unclassified}, 32 words, rank 65; \textit{Each voter decides between [math] and [math] and emits its ballot.}} \textcolor{newblue}{A voter's choice between $a$
+observe are implicit outputs in $P\setminus E$.} \removednote{\textbf{unclassified}, 32 words, rank 66; \textit{Each voter decides between [math] and [math] and emits its ballot.}} \textcolor{newblue}{A voter's choice between $a$
 and $b$ is a \commitment: voting $a$ rules out every set of ballots in which it
 votes $b$.} \textcolor{newblue}{But it is a single-voter \commitment involving no communication, so
-the voter can make it and emit its ballot during a partition.} \removednote{\textbf{unclassified}, 37 words, rank 61; \textit{Each ballot is cast by a different voter, so ballots emitted on different sides of a ...}} \textcolor{newblue}{Ballots on
+the voter can make it and emit its ballot during a partition.} \removednote{\textbf{unclassified}, 37 words, rank 62; \textit{Each ballot is cast by a different voter, so ballots emitted on different sides of a ...}} \textcolor{newblue}{Ballots on
 different sides never conflict, since each is cast by a different voter (the
 full paper formalizes this placement as a \emph{deployment}~\extended), so every set of ballots an observer may collect is consistent.}
 
@@ -1368,7 +1370,7 @@ anyway, sacrificing Partition Consistency.}
 \paragraph{Gilbert and Lynch.}
 Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted
 Monotonicity for $E$ fails. We show the failure for the register example, then
-extend the conclusion from the canonical system to every system. \removednote{\textbf{unclassified}, 31 words, rank 67; \textit{Linearizability respects real-time order: if one operation finishes before another begins, every linearization puts the first ...}} \textcolor{newblue}{Linearizability
+extend the conclusion from the canonical system to every system. \removednote{\textbf{unclassified}, 31 words, rank 68; \textit{Linearizability respects real-time order: if one operation finishes before another begins, every linearization puts the first ...}} \textcolor{newblue}{Linearizability
 respects real-time order~\cite{herlihy1990linearizability}, so suppose the write
 finishes before the read begins.} \textcolor{newblue}{Every linearization then puts the write
 first, and the read must return $v$.} But each of $p$ and $q$ sees only its own
@@ -1430,7 +1432,7 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$. Their
 \end{split}
   \label{eq:spec-composition}
 \end{equation}
-where $\pi$ and $\Join$ are relational projection and equijoin. \removednote{\textbf{unclassified}, 27 words, rank 72; \textit{Every [math] has a nonempty fiber in [math], since [math] is total on [math] and [math] ...}} We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
+where $\pi$ and $\Join$ are relational projection and equijoin. \removednote{\textbf{unclassified}, 27 words, rank 73; \textit{Every [math] has a nonempty fiber in [math], since [math] is total on [math] and [math] ...}} We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
 its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$. \removednote{\textbf{unclassified}, 23 words, rank 79; \textit{Appendix allows each spec to have an input of its own as well, as when a ...}} \textcolor{newblue}{In the replicated
 store, $\Spec_1$ orders the proposed commands into a log, and $\Spec_2$
 executes the log and outputs the responses.}
@@ -1481,7 +1483,7 @@ two stages keep yields runs of $P_2\circ P_1$.} \textcolor{newblue}{\fullproof}
 \begin{corollary}[Upstream \commitments]
 \label{cor:upstream-commitments}
 If a guarded pipeline's composite $P_2\circ P_1$ is not lifted monotone, some
-output of $\Spec_1$ needs a \commitment. \removednote{\textbf{unclassified}, 42 words, rank 58; \textit{Otherwise [math] satisfies Lifted Monotonicity by the No- test, and [math] does by Proposition .}}
+output of $\Spec_1$ needs a \commitment. \removednote{\textbf{unclassified}, 42 words, rank 59; \textit{Otherwise [math] satisfies Lifted Monotonicity by the No- test, and [math] does by Proposition .}}
 \end{corollary}
 
 This answers the opening puzzle. \textcolor{newblue}{The store restricted to logs needs no
@@ -1652,7 +1654,7 @@ not monotone, and since the semilattice stage needs no \commitment, the pipeline
 not guarded (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
 on the query.} \textcolor{newblue}{An answer that exposes an element as present blocks its removal
 before it arrives, the third pattern above.} \textcolor{newblue}{The two-phase set does not enforce the block: it accepts the
-removal, and the answer is contradicted.} \removednote{\textbf{unclassified}, 38 words, rank 60; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 18; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 110; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{The CRDT's join is one
+removal, and the answer is contradicted.} \removednote{\textbf{unclassified}, 38 words, rank 61; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 18; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 110; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).}
 
@@ -1671,7 +1673,7 @@ store's \emph{read rule}.}
 \label{def:hat-spec}
 \textcolor{newblue}{An input is a history: a set of events, partially ordered by happens-before,
 of three kinds.} \textcolor{newblue}{A read is tagged with its replica; a commit carries its
-timestamp and write set; an arrival brings a committed write to a replica.} \removednote{\textbf{unclassified}, 28 words, rank 70; \textit{The history preserves each client's program order and each replica's arrival order, and a transaction's reads ...}} One
+timestamp and write set; an arrival brings a committed write to a replica.} \removednote{\textbf{unclassified}, 28 words, rank 71; \textit{The history preserves each client's program order and each replica's arrival order, and a transaction's reads ...}} One
 input \inrel another when it adds events, none of which happens before an event
 already present. An output is a set of read answers, ordered by inclusion. \textcolor{newblue}{An
 isolation level $L$ is defined by the phenomena it
@@ -1830,7 +1832,7 @@ or protocol in mind.
 
 
 
-\textcolor{newblue}{Raising the level to specs also enables more refined analysis.} \removednote{\textbf{unclassified}, 32 words, rank 66; \textit{Bloom flagged syntactic non-monotonicity in programs and conservatively injected coordination code in front of it.}} \textcolor{newblue}{Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs,
+\textcolor{newblue}{Raising the level to specs also enables more refined analysis.} \removednote{\textbf{unclassified}, 32 words, rank 67; \textit{Bloom flagged syntactic non-monotonicity in programs and conservatively injected coordination code in front of it.}} \textcolor{newblue}{Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs,
 and recommended more non-monotone coordination code in front of it: the puzzle of
 Section~\ref{sec:composition}.} \textcolor{newblue}{Later tools moved from syntax to declared
 contracts and invariants in specific

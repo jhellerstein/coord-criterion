@@ -327,8 +327,9 @@ theorem «sec:complete-cap/canonical-system-canonical» (sp : Spec I O) (D : Typ
 /-! ### Definition `def:lm-for-A` (Lifted Monotonicity for `E`) -/
 
 /-- **Def. `def:lm-for-A` (Lifted Monotonicity for `E`).**  "`P` satisfies
-Lifted Monotonicity for `E` when every finite set of rows of `E` is consistent
-at every common input extension of their inputs."  Lean: `ConsistentOn sp E`
+Lifted Monotonicity for `E` when every finite set of rows of `E` is
+row-consistent," that is, consistent at every common input extension of their
+inputs.  Lean: `ConsistentOn sp E`
 (the library name predates the paper's term); finite sets are lists. -/
 abbrev «def:lm-for-A» (sp : Spec I O) (E : Table I O) : Prop := ConsistentOn sp E
 

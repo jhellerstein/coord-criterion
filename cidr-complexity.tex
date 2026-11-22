@@ -708,8 +708,10 @@ $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$ and
 $a$: none is a \emph{common \outnoun} of them at $aba$.  Rows with a common
 \outnoun at $j$ are \emph{consistent at} $j$, and \emph{inconsistent at} $j$
-otherwise: \commitment-free runs that emit their outputs can be reconciled at
-$j$ exactly when the rows are consistent there.  These two rows are
+otherwise: \commitment-free runs that emit their outputs can be reconciled at $j$ exactly when the rows are consistent there.  Rows are \emph{row-consistent} when they are consistent at every common
+\indesc of their inputs, and \emph{row-inconsistent} otherwise.  When the context is
+clearly about rows, we say simply that they are consistent; otherwise we name
+the scope.  These two rows are
 inconsistent at $aba$.  So a run that emits $\bot$ at
 $ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
 that receives $aba$ and emits $a$.  Under the equality order this removal is
@@ -1004,9 +1006,7 @@ emits $\{\texttt{t}{\to}\texttt{s2}\}$.  At $\{\texttt{s},\texttt{t}\}$, which \
 
 \color{black}\begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
-\cxtag{84}{N/M}\cxbar{84}{0.4 0.4 1}{s}An \spectype satisfies the \emph{common-extension condition} when every
-finite set of rows of $P$ is consistent at every common \indesc of their
-inputs.\cxbar{84}{0.4 0.4 1}{e}
+\cxtag{84}{N/M}\cxbar{84}{0.4 0.4 1}{s}An \spectype satisfies the \emph{common-extension condition} when every finite set of rows of $P$ is row-consistent.\cxbar{84}{0.4 0.4 1}{e}
 \end{definition}
 
 \color{black}\begin{proposition}[Common-extension form of Lifted Monotonicity]
@@ -1110,9 +1110,11 @@ follows.  \fullproof\cxbar{96}{0.4 0.4 1}{e}
 consistent, while transaction runs that emit $[A,B]$ and $[B,A]$ are not, since
 that fiber is not directed.
 
-\color{blue!75!black}\cxtag{98}{B/M}\cxbar{98}{0.4 0.4 1}{s}Complete CALM allows us to apply Lifted Monotonicity to check consistency
-without assessing runs, and it suffices to check pairs of rows. If every two rows are consistent at each common extension of their inputs, so
-is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a
+\color{blue!75!black}\cxtag{98}{B/M}\cxbar{98}{0.4 0.4 1}{s}Complete CALM connects the two scopes of consistency: a spec's runs are
+consistent exactly when every finite set of its rows is row-consistent
+(Proposition~\ref{prop:common-expansion-form}).  So we can check consistency
+on the table without assessing runs, and pairs of rows suffice.  If every two
+rows are consistent, so is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a
 smaller family, until one row remains.\cxbar{98}{0.4 0.4 1}{e}
 
 % ======================================================================
@@ -1365,7 +1367,7 @@ one condition.\cxbar{129}{0.4 0.4 1}{e}
 \color{black}\begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
 \cxtag{130}{N/S}$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of
-rows of $E$ is consistent at every common \indesc of their inputs.
+rows of $E$ is row-consistent.
 \end{definition}
 
 \color{black}\begin{theorem}[Complete CAP]

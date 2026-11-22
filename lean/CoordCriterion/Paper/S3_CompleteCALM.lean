@@ -362,9 +362,9 @@ theorem «sec:lifted-monotonicity/traceroute-common-extension» (x y : Figures.T
 
 /-- **Def. `def:common-expansion-condition`** (Common-extension condition).
 "An I/O specification satisfies the common-extension condition when every
-finite set of rows of `P` is consistent at every common input extension of
-their inputs."  Rows are consistent at `j` when some `u ∈ P(j)` extends every
-`o_r`.  Lean:
+finite set of rows of `P` is row-consistent."  Rows are row-consistent when
+they are consistent at every common input extension `j` of their inputs, that is, some
+`u ∈ P(j)` extends every `o_r`.  Lean:
 `Spec.CommonExpansion`, the rows as a list. -/
 abbrev «def:common-expansion-condition» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.CommonExpansion

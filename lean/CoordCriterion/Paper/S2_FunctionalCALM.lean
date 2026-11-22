@@ -566,7 +566,8 @@ abbrev «def:run/reachable-without-commitment» {I O : Type} [PO I] [PO O] {sp :
 extends both of their inputs, but no output at `aba` extends both `⊥` and `a`:
 none is a *common output extension* of them at `aba`.  Rows with a common
 output extension at `j` are *consistent at* `j`, and *inconsistent at* `j`
-otherwise … These two rows are inconsistent at `aba`."  The last conjunct says
+otherwise … Rows are *row-consistent* when they are consistent at every
+common input extension of their inputs … These two rows are inconsistent at `aba`."  The last conjunct says
 the two rows are inconsistent at `aba`. -/
 theorem «sec:election-story/obstruction» :
     elecEq.P bab ⟨.bot⟩ ∧ elecEq.P baba ⟨.win .a⟩ ∧ bab ≼ baba ∧ baba ≼ baba ∧
