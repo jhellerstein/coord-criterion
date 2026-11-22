@@ -213,10 +213,10 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:confluence»` | abbrev | "Having extracted canonical runs from a spec, we are now ready to define consistency." **Def. |
 | `«def:consistency»` | abbrev | **Def. |
 | `«sec:election-story/consistency»` | theorem | Closing paragraph of §2.1: |
-| `«lem:run-residual»` | theorem | "Three facts about runs drive the proof. |
+| `«lem:run-residual»` | theorem | "Events are relational selections, and selections commute, so a run's remainder table depends only on its last input and the outputs it emitted:" **Lemma `le… |
 | `«eq:run-residual»` | abbrev | **Eq. |
 | `«lem:run-residual/example»` | theorem | Example after Lemma `lem:run-residual`: |
-| `«prop:confluence»` | theorem | "Second, a set of runs can be continued to a common state exactly when their current remainder tables share a row at the target input:" **Prop. |
+| `«prop:confluence»` | theorem | "A set of runs can be continued to a common state exactly when their current remainder tables share a row at the target input:" **Prop. |
 | `«prop:confluence/survivor-condition»` | abbrev | Prop. |
 | `«sec:functional-calm-theorem/safety-of-runs»` | theorem | Before Lemma `lem:confluence-legality`: |
 | `«lem:confluence-legality»` | theorem | **Lemma `lem:confluence-legality`** (Confluence and legality). |

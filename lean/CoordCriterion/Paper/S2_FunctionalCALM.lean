@@ -631,7 +631,7 @@ theorem «sec:election-story/consistency» :
 
 /-! ## The Functional CALM theorem (`sec:functional-calm-theorem`) -/
 
-/-- "Three facts about runs drive the proof.  First, events are relational
+/-- "Events are relational
 selections, and selections commute, so a run's remainder table depends only on
 its last input and the outputs it emitted:"
 
@@ -664,7 +664,7 @@ theorem «lem:run-residual/example» (k : Ballots) (o : ResE) :
     outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) :=
   elecEq_bot_single_row k o
 
-/-- "Second, a set of runs can be continued to a common state exactly when
+/-- "A set of runs can be continued to a common state exactly when
 their current remainder tables share a row at the target input:"
 
 **Prop. `prop:confluence`** (Survivor test).  "Runs ending at states
@@ -693,8 +693,7 @@ abbrev «prop:confluence/survivor-condition» {I O : Type} [PO I] [PO O] {sp : S
 
 /-- Before Lemma `lem:confluence-legality`: "Consistency is a safety property
 of the spec's runs: it guarantees that a common state exists, not that a
-system reaches it (Section `sec:commitment-conflict`). … Third, consistency
-comes down to legality:"  The first sentence is the reading of Def.
+system reaches it (Section `sec:commitment-conflict`). … With the survivor test, consistency comes down to legality:"  The first sentence is the reading of Def.
 `def:consistency` (prose); Lean states the second, which is the lemma in the
 form `Spec.Consistent ↔ Spec.RunsLegal`. -/
 theorem «sec:functional-calm-theorem/safety-of-runs» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
