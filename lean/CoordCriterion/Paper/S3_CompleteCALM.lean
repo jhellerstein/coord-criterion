@@ -414,7 +414,7 @@ theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 
 /-- "Specification states, input events, runs, commitment-free runs, and
-consistency are defined as before.  The results of Section `sec:executions`
+consistency are defined as before.  The results of Section `sec:functional-calm-theorem`
 use output events only through Equation `eq:output-action`, which lifted
 output events still satisfy, so the rows-remaining lemma (Lemma
 `lem:run-residual`), the Survivor test (Proposition `prop:confluence`), and
