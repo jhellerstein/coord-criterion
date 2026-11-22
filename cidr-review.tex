@@ -1441,9 +1441,10 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$. Their
 \end{split}
   \label{eq:spec-composition}
 \end{equation}
-where $\pi$ and $\Join$ are relational projection and equijoin. \removednote{\textbf{unclassified}, 27 words, rank 72; \textit{Every [math] has a nonempty fiber in [math], since [math] is total on [math] and [math] ...}} \textcolor{newblue}{We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
-its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$, as the log guards the
-store.} \removednote{\textbf{unclassified}, 23 words, rank 78; \textit{Appendix allows each spec to have an input of its own as well, as when a ...}}
+where $\pi$ and $\Join$ are relational projection and equijoin. \removednote{\textbf{unclassified}, 27 words, rank 72; \textit{Every [math] has a nonempty fiber in [math], since [math] is total on [math] and [math] ...}} We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
+its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$. \removednote{\textbf{unclassified}, 23 words, rank 78; \textit{Appendix allows each spec to have an input of its own as well, as when a ...}} \textcolor{newblue}{In the replicated
+store, $\Spec_1$ orders the proposed commands into a log, and $\Spec_2$
+executes the log and outputs the responses.}
 
 \begin{lemma}[Composition]
 \label{lem:composition}
@@ -1480,7 +1481,11 @@ $\Spec_2|_{\Spec_1}$ satisfies Lifted Monotonicity.}
 $\Spec_2|_{\Spec_1}$ answers each of its outputs without \commitment, and the
 pipeline's runs are consistent whenever the system's are.} \removednote{\textbf{unclassified}, 126 words, rank 25; \textit{Specifically, replacing each output of [math] by its answers, and dropping the events of [math], gives ...}}
 \end{theorem}
-\textcolor{newblue}{\proofinfull}
+\begin{proof}[Proof sketch]
+\textcolor{newblue}{The outputs of a run of $\Spec_1$ form a chain, which $\Spec_2|_{\Spec_1}$
+answers legally by Proposition~\ref{prop:guard-test}; joining the rows the
+two stages keep yields runs of $P_2\circ P_1$.} \textcolor{newblue}{\fullproof}
+\end{proof}
 
 \textcolor{newblue}{Conversely, by Lemma~\ref{lem:composition}:}
 
@@ -1544,8 +1549,9 @@ The commuting log is guarded but not tight: $\preceq_M$ separates
 $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and $\sqsubseteq$ does not. \textcolor{newblue}{Generalized
 Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} avoid
 such \commitments by ordering only commands that do not commute.} \removednote{\textbf{unclassified}, 156 words, rank 17; \textit{When the store's outputs do not record the order of commuting commands, they bring the log ...}} \removednote{\textbf{unclassified}, 13 words, rank 102; \textit{Guarded pipelines show how an upstream stage can discharge a pipeline's obligations.}} \textcolor{newblue}{Without
-greatest answers a gap can remain, the price of splitting work into
-stages~\extended.}
+greatest answers a gap can remain: when the downstream may give any of several
+answers, the upstream must commit before it sees which one, while a single
+implementation of the composite could correlate the two choices~\extended.} \textcolor{newblue}{That gap is the price of splitting the work into stages.}
 
 \paragraph{Composite CALM.}
 \label{sec:composite-calm}

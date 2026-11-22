@@ -1442,8 +1442,9 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.  Their
   \label{eq:spec-composition}
 \end{equation}
 where $\pi$ and $\Join$ are relational projection and equijoin.  We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
-its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$, as the log guards the
-store.
+its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.  In the replicated
+store, $\Spec_1$ orders the proposed commands into a log, and $\Spec_2$
+executes the log and outputs the responses.
 
 \begin{lemma}[Composition]
 \label{lem:composition}
@@ -1480,7 +1481,11 @@ In a guarded pipeline, fix any system for $\Spec_1$.  Then
 $\Spec_2|_{\Spec_1}$ answers each of its outputs without \commitment, and the
 pipeline's runs are consistent whenever the system's are.
 \end{theorem}
-\proofinfull
+\begin{proof}[Proof sketch]
+The outputs of a run of $\Spec_1$ form a chain, which $\Spec_2|_{\Spec_1}$
+answers legally by Proposition~\ref{prop:guard-test}; joining the rows the
+two stages keep yields runs of $P_2\circ P_1$.  \fullproof
+\end{proof}
 
 Conversely, by Lemma~\ref{lem:composition}:
 
@@ -1541,8 +1546,10 @@ The commuting log is guarded but not tight: $\preceq_M$ separates
 $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and $\sqsubseteq$ does not.  Generalized
 Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} avoid
 such \commitments by ordering only commands that do not commute.  Without
-greatest answers a gap can remain, the price of splitting work into
-stages~\extended.
+greatest answers a gap can remain: when the downstream may give any of several
+answers, the upstream must commit before it sees which one, while a single
+implementation of the composite could correlate the two choices~\extended.
+That gap is the price of splitting the work into stages.
 
 \paragraph{Composite CALM.}
 \label{sec:composite-calm}
