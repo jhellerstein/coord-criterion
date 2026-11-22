@@ -360,7 +360,7 @@ theorem «sec:query-instance/deterministic-behaviors» {F N G : Type} (loc : F �
 /-- Sec. `sec:query-instance`: "The sufficient half does not follow from
 Complete CAP: participants on the same side can hear from overlapping sets of
 participants, and their construction, in which a group's smallest node decides
-for the group, makes commitments that keep such outputs compatible."
+for the group, makes commitments that keep such rows consistent."
 
 Lean: a spanning-tree behavior (`QRef.tree`, a concrete instance of their
 `Top_span`, Example 8) is node monotone, yet no total explicit relation inside
@@ -1367,19 +1367,17 @@ spec. …"  Next paragraph: "A *declared* spec `D` gives, for each receive
 sequence, a set of reply sequences by a rule; it does not enumerate
 executions.  To check Lifted Monotonicity on `D` instead of on the projected
 spec, `D` must satisfy two properties, and both are needed: if `D` omits a reply sequence the
-automaton can produce, it may hide an incompatibility, and if `D` adds one the
-automaton cannot produce, it may create an incompatibility the automaton does
-not have."  The description of verification work (invariants, forward
+automaton can produce, it may hide an inconsistency, and if `D` adds one the
+automaton cannot produce, it may create an inconsistency the automaton does not have."  The description of verification work (invariants, forward
 simulations, refinement mappings, mechanized proofs) is argued in prose only
 (see the README).
 
 Lean: `IOT.Ctr.realizability_alone`: allowing no replies (`IOT.Ctr.noReplies`)
 is realizable for the racing counter and consistent, while the racing
-counter's projected spec is inconsistent, so omitting reply sequences hides the
-incompatibility.  `IOT.Ctr.domination_alone`: allowing every reply sequence
+counter's projected spec is inconsistent, so omitting reply sequences hides the inconsistency.  `IOT.Ctr.domination_alone`: allowing every reply sequence
 (`IOT.Ctr.allReplies`) dominates the recording counter and is inconsistent,
 while the recording counter's projected spec is consistent, so adding reply
-sequences creates an incompatibility. -/
+sequences creates an inconsistency. -/
 theorem «sec:operational-models/both-halves» :
     ((∀ w t, (IOT.Ctr.noReplies IOT.Ctr.Race).P w t → (IOT.spec IOT.Ctr.Race).P w t) ∧
       (IOT.Ctr.noReplies IOT.Ctr.Race).Consistent ∧ ¬ (IOT.spec IOT.Ctr.Race).Consistent) ∧

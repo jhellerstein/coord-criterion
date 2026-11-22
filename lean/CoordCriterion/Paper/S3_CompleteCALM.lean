@@ -254,7 +254,7 @@ theorem «sec:lifted-monotonicity/directed-example» :
 /-- "A singleton fiber is trivially directed.  Each traceroute fiber of Figure
 `fig:ambiguity-frames`(g) is directed too: the union of finitely many permitted
 route sets is itself a permitted route set, and it contains each of them.  The
-two transaction orders in panel (f), by contrast, are incompatible."  Lean: the
+two transaction orders in panel (f), by contrast, have no common extension."  Lean: the
 union of two permitted route sets is permitted and extends both (finitely many
 by induction, packaged as `DirectedOutputs`). -/
 theorem «sec:lifted-monotonicity/figure-fibers» :

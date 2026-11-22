@@ -450,8 +450,7 @@ theorem «fig:nonmonotone-frame» :
       ∀ k o, outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) :=
   ⟨elecEq_bot_excludes, elecEq_bot_single_row⟩
 
-/-- "Under this order (called the *equality order*), `⊥` is incompatible with
-future winners, so it is not legal at `ab·`, and emitting it applies `x_⊥`,
+/-- "Under this order (called the *equality order*), no output extends both `⊥` and a future winner, so it is not legal at `ab·`, and emitting it applies `x_⊥`,
 which removes `(aba,a)` and `(abb,b)`."  Lean: at `σ_P(ab·)`, `⊥` is not a
 legal output under `elecEq`. -/
 theorem «sec:election-story/equality-order-commitment» :

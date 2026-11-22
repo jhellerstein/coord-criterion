@@ -198,7 +198,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«sec:functional-events/determination-examples»` | theorem | "*Determination* is the process of reaching a determined state. |
 | `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state with that output: |
 | `«fig:nonmonotone-frame»` | theorem | Fig. |
-| `«sec:election-story/equality-order-commitment»` | theorem | "Under this order (called the *equality order*), `⊥` is incompatible with future winners, so it is not legal at `ab·`, and emitting it applies `x_⊥`, which r… |
+| `«sec:election-story/equality-order-commitment»` | theorem | "Under this order (called the *equality order*), no output extends both `⊥` and a future winner, so it is not legal at `ab·`, and emitting it applies `x_⊥`,… |
 | `«fig:election-frames/d»` | theorem | Fig. |
 | `«fig:election-frames/d-gray»` | theorem | Fig. |
 | `«fig:election-frames/bot-alone»` | theorem | Fig. |
@@ -542,10 +542,10 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/relational-specification»` | abbrev | *I/O specification* — `Spec = (I,≼,O,≼,P)` with `P ⊆ I × O` total on `I` (Def. |
 | `«app:notation/nondeterministic»` | abbrev | *nondeterministic* — some fiber has more than one output (Def. |
 | `«app:notation/relational-monotonicity»` | abbrev | *Relational Monotonicity* — every output keeps an output extension as input grows (Def. |
-| `«app:notation/compatible-in»` | abbrev | *compatible in `F`* — outputs that some `u ∈ F` extends all at once (Sec. |
-| `«app:notation/directed»` | abbrev | *directed fiber* — every nonempty finite subset is compatible in the fiber (Def. |
+| `«app:notation/compatible-in»` | abbrev | Helper (no longer a notation-table entry): |
+| `«app:notation/directed»` | abbrev | *directed fiber* — every nonempty finite subset has a common extension in the fiber (Def. |
 | `«app:notation/directed-outputs»` | abbrev | *directed fibers* — every fiber of the spec is directed (Def. |
-| `«app:notation/joint-lift»` | abbrev | *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` is compatible in `B` (Eq. |
+| `«app:notation/joint-lift»` | abbrev | *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` has a common extension in `B` (Eq. |
 | `«app:notation/lifted-monotonicity»` | abbrev | *Lifted Monotonicity* (*monotone*) — `i ≼ j ⇒ P(i) ⊑ P(j)` (Def. |
 | `«app:notation/common-expansion-condition»` | abbrev | *common-extension condition* — rows with a common input extension `j` have a common output extension in `P(j)` (Def. |
 | `«app:notation/ruled-out»` | abbrev | *ruled out by `o`* — a row whose output does not extend `o` (App. |

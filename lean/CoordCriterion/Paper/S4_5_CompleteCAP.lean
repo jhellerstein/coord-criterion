@@ -327,9 +327,8 @@ theorem «sec:complete-cap/canonical-system-canonical» (sp : Spec I O) (D : Typ
 /-! ### Definition `def:lm-for-A` (Lifted Monotonicity for `E`) -/
 
 /-- **Def. `def:lm-for-A` (Lifted Monotonicity for `E`).**  "`P` satisfies
-Lifted Monotonicity for `E` when every finite set of rows of `E` is
-consistent," that is, row-consistent: consistent at every common input extension of their
-inputs.  Lean: `ConsistentOn sp E`
+Lifted Monotonicity for `E` when every finite set of rows of `E` with a common
+input extension `j` has a common output extension in `P(j)`."  Lean: `ConsistentOn sp E`
 (the library name predates the paper's term); finite sets are lists. -/
 abbrev «def:lm-for-A» (sp : Spec I O) (E : Table I O) : Prop := ConsistentOn sp E
 
@@ -349,8 +348,7 @@ abbrev «def:escapes-cap» (sp : Spec I O) (D : Type) (E : Table I O) : Prop :=
 system's participants never wait: each can emit any output of `E` that its
 state allows, so it has Availability for `E`."  This entry checks that
 sentence, for every spec and every `E`.  The connective sentence before Def.
-`def:lm-for-A`, "Whether the canonical system's answers stay compatible across
-sides depends on one condition", is made precise by Theorem `thm:complete-cap`. -/
+`def:lm-for-A`, "Whether the canonical system's answers stay consistent across sides depends on one condition", is made precise by Theorem `thm:complete-cap`. -/
 theorem «sec:complete-cap/canonical-never-waits» (sp : Spec I O) (D : Type) (E : Table I O) :
     «def:partition-notions/for» E («sec:complete-cap/canonical-system» sp D E) :=
   availabilityFor_resp E

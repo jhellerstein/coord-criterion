@@ -211,11 +211,10 @@ abbrev «app:notation/nondeterministic» (sp : Spec I O) : Prop :=
 grows (Def. `def:relational-monotonicity`).  Lean: `Spec.RelMono`. -/
 abbrev «app:notation/relational-monotonicity» (sp : Spec I O) : Prop := sp.RelMono
 
-/-- *compatible in `F`* — outputs that some `u ∈ F` extends all at once
-(Sec. `sec:lifted-monotonicity`).  Lean: `CompatibleIn F X`. -/
+/-- Helper (no longer a notation-table entry): outputs that some `u ∈ F` extends all at once.  Lean: `CompatibleIn F X`. -/
 abbrev «app:notation/compatible-in» (F : O → Prop) (X : List O) : Prop := CompatibleIn F X
 
-/-- *directed fiber* — every nonempty finite subset is compatible in the fiber
+/-- *directed fiber* — every nonempty finite subset has a common extension in the fiber
 (Def. `def:fiber-directedness`).  Lean: `JointLift F F`. -/
 abbrev «app:notation/directed» (F : O → Prop) : Prop := JointLift F F
 
@@ -224,7 +223,7 @@ abbrev «app:notation/directed» (F : O → Prop) : Prop := JointLift F F
 Lean: `Spec.DirectedOutputs`. -/
 abbrev «app:notation/directed-outputs» (sp : Spec I O) : Prop := sp.DirectedOutputs
 
-/-- *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` is compatible in `B`
+/-- *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` has a common extension in `B`
 (Eq. `eq:joint-output-order`).  Lean: `JointLift A B`. -/
 abbrev «app:notation/joint-lift» (A B : O → Prop) : Prop := JointLift A B
 

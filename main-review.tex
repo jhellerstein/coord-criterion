@@ -1892,7 +1892,8 @@ one condition.}
 
 \begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
-\textcolor{reviewed}{$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ is consistent.}
+\textcolor{reviewed}{$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of
+rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$.}
 \end{definition}
 
 \begin{theorem}[Complete CAP]
@@ -2459,8 +2460,7 @@ characterization holds in our formalism. Its necessary half is the partition
 argument above, applied to histories that respect their placement. The
 sufficient half does not follow from Complete CAP: participants on the same
 side can hear from overlapping sets of participants, and their construction,
-in which a group's smallest node decides for the group, makes \commitments that
-keep such outputs compatible. Our version does not need their requirement that
+in which a group's smallest node decides for the group, makes \commitments that keep such rows consistent. Our version does not need their requirement that
 programs treat data values only as interchangeable symbols.
 
 Their aims differ from ours. They ask which behaviors become computable when
@@ -3011,8 +3011,7 @@ A \emph{declared} spec $D$ gives, for each receive sequence, a set of reply
 sequences by a rule; it does not enumerate executions. To check Lifted
 Monotonicity on $D$ instead of on the projected spec, $D$ must satisfy two
 properties, and both are needed: if $D$ omits a reply sequence the automaton
-can produce, it may hide an incompatibility, and if $D$ adds one the automaton
-cannot produce, it may create an incompatibility the automaton does not have.
+can produce, it may hide an inconsistency, and if $D$ adds one the automaton cannot produce, it may create an inconsistency the automaton does not have.
 \begin{itemize}
 \item
 \emph{Realizability.}  Every reply sequence that $D$ allows at a
@@ -4926,10 +4925,8 @@ ordered by prefix, and $O$ the cumulative response histories, ordered by
 extension. Let $\Spec_1$ relate each proposal stream to the logs of its
 commands, and let the store $\Spec_2$ be the functional spec induced by the
 function $f$ that executes a log on a deterministic state machine, which is
-monotone in the prefix order. Then $\Spec_1$ is non-monotone, since distinct
-next entries are incompatible outputs in one fiber. So is the key-value store
-$P_2\circ P_1$, since concurrent commands ordered oppositely give incompatible
-responses. Multi-Paxos runs $\Spec_1$ under its own basis, deciding one log
+monotone in the prefix order. Then $\Spec_1$ is non-monotone, since distinct next entries are inconsistent rows in one fiber. So is the key-value store
+$P_2\circ P_1$, since concurrent commands ordered oppositely give inconsistent rows. Multi-Paxos runs $\Spec_1$ under its own basis, deciding one log
 slot at a time~\cite{schneider1990smr,lamport2001paxos}. Since $f$ is
 monotone, the pipeline is guarded. By Theorem~\ref{thm:guarded-pipelines} the store under the empty basis follows every run of the log, and by Corollary~\ref{cor:upstream-commitments} the log's \commitments cannot be
 dropped. By Corollary~\ref{cor:empty-store}, a store that takes locks of its

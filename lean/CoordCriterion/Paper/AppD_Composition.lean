@@ -601,9 +601,8 @@ theorem «app:composition/store-commitment» :
 
 /-- **Example `ex:committed-log-composition`** (Replicated store), for any
 deterministic state machine `δ` and two distinct commands: "Then `𝒮₁` is
-non-monotone, since distinct next entries are incompatible outputs in one
-fiber.  So is the key-value store `P₂ ∘ P₁`, since concurrent commands ordered
-oppositely give incompatible responses. … Since `f` is monotone, the pipeline
+non-monotone, since distinct next entries are inconsistent rows in one fiber.  So is the key-value store `P₂ ∘ P₁`, since concurrent commands ordered
+oppositely give inconsistent rows. … Since `f` is monotone, the pipeline
 is guarded.  By Theorem `thm:guarded-pipelines` the store under the empty
 basis follows every run of the log, and by Corollary `cor:upstream-commitments` the log's commitments cannot be dropped.  By
 Corollary `cor:empty-store`, a store that takes locks of its own can run with
