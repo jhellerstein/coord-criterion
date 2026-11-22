@@ -1075,8 +1075,10 @@ Complete CALM allows us to apply Lifted Monotonicity to check consistency
 without assessing runs. Lifted
 Monotonicity is checked on the table itself, and pairs of rows suffice: if every
 two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
-so does every finite family of such rows, by replacing two rows at a time with
-one row at $j$ that \outrel both. \jmh{I don't understand the last sentence.}
+so does every finite family of such rows.  Two rows of the family have a
+common \outnoun $u\in\fiber{j}$, so replacing them with the single row $(j,u)$
+leaves a smaller family with the same common \indesc, and repeating this
+leaves one row.
 
 % ======================================================================
 \section{Distributed Execution}
@@ -1588,7 +1590,10 @@ Let $\Spec_1$ guard $\Spec_2$.
 By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
 upstream commit less than $\sqsubseteq$ does.  The commuting log is guarded but
 not tight: $\preceq_M$ separates $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and
-$\sqsubseteq$ does not.  Without greatest answers, a gap can remain: when the
+$\sqsubseteq$ does not.  Generalized Paxos~\cite{lamport2005generalized} and
+EPaxos~\cite{moraru2013epaxos} avoid such \commitments: they order only
+commands that do not commute.  When the store's outputs do not record the
+order of commuting commands, they bring the log closer to a tight pipeline.  Without greatest answers, a gap can remain: when the
 downstream may give any of several answers, the upstream must commit before
 it sees which one, while a single implementation of the composite could
 correlate the two choices~\extended.  That gap is the price of splitting the
@@ -1688,12 +1693,12 @@ domain-distinct (or domain-disjoint) from $I$; under these orders each form is
 functional monotonicity, so Functional CALM gives their characterizations.  Li
 and Lee prove CALM for replicated objects with write, merge, and query
 operations~\cite{li2025coordinationfree}; in our terms, theirs is the case of
-set inputs ordered by inclusion and arbitrary partially ordered outputs, with the
-goal being a
-coordination-free implementation in place of consistency. \jmh{this reworded last
-line suggests that we're not capturing a real distinction: our consistency goal is also
-coordination-free consistency. What distinction do we intend (beyond limitations on 
-input/output types)?}
+set inputs ordered by inclusion and arbitrary partially ordered outputs.  Their
+goal, a coordination-free implementation, is also ours: by
+Lemma~\ref{lem:confluence-legality}, a spec's runs are consistent exactly when
+none of them needs a \commitment.  The difference is the setting: they prove
+the equivalence for an operational model of replicated objects, and we prove it
+for specs.
 
 Baccaert and Ketsman were the first to consider nondeterministic specs in a
 CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}, which
@@ -1718,19 +1723,20 @@ replica that has not yet received every update.  Such a query risks Lamport's an
 monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
 
-\jmh{The discussion makes no use of composition, which seems like a lost opportunity
-to illustrate that material.}
-We take as input the set of updates a replica has received, ordered by inclusion;
-the replica's state is their join in the semilattice.  The output is the answer
-to a client's query, so the client-visible spec is a function: query the state
-those updates produce.  By Functional CALM, its runs are consistent exactly when
-receiving more updates never yields an answer that fails to extend an earlier
-one.  For example, a two-phase
+The client-visible spec is a composition (\S\ref{sec:composition}).  A state
+stage $s$ takes the set of updates a replica has received, ordered by
+inclusion, to their join in the semilattice; it guards a query stage $q$ that
+answers a client's query on that state.  The state stage is monotone by
+construction and needs no \commitment, so by Proposition~\ref{prop:guard-test}
+and Lemma~\ref{lem:composition} the composite $q\circ s$ is consistent whenever
+$q$ is monotone on the states $s$ can reach.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.  An answer that
-exposes an element as present blocks its removal before it arrives, the third
-pattern above.  The two-phase set does not enforce the block: it accepts the
+test: a later removal grows $R$ and shrinks the answer.  The composite is then
+not monotone, and since the state stage needs no \commitment, the pipeline is
+not guarded (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
+on the query.  An answer that exposes an element as present blocks its removal
+before it arrives, the third pattern above.  The two-phase set does not enforce the block: it accepts the
 removal, and the answer is contradicted.  The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).
@@ -1854,8 +1860,8 @@ an output $o$ for a given input $i$ in one execution, even though $(i,o)$ is
 within spec from another execution.  Modeling the automaton as a system, with
 its choices as \commitment events, captures the executions precisely: the
 automaton is confluent exactly when its \commitments never remove every row
-its canonical runs could still agree on.  Standard techniques
-can be used to map automata to specs.
+its canonical runs could still agree on.  The full paper gives both
+constructions~\extended.
 Model checkers can refute
 consistency on bounded inputs~\cite{newcombe2015aws}, and mechanized
 proofs~\cite{hawblitzel2015ironfleet} can show, by the standard obligations of
@@ -1955,7 +1961,7 @@ coordination: removing possibilities via \commitments. This simplicity
 leads to the generality of Complete CALM: a spec's runs are consistent exactly
 when it is lifted monotone, which reduces to textbook monotonicity for
 functional specs. Complete CAP follows as a corollary. \Commitments
-lead to Proper Coordination, explaining how to make the right commitments in non-monotone specs.
+lead to Proper Coordination, explaining how to make the right commitments in compositions of non-monotone specs.
 %  A totally ordered log
 % and a key-value store are each non-monotone on their own, yet when the log
 % guards the store, the log's \commitments are all the composition needs, and

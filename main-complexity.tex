@@ -2300,7 +2300,10 @@ Appendix~\ref{app:composition}.\cxbar{composition-28}{0.4 0.4 1}{e}\color{black}
 \color{black}\cxtag{composition:29}{N/M}\cxbar{composition-29}{0.4 0.4 1}{s}By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
 upstream commit less than $\sqsubseteq$ does.  The commuting log is guarded but
 not tight: $\preceq_M$ separates $(\{A\},[A])$ from $(\{A,B\},[B,A])$, and
-$\sqsubseteq$ does not.  Reversing the order
+$\sqsubseteq$ does not.  Generalized Paxos~\cite{lamport2005generalized} and
+EPaxos~\cite{moraru2013epaxos} avoid such \commitments: they order only
+commands that do not commute.  When the store's outputs do not record the
+order of commuting commands, they bring the log closer to a tight pipeline.  Reversing the order
 on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
 greatest answers, a gap can remain.  Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
