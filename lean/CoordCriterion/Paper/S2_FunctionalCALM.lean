@@ -563,12 +563,12 @@ abbrev «def:run/reachable-without-commitment» {I O : Type} [PO I] [PO O] {sp :
 
 /-- "Different runs may retain different rows.  Under the equality order, rows
 `(ab·,⊥)` and `(aba,a)` have the *common input extension* `aba`, an input that
-extends both of their inputs, but no output at `aba` extends both `⊥` and `a`:
-none is a *common output extension* of them at `aba`.  Rows with a common
-output extension at `j` are *row-consistent at* `j`, and *row-inconsistent at*
-`j` otherwise … Rows are *row-consistent* when they are row-consistent at every
-common input extension of their inputs … These two rows are inconsistent at `aba`."  The last conjunct says
-the two rows are inconsistent at `aba`. -/
+extends both of their inputs, but no *common output extension*: no output at
+`aba` extends both `⊥` and `a`."  And: "Rows with a common output extension at
+`j` are *row-consistent at* `j`, and *row-inconsistent at* `j` otherwise. …
+Rows are *row-consistent* when they are row-consistent at every common input
+extension of their inputs …"  The last conjunct says the two rows are
+row-inconsistent at `aba`. -/
 theorem «sec:election-story/obstruction» :
     elecEq.P bab ⟨.bot⟩ ∧ elecEq.P baba ⟨.win .a⟩ ∧ bab ≼ baba ∧ baba ≼ baba ∧
       ¬ ∃ u, elecEq.P baba u ∧ (⟨.bot⟩ : ResE) ≼ u ∧ (⟨.win .a⟩ : ResE) ≼ u :=

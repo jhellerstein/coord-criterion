@@ -672,20 +672,28 @@ states such runs reach are \emph{reachable without \commitment}.}
 
 Different runs may retain different rows. Under the equality order, rows
 $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
-that \inrel both of their inputs, but no output at $aba$ \outrel both $\bot$ and
-$a$: none is a \emph{common \outnoun} of them at $aba$. Rows with a common \outnoun at $j$ are \emph{row-consistent at} $j$, and
-\emph{row-inconsistent at} $j$ otherwise: \commitment-free runs that emit their
-outputs can be reconciled at $j$ exactly when the rows are row-consistent
-there. Rows are \emph{row-consistent} when they are row-consistent at every
-common \indesc of their inputs, and \emph{row-inconsistent} otherwise. When
-the context is clearly about rows, we say simply that they are consistent;
-otherwise we name the scope. These two rows are inconsistent at $aba$. So a run that emits $\bot$ at
-$ab\cdot$ must apply $x_\bot$, and can never be reconciled at $aba$ with a run
-that receives $aba$ and emits $a$. Under the equality order this removal is
-$\bot$'s canonical \commitment, required by the spec; in panel~(d), under the
-original order, the registrar made the same removal by choice.
+that \inrel both of their inputs, but no \emph{common \outnoun}: no output at
+$aba$ \outrel both $\bot$ and $a$.
 
-Having extracted canonical runs from a spec, we are now ready to define consistency. \removednote{\textbf{unclassified}, 0 words, rank 117; labels def:confluence}
+Common \outnouns give us a row-level notion of consistency. Rows with a common
+\outnoun at $j$ are \emph{row-consistent at} $j$, and \emph{row-inconsistent
+at} $j$ otherwise. \Commitment-free runs that emit their outputs can be
+reconciled at $j$ exactly when the rows are row-consistent there, so row
+consistency is consistency of particular runs: the \commitment-free runs that
+emit the rows' outputs. Rows are \emph{row-consistent} when they are
+row-consistent at every common \indesc of their inputs, and
+\emph{row-inconsistent} otherwise. When the context is clearly about rows, we
+say simply that they are \emph{consistent}.
+
+Because our two rows $(ab\cdot,\bot)$ and $(aba,a)$ are inconsistent under the
+equality order, a run that emits $\bot$ at $ab\cdot$ must apply $x_\bot$, and
+can never be reconciled at $aba$ with a run that receives $aba$ and emits
+$a$. Under the equality order this removal is $\bot$'s canonical
+\commitment, required by the spec; in panel~(d), under the original order, the
+registrar made the same removal by choice.
+
+Having extracted canonical runs from a spec, we are now ready to define
+consistency for all of a spec's runs. \removednote{\textbf{unclassified}, 0 words, rank 117; labels def:confluence}
 
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
@@ -768,8 +776,8 @@ instead takes $\mathsf{input}(k)$ and emits $x$ shares no row at $k$ with it,
 so by Proposition~\ref{prop:confluence} the two are not confluent at $k$, a
 contradiction.} \removednote{\textbf{unclassified}, 72 words, rank 41; \textit{Now assume no output event applies a , and take a family of runs and a ...}} \textcolor{newblue}{Now assume no output event applies a \commitment.} \textcolor{newblue}{Every output
 is then legal where it is emitted, so the rows the runs keep at their current
-inputs (Lemma~\ref{lem:run-residual}) are consistent at any common extension $j$, through a row at $j$ that survives in every run; Proposition~\ref{prop:confluence}
-gives consistency.} \textcolor{newblue}{\fullproof}
+inputs (Lemma~\ref{lem:run-residual}) are consistent;
+Proposition~\ref{prop:confluence} gives confluence.} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{In the election under the equality order, emitting $\bot$ at $ab\cdot$ applies
