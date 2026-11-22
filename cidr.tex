@@ -910,13 +910,12 @@ Equation~\ref{eq:functional-monotonicity}.  In the traceroute spec, tracing from
 a second source \texttt{t} extends the input from $\{\texttt{s}\}$ to
 $\{\texttt{s},\texttt{t}\}$, and every route set permitted at
 $\{\texttt{s}\}$ is still permitted there, so Relational Monotonicity holds.
-Relational Monotonicity compares fibers across inputs, so it does not
-require the outputs within one fiber to have a common \outnoun.  For a set
+
+Within a fiber, we also need the outputs to have a common \outnoun; directedness is the order-theoretic term.
+Formally, for a set
 $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
 \emph{incompatible in $F$} otherwise.
-
-
 
 \begin{definition}[Directed fiber, directed fibers]
 \label{def:fiber-directedness}
@@ -931,7 +930,7 @@ Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
 
 Directedness is more permissive than a join-semilattice.  It asks only that
 each finite set of outputs in a fiber have some common \outnoun within the
-fiber, while a join-semilattice requires a least one.  For example, the fiber
+fiber, while a join-semilattice requires a \emph{least} one.  For example, the fiber
 $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
 since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least
 common \outnoun: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal.
@@ -991,11 +990,11 @@ Monotonicity is its special case in which all the rows share one input.
 
 To connect Lifted Monotonicity to consistency, we return to
 runs, where nondeterminism raises a new question: when emitting one output
-removes others, is that removal a \commitment?  The output event is unchanged from the functional case: at a state $(i,R)$ with $o\in R(i)$,
+removes others, is that removal a \commitment?  The output event itself is unchanged from the functional case: at a state $(i,R)$ with $o\in R(i)$,
 $\mathsf{output}(o)$ emits $o$ and keeps the rows whose outputs \outrelbase $o$,
 ending at $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).
 
-Removing a row $(k,x)$ does not always lose the information in its output.  If
+However, removing a row $(k,x)$ does not always lose the information in its output.  If
 some output $u\in R(k)$ \outrel both $x$ and $o$, the row $(k,u)$ is kept, and
 a later output $u$ reports everything $x$ would have.  We separate the removed
 rows accordingly.
@@ -1076,12 +1075,12 @@ So the runs of the traceroute spec in Figure~\ref{fig:ambiguity-frames} are
 consistent, while transaction runs that emit $[A,B]$ and $[B,A]$ are not, since
 that fiber is not directed.
 
-Complete CALM also changes how consistency can be checked.  Its definition
-asks whether runs can be continued to a common state.  Lifted
+Complete CALM allows us to apply Lifted Monotonicity to check consistency
+without assessing runs. Lifted
 Monotonicity is checked on the table itself, and pairs of rows suffice: if every
 two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
 so does every finite family of such rows, by replacing two rows at a time with
-one row at $j$ that \outrel both.
+one row at $j$ that \outrel both. \jmh{I don't understand the last sentence.}
 
 % ======================================================================
 \section{Distributed Execution}
@@ -1104,7 +1103,7 @@ from the environment, a participant can learn cumulative input from another
 participant.
 
 Participants exchange messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.
-A \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$ if it
+A \emph{message} $m=(j,d)$ carries an input $j$, or $\varnothing$ if it
 carries none, and application-specific data $d$, such as timestamps, version
 vectors, or state identifiers.  Receiving a message does not change the
 specification state.  A participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a legal common \indesc $k$
@@ -1128,7 +1127,7 @@ happens-before: whenever $C$ contains an event, it contains every event that
 happens before it~\cite{lamport1978time,chandy1985distributed}.
 \end{definition}
 
-The term is standard and unrelated to our notion of consistency.  A history
+The ``consistent cut'' term is standard and unrelated to our notion of consistency.  A history
 is itself a consistent cut, its \emph{final cut}.  At a
 consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, ending in some state
@@ -1160,8 +1159,8 @@ For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
 arrival order, or outputs emitted.  This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
-asks of replicated state.  The semilattice merge of CRDTs suffices for it but
-is not needed: it follows directly from any monotone functional
+asks of replicated state.  The semilattice merge of CRDTs suffices but
+is stronger than required: convergence follows from any monotone functional
 spec.
 
 \subsection{Systems and canonical runs}
@@ -1225,7 +1224,7 @@ Two familiar concurrency control examples make this concrete. Two-phase locking
 (2PL) orders transactions pairwise through lock requests: when $B$ waits for a
 lock $A$ holds, the 2PL \commitment $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else.
 Multiversion timestamp ordering (MVTO)~\cite{bernstein1981concurrency} orders transactions totally through timestamp
-assignment: the MVTO \commitment $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet
+assignment: the MVTO \commitment $\mathsf{stamp}(B)$ orders $B$ before any transaction not yet
 stamped. The two systems' bespoke \commitments each leave different possibilities
 afterward (Figure~\ref{fig:cc-commitments}).
 
