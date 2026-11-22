@@ -1272,7 +1272,7 @@ the conclusions an observer may draw by combining them.} The spec must permit
 such combinations, but no participant emits them, and availability does not
 need them.
 
-\begin{definition}[Explicit possibility relation]
+\begin{definition}[Explicit relation]
 \label{def:explicit-relation}
 An \emph{explicit possibility relation}, or \emph{explicit relation}, is a set
 $E\subseteq P$ of rows whose outputs participants actually emit. Write $E(i)$
@@ -1282,10 +1282,10 @@ for its outputs at input $i$.
 \textcolor{newblue}{Like Gilbert and Lynch, we examine a replicated register: a key-value store
 with a single key, starting at $v_0$.} \removednote{\textbf{unclassified}, 4 words, rank 104; \textit{It starts at [math].}} Participant $p$ receives write $w(v)$
 and emits its acknowledgment; concurrently, participant $q$ receives the read
-$r$ and emits $v_0$. These two outputs are in $E$. A client that collects
+$r$ and emits $v_0$. These two outputs are in $E$. \textcolor{newblue}{A client that collects
 both responses sees the pair, which is in $P\setminus E$: a linearizable
 register spec permits it, since a linearization may place the read before the
-write, and must, since the pair \outrel both local outputs. \removednote{\textbf{unclassified}, 15 words, rank 86; \textit{Had the write finished before the read began, the spec would not permit the pair.}}
+write.} \removednote{\textbf{unclassified}, 15 words, rank 86; \textit{Had the write finished before the read began, the spec would not permit the pair.}}
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
@@ -1293,8 +1293,8 @@ separates the participants.
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
 A \emph{partitioned history} divides the participants into two or more
-sides and contains no receive whose matching send lies on another side. Same-side messages are allowed, and participants still receive environment
-input and emit outputs.
+sides and contains no receive whose matching send lies on another side. \textcolor{newblue}{Same-side messages are allowed; participants also receive environment
+input and emit outputs.}
 \end{definition}
 
 We consider a system whose participants each follow a strategy that depends
@@ -1305,9 +1305,9 @@ participant can still emit every explicit output its state permits. \removednote
 \begin{definition}[Availability]
 \label{def:partition-notions}
 Consider a partitioned history that the system produces, in which participant
-$p$ ends in state $(i,R)$. A \emph{same-side continuation} for $p$ extends that
+$p$ ends in state $(i,R)$. \textcolor{newblue}{A \emph{same-side continuation} for $p$ extends that
 history with events the system can produce on $p$'s side alone, with no new
-input and no message from another side. Participant $p$ can emit $o$ when some same-side continuation for $p$ emits
+input, and no message from another side.} Participant $p$ can emit $o$ when some same-side continuation for $p$ emits
 $o$. \textcolor{newblue}{The system has \emph{Availability for $E$} when, in every
 such history, each participant $p$ can emit every output in $R(i)\cap E(i)$.}
 \end{definition}
