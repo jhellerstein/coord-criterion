@@ -1507,16 +1507,15 @@ emitting the log $[A]$ rules out $[B,A]$ by \commitment, though both logs
 yield the same output.
 
 An unnecessary \commitment is one the upstream makes but the composite does
-not need.  To find them, we first make precise which rows an output removes
-by \commitment.  Take rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$:
-the upstream emits $m$ at input $i$, and $k$ is an input that may still
-arrive.  If some row at $k$ covers both outputs, that is, some $m'\in P_1(k)$
-has $m\preceq_M m'$ and $x\preceq_M m'$, then emitting $m$ either keeps $(k,x)$
-or subsumes it, and nothing is lost.  If none does, emitting $m$ at $\sigma_{P_1}(i)$ removes
-$(k,x)$ by \commitment, and we say that $\preceq_M$ \emph{separates} the two
-rows.  The
-same test makes sense with any order $\preceq'_M$ on $M$ in place of
-$\preceq_M$, and for rows of the composite under $\OutputOrd$.
+not need.  Canonical \commitments (Definition~\ref{def:subsumed-excluded})
+already say which rows an output removes by \commitment.  What is new here
+is a pairwise form of that test with the order as a parameter, so that it
+applies to either stage and to other orders on $M$.  Take rows $(i,m)$ and $(k,x)$ of $P_1$
+with $i\InputOrd k$.  An order $\preceq'_M$ on $M$ \emph{separates} them when
+no row at $k$ covers both outputs: no $m'\in P_1(k)$ has $m\preceq'_M m'$ and
+$x\preceq'_M m'$.  Under $\preceq_M$, these are exactly the rows $(k,x)$ that
+emitting $m$ at the canonical state $\sigma_{P_1}(i)$ removes by \commitment.
+The composite separates its rows the same way under $\OutputOrd$.
 
 \begin{definition}[Tight pipeline, Proper Coordination]
 \label{def:tight}
