@@ -276,11 +276,11 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 
 /-! ### Tight and proper pipelines -/
 
-/-- "Throughout, we compare rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k`, at
-`k`.  Suppose such rows are inconsistent at `k`.  Emitting `m` at `σ_{P₁}(i)` then requires a commitment that removes
-`(k,x)` (Definition `def:subsumed-excluded`)."  Lean: rows inconsistent at `k`
-under a relation `r` on `M` is `Tight.Conf P r` (with `r = ≼_M` here, `⊑` in
-the theorem); the removal by commitment is `Tight.excluded_canon_iff`. -/
+/-- From Def. `def:tight`: rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k` are
+"inconsistent at `k`, so that emitting `m` at `σ_{P₁}(i)` must remove `(k,x)`
+(Definition `def:subsumed-excluded`)."  Lean: rows inconsistent at `k` under a
+relation `r` on `M` is `Tight.Conf P r` (with `r = ≼_M` here, `⊑` in the
+theorem); the removal by commitment is `Tight.excluded_canon_iff`. -/
 theorem «sec:proper-coordination/inconsistent-rows» {I M : Type} [PO I] [PO M] (sp : Spec I M)
     {i : I} {m : M} (hm : sp.P i m) (k : I) (x : M) :
     Excluded (canon sp i) m k x ↔ Tight.Conf sp.P PO.le i m k x :=
@@ -288,8 +288,9 @@ theorem «sec:proper-coordination/inconsistent-rows» {I M : Type} [PO I] [PO M]
 
 /-- **Definition `def:tight`** (Tight pipeline): "A pipeline in which `𝒮₁`
 guards `𝒮₂` is tight when its upstream makes no unnecessary commitment:
-whenever rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k` are inconsistent at `k`, some answers
-`o ∈ P₂(m)` and `y ∈ P₂(x)` are inconsistent at `k` in the composite."  Lean: `Tight.Tight`, unfolded; in
+whenever rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k` are inconsistent at `k`,
+so that emitting `m` at `σ_{P₁}(i)` must remove `(k,x)` …, some of their
+answers are inconsistent at `k` in the composite."  Lean: `Tight.Tight`, unfolded; in
 terms of canonical commitments it is `Tight.tight_iff_excluded`. -/
 theorem «def:tight» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M) (sk : Spec M O) :
     Tight.Tight sp sk ↔ ∀ i m k x, Tight.Conf sp.P PO.le i m k x →

@@ -2144,22 +2144,17 @@ them than the composition needs. Suppose two commands $A$ and $B$ commute,
 and the store's outputs do not record their order, as when it reports its
 state. Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
 yet the composite needs no \commitment there, since both logs lead to the same
-output.
-
-\textcolor{reviewed}{An unnecessary \commitment is one that prevents a failure of Lifted
-Monotonicity in the upstream that leads to no failure in the composite.} \textcolor{reviewed}{Throughout, we compare rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$,
-at $k$.} \textcolor{reviewed}{Suppose such rows are inconsistent at $k$.} Emitting $m$ at $\sigma_{P_1}(i)$ then requires a
-\commitment that removes $(k,x)$ (Definition~\ref{def:subsumed-excluded}). \textcolor{reviewed}{If
-every pair of answers $(i,o)$ and $(k,y)$, with $o\in P_2(m)$ and
-$y\in P_2(x)$, is consistent at $k$ in the composite, the composite needs no
-such \commitment, and the upstream's is unnecessary.}
+output. \textcolor{reviewed}{That \commitment is \emph{unnecessary}: it prevents a
+failure of Lifted Monotonicity in the upstream that leads to no failure in the
+composite.}
 
 \begin{definition}[Tight pipeline, Proper Coordination]
 \label{def:tight}
 \label{def:proper-coordination}
 \textcolor{reviewed}{A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
-upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$ are
-inconsistent at $k$, some answers $o\in P_2(m)$ and $y\in P_2(x)$ are
+upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
+of $P_1$ with $i\InputOrd k$ are inconsistent at $k$, so that emitting $m$ at
+$\sigma_{P_1}(i)$ must remove $(k,x)$ (Definition~\ref{def:subsumed-excluded}), some of their answers are
 inconsistent at $k$ in the composite.} \textcolor{reviewed}{Its coordination is \emph{proper} when
 it is guarded and tight.}
 \end{definition}
