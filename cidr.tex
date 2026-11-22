@@ -1072,11 +1072,9 @@ consistent, while transaction runs that emit $[A,B]$ and $[B,A]$ are not, since
 that fiber is not directed.
 
 Complete CALM allows us to apply Lifted Monotonicity to check consistency
-without assessing runs. Lifted
-Monotonicity is checked on the table itself, and pairs of rows suffice: if every
-two rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$, then
-so does every finite family of such rows.  Two rows of the family have a
-common \outnoun $u\in\fiber{j}$, so replacing them with the single row $(j,u)$
+without assessing runs, and it suffices to check pairs of rows. If every
+two rows with a common \indesc $j$ have a common \outnoun $u \in \fiber{j}$,
+replacing them with the single row $(j,u)$
 leaves a smaller family with the same common \indesc, and repeating this
 leaves one row.
 
@@ -1692,13 +1690,9 @@ placement by an input order in which $I\cup J$ \inrel $I$ only when $J$ is
 domain-distinct (or domain-disjoint) from $I$; under these orders each form is
 functional monotonicity, so Functional CALM gives their characterizations.  Li
 and Lee prove CALM for replicated objects with write, merge, and query
-operations~\cite{li2025coordinationfree}; in our terms, theirs is the case of
-set inputs ordered by inclusion and arbitrary partially ordered outputs.  Their
-goal, a coordination-free implementation, is also ours: by
-Lemma~\ref{lem:confluence-legality}, a spec's runs are consistent exactly when
-none of them needs a \commitment.  The difference is the setting: they prove
-the equivalence for an operational model of replicated objects, and we prove it
-for specs.
+operations~\cite{li2025coordinationfree}. In our terms, they study the case of
+set inputs ordered by inclusion and arbitrary partially ordered outputs; they prove
+equivalence for an operational model of replicated objects.
 
 Baccaert and Ketsman were the first to consider nondeterministic specs in a
 CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}, which
@@ -1723,17 +1717,17 @@ replica that has not yet received every update.  Such a query risks Lamport's an
 monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
 
-The client-visible spec is a composition (\S\ref{sec:composition}).  A state
+The client-visible spec is a composition (\S\ref{sec:composition}).  A semilattice
 stage $s$ takes the set of updates a replica has received, ordered by
 inclusion, to their join in the semilattice; it guards a query stage $q$ that
-answers a client's query on that state.  The state stage is monotone by
+answers a client's query on that state.  The semilattice stage is monotone by
 construction and needs no \commitment, so by Proposition~\ref{prop:guard-test}
 and Lemma~\ref{lem:composition} the composite $q\circ s$ is consistent whenever
 $q$ is monotone on the states $s$ can reach.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
 test: a later removal grows $R$ and shrinks the answer.  The composite is then
-not monotone, and since the state stage needs no \commitment, the pipeline is
+not monotone, and since the semilattice stage needs no \commitment, the pipeline is
 not guarded (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
 on the query.  An answer that exposes an element as present blocks its removal
 before it arrives, the third pattern above.  The two-phase set does not enforce the block: it accepts the
