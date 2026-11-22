@@ -276,8 +276,8 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 
 /-! ### Tight and proper pipelines -/
 
-/-- "Suppose rows `(i,m)` and `(k,x)` of `P₁`, with `i ≼ k`, are inconsistent at
-`k`.  Emitting `m` at `σ_{P₁}(i)` then requires a commitment that removes
+/-- "Throughout, we compare rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k`, at
+`k`.  Suppose such rows are inconsistent at `k`.  Emitting `m` at `σ_{P₁}(i)` then requires a commitment that removes
 `(k,x)` (Definition `def:subsumed-excluded`)."  Lean: rows inconsistent at `k`
 under a relation `r` on `M` is `Tight.Conf P r` (with `r = ≼_M` here, `⊑` in
 the theorem); the removal by commitment is `Tight.excluded_canon_iff`. -/
@@ -288,7 +288,7 @@ theorem «sec:proper-coordination/inconsistent-rows» {I M : Type} [PO I] [PO M]
 
 /-- **Definition `def:tight`** (Tight pipeline): "A pipeline in which `𝒮₁`
 guards `𝒮₂` is tight when its upstream makes no unnecessary commitment:
-whenever rows `(i,m)` and `(k,x)` of `P₁` are inconsistent at `k`, some answers
+whenever rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k` are inconsistent at `k`, some answers
 `o ∈ P₂(m)` and `y ∈ P₂(x)` are inconsistent at `k` in the composite."  Lean: `Tight.Tight`, unfolded; in
 terms of canonical commitments it is `Tight.tight_iff_excluded`. -/
 theorem «def:tight» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M) (sk : Spec M O) :
@@ -317,14 +317,15 @@ theorem «sec:proper-coordination/downstream-order» {M O : Type} [PO M] [PO O] 
 /-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Let `𝒮₁`
 guard `𝒮₂`.  (1) The pipeline is guarded exactly when `m ≼_M m'` implies
 `m ⊑ m'` for all outputs `m, m'` of `𝒮₁`.  (2) If the pipeline is guarded,
-two rows of `P₁` with answers inconsistent in the composite are inconsistent
-under `⊑`, and rows inconsistent under `⊑` are inconsistent under every order
-on `M` for which the pipeline is guarded, including `≼_M`.  (3) If the
+rows of `P₁` with answers inconsistent at `k` in the composite are
+inconsistent at `k` under `⊑`, and rows inconsistent at `k` under `⊑` are
+inconsistent at `k` under every order on `M` for which the pipeline is guarded,
+including `≼_M`.  (3) If the
 pipeline is guarded and every fiber `P₂(m)` at an output `m` of `𝒮₁` has a
-greatest element, as when `𝒮₂` is functional, then two rows are inconsistent
-under `⊑` exactly when some of their answers are inconsistent in the
-composite.  So the coordination is proper exactly when `≼_M` and `⊑` make the
-same pairs of rows inconsistent."  Lean: (1)
+greatest element, as when `𝒮₂` is functional, then rows are inconsistent at
+`k` under `⊑` exactly when some of their answers are inconsistent at `k` in
+the composite.  So the coordination is proper exactly when `≼_M` and `⊑` make
+the same pairs of rows inconsistent at `k`."  Lean: (1)
 `Tight.proper_iff_le_dle`; (2) `Tight.dleConf_of_compConf` and
 `Tight.conf_of_dleConf`, with every other order in
 `«thm:proper-coordination/any-order»`; (3) `Tight.dleConf_iff_compConf` and
@@ -350,8 +351,8 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
      ⟨fun h => (Tight.tight_iff hP htop).1 h.2, fun h => ⟨hP, (Tight.tight_iff hP htop).2 h⟩⟩⟩⟩
 
 /-- Theorem `thm:proper-coordination`(2), second half, for an arbitrary order:
-"rows inconsistent under `⊑` are inconsistent under every order on `M` for
-which the pipeline is guarded."  Lean: `Tight.conf_of_dleConf_under`; `inst` is the
+"rows inconsistent at `k` under `⊑` are inconsistent at `k` under every order
+on `M` for which the pipeline is guarded."  Lean: `Tight.conf_of_dleConf_under`; `inst` is the
 other order on `M`, and `Joint.underOut`/`Joint.underIn` are the same tables
 with `M` ordered by it. -/
 theorem «thm:proper-coordination/any-order» {I M O : Type} [PO I] [PO O] {_instM : PO M}
@@ -364,7 +365,7 @@ theorem «thm:proper-coordination/any-order» {I M O : Type} [PO I] [PO O] {_ins
 open Tight Tight.Log Comp Guard in
 /-- "The commuting log is guarded but not tight: `({A},[A])` and
 `({A,B},[B,A])` are inconsistent at `{A,B}` under the prefix order but
-consistent under `⊑`."  With the motivating
+consistent there under `⊑`."  With the motivating
 paragraph: "Suppose two commands `A` and `B` commute, and the store's outputs
 do not record their order, as when it reports its state."  Lean:
 `Tight.Log.commuting`, with two increments and the store answering a log with

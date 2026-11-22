@@ -166,7 +166,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 105 & 11819\\
+unclassified & 105 & 11826\\
 signposting & 6 & 375\\
 explanation & 2 & 256\\
 formal definition/notation & 6 & 116\\
@@ -184,7 +184,7 @@ related-work detail & 1 & 61\\
 9. unclassified, 198 words: \textit{The question of coordination-free consistency becomes clear in this model: ...}\par
 10. unclassified, 192 words: \textit{The theorem has two parts.}\par
 11. unclassified, 184 words: \textit{In any history of a monotone functional specification, every participant ...}\par
-12. unclassified, 176 words: \textit{Functional CALM restates the result as a property of a ...}\par
+12. unclassified, 179 words: \textit{If the pipeline is guarded and every fiber [math] at ...}\par
 }\par\medskip
 \noindent{\color{newblue}Blue: new or edited for CIDR.}\quad{\color{cutred}Red: removed from the full version.}\par
 
@@ -963,7 +963,7 @@ $X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.} \remov
 \end{definition}
 
 \textcolor{newblue}{With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).} \removednote{\textbf{unclassified}, 158 words, rank 15; \textit{In general it is exactly Relational Monotonicity together with directed fibers.}} \textcolor{newblue}{Lifted
+(Definition~\ref{def:functional-monotonicity}).} \removednote{\textbf{unclassified}, 158 words, rank 16; \textit{In general it is exactly Relational Monotonicity together with directed fibers.}} \textcolor{newblue}{Lifted
 Monotonicity holds exactly when both Relational Monotonicity and directed fibers
 hold.}
 
@@ -1496,7 +1496,7 @@ output of $\Spec_1$ needs a \commitment. \removednote{\textbf{unclassified}, 42 
 
 This answers the opening puzzle. \textcolor{newblue}{The store restricted to logs needs no
 \commitment, so locks in the store would be pure overhead, and the pipeline is
-consistent whenever the log is.} \removednote{\textbf{unclassified}, 158 words, rank 16; \textit{The store as a whole is not monotone, so by Corollary some output of the log ...}} \textcolor{newblue}{The store as a whole is not monotone, so some
+consistent whenever the log is.} \removednote{\textbf{unclassified}, 158 words, rank 17; \textit{The store as a whole is not monotone, so by Corollary some output of the log ...}} \textcolor{newblue}{The store as a whole is not monotone, so some
 output of the log needs a \commitment, and consensus provides it.}
 
 \paragraph{Tight and proper pipelines.}
@@ -1506,8 +1506,8 @@ emitting the log $[A]$ rules out $[B,A]$ by \commitment, though both logs
 yield the same output.}
 
 An unnecessary \commitment is one that prevents a failure of Lifted
-Monotonicity in the upstream that leads to no failure in the composite. Suppose rows $(i,m)$ and $(k,x)$ of $P_1$, with $i\InputOrd k$, are
-inconsistent at $k$. \textcolor{newblue}{Emitting $m$ at $\sigma_{P_1}(i)$ then requires a
+Monotonicity in the upstream that leads to no failure in the composite. Throughout, we compare rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$,
+at $k$. Suppose such rows are inconsistent at $k$. \textcolor{newblue}{Emitting $m$ at $\sigma_{P_1}(i)$ then requires a
 \commitment that removes $(k,x)$.} If every pair of answers $(i,o)$ and $(k,y)$,
 with $o\in P_2(m)$ and $y\in P_2(x)$, is consistent at $k$ in the composite,
 the composite needs no such \commitment, and the upstream's is unnecessary.
@@ -1516,8 +1516,8 @@ the composite needs no such \commitment, and the upstream's is unnecessary.
 \label{def:tight}
 \label{def:proper-coordination}
 A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
-upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$ of
-$P_1$ are inconsistent at $k$, some answers $o\in P_2(m)$ and $y\in P_2(x)$ are
+upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$ are
+inconsistent at $k$, some answers $o\in P_2(m)$ and $y\in P_2(x)$ are
 inconsistent at $k$ in the composite. Its coordination is \emph{proper} when
 it is guarded and tight.
 \end{definition}
@@ -1538,25 +1538,26 @@ Let $\Spec_1$ guard $\Spec_2$.
 The pipeline is guarded exactly when $m\preceq_M m'$ implies
         $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.
 \item
-\textcolor{newblue}{If it is guarded, two rows of $P_1$ with answers inconsistent in the
-        composite are inconsistent under $\sqsubseteq$, and rows inconsistent
-        under $\sqsubseteq$ are inconsistent under every order on $M$ for which
-        the pipeline is guarded, including $\preceq_M$.} \removednote{\textbf{unclassified}, 174 words, rank 13; \textit{If the pipeline is guarded and every fiber [math] at an output [math] of [math] has ...}}
+\textcolor{newblue}{If it is guarded, rows of $P_1$ with answers inconsistent at $k$ in
+        the composite are inconsistent at $k$ under $\sqsubseteq$, and rows
+        inconsistent at $k$ under $\sqsubseteq$ are inconsistent at $k$ under
+        every order on $M$ for which the pipeline is guarded, including
+        $\preceq_M$.} \removednote{\textbf{unclassified}, 179 words, rank 12; \textit{If the pipeline is guarded and every fiber [math] at an output [math] of [math] has ...}}
 \item
 \textcolor{newblue}{If, moreover, each $P_2(m)$ has a greatest element, as when $\Spec_2$
-        is functional, two rows are inconsistent under $\sqsubseteq$ exactly
-        when some of their answers are inconsistent in the composite, so the
-        pipeline is proper exactly when $\preceq_M$ and $\sqsubseteq$ make the
-        same pairs inconsistent.}
+        is functional, rows are inconsistent at $k$ under $\sqsubseteq$ exactly
+        when some of their answers are inconsistent at $k$ in the composite, so
+        the pipeline is proper exactly when $\preceq_M$ and $\sqsubseteq$ make
+        the same pairs inconsistent at $k$.}
 \end{enumerate}
 \end{theorem}
 \textcolor{newblue}{\proofinfull}
 
 The commuting log is guarded but not tight: $(\{A\},[A])$ and
-$(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the prefix order but
-consistent under $\sqsubseteq$. \textcolor{newblue}{Generalized
+$(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the prefix order but consistent there
+under $\sqsubseteq$. \textcolor{newblue}{Generalized
 Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} avoid
-such \commitments by ordering only commands that do not commute.} \removednote{\textbf{unclassified}, 157 words, rank 17; \textit{When the store's outputs do not record the order of commuting commands, they bring the log ...}} \removednote{\textbf{unclassified}, 13 words, rank 99; \textit{Guarded pipelines show how an upstream stage can discharge a pipeline's obligations.}} \textcolor{newblue}{Without
+such \commitments by ordering only commands that do not commute.} \removednote{\textbf{unclassified}, 159 words, rank 15; \textit{When the store's outputs do not record the order of commuting commands, they bring the log ...}} \removednote{\textbf{unclassified}, 13 words, rank 99; \textit{Guarded pipelines show how an upstream stage can discharge a pipeline's obligations.}} \textcolor{newblue}{Without
 greatest answers a gap can remain: when the downstream may give any of several
 answers, the upstream must commit before it sees which one, while a single
 implementation of the composite could correlate the two choices~\extended.} \textcolor{newblue}{That gap is the price of splitting the work into stages.}
@@ -1612,7 +1613,7 @@ and output orders. \textcolor{newblue}{The CALM Theorem of Ameloot et al.\ is st
 particular operational model: a query (which is a function) can be evaluated on a network of
 relational transducers without coordination exactly when it is monotone, under
 that model's assumptions about data placement and
-execution~\cite{ameloot2013relational,ameloot2015weaker}.} \removednote{\textbf{unclassified}, 176 words, rank 12; \textit{Functional CALM restates the result as a property of a spec, so that it can be ...}} \textcolor{newblue}{Functional CALM restates the
+execution~\cite{ameloot2013relational,ameloot2015weaker}.} \removednote{\textbf{unclassified}, 176 words, rank 13; \textit{Functional CALM restates the result as a property of a spec, so that it can be ...}} \textcolor{newblue}{Functional CALM restates the
 theorem as a property of a spec but does not replace those operational
 details.} \textcolor{newblue}{When transducers know how data is placed, more queries become
 coordination-free; Ameloot et al.\ characterized these classes by

@@ -1506,8 +1506,8 @@ yield the same output.
 
 An unnecessary \commitment is one that prevents a failure of Lifted
 Monotonicity in the upstream that leads to no failure in the composite.
-Suppose rows $(i,m)$ and $(k,x)$ of $P_1$, with $i\InputOrd k$, are
-inconsistent at $k$.  Emitting $m$ at $\sigma_{P_1}(i)$ then requires a
+Throughout, we compare rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$,
+at $k$.  Suppose such rows are inconsistent at $k$.  Emitting $m$ at $\sigma_{P_1}(i)$ then requires a
 \commitment that removes $(k,x)$.  If every pair of answers $(i,o)$ and $(k,y)$,
 with $o\in P_2(m)$ and $y\in P_2(x)$, is consistent at $k$ in the composite,
 the composite needs no such \commitment, and the upstream's is unnecessary.
@@ -1516,8 +1516,8 @@ the composite needs no such \commitment, and the upstream's is unnecessary.
 \label{def:tight}
 \label{def:proper-coordination}
 A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
-upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$ of
-$P_1$ are inconsistent at $k$, some answers $o\in P_2(m)$ and $y\in P_2(x)$ are
+upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$ are
+inconsistent at $k$, some answers $o\in P_2(m)$ and $y\in P_2(x)$ are
 inconsistent at $k$ in the composite.  Its coordination is \emph{proper} when
 it is guarded and tight.
 \end{definition}
@@ -1536,22 +1536,23 @@ Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
   \item The pipeline is guarded exactly when $m\preceq_M m'$ implies
         $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.
-  \item If it is guarded, two rows of $P_1$ with answers inconsistent in the
-        composite are inconsistent under $\sqsubseteq$, and rows inconsistent
-        under $\sqsubseteq$ are inconsistent under every order on $M$ for which
-        the pipeline is guarded, including $\preceq_M$.
+    \item If it is guarded, rows of $P_1$ with answers inconsistent at $k$ in
+        the composite are inconsistent at $k$ under $\sqsubseteq$, and rows
+        inconsistent at $k$ under $\sqsubseteq$ are inconsistent at $k$ under
+        every order on $M$ for which the pipeline is guarded, including
+        $\preceq_M$.
   \item If, moreover, each $P_2(m)$ has a greatest element, as when $\Spec_2$
-        is functional, two rows are inconsistent under $\sqsubseteq$ exactly
-        when some of their answers are inconsistent in the composite, so the
-        pipeline is proper exactly when $\preceq_M$ and $\sqsubseteq$ make the
-        same pairs inconsistent.
+        is functional, rows are inconsistent at $k$ under $\sqsubseteq$ exactly
+        when some of their answers are inconsistent at $k$ in the composite, so
+        the pipeline is proper exactly when $\preceq_M$ and $\sqsubseteq$ make
+        the same pairs inconsistent at $k$.
 \end{enumerate}
 \end{theorem}
 \proofinfull
 
 The commuting log is guarded but not tight: $(\{A\},[A])$ and
-$(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the prefix order but
-consistent under $\sqsubseteq$.  Generalized
+$(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the prefix order but consistent there
+under $\sqsubseteq$.  Generalized
 Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} avoid
 such \commitments by ordering only commands that do not commute.  Without
 greatest answers a gap can remain: when the downstream may give any of several
