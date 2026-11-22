@@ -1344,18 +1344,21 @@ $E$.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-First assume the spec escapes CAP for $E$, and take rows $(i_r,o_r)$ of $E$
-with a common \indesc $j$.  Put participant $r$ alone on a side with input
-$i_r$; Availability lets it emit $o_r$, and Partition Consistency leaves some
-row $(j,u)$ in every participant's state (Proposition~\ref{prop:confluence}).
-That $u$ \outrel every $o_r$ (Lemma~\ref{lem:run-residual}), so Lifted
-Monotonicity for $E$ follows.  Now assume Lifted Monotonicity for $E$.  The
-canonical system never waits, so it has Availability for $E$.  At a common
-\indesc $j$ of the participants' current inputs, the outputs emitted on all
-sides have a common \outnoun $u$ in $\fiber{j}$, and every participant keeps
-$(j,u)$, since it makes no \commitments of its own
-(Lemma~\ref{lem:run-residual}).  So all can continue to a common state at $j$,
-and Partition Consistency follows.  \fullproof
+First assume the spec escapes CAP for $E$.  Take rows $(i_r,o_r)$ of $E$ and
+an input $j$ that \inrel every $i_r$.  Put each participant $r$ alone on a side
+with input $i_r$, so Availability lets it emit $o_r$.  Partition Consistency
+then lets all participants reach one state at $j$, so some row $(j,u)$ survives
+in every participant's state (Proposition~\ref{prop:confluence}).  That $u$
+\outrel every $o_r$ (Lemma~\ref{lem:run-residual}), which is Lifted
+Monotonicity for $E$.
+
+Now assume Lifted Monotonicity for $E$.  The canonical system never waits, so
+it has Availability for $E$.  Let $j$ be an input that \inrel every
+participant's current input.  Some output $u$ at $j$ \outrel every output
+emitted on any side.  Each participant makes no \commitments of its own, so it
+still has $(j,u)$ (Lemma~\ref{lem:run-residual}).  All participants can
+therefore continue to one state at $j$, which is Partition Consistency.
+\fullproof
 \end{proof}
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.

@@ -432,22 +432,23 @@ $E$.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-First assume the spec escapes CAP for $E$, and take finitely many rows
-$(i_r,o_r)$ of $E$ with a common \indesc $j$.  In a partitioned history, put
-participant $r$ alone on its side with input $i_r$; Availability lets it emit
-$o_r$.  Partition Consistency makes the final cut confluent at $j$, so some row
-$(j,u)$ remains in every participant's state
-(Proposition~\ref{prop:confluence}), and $u$ \outrel every $o_r$
-(Lemma~\ref{lem:run-residual}).  So Lifted Monotonicity for $E$ follows.  Now
-assume Lifted Monotonicity for $E$.  The canonical system's participants never
-wait: each can emit any output of $E$ that its state allows, so it has
-Availability for $E$.  Let $j$ be a common \indesc of the participants' current
-inputs.  The outputs emitted on all sides are outputs of $E$, so they have a
-common \outnoun $u$ in $\fiber{j}$.  Each participant still has the row
-$(j,u)$, since it makes no \commitments of its own and $u$ \outrel every output
-it emitted (Lemma~\ref{lem:run-residual}).  So the participants can all
-continue to a common state at $j$, and Partition Consistency follows.  Full
-proof in Appendix~\ref{app:proofs-sec4}.
+First assume the spec escapes CAP for $E$.  Take finitely many rows
+$(i_r,o_r)$ of $E$ and an input $j$ that \inrel every $i_r$.  In a partitioned
+history, put each participant $r$ alone on a side with input $i_r$, so
+Availability lets it emit $o_r$.  Partition Consistency makes the final cut
+confluent at $j$, so some row $(j,u)$ survives in every participant's state
+(Proposition~\ref{prop:confluence}).  That $u$ \outrel every $o_r$
+(Lemma~\ref{lem:run-residual}), which is Lifted Monotonicity for $E$.
+
+Now assume Lifted Monotonicity for $E$.  The canonical system's participants
+never wait: each can emit any output of $E$ that its state allows, so the
+system has Availability for $E$.  Let $j$ be an input that \inrel every
+participant's current input.  The outputs emitted on all sides are outputs of
+$E$, so some output $u$ at $j$ \outrel all of them.  Each participant makes no
+\commitments of its own and $u$ \outrel every output it emitted, so it still
+has $(j,u)$ (Lemma~\ref{lem:run-residual}).  All participants can therefore
+continue to one state at $j$, which is Partition Consistency.  Full proof in
+Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as the voters in the election of Section~\ref{sec:election-story} show.
