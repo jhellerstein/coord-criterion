@@ -315,24 +315,22 @@ theorem «sec:proper-coordination/downstream-order» {M O : Type} [PO M] [PO O] 
       (∀ a b c, Tight.dle P₂ a b → Tight.dle P₂ b c → Tight.dle P₂ a c) :=
   ⟨fun _ _ => Tight.graph_dle_iff, fun _ _ _ h1 h2 => Tight.dle_trans h1 h2⟩
 
-/-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Let `𝒮₁`
-guard `𝒮₂`.  (1) The pipeline is guarded exactly when `m ≼_M m'` implies
-`m ⊑ m'` for all outputs `m, m'` of `𝒮₁`.  (2) If the pipeline is guarded,
-rows of `P₁` with answers inconsistent at `k` in the composite are
-inconsistent at `k` under `⊑`, and rows inconsistent at `k` under `⊑` are
-inconsistent at `k` under every order on `M` for which the pipeline is guarded,
-including `≼_M`.  (3) If the
-pipeline is guarded and every fiber `P₂(m)` at an output `m` of `𝒮₁` has a
-greatest element, as when `𝒮₂` is functional, then rows are inconsistent at
-`k` under `⊑` exactly when some of their answers are inconsistent at `k` in
-the composite.  So the coordination is proper exactly when `≼_M` and `⊑` make
-the same pairs of rows inconsistent at `k`."  Lean: (1)
+/-- **Theorem `thm:upstream-canonicalization`** (Upstream Canonicalization):
+"Let `𝒮₁` guard `𝒮₂`.  (1) An order on `M` keeps the pipeline guarded exactly
+when it is contained in `⊑` on the outputs of `𝒮₁`.  (2) Under every such
+order, the upstream's canonical commitments include those under `⊑`, and these
+include every commitment the composite needs.  (3) If each `P₂(m)` has a
+greatest element, as when `𝒮₂` is functional, the upstream's canonical
+commitments under `⊑` are exactly the composite's.  So a guarded pipeline is
+proper exactly when `≼_M` requires no more commitments than `⊑`."  A canonical
+commitment removing `(k,x)` at `σ_{P₁}(i)` corresponds to a pair inconsistent at
+`k` (`Tight.excluded_canon_iff`).  Lean: (1)
 `Tight.proper_iff_le_dle`; (2) `Tight.dleConf_of_compConf` and
 `Tight.conf_of_dleConf`, with every other order in
-`«thm:proper-coordination/any-order»`; (3) `Tight.dleConf_iff_compConf` and
+`«thm:upstream-canonicalization/any-order»`; (3) `Tight.dleConf_iff_compConf` and
 `Tight.tight_iff` (a greatest element is `Tight.HasTop`).  The functional
 case of (3) needs no guardedness: `Tight.graph_conf_iff`. -/
-theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
+theorem «thm:upstream-canonicalization» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
     (Guard.Proper sp sk ↔ ∀ m m', Joint.Img sp m → Joint.Img sp m' → m ≼ m' →
       Tight.dle sk.P m m') ∧
@@ -351,12 +349,11 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
    fun hP htop => ⟨fun _ _ _ _ hi hk => Tight.dleConf_iff_compConf hP htop hi hk,
      ⟨fun h => (Tight.tight_iff hP htop).1 h.2, fun h => ⟨hP, (Tight.tight_iff hP htop).2 h⟩⟩⟩⟩
 
-/-- Theorem `thm:proper-coordination`(2), second half, for an arbitrary order:
-"rows inconsistent at `k` under `⊑` are inconsistent at `k` under every order
-on `M` for which the pipeline is guarded."  Lean: `Tight.conf_of_dleConf_under`; `inst` is the
+/-- Theorem `thm:upstream-canonicalization`(2), first half, for an arbitrary order:
+"Under every such order, the upstream's canonical commitments include those under `⊑`."  Lean: `Tight.conf_of_dleConf_under`; `inst` is the
 other order on `M`, and `Joint.underOut`/`Joint.underIn` are the same tables
 with `M` ordered by it. -/
-theorem «thm:proper-coordination/any-order» {I M O : Type} [PO I] [PO O] {_instM : PO M}
+theorem «thm:upstream-canonicalization/any-order» {I M O : Type} [PO I] [PO O] {_instM : PO M}
     (inst : PO M) (sp : @Spec I M _ _instM) (sk : @Spec M O _instM _)
     (hP : @Guard.Proper I M O _ inst _ (Joint.underOut inst sp) (Joint.underIn inst sk))
     {i m k x} (h : Tight.Conf (@Spec.P I M _ _instM sp) (Tight.dle (@Spec.P M O _instM _ sk)) i m k x) :

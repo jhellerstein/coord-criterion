@@ -2153,40 +2153,40 @@ composite.}
 \label{def:proper-coordination}
 \textcolor{reviewed}{A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
 upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
-of $P_1$ with $i\InputOrd k$ are inconsistent at $k$, so that emitting $m$ at
-$\sigma_{P_1}(i)$ must remove $(k,x)$ (Definition~\ref{def:subsumed-excluded}), some of their answers are
-inconsistent at $k$ in the composite.} \textcolor{reviewed}{Its coordination is \emph{proper} when
-it is guarded and tight.}
+of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
+$(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
+are inconsistent at $k$ in $P_2\circ P_1$.}
+
+\textcolor{reviewed}{A pipeline's coordination is \emph{proper} when it is guarded and tight.}
 \end{definition}
 
-\textcolor{reviewed}{To measure the upstream against the downstream, write $m\sqsubseteq m'$ when
-every finite set of outputs in $P_2(m)$ has a common extension in $P_2(m')$, and
-read consistency of rows of $P_1$ \emph{under} $\sqsubseteq$ by using
-$\sqsubseteq$ in place of $\preceq_M$.} \textcolor{reviewed}{For a functional downstream $f$, $m\sqsubseteq
-m'$ exactly when $f(m)\OutputOrd f(m')$.} \textcolor{reviewed}{The relation $\sqsubseteq$ is
-transitive but need not be an order: logs that the store answers alike
-are equivalent under it.}
+\textcolor{reviewed}{Tightness compares the upstream's canonical \commitments with those the
+composite needs.} \textcolor{reviewed}{The upstream's order on $M$ decides which \commitments are
+canonical, and the commuting log shows it can demand too many: it orders
+$[A,B]$ and $[B,A]$, although the store treats them alike.} \textcolor{reviewed}{We therefore ask
+for an order on $M$ under which the upstream's canonical \commitments are
+exactly the composite's.} \textcolor{reviewed}{Write $m\sqsubseteq m'$ when every finite set of
+outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read consistency
+of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments
+that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$.} \textcolor{reviewed}{For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
+$f(m)\OutputOrd f(m')$.}
 
-\begin{theorem}[Proper Coordination]
-\label{thm:proper-coordination}
+\begin{theorem}[Upstream Canonicalization]
+\label{thm:upstream-canonicalization}
 \textcolor{reviewed}{Let $\Spec_1$ guard $\Spec_2$.}
 \begin{enumerate}
 \item
-\textcolor{reviewed}{The pipeline is guarded exactly when $m\preceq_M m'$ implies
-        $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.}
+\textcolor{reviewed}{An order on $M$ keeps the pipeline guarded exactly when it is
+        contained in $\sqsubseteq$ on the outputs of $\Spec_1$.}
 \item
-\textcolor{reviewed}{If the pipeline is guarded, rows of $P_1$ with answers inconsistent at
-        $k$ in the composite are inconsistent at $k$ under $\sqsubseteq$, and
-        rows inconsistent at $k$ under $\sqsubseteq$ are inconsistent at $k$
-        under every order on $M$ for which the pipeline is guarded, including
-        $\preceq_M$.}
+\textcolor{reviewed}{Under every such order, the upstream's canonical \commitments include
+        those under $\sqsubseteq$, and these include every \commitment the
+        composite needs.}
 \item
-If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
-        of $\Spec_1$ has a greatest element, as when $\Spec_2$ is functional,
-        then rows are inconsistent at $k$ under $\sqsubseteq$ exactly when some
-        of their answers are inconsistent at $k$ in the composite. So the
-        coordination is proper exactly when $\preceq_M$ and $\sqsubseteq$ make
-        the same pairs of rows inconsistent at $k$.
+\textcolor{reviewed}{If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
+        functional, the upstream's canonical \commitments under $\sqsubseteq$
+        are exactly the composite's.} \textcolor{reviewed}{So a guarded pipeline is proper exactly
+        when $\preceq_M$ requires no more \commitments than $\sqsubseteq$.}
 \end{enumerate}
 \end{theorem}
 
@@ -2203,13 +2203,16 @@ and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$. Full pro
 Appendix~\ref{app:composition}.
 \end{proof}
 
-By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
-upstream commit less than $\sqsubseteq$ does. \textcolor{reviewed}{The commuting log is guarded but
-not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the prefix order but consistent there
-under $\sqsubseteq$.} \textcolor{reviewed}{Generalized Paxos~\cite{lamport2005generalized} and
-EPaxos~\cite{moraru2013epaxos} avoid such \commitments: they order only
-commands that do not commute.} When the store's outputs do not record the
-order of commuting commands, they bring the log closer to a tight pipeline. Reversing the order
+\textcolor{reviewed}{Upstream canonicalization is the route to Proper Coordination: when the
+downstream's answers have greatest elements, an upstream ordered by
+$\sqsubseteq$ makes exactly the \commitments the composition needs.} \textcolor{reviewed}{Since
+$\sqsubseteq$ is transitive but need not be an order, adopting it means
+treating values the downstream answers alike, such as logs that differ only in
+the order of commuting commands, as equal.} \textcolor{reviewed}{The commuting log is guarded but
+not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$
+under the prefix order but consistent there under $\sqsubseteq$.} \textcolor{reviewed}{Generalized
+Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} move
+toward $\sqsubseteq$ by ordering only commands that do not commute.} Reversing the order
 on $M$ in the boolean toggle below is reordering by $\sqsubseteq$. Without
 greatest answers, a gap can remain. Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
@@ -4968,7 +4971,7 @@ in the state's table, and at $\sigma_{P_1}(i)$ that table has the fiber
 $P_1(k)$ at $k$. So a spec satisfies Lifted Monotonicity exactly when no rows $(i,m)$ and $(k,x)$ with $i\InputOrd k$ are inconsistent at $k$
 (Proposition~\ref{prop:common-expansion-form}).
 
-\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
+\begin{proof}[Proof of Theorem~\ref{thm:upstream-canonicalization}]
 (1) By Proposition~\ref{prop:guard-test}, the pipeline is guarded exactly when
 $\Spec_2$ satisfies the common-extension condition on the outputs of
 $\Spec_1$. For outputs $m\preceq_M m'$, that condition at $m'$ for finitely

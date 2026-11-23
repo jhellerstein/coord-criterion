@@ -2218,47 +2218,48 @@ output.  That \commitment is \emph{unnecessary}: it prevents a
 failure of Lifted Monotonicity in the upstream that leads to no failure in the
 composite.\cxbar{composition-23}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\begin{definition}[Tight pipeline, Proper Coordination]
+\color{black!45}\begin{definition}[Tight pipeline, Proper Coordination]
 \label{def:tight}
 \label{def:proper-coordination}
-\cxtag{composition:24}{N/M}\cxbar{composition-24}{0.4 0.4 1}{s}A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
+\cxtag{composition:24}{C}A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
 upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
-of $P_1$ with $i\InputOrd k$ are inconsistent at $k$, so that emitting $m$ at
-$\sigma_{P_1}(i)$ must remove $(k,x)$ (Definition~\ref{def:subsumed-excluded}), some of their answers are
-inconsistent at $k$ in the composite.  Its coordination is \emph{proper} when
-it is guarded and tight.\cxbar{composition-24}{0.4 0.4 1}{e}\color{black}
+of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
+$(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
+are inconsistent at $k$ in $P_2\circ P_1$.\color{black}
+
+\color{black!45}\cxtag{composition:25}{C}A pipeline's coordination is \emph{proper} when it is guarded and tight.\color{black}
 \end{definition}
 
-\color{black!45}\cxtag{composition:25}{C}To measure the upstream against the downstream, write $m\sqsubseteq m'$ when
-every finite set of outputs in $P_2(m)$ has a common extension in $P_2(m')$, and
-read consistency of rows of $P_1$ \emph{under} $\sqsubseteq$ by using
-$\sqsubseteq$ in place of $\preceq_M$.  For a functional downstream $f$, $m\sqsubseteq
-m'$ exactly when $f(m)\OutputOrd f(m')$.  The relation $\sqsubseteq$ is
-transitive but need not be an order: logs that the store answers alike
-are equivalent under it.\color{black}
+\color{black!45}\cxtag{composition:26}{C}Tightness compares the upstream's canonical \commitments with those the
+composite needs.  The upstream's order on $M$ decides which \commitments are
+canonical, and the commuting log shows it can demand too many: it orders
+$[A,B]$ and $[B,A]$, although the store treats them alike.  We therefore ask
+for an order on $M$ under which the upstream's canonical \commitments are
+exactly the composite's.  Write $m\sqsubseteq m'$ when every finite set of
+outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read consistency
+of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments
+that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$.
+For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
+$f(m)\OutputOrd f(m')$.\color{black}
 
-\color{black}\begin{theorem}[Proper Coordination]
-\label{thm:proper-coordination}
-\cxtag{composition:26}{N/M}\cxbar{composition-26}{0.4 0.4 1}{s}Let $\Spec_1$ guard $\Spec_2$.
+\color{black!45}\begin{theorem}[Upstream Canonicalization]
+\label{thm:upstream-canonicalization}
+\cxtag{composition:27}{C}Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item The pipeline is guarded exactly when $m\preceq_M m'$ implies
-        $m\sqsubseteq m'$ for all outputs $m,m'$ of $\Spec_1$.
-    \item If the pipeline is guarded, rows of $P_1$ with answers inconsistent at
-        $k$ in the composite are inconsistent at $k$ under $\sqsubseteq$, and
-        rows inconsistent at $k$ under $\sqsubseteq$ are inconsistent at $k$
-        under every order on $M$ for which the pipeline is guarded, including
-        $\preceq_M$.
-  \item If the pipeline is guarded and every fiber $P_2(m)$ at an output $m$
-        of $\Spec_1$ has a greatest element, as when $\Spec_2$ is functional,
-        then rows are inconsistent at $k$ under $\sqsubseteq$ exactly when some
-        of their answers are inconsistent at $k$ in the composite.  So the
-        coordination is proper exactly when $\preceq_M$ and $\sqsubseteq$ make
-        the same pairs of rows inconsistent at $k$.\cxbar{composition-26}{0.4 0.4 1}{e}\color{black}
+  \item An order on $M$ keeps the pipeline guarded exactly when it is
+        contained in $\sqsubseteq$ on the outputs of $\Spec_1$.
+  \item Under every such order, the upstream's canonical \commitments include
+        those under $\sqsubseteq$, and these include every \commitment the
+        composite needs.
+  \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
+        functional, the upstream's canonical \commitments under $\sqsubseteq$
+        are exactly the composite's.  So a guarded pipeline is proper exactly
+        when $\preceq_M$ requires no more \commitments than $\sqsubseteq$.\color{black}
 \end{enumerate}
 \end{theorem}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{composition:27}{N/M}\cxbar{composition-27}{0.4 0.4 1}{s}(1) restates Proposition~\ref{prop:guard-test} through the common-extension
+\cxtag{composition:28}{N/M}\cxbar{composition-28}{0.4 0.4 1}{s}(1) restates Proposition~\ref{prop:guard-test} through the common-extension
 condition.  (2) Suppose $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then
 answers $o\in P_2(m)$ and $y\in P_2(x)$ have extensions in $P_2(m')$, which is
 directed by (1), so some $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$
@@ -2267,16 +2268,19 @@ guarded is contained in $\sqsubseteq$ by (1), so it makes at least as many
 pairs inconsistent.  (3) With
 greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
 and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
-Appendix~\ref{app:composition}.\cxbar{composition-27}{0.4 0.4 1}{e}\color{black}
+Appendix~\ref{app:composition}.\cxbar{composition-28}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{composition:28}{N/M}\cxbar{composition-28}{0.4 0.4 1}{s}By (1) and (2), no order on $M$ under which the pipeline is guarded lets the
-upstream commit less than $\sqsubseteq$ does.  The commuting log is guarded but
-not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the prefix order but consistent there
-under $\sqsubseteq$.  Generalized Paxos~\cite{lamport2005generalized} and
-EPaxos~\cite{moraru2013epaxos} avoid such \commitments: they order only
-commands that do not commute.  When the store's outputs do not record the
-order of commuting commands, they bring the log closer to a tight pipeline.  Reversing the order
+\color{black}\cxtag{composition:29}{N/M}\cxbar{composition-29}{0.4 0.4 1}{s}Upstream canonicalization is the route to Proper Coordination: when the
+downstream's answers have greatest elements, an upstream ordered by
+$\sqsubseteq$ makes exactly the \commitments the composition needs.  Since
+$\sqsubseteq$ is transitive but need not be an order, adopting it means
+treating values the downstream answers alike, such as logs that differ only in
+the order of commuting commands, as equal.  The commuting log is guarded but
+not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$
+under the prefix order but consistent there under $\sqsubseteq$.  Generalized
+Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} move
+toward $\sqsubseteq$ by ordering only commands that do not commute.  Reversing the order
 on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
 greatest answers, a gap can remain.  Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
@@ -2287,20 +2291,20 @@ guarded.  Yet the composite permits every number at both
 inputs and needs no \commitment: a single implementation could answer at
 $\mathit{lo}$ and later give the same answer at $\mathit{hi}$.  The upstream
 must commit before it sees the downstream's answer, and the remaining gap is
-the price of splitting the work into stages.\cxbar{composition-28}{0.4 0.4 1}{e}\color{black}
+the price of splitting the work into stages.\cxbar{composition-29}{0.4 0.4 1}{e}\color{black}
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-\color{black}\cxtag{composition:29}{N/M}\cxbar{composition-29}{0.4 0.4 1}{s}Guarded pipelines show how an upstream
+\color{black}\cxtag{composition:30}{N/M}\cxbar{composition-30}{0.4 0.4 1}{s}Guarded pipelines show how an upstream
 stage can discharge a pipeline's \commitment obligations.
 \emph{Composite CALM} asks a stronger question: when does a pipeline need no
 \commitment at any stage?  If every stage is monotone, the answer is immediate:
 by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
 a \commitment.  The interesting case has a non-monotone stage, and it raises a
-simpler puzzle than our opening one.\cxbar{composition-29}{0.4 0.4 1}{e}\color{black}
+simpler puzzle than our opening one.\cxbar{composition-30}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{composition:30}{N/M}\cxbar{composition-30}{0.4 0.4 1}{s}Consider the spec for an incrementing counter that is capped at $9$, and
+\color{black}\cxtag{composition:31}{N/M}\cxbar{composition-31}{0.4 0.4 1}{s}Consider the spec for an incrementing counter that is capped at $9$, and
 compose it with a downstream spec for a double-digit threshold test, which
 outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.
 Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
@@ -2309,23 +2313,23 @@ answer must be final: unchanging in the face of more input.  Then the output ord
 emit \textsf{false} without a \commitment, since a later count of $10$ would
 contradict it.  Yet when composed after the capped counter, the pair of
 stages needs no \commitment.  When do composed specs erase the need for
-\commitment entirely?\cxbar{composition-30}{0.4 0.4 1}{e}\color{black}
+\commitment entirely?\cxbar{composition-31}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{composition:31}{N/M}\cxbar{composition-31}{0.4 0.4 1}{s}The composite is itself an \spectype.  By Complete CALM, its runs are
+\color{black}\cxtag{composition:32}{N/M}\cxbar{composition-32}{0.4 0.4 1}{s}The composite is itself an \spectype.  By Complete CALM, its runs are
 consistent exactly when it satisfies Lifted Monotonicity, and then no output needs a
 \commitment (Theorem~\ref{thm:complete-calm},
 Proposition~\ref{prop:exposure-boundary}).  The orders on $I$ and $O$ are part
 of the composite's contract with its environment.  The order on $M$ is not:
 the composite's table never mentions it, and some order on $M$ may make both
 stages monotone.  A composite can be jointly monotone, with no stage needing a
-\commitment, in three ways.\cxbar{composition-31}{0.4 0.4 1}{e}\color{black}
+\commitment, in three ways.\cxbar{composition-32}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{composition:32}{N/M}\cxbar{composition-32}{0.4 0.4 1}{s}First, every stage is monotone, as noted above.  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape.  A
+\color{black}\cxtag{composition:33}{N/M}\cxbar{composition-33}{0.4 0.4 1}{s}First, every stage is monotone, as noted above.  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape.  A
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
 compositions of monotone functions are monotone, so monotonicity of $q$ on the
-whole state domain suffices.\cxbar{composition-32}{0.4 0.4 1}{e}\color{black}
+whole state domain suffices.\cxbar{composition-33}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{composition:33}{N/M}\cxbar{composition-33}{0.4 0.4 1}{s}Second, the upstream can filter out the inputs on which the downstream is not
+\color{black}\cxtag{composition:34}{N/M}\cxbar{composition-34}{0.4 0.4 1}{s}Second, the upstream can filter out the inputs on which the downstream is not
 monotone.  In the example above, the test fails monotonicity only when the
 count passes from single to double digits, and the capped counter never does
 so.  Restricted to the counts it does produce, the test always answers
@@ -2333,91 +2337,91 @@ so.  Restricted to the counts it does produce, the test always answers
 including equality.  By Proposition~\ref{prop:guard-test}, the pipeline
 is guarded, and since the capped counter is itself monotone, neither stage needs
 a \commitment (Proposition~\ref{prop:joint-monotone}(2)).  This is proper
-coordination in which the upstream itself needs no \commitment.\cxbar{composition-33}{0.4 0.4 1}{e}\color{black}
+coordination in which the upstream itself needs no \commitment.\cxbar{composition-34}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{composition:34}{N/M}\cxbar{composition-34}{0.4 0.4 1}{s}Third, a different order on $M$ can make two non-monotone stages monotone.
+\color{black}\cxtag{composition:35}{N/M}\cxbar{composition-35}{0.4 0.4 1}{s}Third, a different order on $M$ can make two non-monotone stages monotone.
 Consider two stages that each negate a boolean, so that their composite is the
 identity.  We order the booleans with false below true for $I$, $O$, and $M$.
 Neither stage is monotone, since each maps true, the larger value, to false.
 Reversing the order on $M$, so that true lies below false, makes both stages
 monotone, and the composite is the identity either way
-(Appendix~\ref{app:composition}).\cxbar{composition-34}{0.4 0.4 1}{e}\color{black}
+(Appendix~\ref{app:composition}).\cxbar{composition-35}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{proposition}[Jointly monotone composites]
 \label{prop:joint-monotone}
-\cxtag{composition:35}{N/M}\cxbar{composition-35}{0.4 0.4 1}{s}The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, so its runs are
+\cxtag{composition:36}{N/M}\cxbar{composition-36}{0.4 0.4 1}{s}The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, so its runs are
 consistent and it needs no \commitment, in each of the following cases.
 \begin{enumerate}
   \item $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity.
   \item $\Spec_1$ satisfies Lifted Monotonicity; $\Spec_2$ satisfies it on
         $\Spec_1$'s outputs.
   \item $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity via a different order
-        on $M$.\cxbar{composition-35}{0.4 0.4 1}{e}\color{black}
+        on $M$.\cxbar{composition-36}{0.4 0.4 1}{e}\color{black}
 \end{enumerate}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{composition:36}{N/M}\cxbar{composition-36}{0.4 0.4 1}{s}(1) is Lemma~\ref{lem:composition}.  (2) The proof of the lemma uses only
+\cxtag{composition:37}{N/M}\cxbar{composition-37}{0.4 0.4 1}{s}(1) is Lemma~\ref{lem:composition}.  (2) The proof of the lemma uses only
 intermediate values in fibers of $\Spec_1$.  (3) The composite joins the two
 tables on the intermediate value and never compares two intermediate values, so
 its table does not depend on the order on $M$.  The lemma then applies under
-the different order.  Full proof in Appendix~\ref{app:composition}.\cxbar{composition-36}{0.4 0.4 1}{e}\color{black}
+the different order.  Full proof in Appendix~\ref{app:composition}.\cxbar{composition-37}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{composition:37}{N/M}\cxbar{composition-37}{0.4 0.4 1}{s}The three cases do not cover every monotone composite
-(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a \commitment even though the composite is monotone.\cxbar{composition-37}{0.4 0.4 1}{e}\color{black}
+\color{black}\cxtag{composition:38}{N/S}The three cases do not cover every monotone composite
+(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a \commitment even though the composite is monotone.\color{black}
 
 \subsection{Intersection}
 \label{sec:intersection}
 
-\color{black}\cxtag{composition:38}{N/S}Sequential composition feeds the outputs of one spec to the inputs of the
+\color{black}\cxtag{composition:39}{N/M}\cxbar{composition-39}{0.4 0.4 1}{s}Sequential composition feeds the outputs of one spec to the inputs of the
 next.  Specs can also be combined on a shared interface.  An application spec,
 such as a replicated store that answers reads by a fixed rule, may promise
 nothing about isolation, while a consistency property, such as an isolation
 level, constrains the same reads.  A system that meets both may produce only
-the rows that both permit.\color{black}
+the rows that both permit.\cxbar{composition-39}{0.4 0.4 1}{e}\color{black}
 
 \color{black}\begin{definition}[Intersection]
 \label{def:intersection}
-\cxtag{composition:39}{N/M}\cxbar{composition-39}{0.4 0.4 1}{s}Let $\Spec_1=(I,\InputOrd,O,\OutputOrd,P_1)$ and
+\cxtag{composition:40}{N/M}\cxbar{composition-40}{0.4 0.4 1}{s}Let $\Spec_1=(I,\InputOrd,O,\OutputOrd,P_1)$ and
 $\Spec_2=(I,\InputOrd,O,\OutputOrd,P_2)$ share their ordered domains.  Their
 \emph{intersection} $\Spec_1\cap\Spec_2$ has table $P_1\cap P_2$.  It is an
 \spectype when $P_1\cap P_2$ is total on $I$: every input has an output that
-both permit.\cxbar{composition-39}{0.4 0.4 1}{e}\color{black}
+both permit.\cxbar{composition-40}{0.4 0.4 1}{e}\color{black}
 \end{definition}
 
-\color{black}\cxtag{composition:40}{N/M}\cxbar{composition-40}{0.4 0.4 1}{s}The shared domains matter.  For example, isolation levels are defined on
+\color{black}\cxtag{composition:41}{N/M}\cxbar{composition-41}{0.4 0.4 1}{s}The shared domains matter.  For example, isolation levels are defined on
 histories of reads, writes, and commits, so an application spec must describe
-its inputs and outputs in those terms before it can be intersected with one.\cxbar{composition-40}{0.4 0.4 1}{e}\color{black}
+its inputs and outputs in those terms before it can be intersected with one.\cxbar{composition-41}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\cxtag{composition:41}{N/M}\cxbar{composition-41}{0.4 0.4 1}{s}Intersection does not preserve Lifted Monotonicity.  Let $a$ and $b$ be
+\color{black}\cxtag{composition:42}{N/S}Intersection does not preserve Lifted Monotonicity.  Let $a$ and $b$ be
 incomparable outputs, each below both $c$ and $d$, with $c$ and $d$
 incomparable, and let both specs have a single input.  The fiber $\{a,b,c\}$ is
 directed, since $c$ \outrel each of its members, and so is $\{a,b,d\}$.  The
 intersection of the two fibers, $\{a,b\}$, is not: no output in it \outrel
 both $a$ and $b$.  Two specs that need no \commitment can thus have an
 intersection that does.  A
-monotone bound rules this out.\cxbar{composition-41}{0.4 0.4 1}{e}\color{black}
+monotone bound rules this out.\color{black}
 
 \color{black}\begin{proposition}[Intersection under a monotone bound]
 \label{prop:intersection-bound}
-\cxtag{composition:42}{N/S}Let $g:I\to O$ be monotone.  Suppose that every output $\Spec_1$ permits at an
+\cxtag{composition:43}{N/M}\cxbar{composition-43}{0.4 0.4 1}{s}Let $g:I\to O$ be monotone.  Suppose that every output $\Spec_1$ permits at an
 input $j$ lies below $g(j)$, and that $\Spec_1$ and $\Spec_2$ both permit $g(j)$
 at every $j$.  Then $\Spec_1\cap\Spec_2$ is an \spectype and satisfies Lifted
-Monotonicity.\color{black}
+Monotonicity.\cxbar{composition-43}{0.4 0.4 1}{e}\color{black}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{composition:43}{N/M}\cxbar{composition-43}{0.4 0.4 1}{s}The intersection permits $g(j)$ at every $j$, so it is total.  An output it
+\cxtag{composition:44}{N/M}\cxbar{composition-44}{0.4 0.4 1}{s}The intersection permits $g(j)$ at every $j$, so it is total.  An output it
 permits at $i\InputOrd j$ lies below $g(i)$, and $g(i)\OutputOrd g(j)$, so
 $g(j)$ \outrel every output it permits at inputs below $j$.  Full proof in
-Appendix~\ref{app:intersection}.\cxbar{composition-43}{0.4 0.4 1}{e}\color{black}
+Appendix~\ref{app:intersection}.\cxbar{composition-44}{0.4 0.4 1}{e}\color{black}
 \end{proof}
 
-\color{black}\cxtag{composition:44}{N/M}\cxbar{composition-44}{0.4 0.4 1}{s}A store whose answers follow a monotone rule therefore stays monotone when
+\color{black}\cxtag{composition:45}{N/M}\cxbar{composition-45}{0.4 0.4 1}{s}A store whose answers follow a monotone rule therefore stays monotone when
 intersected with any property that permits the rule's answers.
 Section~\ref{sec:hat-instance} uses this construction for isolation levels and
-a key-value store.\cxbar{composition-44}{0.4 0.4 1}{e}\color{black}
+a key-value store.\cxbar{composition-45}{0.4 0.4 1}{e}\color{black}
 
 \section{Related Work and Mappings}
 \label{sec:instances}
@@ -5097,7 +5101,7 @@ in the state's table, and at $\sigma_{P_1}(i)$ that table has the fiber
 $P_1(k)$ at $k$.  So a spec satisfies Lifted Monotonicity exactly when no rows $(i,m)$ and $(k,x)$ with $i\InputOrd k$ are inconsistent at $k$
 (Proposition~\ref{prop:common-expansion-form}).\cxbar{composition-51}{0.4 0.4 1}{e}\color{black}
 
-\color{black}\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
+\color{black}\begin{proof}[Proof of Theorem~\ref{thm:upstream-canonicalization}]
 \cxtag{composition:52}{N/M}\cxbar{composition-52}{0.4 0.4 1}{s}(1) By Proposition~\ref{prop:guard-test}, the pipeline is guarded exactly when
 $\Spec_2$ satisfies the common-extension condition on the outputs of
 $\Spec_1$.  For outputs $m\preceq_M m'$, that condition at $m'$ for finitely

@@ -241,8 +241,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:tight»
 #check @CC.Paper.«def:proper-coordination»
 #check @CC.Paper.«sec:proper-coordination/downstream-order»
-#check @CC.Paper.«thm:proper-coordination»
-#check @CC.Paper.«thm:proper-coordination/any-order»
+#check @CC.Paper.«thm:upstream-canonicalization»
+#check @CC.Paper.«thm:upstream-canonicalization/any-order»
 #check @CC.Paper.«sec:proper-coordination/commuting-log»
 #check @CC.Paper.«sec:proper-coordination/gap»
 #check @CC.Paper.«sec:composite-calm/all-monotone»

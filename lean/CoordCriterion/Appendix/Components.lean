@@ -43,7 +43,7 @@ composition is the library's `Comp.seq`; the values an upstream can offer are
   `offered_available` (on the offered interface the empty-basis downstream
   admits a commitment-free following run for every admitted upstream run),
   `Component.proper_follows`, `Component.proper_run` (Theorem
-  `thm:proper-coordination`(2) for the runs a component admits),
+  Theorem `thm:guarded-pipelines` for the runs a component admits),
   `ofSys_free`, `ofSys_eraseSys_commitmentFree`.
 
 Modeling choices: an `OperationalRun` names its initial input and one emitted
@@ -590,7 +590,7 @@ theorem offered_available {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp 
   exact ⟨implementationProper_of_downstream_commitmentFree p (ofCommitmentBasis_empty_commitmentFree _),
     w, hin, hout, sysExec_emptyCommitmentBasis_coordFree hx⟩
 
-/-- **Theorem `thm:proper-coordination`(2), following, for the runs an
+/-- **Theorem `thm:guarded-pipelines`, following, for the runs an
 implementation admits.**  In a proper pipeline, for every run an upstream
 implementation admits that emits `m :: ms`, the empty-basis `𝒮₂|_{𝒮₁}`
 follows it, and the merged trace is a run of `P₂ ∘ P₁` (`Guard.proper_follows`). -/
@@ -606,7 +606,7 @@ theorem Component.proper_follows {sp : Spec I M} {sk : Spec M O} (hP : Guard.Pro
         ρ'.cur = r.final.cur :=
   Guard.proper_follows hP (c.sound r h).legal he
 
-/-- **Theorem `thm:proper-coordination`(2), the composite run, for the runs an
+/-- **Theorem `thm:guarded-pipelines`, the composite run, for the runs an
 implementation admits** (`Guard.proper_run`): any empty-basis run of
 `𝒮₂|_{𝒮₁}` that receives each output of an admitted upstream run and answers
 it any number of times gives a run of `P₂ ∘ P₁` whose table contains the

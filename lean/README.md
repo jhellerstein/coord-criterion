@@ -424,8 +424,8 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«def:tight»` | theorem | **Definition `def:tight`** (Tight pipeline): |
 | `«def:proper-coordination»` | def | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/downstream-order»` | theorem | "To measure the upstream against the downstream, write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read cons… |
-| `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
-| `«thm:proper-coordination/any-order»` | theorem | Theorem `thm:proper-coordination`(2), second half, for an arbitrary order: |
+| `«thm:upstream-canonicalization»` | theorem | **Theorem `thm:upstream-canonicalization`** (Upstream Canonicalization): |
+| `«thm:upstream-canonicalization/any-order»` | theorem | Theorem `thm:upstream-canonicalization`(2), first half, for an arbitrary order: |
 | `«sec:proper-coordination/commuting-log»` | theorem | "The commuting log is guarded but not tight: |
 | `«sec:proper-coordination/gap»` | theorem | "Without greatest answers, a gap can remain. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |

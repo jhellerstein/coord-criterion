@@ -166,7 +166,7 @@ theorem conf_of_dleConf {sp : Spec I M} {sk : Spec M O} (hP : Proper sp sk)
 
 /-- **Every composite conflict comes from a `dle`-conflict**, for any choice of
 witnesses, in a proper pipeline.  (This refines Theorem
-`thm:proper-coordination`(3).) -/
+Corollary `cor:upstream-commitments`.) -/
 theorem dleConf_of_compConf {sp : Spec I M} {sk : Spec M O} (hP : Proper sp sk)
     {i m k x o y} (hi : sp.P i m) (hk : sp.P k x) (hm : sk.P m o) (hx : sk.P x y)
     (hc : Conf (seq sp sk).P PO.le i o k y) : Conf sp.P (dle sk.P) i m k x := by

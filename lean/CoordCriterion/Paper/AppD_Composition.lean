@@ -12,7 +12,7 @@ stated in Section `sec:composition` and recorded in
 appendix: composition with independent inputs and its curried evaluation, the
 component-commitment example, the Guarded pipelines subsection with its
 corollaries, the covering argument, the counterexamples, and Examples
-`ex:committed-log-composition` and `ex:bare-reads`.  The Tight and proper pipelines subsection (`app:tight`) is recorded with Theorem `thm:proper-coordination` in `Paper/S5_Composition.lean`.
+`ex:committed-log-composition` and `ex:bare-reads`.  The Tight and proper pipelines subsection (`app:tight`) is recorded with Theorem `thm:upstream-canonicalization` in `Paper/S5_Composition.lean`.
 Unlabeled claims are `«app:composition/<slug>»`.
 
 Library: `Appendix/Composition.lean` (namespace `CC.Comp`), the examples at
