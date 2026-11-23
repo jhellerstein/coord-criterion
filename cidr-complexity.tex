@@ -184,7 +184,7 @@ unified framework says exactly
 what coordination a spec needs, and when.  A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
-\emph{Proper Coordination} identifies which stage of a composition must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs, explaining designs such
+A composition of specs has \emph{tight coordination} when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  We show how to order the upstream's outputs to achieve it, explaining designs such
 as consensus logs in front of a replicated store.
 \end{abstract}
 
@@ -333,8 +333,8 @@ partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directl
 mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
-In a composition of specs, \emph{Proper Coordination}
-identifies which stage must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs.  In state-machine replication, for example, the consensus log
+In a composition of specs, coordination is \emph{tight}
+when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  Guard Tightening shows how to order the upstream's outputs to achieve it.  In state-machine replication, for example, the consensus log
 makes every \commitment; the replicated store needs none, so any coordination it employs is overhead
 (\S\ref{sec:composition}).\cxbar{16}{0.4 0.4 1}{e}
 
@@ -358,7 +358,7 @@ makes every \commitment; the replicated store needs none, so any coordination it
 \cxtag{20}{N/M}\cxbar{20}{0.4 0.4 1}{s}\emph{3. Constructive results for coordination.} We define \commitments,
         the underlying contracts that coordination mechanisms can enforce,
         and identify exactly the \commitments a non-monotone spec requires.
-        Specs compose by equijoin, and Proper Coordination identifies the stage that must make the \commitments, certifying that later stages need none and that it makes no more than the composition needs.\cxbar{20}{0.4 0.4 1}{e}
+        Specs compose by equijoin.  Coordination is tight when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  Guard Tightening shows how to order the upstream's outputs to achieve it.\cxbar{20}{0.4 0.4 1}{e}
 
 \color{black}\noindent
 \cxtag{21}{N/M}\cxbar{21}{0.4 0.4 1}{s}\emph{4. A map of the literature.} Highly Available Transactions, Invariant
@@ -1461,7 +1461,7 @@ theorem.  The full paper also derives the theorem in Gilbert and Lynch's asynchr
 model~\cite{hellerstein2026completecalmfull}.\cxbar{142}{0.4 0.4 1}{e}
 
 % ======================================================================
-\section{Composition and Proper Coordination}
+\section{Composition and Tight Coordination}
 \label{sec:composition}
 
 \color{black}\cxtag{143}{N/M}\cxbar{143}{0.4 0.4 1}{s}A replicated key-value store poses a puzzle.  With mutable values it is
@@ -1472,7 +1472,7 @@ all replicas execute the same commands in the same order.  But consensus is
 itself non-monotone: two concurrent commands may be appended in either order.
 The standard solution to non-monotonicity is more non-monotonicity!  Why does
 it work?  Our framework answers by locating the stage that makes the
-\commitments (\S\ref{sec:proper-coordination}).\cxbar{143}{0.4 0.4 1}{e}
+\commitments (\S\ref{sec:tight-coordination}).\cxbar{143}{0.4 0.4 1}{e}
 \label{sec:sequential-composition}
 
 \color{black}\cxtag{144}{N/S}Formally, consider two \spectype[s]
@@ -1503,28 +1503,29 @@ executes the log and outputs the responses.
 
 \color{black}\cxtag{146}{N/M}\cxbar{146}{0.4 0.4 1}{s}By associativity the lemma extends to finite pipelines.\cxbar{146}{0.4 0.4 1}{e}
 
-\subsection{Proper Coordination}
-\label{sec:proper-coordination}
+\subsection{Tight Coordination}
+\label{sec:tight-coordination}
 
 \color{black}\cxtag{147}{N/M}\cxbar{147}{0.4 0.4 1}{s}Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
 $\Spec_1$.\cxbar{147}{0.4 0.4 1}{e}
 
-\color{black}\begin{definition}[Guarded pipeline]
-\label{def:guarded}
-\cxtag{148}{N/M}\cxbar{148}{0.4 0.4 1}{s}A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{guarded} when
+\color{black}\begin{definition}[Sufficient guard]
+\label{def:sufficient-guard}
+\cxtag{148}{N/M}\cxbar{148}{0.4 0.4 1}{s}$\Spec_1$ is a \emph{sufficient guard} for $\Spec_2$ when
 $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
 reaches without \commitment is legal.\cxbar{148}{0.4 0.4 1}{e}
 \end{definition}
 
 \color{black}\begin{proposition}[Guard test]
 \label{prop:guard-test}
-\cxtag{149}{N/M}\cxbar{149}{0.4 0.4 1}{s}By the No-\commitment test, a pipeline is guarded exactly when
-$\Spec_2|_{\Spec_1}$ satisfies Lifted Monotonicity.\cxbar{149}{0.4 0.4 1}{e}
+\cxtag{149}{N/M}\cxbar{149}{0.4 0.4 1}{s}By the No-\commitment test, $\Spec_1$ is a sufficient guard for $\Spec_2$
+exactly when $\Spec_2|_{\Spec_1}$ satisfies Lifted Monotonicity.\cxbar{149}{0.4 0.4 1}{e}
 \end{proposition}
 
-\color{black}\begin{theorem}[Guarded pipelines]
-\label{thm:guarded-pipelines}
-\cxtag{150}{N/M}\cxbar{150}{0.4 0.4 1}{s}In a guarded pipeline, fix any system for $\Spec_1$.  Then
+\color{black}\begin{theorem}[Sufficient guards]
+\label{thm:sufficient-guards}
+\cxtag{150}{N/M}\cxbar{150}{0.4 0.4 1}{s}Let $\Spec_1$ be a sufficient guard for $\Spec_2$, and fix any system for
+$\Spec_1$.  Then
 $\Spec_2|_{\Spec_1}$ answers each of its outputs without \commitment, and the
 pipeline's runs are consistent whenever the system's are.
 \end{theorem}
@@ -1538,8 +1539,9 @@ two stages keep yields runs of $P_2\circ P_1$.  \fullproof\cxbar{150}{0.4 0.4 1}
 
 \color{black}\begin{corollary}[Upstream \commitments]
 \label{cor:upstream-commitments}
-\cxtag{152}{N/M}\cxbar{152}{0.4 0.4 1}{s}If a guarded pipeline's composite $P_2\circ P_1$ is not lifted monotone, some
-output of $\Spec_1$ needs a \commitment.\cxbar{152}{0.4 0.4 1}{e}
+\cxtag{152}{N/M}\cxbar{152}{0.4 0.4 1}{s}If $\Spec_1$ is a sufficient guard for $\Spec_2$ and the composite
+$P_2\circ P_1$ is not lifted monotone, some output of $\Spec_1$ needs a
+\commitment.\cxbar{152}{0.4 0.4 1}{e}
 \end{corollary}
 
 \color{black}\cxtag{153}{N/M}\cxbar{153}{0.4 0.4 1}{s}This answers the opening puzzle.  The store restricted to logs needs no
@@ -1547,27 +1549,29 @@ output of $\Spec_1$ needs a \commitment.\cxbar{152}{0.4 0.4 1}{e}
 consistent whenever the log is.  The store as a whole is not monotone, so some
 output of the log needs a \commitment, and consensus provides it.\cxbar{153}{0.4 0.4 1}{e}
 
-\paragraph{Tight and proper pipelines.}
-\color{black}\cxtag{154}{N/M}\cxbar{154}{0.4 0.4 1}{s}A guarded pipeline's upstream may still commit more than the composition
+\paragraph{Necessary and tight guards.}
+\color{black}\cxtag{154}{N/M}\cxbar{154}{0.4 0.4 1}{s}A sufficient guard may still commit more than the composition
 needs.  If commands $A$ and $B$ commute and the store reports only its state,
 emitting the log $[A]$ rules out $[B,A]$ by \commitment, though both logs
 yield the same output.  That \commitment is \emph{unnecessary}: it prevents a
 failure of Lifted Monotonicity in the upstream that leads to no failure in the
 composite.\cxbar{154}{0.4 0.4 1}{e}
 
-\color{black}\begin{definition}[Tight pipeline, Proper Coordination]
-\label{def:tight}
-\label{def:proper-coordination}
-\cxtag{155}{N/M}\cxbar{155}{0.4 0.4 1}{s}A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
-upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
+\color{black}\begin{definition}[Necessary guard, tight guard]
+\label{def:necessary-guard}
+\label{def:tight-guard}
+\cxtag{155}{N/M}\cxbar{155}{0.4 0.4 1}{s}$\Spec_1$ is a \emph{necessary guard} for $\Spec_2$ when it makes no
+unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
 of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
 $(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
 are inconsistent at $k$ in $P_2\circ P_1$.\cxbar{155}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{156}{N/M}\cxbar{156}{0.4 0.4 1}{s}A pipeline's coordination is \emph{proper} when it is guarded and tight.\cxbar{156}{0.4 0.4 1}{e}
+\color{black}\cxtag{156}{N/M}\cxbar{156}{0.4 0.4 1}{s}$\Spec_1$ is a \emph{tight guard} for $\Spec_2$ when it is both a
+sufficient and a necessary guard, and the pipeline's coordination is then
+\emph{tight}.\cxbar{156}{0.4 0.4 1}{e}
 \end{definition}
 
-\color{black}\cxtag{157}{N/M}\cxbar{157}{0.4 0.4 1}{s}Tightness compares the upstream's canonical \commitments with those the
+\color{black}\cxtag{157}{N/M}\cxbar{157}{0.4 0.4 1}{s}Necessity compares the upstream's canonical \commitments with those the
 composite needs.  The upstream's order on $M$ decides which \commitments are
 canonical, and the commuting log shows it can demand too many: it orders
 $[A,B]$ and $[B,A]$, although the store treats them alike.  We therefore ask
@@ -1579,33 +1583,37 @@ that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$.
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
 $f(m)\OutputOrd f(m')$.\cxbar{157}{0.4 0.4 1}{e}
 
-\color{black}\begin{theorem}[Upstream Canonicalization]
-\label{thm:upstream-canonicalization}
+\color{black}\begin{theorem}[Guard Tightening]
+\label{thm:guard-tightening}
 \cxtag{158}{N/M}\cxbar{158}{0.4 0.4 1}{s}Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item An order on $M$ keeps the pipeline guarded exactly when it is
-        contained in $\sqsubseteq$ on the outputs of $\Spec_1$.
-  \item Under every such order, the upstream's canonical \commitments include
-        those under $\sqsubseteq$, and these include every \commitment the
+  \item $\sqsubseteq$ is the coarsest order on $M$ under which $\Spec_1$ is a
+        sufficient guard for $\Spec_2$, and the upstream's canonical
+        \commitments under $\sqsubseteq$ include every \commitment the
         composite needs.
   \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
         functional, the upstream's canonical \commitments under $\sqsubseteq$
-        are exactly the composite's.  So a guarded pipeline is proper exactly
+        are exactly the composite's.  So a sufficient guard is tight exactly
         when $\preceq_M$ requires no more \commitments than $\sqsubseteq$.\cxbar{158}{0.4 0.4 1}{e}
 \end{enumerate}
 \end{theorem}
 \proofinfull
 
-\color{black}\cxtag{159}{N/M}\cxbar{159}{0.4 0.4 1}{s}Upstream canonicalization is the route to Proper Coordination: when the
-downstream's answers have greatest elements, an upstream ordered by
+\color{black}\cxtag{159}{N/M}\cxbar{159}{0.4 0.4 1}{s}A greatest element of $P_2(m)$ is one answer to $m$ that extends every
+other, as a functional downstream trivially has.  Guard Tightening is the route
+to tight coordination: when the downstream's answers have greatest elements, an upstream ordered by
 $\sqsubseteq$ makes exactly the \commitments the composition needs.  Since
 $\sqsubseteq$ is transitive but need not be an order, adopting it means
 treating values the downstream answers alike, such as logs that differ only in
-the order of commuting commands, as equal.  The commuting log is guarded but
-not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$
-under the prefix order but consistent there under $\sqsubseteq$.  Generalized
-Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} move
-toward $\sqsubseteq$ by ordering only commands that do not commute.  Without
+the order of commuting commands, as equal.  When the store's responses record the commands that produced them, the
+consensus log is a tight guard: execution is monotone and reflects the prefix
+order, so every \commitment the log makes is one the store's clients can
+observe.  The commuting log is a sufficient guard but not a necessary one:
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
+prefix order but consistent there under $\sqsubseteq$.  When commands commute
+and responses do not record their order, a log that orders only non-commuting
+commands, as in Generalized Paxos~\cite{lamport2005generalized} and
+EPaxos~\cite{moraru2013epaxos}, restores tightness.  Without
 greatest answers a gap can remain: when the downstream may give any of several
 answers, the upstream must commit before it sees which one, while a single
 implementation of the composite could correlate the two choices~\extended.
@@ -1619,7 +1627,7 @@ also erase a downstream stage's need.  A double-digit threshold test whose
 answers must be final, so that its output order is equality, cannot emit
 \textsf{false} without a \commitment, since a later count of $10$ would
 contradict it.  Behind a counter capped at $9$, it only ever answers
-\textsf{false}, which is monotone under any order: the pipeline is guarded
+\textsf{false}, which is monotone under any order: the counter is a sufficient guard
 (Proposition~\ref{prop:guard-test}), and since the counter is monotone,
 neither stage needs a \commitment.  The full paper extends these results to
 longer pipelines and acyclic graphs of stages~\extended.\cxbar{160}{0.4 0.4 1}{e}
@@ -1712,8 +1720,8 @@ $q$ is monotone on the states $s$ can reach.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
 test: a later removal grows $R$ and shrinks the answer.  The composite is then
-not monotone, and since the semilattice stage needs no \commitment, the pipeline is
-not guarded (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
+not monotone, and since the semilattice stage needs no \commitment, the semilattice
+stage is not a sufficient guard (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
 on the query.  An answer that exposes an element as present blocks its removal
 before it arrives, the third pattern above.  The two-phase set does not enforce the block: it accepts the
 removal, and the answer is contradicted.  The CRDT's join is one
@@ -1911,7 +1919,7 @@ Section~\ref{sec:composition}. Later tools moved from syntax to declared
 contracts and invariants in specific
 contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
 operation the weakest consistency or isolation level a storage system offers that still
-satisfies them. Proper Coordination instead shows where a composition's \commitments belong and which of them are unnecessary, without a fixed menu of levels.\cxbar{183}{0.4 0.4 1}{e}
+satisfies them. Tight coordination instead shows where a composition's \commitments belong and which of them are unnecessary, without a fixed menu of levels.\cxbar{183}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{184}{N/M}\cxbar{184}{0.4 0.4 1}{s}Underlying these issues is a reassessment of Codd's lesson of declarativity: how
 little structure must be declared to be
@@ -1940,7 +1948,7 @@ coordination: removing possibilities via \commitments. This simplicity
 leads to the generality of Complete CALM: a spec's runs are consistent exactly
 when it is lifted monotone, which reduces to textbook monotonicity for
 functional specs. Complete CAP follows as a corollary. \Commitments
-lead to Proper Coordination, explaining how to make the right commitments in compositions of non-monotone specs.\cxbar{185}{0.4 0.4 1}{e}
+lead to tight coordination, explaining how to make the right commitments in compositions of non-monotone specs.\cxbar{185}{0.4 0.4 1}{e}
 %  A totally ordered log
 % and a key-value store are each non-monotone on their own, yet when the log
 % guards the store, the log's \commitments are all the composition needs, and
@@ -1956,7 +1964,7 @@ needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, bringing formal models of provenance to
 concurrent systems. A third direction is to provide general-purpose static
-analysis and synthesis of properly coordinated systems in practical programming frameworks.\cxbar{186}{0.4 0.4 1}{e}
+analysis and synthesis of tightly coordinated systems in practical programming frameworks.\cxbar{186}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{187}{N/M}\cxbar{187}{0.4 0.4 1}{s}\begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.

@@ -2,6 +2,7 @@ import CoordCriterion.Appendix.Guarded
 import CoordCriterion.Appendix.JointMono
 import CoordCriterion.Appendix.ComponentSystems
 import CoordCriterion.Appendix.Intersection
+import CoordCriterion.Paper.S5_Composition
 
 /-!
 # Paper App. E, "Composition: Proofs and Details" (`appendices/composition.tex`)
@@ -10,9 +11,9 @@ Statement layer for Appendix `app:composition`.  The results it proves are
 stated in Section `sec:composition` and recorded in
 `Paper/S5_Composition.lean`; this file holds what appears only in the
 appendix: composition with independent inputs and its curried evaluation, the
-component-commitment example, the Guarded pipelines subsection with its
+component-commitment example, the Sufficient guards subsection with its
 corollaries, the covering argument, the counterexamples, and Examples
-`ex:committed-log-composition` and `ex:bare-reads`.  The Tight and proper pipelines subsection (`app:tight`) is recorded with Theorem `thm:upstream-canonicalization` in `Paper/S5_Composition.lean`.
+`ex:committed-log-composition` and `ex:bare-reads`.  The Necessary and tight guards subsection (`app:tight`) is recorded with Theorem `thm:guard-tightening` in `Paper/S5_Composition.lean`, except Proposition `prop:tight-guards`, which is here.
 Unlabeled claims are `«app:composition/<slug>»`.
 
 Library: `Appendix/Composition.lean` (namespace `CC.Comp`), the examples at
@@ -216,12 +217,12 @@ outputs are ordered by equality.  `𝒮₂` violates Lifted Monotonicity, since
 `[10 ≤ 9]` and `[10 ≤ 10]` differ: at `σ_{𝒮₂}(m)` with `m ≤ 9`, emitting
 `[10 ≤ m]` must remove the row `(10, true)` by commitment.  But `𝒮₂` satisfies
 Lifted Monotonicity on `{n ≤ 9}`, which contains the outputs of `𝒮₁`.  So the
-composite satisfies Lifted Monotonicity by case (2), the pipeline is guarded
-(Proposition `prop:guard-test`), and under the empty basis `𝒮₂|_{𝒮₁}`
+composite satisfies Lifted Monotonicity by case (2), `𝒮₁` is a sufficient
+guard for `𝒮₂` (Proposition `prop:guard-test`), and under the empty basis `𝒮₂|_{𝒮₁}`
 answers every count that `𝒮₁` emits."
 Lean: `Joint.thr_ceOn`, `Joint.up_img`, `Joint.threshold` (the rest of the
 paragraph is `«sec:composite-calm/filtering»`); answering every count is
-`Guard.proper_follows` for this guarded pipeline. -/
+`Guard.proper_follows` for this sufficient guard. -/
 theorem «app:composition/capped-counter» :
     Joint.CEOn Joint.thr (fun m => ¬ Joint.Big m) ∧ (∀ i m, Joint.up.P i m → ¬ Joint.Big m) ∧
       Guard.Proper Joint.up Joint.thr :=
@@ -270,7 +271,7 @@ theorem «app:composition/components-commit» :
     Guard.composite_monotone_not_enough.2, Joint.constant_store_reorder.2.1,
     Joint.constant_store_reorder.2.2.2.2.1⟩
 
-/-! ## Guarded pipelines -/
+/-! ## Sufficient guards -/
 
 /-- "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write
 `R ⋈ T = {(k,x) : ∃ m. (k,m) ∈ R ∧ (m,x) ∈ T}`.  The image of a state
@@ -309,12 +310,12 @@ theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M
       Guard.blk ((m', os) :: ps) = .input m' :: (os.map Event.output ++ Guard.blk ps) :=
   ⟨Iff.rfl, Iff.rfl, fun _ _ _ => rfl⟩
 
-/-- "The proofs below rest on three facts about a guarded pipeline, in which
-`𝒮₂|_{𝒮₁}` satisfies the common-extension condition (Propositions
+/-- "The proofs below rest on three facts that hold when `𝒮₁` is a sufficient
+guard, so that `𝒮₂|_{𝒮₁}` satisfies the common-extension condition (Propositions
 `prop:exposure-boundary` and `prop:common-expansion-form`).  Facts (a) and (b)
 concern a state `τ` that `𝒮₂|_{𝒮₁}` reaches without commitment.  (a) Every
 input `j ⪰_M τ.cur` has a row in `τ`. … (b) Every output at the current input
-of `τ` is a legal output, by Definition `def:guarded`.  (c) If an
+of `τ` is a legal output, by Definition `def:sufficient-guard`.  (c) If an
 output `m` at the current input of a state `σ` of `𝒮₁` is a legal output, then
 every `o ∈ P₂(m)` is a legal output at the image of `σ`. … Either way `(k,u)`
 is a row of the image that extends both `o` and `x`, so `o` is legal
@@ -337,7 +338,7 @@ theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp 
     fun σ _ he hm _ ho => Guard.cf_stepK_on (Guard.proper_iff.1 hP)
       (fun k m h => ⟨k, σ.sub k m h⟩) ⟨_, hm⟩ he ho⟩
 
-/-- Proof of Theorem `thm:guarded-pipelines`: "Before the first output of
+/-- Proof of Theorem `thm:sufficient-guards`: "Before the first output of
 `𝒮₁` we maintain `ρ.cur = σ.cur` and `R_σ ⋈ P₂ ⊆ R_ρ`.  Afterwards we maintain
 `R_σ ⋈ T ⊆ R_ρ`, and every row `(k,m)` of `R_σ` has `m` above the current
 input of `𝒮₂|_{𝒮₁}`. … Each answer `o` has `(m,o) ∈ T`, so `(i,o) ∈ R_ρ`.  The
@@ -348,7 +349,7 @@ are typed as outputs of `𝒮₁`, `Guard.core_lockstep`): `Guard.Inv`; before t
 first output `Guard.merge_inputs`; afterwards `Guard.merge_lockstep`, with the
 answers to one input `Guard.answer_run`; assembled in `Guard.composite_run`
 and `Guard.proper_run`. -/
-theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
+theorem «app:composition/sufficient-lockstep» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {sk : Spec M O} (hC : sk.CommonExpansion) {B : CommitmentBasis sp} {σ ρ : State sp}
     {es : List (SEvent sp)} (h : SysExec B σ es ρ) :
     (Guard.emitted es = [] → ∀ ρ' : State (Comp.seq sp sk), Guard.Inv σ sk.P ρ' →
@@ -368,11 +369,11 @@ theorem «app:composition/canonical-states-suffice» {I O : Type} [PO I] [PO O] 
     ∀ {sp : Spec I O}, (∀ i o, sp.P i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
   fun h => Guard.canon_exposable_commonExpansion h
 
-/-- "Guardedness is needed in Corollary `cor:upstream-commitments`.  With `𝒮₁` the identity on the booleans and
+/-- "The sufficient-guard hypothesis is needed in Corollary `cor:upstream-commitments`.  With `𝒮₁` the identity on the booleans and
 `𝒮₂` negation, the composite is negation, which does not satisfy Lifted Monotonicity,
 yet `𝒮₁` needs no commitment."  Lean: `Joint.needs_commitment_needs_proper`
 (booleans ordered by `Joint.boolPO`, `false ≼ true`). -/
-theorem «app:composition/guardedness-needed» :
+theorem «app:composition/sufficient-guard-needed» :
     ¬ (Comp.seq (graph (id : Bool → Bool)) (graph not)).LiftedMono ∧
       ∀ τ : State (graph (id : Bool → Bool)), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   Joint.needs_commitment_needs_proper
@@ -395,8 +396,8 @@ theorem «app:composition/replacement» {M O : Type} [PO M] [PO O] {sk : Spec M 
   ⟨rfl, fun _ _ _ => Iff.rfl, fun _ _ _ h => Guard.eraseSys_eps h,
     fun _ _ _ h => Guard.eraseSys_noCommit h⟩
 
-/-- **Corollary `cor:empty-store`** (Empty store): "In a guarded pipeline, fix
-any system for `𝒮₂|_{𝒮₁}`.  For every run of the pipeline, the replacement
+/-- **Corollary `cor:empty-store`** (Empty store): "Let `𝒮₁` be a sufficient
+guard for `𝒮₂`, and fix any system for `𝒮₂|_{𝒮₁}`.  For every run of the pipeline, the replacement
 has one with the same run of `𝒮₁` and the same inputs and outputs of
 `𝒮₂|_{𝒮₁}`.  After each event, the replacement's table contains the
 original's."  Lean: `Guard.proper_erase`, for any upstream behaviour `U`
@@ -427,14 +428,14 @@ theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M 
       ∀ k u, ρ.R k u → ρ'.R k u :=
   Guard.erase_lockstep hC h σ' hr hc hs
 
-/-- **Corollary `cor:pipelines`** (Pipelines): "In a guarded pipeline, with any
-systems for `𝒮₁` and `𝒮₂|_{𝒮₁}`, the outputs of every run of the pipeline
+/-- **Corollary `cor:pipelines`** (Pipelines): "Let `𝒮₁` be a sufficient guard
+for `𝒮₂`.  With any systems for `𝒮₁` and `𝒮₂|_{𝒮₁}`, the outputs of every run of the pipeline
 are emitted by a run of `P₂ ∘ P₁` under its canonical basis.  So the pipeline
-guards a further stage `𝒮₃`, and Theorem `thm:guarded-pipelines` applies
+guards a further stage `𝒮₃`, and Theorem `thm:sufficient-guards` applies
 with `P₂ ∘ P₁` in place of `𝒮₁`."  Lean: `Guard.proper_pipeline_step` (the
 outputs of the pipeline's runs, `Guard.GEmits (Guard.liftU P) K`, are emitted
 by the canonical-basis system of `P₂ ∘ P₁`); the theorem for `𝒮₃` is
-`«thm:guarded-pipelines»` with `sp := Comp.seq s1 s2`, whose guard test (`«prop:guard-test»`) is restated
+`«thm:sufficient-guards»` with `sp := Comp.seq s1 s2`, whose guard test (`«prop:guard-test»`) is restated
 here.  Associativity is `«sec:composition/associativity»`. -/
 theorem «cor:pipelines» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q] {s1 : Spec I M}
     {s2 : Spec M O} (s3 : Spec O Q) (h12 : Guard.Proper s1 s2) (P : Guard.Sys s1)
@@ -446,7 +447,7 @@ theorem «cor:pipelines» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q] {s1 : Spe
 
 /-- Proof of Corollary `cor:pipelines`: "By Corollary `cor:empty-store`, every
 run of the pipeline has one with the same outputs in which `𝒮₂|_{𝒮₁}` runs
-under the empty basis.  Theorem `thm:guarded-pipelines`, applied to it
+under the empty basis.  Theorem `thm:sufficient-guards`, applied to it
 and a prefix of the run of `𝒮₁`, gives a run of `P₂ ∘ P₁` with these outputs.
 The canonical basis supplies the canonical commitment of each output event
 that needs one (Definition `def:run-under-basis`), so this is a run under the
@@ -602,14 +603,14 @@ theorem «app:composition/store-commitment» :
 /-- **Example `ex:committed-log-composition`** (Replicated store), for any
 deterministic state machine `δ` and two distinct commands: "Then `𝒮₁` is
 non-monotone, since distinct next entries are inconsistent rows in one fiber.  So is the key-value store `P₂ ∘ P₁`, since concurrent commands ordered
-oppositely give inconsistent rows. … Since `f` is monotone, the pipeline
-is guarded.  By Theorem `thm:guarded-pipelines` the store under the empty
+oppositely give inconsistent rows. … Since `f` is monotone, the log is a
+sufficient guard.  By Theorem `thm:sufficient-guards` the store under the empty
 basis follows every run of the log, and by Corollary `cor:upstream-commitments` the log's commitments cannot be dropped.  By
 Corollary `cor:empty-store`, a store that takes locks of its own can run with
 no commitments at all."  Lean: `𝒮₁ = Inst.smrS1`
 (`I = M = Inst.Pfx Cmd`, prefix order), `f = Inst.execF δ σ₀` (monotone);
-following every run is `«thm:guarded-pipelines»` and dropping the
-store's commitments is `«cor:empty-store»`, both for this guarded pipeline. -/
+following every run is `«thm:sufficient-guards»` and dropping the
+store's commitments is `«cor:empty-store»`, both for this sufficient guard. -/
 theorem «ex:committed-log-composition» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt)
     {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     ¬ (Inst.smrS1 (Cmd := Cmd)).LiftedMono ∧
@@ -652,6 +653,43 @@ theorem «ex:bare-reads/latest-value» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd
     ¬ (Inst.latestG δ rd σ0).LiftedMono ∧
       ∃ τ : State (Inst.latestG δ rd σ0), ReachableCF τ ∧ ∃ o, τ.R τ.cur o ∧ ¬ Exposable τ o :=
   ⟨Inst.latestG_not_liftedMono δ rd σ0 hc, Inst.latest_needs_store_commitment δ rd σ0 hc⟩
+
+/-! ## Necessary and tight guards (`app:tight`) -/
+
+/-- **Proposition `prop:tight-guards`** (Tight guards): "Let `𝒮₁` guard `𝒮₂`.
+(1) If `𝒮₁` satisfies Lifted Monotonicity, it is a necessary guard for `𝒮₂`.
+(2) If `𝒮₂` is induced by a monotone function `f` that reflects `≼_M` on the
+outputs of `𝒮₁`, so that `f(m) ≼ f(m')` implies `m ≼_M m'`, then `𝒮₁` is a
+tight guard for `𝒮₂`."  Lean: (1) `Tight.tight_of_liftedMono`; (2)
+`Tight.tightGuard_of_monotone_reflects` (necessity alone needs only
+reflection: `Tight.tight_of_reflects`). -/
+theorem «prop:tight-guards» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M) :
+    (∀ sk : Spec M O, sp.LiftedMono → Tight.Tight sp sk) ∧
+    (∀ f : M → O, Monotone f → (∀ a b, Joint.Img sp a → Joint.Img sp b → f a ≼ f b → a ≼ b) →
+      «def:tight-guard» sp (graph f)) :=
+  ⟨fun sk h => Tight.tight_of_liftedMono sp sk h,
+   fun f hm hr => Tight.tightGuard_of_monotone_reflects sp f hm hr⟩
+
+/-- "Both parts apply to logs.  In Example `ex:committed-log-composition`,
+suppose the store's responses record the commands that produced them, so that
+`f` maps a log to its commands paired with their responses.  The commands of
+`f(b)` are then `b` itself, so `f(b) ≼ f(b')` implies `b ≼_M b'`, and by (2)
+the log is a tight guard for the store.  For two commuting increments, a
+partial-order log that records only which commands it has logged, as a set
+ordered by inclusion, may emit at each input any subset of the commands
+received, and the store answers a set with its size.  This log satisfies
+Lifted Monotonicity, since the set of all commands received at a larger input
+extends every earlier output.  By (1) it is a necessary guard, and since size
+is monotone it is a tight guard."  Lean: `Tight.SMR.execF_reflects` and
+`Tight.SMR.log_tight_guard`; `Tight.Log.plog`, `Tight.Log.card`, and
+`Tight.Log.partial_order_log`. -/
+theorem «app:tight/logs» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt) :
+    (∀ a b : Inst.Pfx Cmd, Inst.execF δ σ0 a ≼ Inst.execF δ σ0 b → a ≼ b) ∧
+    «def:tight-guard» (Inst.smrS1 (Cmd := Cmd)) (graph (Inst.execF δ σ0)) ∧
+    Tight.Log.plog.LiftedMono ∧ «def:tight-guard» Tight.Log.plog (graph Tight.Log.card) :=
+  ⟨Tight.SMR.execF_reflects δ σ0, Tight.SMR.log_tight_guard δ σ0,
+   Tight.Log.partial_order_log.2.2,
+   ⟨Tight.Log.partial_order_log.1, Tight.Log.partial_order_log.2.1⟩⟩
 
 /-! ## Intersection (`app:intersection`) -/
 
@@ -776,10 +814,10 @@ theorem «def:typed-pipeline» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I
   ⟨fun ⟨w, h⟩ => ⟨w, by rw [← h]; rfl, by rw [← h]; rfl⟩,
    fun ⟨w, h1, h2⟩ => ⟨w, by cases obs; cases h1; cases h2; rfl⟩⟩
 
-/-- **Definition `def:proper-pipeline`** (contract-guarded,
-implementation-guarded).  "A typed pipeline is *contract-guarded* when the
-pipeline of `𝒮₁` and `𝒮₂` is guarded (Definition `def:guarded`),
-and *implementation-guarded* when no downstream run of a feed applies a
+/-- **Definition `def:sufficient-pipeline`** (Contract-sufficient,
+implementation-sufficient).  "A typed pipeline is *contract-sufficient* when
+`𝒮₁` is a sufficient guard for `𝒮₂` (Definition `def:sufficient-guard`), and
+*implementation-sufficient* when no downstream run of a feed applies a
 commitment."
 
 Lean: `Pipeline.ContractProper` (equivalent to `Guard.Proper` by
@@ -787,7 +825,7 @@ Lean: `Pipeline.ContractProper` (equivalent to `Guard.Proper` by
 "Applies no commitment" is `CoordFree`: the run is a run under the empty
 basis, so it has no commitment event and every output event emits a legal
 output. -/
-theorem «def:proper-pipeline» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M}
+theorem «def:sufficient-pipeline» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M}
     {sp2 : Spec M O} (p : Components.Pipeline sp1 sp2) :
     (p.ContractProper ↔ Guard.Proper sp1 sp2) ∧
     (p.ImplementationProper ↔ ∀ w : Components.FeedWitness p.upstream p.downstream,
@@ -806,20 +844,20 @@ theorem «app:components/feed-is-input» {I M O : Type} [PO I] [PO M] [PO O] {sp
 
 /-- **Proposition `prop:typed-pipelines`** (Typed pipelines): "(1) Every
 external observation admitted by a typed pipeline is a row of `P₂ ∘ P₁`.
-(2) If a pipeline is implementation-guarded, the downstream run of every feed,
+(2) If a pipeline is implementation-sufficient, the downstream run of every feed,
 with its commitments erased, is a commitment-free run of `𝒮₂`, in which every
-output is a legal output.  (3) Contract guardedness does not imply implementation
-guardedness: behind a log, the early-lock store is contract-guarded and still
-issues commitments.  (4) Contract guardedness does not guarantee feeds when the
+output is a legal output.  (3) Contract sufficiency does not imply implementation
+sufficiency: behind a log, the early-lock store is contract-sufficient and still
+issues commitments.  (4) Contract sufficiency does not guarantee feeds when the
 downstream component is for `𝒮₂` rather than `𝒮₂|_{𝒮₁}`: behind the capped
 counter, the maximally permissive empty-basis component for the threshold test
 admits no feed at an offered count.
-(5) If, in a contract-guarded pipeline, the downstream is instead the maximally
+(5) If, in a contract-sufficient pipeline, the downstream is instead the maximally
 permissive empty-basis component for `𝒮₂|_{𝒮₁}`, every admitted upstream
-boundary run has a feed, and the pipeline is implementation-guarded."
+boundary run has a feed, and the pipeline is implementation-sufficient."
 
 Lean: (1) `Pipeline.sound`.  (2) `implementationProper_downstream_execCF`
-(`ExecCF`: every output is a legal output).  "contract-guarded" is `Guard.Proper`,
+(`ExecCF`: every output is a legal output).  "contract-sufficient" is `Guard.Proper`,
 which is `Pipeline.ContractProper` (`contractProper_iff_guardProper`).
 (3) For any command `b` and monotone `f` on logs, the log `Inst.smrS1` (empty
 basis) feeding the early-lock store `Guard.earlyLock b f`
@@ -865,7 +903,7 @@ theorem «prop:typed-pipelines» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec 
       obtain ⟨hp, w, h1, h2, _⟩ := Components.offered_available (sk := sk) hP C1 h
       exact ⟨Components.offered_compositeSpec _ _, hp, w, h1, h2⟩⟩
 
-/-- "Item (5) covers one upstream output, while Theorem `thm:guarded-pipelines` follows the entire emitted stream.  Item (4) is
+/-- "Item (5) covers one upstream output, while Theorem `thm:sufficient-guards` follows the entire emitted stream.  Item (4) is
 why (5) uses a component for `𝒮₂|_{𝒮₁}` rather than for `𝒮₂`: its
 canonical states keep only rows at inputs the upstream offers."  Lean: the
 whole stream is `Guard.proper_follows`, the composite-run invariant
@@ -874,8 +912,8 @@ whole stream is `Guard.proper_follows`, the composite-run invariant
 `Component.proper_follows` wraps `Guard.proper_follows` (the empty-basis
 `𝒮₂|_{𝒮₁}` answers every output, and the merged trace is a run of
 `P₂ ∘ P₁`) and `Component.proper_run` wraps `Guard.proper_run`.  A silent
-downstream is vacuously implementation-guarded and shows nothing
-(`implementationProper_silent`); on the offered interface, contract guardedness of the pipeline is guardedness (Definition `def:guarded`)
+downstream is vacuously implementation-sufficient and shows nothing
+(`implementationProper_silent`); on the offered interface, contract sufficiency of the pipeline is the sufficient-guard property (Definition `def:sufficient-guard`)
 (`offered_contractProper_iff`). -/
 theorem «app:components/follows» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {sk : Spec M O} (hP : Guard.Proper sp sk) (C1 : Components.Component sp)

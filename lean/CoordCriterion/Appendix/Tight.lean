@@ -1,14 +1,16 @@
 import CoordCriterion.Appendix.JointMono
 
 /-!
-# Tight pipelines (paper §5.2 and Appendix `app:tight`)
+# Necessary and tight guards (paper §5.2 and Appendix `app:tight`)
 
-A guarded pipeline (`Guard.Proper`, Def. `def:guarded`) is one whose
-downstream `𝒮₂|_{𝒮₁}` needs no commitment, and Corollary
-`cor:upstream-commitments` says the upstream must commit whenever the
-composite `P₂ ∘ P₁` does.  The paper's Proper Coordination
-(Def. `def:proper-coordination`) is guarded and tight.  This file asks the converse question: does the
-upstream commit *more* than the composite needs?
+`𝒮₁` is a sufficient guard for `𝒮₂` (`Guard.Proper`, Def.
+`def:sufficient-guard`) when the downstream `𝒮₂|_{𝒮₁}` needs no commitment,
+and Corollary `cor:upstream-commitments` says the upstream must commit
+whenever the composite `P₂ ∘ P₁` does.  This file asks the converse question:
+does the upstream commit *more* than the composite needs?  The paper's
+necessary guard (Def. `def:necessary-guard`) is `Tight` here, and a tight
+guard (Def. `def:tight-guard`) is `Proper ∧ Tight`.  The Lean names predate
+the paper's.
 
 **Unit of comparison.**  At the canonical state `σ_P(i)`, emitting `a` removes
 the row `(k, b)` by commitment (`Excluded`) exactly when `i ≼ k` and no output
@@ -40,8 +42,12 @@ for a function `g` it is `g m ≼ g m'` (`graph_dle_iff`), the pull-back of
 * `seq_liftedMono_iff_noDleConf` — with greatest answers, the composite is
   Lifted-Monotone iff the upstream has no `dle`-conflict.
 * Deterministic downstream: `graph_conf_iff`, `tight_graph_iff`.
-* Examples: `Log.commuting` (two commuting increments behind a prefix-ordered
-  log: proper, not tight) and `Gap.gap` (without greatest answers no order on
+* Sufficient conditions: `tight_of_liftedMono`, `tight_of_reflects`,
+  `tightGuard_of_monotone_reflects` (Prop. `prop:tight-guards`).
+* Examples: `SMR.log_tight_guard` (the consensus log behind deterministic
+  execution is a tight guard), `Log.commuting` (two commuting increments
+  behind a prefix-ordered log: a sufficient guard, not a necessary one),
+  `Log.partial_order_log` (a partial-order log for them is a tight guard), and `Gap.gap` (without greatest answers no order on
   `M` is tight: a feed-forward upstream cannot see the downstream's answers).
 -/
 
@@ -318,6 +324,74 @@ theorem conf_of_dleConf_under {instM : PO M} (inst : PO M) (sp : @Spec I M _ ins
 
 end Optimal
 
+/-! ### Tight guards: two sufficient conditions for necessity -/
+
+section TightGuards
+variable {I M O : Type} [PO I] [PO M] [PO O]
+
+/-- **A lifted-monotone upstream is a necessary guard**, vacuously: it has no
+conflicts, so it makes no commitment at all. -/
+theorem tight_of_liftedMono (sp : Spec I M) (sk : Spec M O) (h : sp.LiftedMono) :
+    Tight sp sk :=
+  fun i m k x hc => absurd hc ((liftedMono_iff_noConf sp).1 h i m k x)
+
+/-- **A downstream that reflects the upstream's order makes the guard
+necessary.**  If, on the upstream's outputs, `g a ≼ g b` implies `a ≼ b`, every
+conflict of the upstream is also a conflict under the order pulled back
+through `g`, so the upstream is tight behind `g` (`tight_graph_iff`). -/
+theorem tight_of_reflects (sp : Spec I M) (g : M → O)
+    (hr : ∀ a b, Img sp a → Img sp b → g a ≼ g b → a ≼ b) : Tight sp (graph g) := by
+  rw [tight_graph_iff]
+  intro i m k x hc
+  refine ⟨hc.1, hc.2.1, hc.2.2.1, fun ⟨c, hcP, h1, h2⟩ => hc.2.2.2 ⟨c, hcP, ?_, ?_⟩⟩
+  · exact hr _ _ ⟨i, hc.2.1⟩ ⟨k, hcP⟩ h1
+  · exact hr _ _ ⟨k, hc.2.2.1⟩ ⟨k, hcP⟩ h2
+
+/-- **Tight guard behind a monotone, order-reflecting function.**  A monotone
+`g` makes the guard sufficient (`Guard.proper_of_ce`), and one that also
+reflects the upstream's order on its outputs makes it necessary. -/
+theorem tightGuard_of_monotone_reflects (sp : Spec I M) (g : M → O) (hm : Monotone g)
+    (hr : ∀ a b, Img sp a → Img sp b → g a ≼ g b → a ≼ b) :
+    Proper sp (graph g) ∧ Tight sp (graph g) :=
+  ⟨Guard.proper_of_ce (Guard.graph_commonExpansion hm), tight_of_reflects sp g hr⟩
+
+end TightGuards
+
+/-! ### Example: a totally ordered log is a tight guard when the responses
+determine the log -/
+
+namespace SMR
+
+open Inst (Pfx exec execF smrS1)
+
+variable {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R)
+
+/-- Each response names its command, so the response log determines the log. -/
+theorem fst_exec : ∀ (σ : Stt) (l : List Cmd), (exec δ σ l).map Prod.fst = l
+  | _, [] => rfl
+  | σ, c :: l => by simp only [exec, List.map_cons, fst_exec _ l]
+
+/-- Execution reflects the prefix order: if one response log extends another,
+so does the log. -/
+theorem execF_reflects (σ0 : Stt) (a b : Pfx Cmd) (h : execF δ σ0 a ≼ execF δ σ0 b) :
+    a ≼ b := by
+  obtain ⟨t, ht⟩ := h
+  refine ⟨t.map Prod.fst, ?_⟩
+  have := congrArg (List.map Prod.fst) ht
+  simpa [execF, fst_exec, List.map_append] using this
+
+/-- **The consensus log is a tight guard for the replicated store.**  Behind
+deterministic execution, whose response log records each command, the totally
+ordered log is a sufficient guard (execution is monotone) and a necessary one
+(execution reflects the prefix order): every commitment the log makes is one
+the store's clients can observe. -/
+theorem log_tight_guard (σ0 : Stt) :
+    Proper (smrS1 (Cmd := Cmd)) (graph (execF δ σ0)) ∧ Tight (smrS1 (Cmd := Cmd)) (graph (execF δ σ0)) :=
+  tightGuard_of_monotone_reflects _ _ (Inst.execF_monotone δ σ0)
+    (fun a b _ _ h => execF_reflects δ σ0 a b h)
+
+end SMR
+
 
 /-! ### Example: commuting commands behind a log -/
 
@@ -431,6 +505,42 @@ theorem commuting :
     refine ⟨len x, ⟨x, hx, rfl⟩, ?_, PO.refl _⟩
     show len m ≤ len x
     cases i <;> cases k <;> cases m <;> cases x <;> simp_all [log, logP, Req.leb, len]
+
+/-! #### A partial-order log for commuting commands -/
+
+/-- A partial-order log for two commuting commands records only which commands
+it has logged, not their order: its values are sets of commands, ordered by
+inclusion (`Req`).  At received commands `i`, it may emit any logged set
+contained in `i`. -/
+def plogP : Table Req Req := fun i t => t ≼ i
+
+def plog : Spec Req Req where
+  P := plogP
+  total i := ⟨i, PO.refl i⟩
+
+/-- The store's response to a set of increments is its size. -/
+def card : Req → Nat
+  | .none => 0
+  | .a => 1
+  | .b => 1
+  | .ab => 2
+
+theorem card_monotone : Monotone card := by
+  intro x y h
+  show card x ≤ card y
+  cases x <;> cases y <;> simp_all [Req.leb, card]
+
+/-- **The partial-order log is a tight guard.**  It is a sufficient guard
+(`card` is monotone) and a necessary one: it is itself lifted monotone, so it
+makes no commitment at all, and the commuting commands are never ordered. -/
+theorem partial_order_log :
+    Proper plog (graph card) ∧ Tight plog (graph card) ∧ plog.LiftedMono := by
+  have hLM : plog.LiftedMono := by
+    rw [liftedMono_iff_noConf]
+    intro i a k b hc
+    exact hc.2.2.2 ⟨k, PO.refl k, PO.trans hc.2.1 hc.1, hc.2.2.1⟩
+  exact ⟨Guard.proper_of_ce (Guard.graph_commonExpansion card_monotone),
+    tight_of_liftedMono plog (graph card) hLM, hLM⟩
 
 end Log
 

@@ -140,7 +140,7 @@ unified framework says exactly
 what coordination a spec needs, and when.  A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
-\emph{Proper Coordination} identifies which stage of a composition must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs, explaining designs such
+A composition of specs has \emph{tight coordination} when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  We show how to order the upstream's outputs to achieve it, explaining designs such
 as consensus logs in front of a replicated store.
 \end{abstract}
 
@@ -166,7 +166,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 105 & 11719\\
+unclassified & 105 & 11777\\
 signposting & 6 & 375\\
 explanation & 2 & 256\\
 formal definition/notation & 6 & 116\\
@@ -176,12 +176,12 @@ related-work detail & 1 & 61\\
 1. unclassified, 2535 words: \textit{A system must reserve IDs, reject one creation, or weaken ...}\par
 2. unclassified, 909 words: \textit{The registrar shows how a system's own can block a ...}\par
 3. unclassified, 875 words: \textit{In our terms, they prove a counterpart of Functional CALM ...}\par
-4. unclassified, 787 words: \textit{Yet when composed after the capped counter, the pair of ...}\par
+4. unclassified, 788 words: \textit{Yet when composed after the capped counter, the pair of ...}\par
 5. unclassified, 592 words: \textit{The extended paper's algorithm for monotonic atomic view has the ...}\par
 6. unclassified, 348 words: \textit{A local history of participant [math] is a finite sequence ...}\par
 7. unclassified, 220 words: \textit{events only remove rows, so dropping them can only keep ...}\par
 8. unclassified, 215 words: \textit{The environment observes nothing from a event.}\par
-9. unclassified, 198 words: \textit{The question of coordination-free consistency becomes clear in this model: ...}\par
+9. unclassified, 203 words: \textit{The question of coordination-free consistency becomes clear in this model: ...}\par
 10. unclassified, 192 words: \textit{The theorem has two parts.}\par
 11. unclassified, 184 words: \textit{In any history of a monotone functional specification, every participant ...}\par
 12. unclassified, 176 words: \textit{Functional CALM restates the result as a property of a ...}\par
@@ -263,10 +263,10 @@ a spec to be faithful.
 As a system runs, possibilities narrow: the spec's table loses rows. When new
 input arrives, the world has moved on, and rows that cannot be reached by
 extending that input are lost. When the system decides among possibilities, it
-makes a controlled decision to remove rows. \removednote{\textbf{unclassified}, 21 words, rank 81; \textit{The decision is incidental if each removed output is covered by a remaining output that it, ...}} \textcolor{newblue}{The decision is fateful if some
+makes a controlled decision to remove rows. \removednote{\textbf{unclassified}, 21 words, rank 82; \textit{The decision is incidental if each removed output is covered by a remaining output that it, ...}} \textcolor{newblue}{The decision is fateful if some
 removed output has no remaining output that \outrel it.} Choosing between two candidates in a leader election is fateful: nothing
 remaining covers the loser's possibility of a win. \textcolor{newblue}{So is closing the polls early,
-ruling out every row with a late ballot.} \removednote{\textbf{unclassified}, 96 words, rank 30; \textit{We call a fateful decision a : an irrevocable decision, enforceable by coordination mechanisms such as ...}} \textcolor{newblue}{We call a fateful decision a
+ruling out every row with a late ballot.} \removednote{\textbf{unclassified}, 96 words, rank 31; \textit{We call a fateful decision a : an irrevocable decision, enforceable by coordination mechanisms such as ...}} \textcolor{newblue}{We call a fateful decision a
 \emph{\commitment}.}
 
 \textcolor{newblue}{Automata have often been used to formally specify distributed
@@ -308,8 +308,8 @@ partition.} The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directl
 What of coordination? A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments. Our criterion identifies exactly
-the \commitments a spec's outputs require, independent of mechanism. In a composition of specs, \emph{Proper Coordination}
-identifies which stage must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs. \textcolor{newblue}{In state-machine replication, for example, the consensus log
+the \commitments a spec's outputs require, independent of mechanism. In a composition of specs, coordination is \emph{tight}
+when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs. Guard Tightening shows how to order the upstream's outputs to achieve it. \textcolor{newblue}{In state-machine replication, for example, the consensus log
 makes every \commitment; the replicated store needs none, so any coordination it employs is overhead
 (\S\ref{sec:composition}).}
 
@@ -332,11 +332,11 @@ We make contributions in four categories: \removednote{\textbf{unclassified}, 13
 \noindent
 \emph{3. Constructive results for coordination.} We define \commitments,
         the underlying contracts that coordination mechanisms can enforce,
-        and identify exactly the \commitments a non-monotone spec requires. Specs compose by equijoin, and Proper Coordination identifies the stage that must make the \commitments, certifying that later stages need none and that it makes no more than the composition needs.
+        and identify exactly the \commitments a non-monotone spec requires. Specs compose by equijoin. Coordination is tight when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs. Guard Tightening shows how to order the upstream's outputs to achieve it.
 
 \textcolor{newblue}{\noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant
-        Confluence, CRDT observation, and later refinements of CALM are all explained via Complete CALM (\S\ref{sec:instances}).} \removednote{\textbf{unclassified}, 36 words, rank 63; \textit{0.5em The paper develops these contributions in order, then relates the criterion to earlier results (Section ...}}
+        Confluence, CRDT observation, and later refinements of CALM are all explained via Complete CALM (\S\ref{sec:instances}).} \removednote{\textbf{unclassified}, 36 words, rank 64; \textit{0.5em The paper develops these contributions in order, then relates the criterion to earlier results (Section ...}}
 
 \textcolor{newblue}{\vspace{0.5em}
 \noindent
@@ -494,7 +494,7 @@ $\bot\OutputOrd\bot\OutputOrd a$.
 As a run proceeds, the possibilities narrow. Each panel of
 Figure~\ref{fig:election-frames} shows one moment: the ballots received so
 far, and the rows that can still be reached from them. We call such a moment
-a specification state. \removednote{\textbf{unclassified}, 48 words, rank 52; \textit{Given a specification [math], a specification state is a pair [math], where [math] is the current ...}; labels def:residual-state}
+a specification state. \removednote{\textbf{unclassified}, 48 words, rank 53; \textit{Given a specification [math], a specification state is a pair [math], where [math] is the current ...}; labels def:residual-state}
 
 \begin{definition}[Specification state]
 \label{def:state}
@@ -555,7 +555,7 @@ is $\pi_{\mathrm{out}}(R[\mathrm{in}\InputGe i]) = \pi_{\mathrm{out}}(R)$. We sa
 
 \paragraph{Output events and \commitments.}
 Inputs arrive from the environment, but outputs are the system's to choose, and
-once emitted they cannot be retracted. \removednote{\textbf{unclassified}, 25 words, rank 75; \textit{At a state [math], the current input has a unique row [math], so [math], the current ...}} Emitting $\bot$ in panel~(b) is safe,
+once emitted they cannot be retracted. \removednote{\textbf{unclassified}, 25 words, rank 76; \textit{At a state [math], the current input has a unique row [math], so [math], the current ...}} Emitting $\bot$ in panel~(b) is safe,
 since every output still possible builds on it; emitting $a$ there would not
 be, since $b$ is still possible.
 
@@ -569,7 +569,7 @@ $o$.}
 So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c). Possibilities
 can also be removed deliberately. Closing the polls in panel~(d) rules out
 $aba$ and $abb$, and no remaining row covers them: this is the fateful
-decision of the introduction. \removednote{\textbf{unclassified}, 17 words, rank 88; \textit{A row [math] is by another row [math] at the same input when [math] [math].}} \removednote{\textbf{unclassified}, 46 words, rank 54; \textit{A is a partial function [math] on specification states that removes a nonempty set of rows, ...}; labels eq:commitment-unsubsumed}
+decision of the introduction. \removednote{\textbf{unclassified}, 17 words, rank 89; \textit{A row [math] is by another row [math] at the same input when [math] [math].}} \removednote{\textbf{unclassified}, 46 words, rank 54; \textit{A is a partial function [math] on specification states that removes a nonempty set of rows, ...}; labels eq:commitment-unsubsumed}
 
 \begin{definition}[\Commitment]
 \label{def:commitment}
@@ -659,7 +659,7 @@ output events.}
 
 \paragraph{Runs and consistency.}
 Runs are the foundation of the consistency side of CALM. A spec's runs are
-sequences of its events, like those that produce panels~(a)--(c). \removednote{\textbf{unclassified}, 29 words, rank 70; \textit{Input and output events are specification events : they change the specification state.}; labels def:specification-event, def:transition-system} \removednote{\textbf{unclassified}, 97 words, rank 29; \textit{A canonical run , or just run , is any finite transition sequence of the transition ...}}
+sequences of its events, like those that produce panels~(a)--(c). \removednote{\textbf{unclassified}, 29 words, rank 71; \textit{Input and output events are specification events : they change the specification state.}; labels def:specification-event, def:transition-system} \removednote{\textbf{unclassified}, 97 words, rank 30; \textit{A canonical run , or just run , is any finite transition sequence of the transition ...}}
 
 \begin{definition}[Specification event, canonical run, \commitment-free]
 \label{def:run}
@@ -701,7 +701,7 @@ consistency for all of a spec's runs. \removednote{\textbf{unclassified}, 0 word
 common \indesc $j$ of their current inputs when each can be continued to one
 common state with current input $j$.} The runs of an \spectype are
 \emph{consistent} when every finite family of them is confluent at every common
-\indesc of their current inputs. \removednote{\textbf{unclassified}, 94 words, rank 34; \textit{Consistency requires confluence at every common extension of the runs' current inputs, not just at some ...}}
+\indesc of their current inputs. \removednote{\textbf{unclassified}, 94 words, rank 35; \textit{Consistency requires confluence at every common extension of the runs' current inputs, not just at some ...}}
 \end{definition}
 
 \textcolor{newblue}{Consistency as we define it has to hold after every output.} \textcolor{newblue}{An inconsistent
@@ -782,7 +782,7 @@ Proposition~\ref{prop:confluence} gives confluence.} \textcolor{newblue}{\fullpr
 
 \textcolor{newblue}{In the election under the equality order, emitting $\bot$ at $ab\cdot$ applies
 a \commitment, since $\bot$ is not legal there, and the two runs of
-\S\ref{sec:election-story} share no row at $aba$.} \removednote{\textbf{unclassified}, 21 words, rank 82; \textit{In the functional case, monotonicity has a strong consequence: emitting outputs never changes the state, which ...}}
+\S\ref{sec:election-story} share no row at $aba$.} \removednote{\textbf{unclassified}, 21 words, rank 83; \textit{In the functional case, monotonicity has a strong consequence: emitting outputs never changes the state, which ...}}
 
 \textcolor{newblue}{In a monotone spec, a run's outputs never narrow its state:}
 
@@ -806,8 +806,8 @@ monotone.
 \begin{proof}[Proof sketch]
 \textcolor{newblue}{By Lemma~\ref{lem:confluence-legality}, the runs are consistent iff
 no output event of a run applies a \commitment.} First assume they are
-consistent, and suppose $f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$. \removednote{\textbf{unclassified}, 20 words, rank 84; \textit{At [math] the event [math] then applies [math] and rules out input [math], a contradiction, so ...}} \textcolor{newblue}{Emitting $f(i)$ at $\sigma_P(i)$ then applies a \commitment that rules out $k$,
-a contradiction, so the spec is monotone.} Now assume the spec is monotone. \removednote{\textbf{unclassified}, 26 words, rank 74; \textit{It can emit every current output without (Proposition ), so by induction on its length every ...}} \textcolor{newblue}{A
+consistent, and suppose $f(i)\not\OutputOrd f(k)$ for some $i\InputOrd k$. \removednote{\textbf{unclassified}, 20 words, rank 85; \textit{At [math] the event [math] then applies [math] and rules out input [math], a contradiction, so ...}} \textcolor{newblue}{Emitting $f(i)$ at $\sigma_P(i)$ then applies a \commitment that rules out $k$,
+a contradiction, so the spec is monotone.} Now assume the spec is monotone. \removednote{\textbf{unclassified}, 26 words, rank 75; \textit{It can emit every current output without (Proposition ), so by induction on its length every ...}} \textcolor{newblue}{A
 run at $i$ is in $\sigma_P(i)$ (Corollary~\ref{cor:state-by-input}); every
 output in its upper fiber \outrel $f(i)$, so $f(i)$ is legal, requires no \commitment
 to emit, and consistency follows.} \textcolor{newblue}{\fullproof}
@@ -916,7 +916,7 @@ a condition within the fiber at each input.
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
 An \spectype satisfies \emph{Relational Monotonicity}
-when every output keeps some \outnoun as input \ingrows: \removednote{\textbf{unclassified}, 33 words, rank 65; \textit{In the traceroute spec, tracing from a second source t moves the input from [math] to ...}}
+when every output keeps some \outnoun as input \ingrows: \removednote{\textbf{unclassified}, 33 words, rank 66; \textit{In the traceroute spec, tracing from a second source t moves the input from [math] to ...}}
         \begin{equation}
   i\InputOrd j,\ o\in\fiber{i}
   \quad\Longrightarrow\quad
@@ -926,7 +926,7 @@ when every output keeps some \outnoun as input \ingrows: \removednote{\textbf{un
 \end{definition}
 
 For singleton fibers this is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}. \removednote{\textbf{unclassified}, 21 words, rank 83; \textit{Relational Monotonicity compares fibers across inputs, so it does not require the outputs within one fiber ...}} \removednote{\textbf{unclassified}, 0 words, rank 119; labels def:directed-outputs} \textcolor{newblue}{In the traceroute spec, tracing from
+Equation~\ref{eq:functional-monotonicity}. \removednote{\textbf{unclassified}, 21 words, rank 84; \textit{Relational Monotonicity compares fibers across inputs, so it does not require the outputs within one fiber ...}} \removednote{\textbf{unclassified}, 0 words, rank 119; labels def:directed-outputs} \textcolor{newblue}{In the traceroute spec, tracing from
 a second source \texttt{t} extends the input from $\{\texttt{s}\}$ to
 $\{\texttt{s},\texttt{t}\}$, and every route set permitted at
 $\{\texttt{s}\}$ is still permitted there, so Relational Monotonicity holds.}
@@ -950,7 +950,7 @@ Directedness is more permissive than a join-semilattice. \textcolor{newblue}{It 
 each finite set of outputs in a fiber have some common extension within the
 fiber, while a join-semilattice requires a \emph{least} one.} For example, the fiber
 $\{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}$ under inclusion is directed,
-since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least common extension: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal. \removednote{\textbf{unclassified}, 34 words, rank 64; \textit{To state both requirements at once, we lift [math] from outputs to sets of outputs.}; labels eq:joint-output-order}
+since $\{a,b,c,d\}$ \outrel every member, but $\{a\}$ and $\{b\}$ have no least common extension: $\{a,b,c\}$ and $\{a,b,d\}$ are both minimal. \removednote{\textbf{unclassified}, 34 words, rank 65; \textit{To state both requirements at once, we lift [math] from outputs to sets of outputs.}; labels eq:joint-output-order}
 
 \paragraph{Lifted Monotonicity.}
 \textcolor{newblue}{The two conditions become one
@@ -963,7 +963,7 @@ $X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.} \remov
 \end{definition}
 
 \textcolor{newblue}{With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).} \removednote{\textbf{unclassified}, 158 words, rank 14; \textit{In general it is exactly Relational Monotonicity together with directed fibers.}} \textcolor{newblue}{Lifted
+(Definition~\ref{def:functional-monotonicity}).} \removednote{\textbf{unclassified}, 158 words, rank 15; \textit{In general it is exactly Relational Monotonicity together with directed fibers.}} \textcolor{newblue}{Lifted
 Monotonicity holds exactly when both Relational Monotonicity and directed fibers
 hold.}
 
@@ -976,7 +976,7 @@ emits $\{\texttt{t}{\to}\texttt{s2}\}$.} At $\{\texttt{s},\texttt{t}\}$, which \
 
 \begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
-An \spectype satisfies the \emph{common-extension condition} when every finite set of rows of $P$ is consistent. \removednote{\textbf{unclassified}, 22 words, rank 80; \textit{For the empty set of rows the condition asks only that [math] be nonempty, which follows ...}}
+An \spectype satisfies the \emph{common-extension condition} when every finite set of rows of $P$ is consistent. \removednote{\textbf{unclassified}, 22 words, rank 81; \textit{For the empty set of rows the condition asks only that [math] be nonempty, which follows ...}}
 \end{definition}
 
 \begin{proposition}[Common-extension form of Lifted Monotonicity]
@@ -1120,7 +1120,7 @@ is happens-before. \removednote{\textbf{unclassified}, 12 words, rank 102; \text
 \label{def:distributed-history}
 \textcolor{newblue}{A \emph{distributed history} $H$ is a finite set of \emph{history events}, each
 an occurrence at one participant of a specification event, $\mathsf{send}(m)$,
-or $\mathsf{receive}(m)$.} \removednote{\textbf{unclassified}, 96 words, rank 31; \textit{a total local order on each participant's history events;}; labels def:happens-before, def:consistent-cut} \textcolor{newblue}{Each participant's events are totally ordered, every
+or $\mathsf{receive}(m)$.} \removednote{\textbf{unclassified}, 96 words, rank 32; \textit{a total local order on each participant's history events;}; labels def:happens-before, def:consistent-cut} \textcolor{newblue}{Each participant's events are totally ordered, every
 receive has a matching send at another participant, and each participant $p$'s
 specification events, in order, form a run from $\sigma_P(i_p)$.} \textcolor{newblue}{A
 \emph{consistent cut} $C$ is a set of history events closed under
@@ -1128,11 +1128,11 @@ happens-before: whenever $C$ contains an event, it contains every event that
 happens before it~\cite{lamport1978time,chandy1985distributed}.}
 \end{definition}
 
-\textcolor{newblue}{The ``consistent cut'' term is standard and unrelated to our notion of consistency.} \removednote{\textbf{formal definition/notation}, 20 words, rank 85; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run} \textcolor{newblue}{A history
+\textcolor{newblue}{The ``consistent cut'' term is standard and unrelated to our notion of consistency.} \removednote{\textbf{formal definition/notation}, 20 words, rank 86; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run} \textcolor{newblue}{A history
 is itself a consistent cut, its \emph{final cut}.} \removednote{\textbf{unclassified}, 151 words, rank 17; \textit{Let [math] be a common of the participants' current inputs at a consistent cut [math].}; labels def:distributed-consistency, prop:distributed-consistency} \textcolor{newblue}{At a
 consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, ending in some state
-$\sigma_p$.} \removednote{\textbf{unclassified}, 40 words, rank 60; \textit{The endpoint of a consistent cut [math] is [math].}; labels def:endpoint, fig:participant-runs} \removednote{\textbf{formal definition/notation}, 27 words, rank 72; \textit{A continuation of a history at a consistent cut [math] is a history [math] that extends ...}} \textcolor{newblue}{For a common extension $j$ of the participants' current inputs,
+$\sigma_p$.} \removednote{\textbf{unclassified}, 40 words, rank 61; \textit{The endpoint of a consistent cut [math] is [math].}; labels def:endpoint, fig:participant-runs} \removednote{\textbf{formal definition/notation}, 27 words, rank 73; \textit{A continuation of a history at a consistent cut [math] is a history [math] that extends ...}} \textcolor{newblue}{For a common extension $j$ of the participants' current inputs,
 confluence asks whether the history can be extended so that every participant
 reaches the same state $(j,R)$.}
 
@@ -1167,7 +1167,7 @@ spec.}
 \subsection{Systems and canonical runs}
 \label{sec:systems}
 
-A spec says which behaviors are permitted, not how a system chooses among them. We now model those choices, and show that a system's inputs and outputs always match a canonical run's. \removednote{\textbf{unclassified}, 19 words, rank 86; \textit{For example, serializability can be enforced by any of a number of concurrency control protocols (Figure ...}}
+A spec says which behaviors are permitted, not how a system chooses among them. We now model those choices, and show that a system's inputs and outputs always match a canonical run's. \removednote{\textbf{unclassified}, 19 words, rank 87; \textit{For example, serializability can be enforced by any of a number of concurrency control protocols (Figure ...}}
 
 \begin{figure}[t]
   \centering
@@ -1348,7 +1348,7 @@ in every participant's state (Proposition~\ref{prop:confluence}).} By
 Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are
 consistent at $j$, which is Lifted Monotonicity for $E$.
 
-Now assume Lifted Monotonicity for $E$. \removednote{\textbf{unclassified}, 24 words, rank 77; \textit{The canonical system's participants never wait: each can emit any output of [math] that its state ...}} \textcolor{newblue}{The canonical system never waits, so
+Now assume Lifted Monotonicity for $E$. \removednote{\textbf{unclassified}, 24 words, rank 78; \textit{The canonical system's participants never wait: each can emit any output of [math] that its state ...}} \textcolor{newblue}{The canonical system never waits, so
 it has Availability for $E$.} Let $j$ be an input that \inrel every
 participant's current input. \textcolor{newblue}{The rows emitted on all sides are consistent at
 $j$, through some row $(j,u)$.} \textcolor{newblue}{Each participant makes no \commitments of its own, so it
@@ -1358,14 +1358,14 @@ therefore continue to one state at $j$, which is Partition Consistency. \removed
 
 For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \textcolor{newblue}{\Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.}
 
-Return to the election of Section~\ref{sec:election-story}. \removednote{\textbf{unclassified}, 30 words, rank 69; \textit{That discussion centered on the spec for vote collection, as performed by the registrar.}} \textcolor{newblue}{That discussion
+Return to the election of Section~\ref{sec:election-story}. \removednote{\textbf{unclassified}, 30 words, rank 70; \textit{That discussion centered on the spec for vote collection, as performed by the registrar.}} \textcolor{newblue}{That discussion
 centered on the spec for vote collection, as performed by the registrar; here
 we consider the spec for the voters, which the registrar observes.} \textcolor{newblue}{Each
 voter's ballot is a row of $E$, and the sets of ballots the registrar may
-observe are implicit outputs in $P\setminus E$.} \removednote{\textbf{unclassified}, 32 words, rank 66; \textit{Each voter decides between [math] and [math] and emits its ballot.}} \textcolor{newblue}{A voter's choice between $a$
+observe are implicit outputs in $P\setminus E$.} \removednote{\textbf{unclassified}, 32 words, rank 67; \textit{Each voter decides between [math] and [math] and emits its ballot.}} \textcolor{newblue}{A voter's choice between $a$
 and $b$ is a \commitment: voting $a$ rules out every set of ballots in which it
 votes $b$.} \textcolor{newblue}{But it is a single-voter \commitment involving no communication, so
-the voter can make it and emit its ballot during a partition.} \removednote{\textbf{unclassified}, 37 words, rank 62; \textit{Each ballot is cast by a different voter, so ballots emitted on different sides of a ...}} \textcolor{newblue}{Ballots on
+the voter can make it and emit its ballot during a partition.} \removednote{\textbf{unclassified}, 37 words, rank 63; \textit{Each ballot is cast by a different voter, so ballots emitted on different sides of a ...}} \textcolor{newblue}{Ballots on
 different sides never conflict, since each is cast by a different voter (the
 full paper formalizes this placement as a \emph{deployment}~\extended), so every set of ballots an observer may collect is consistent.}
 
@@ -1378,7 +1378,7 @@ anyway, sacrificing Partition Consistency.}
 \paragraph{Gilbert and Lynch.}
 Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted
 Monotonicity for $E$ fails. We show the failure for the register example, then
-extend the conclusion from the canonical system to every system. \removednote{\textbf{unclassified}, 31 words, rank 68; \textit{Linearizability respects real-time order: if one operation finishes before another begins, every linearization puts the first ...}} \textcolor{newblue}{Linearizability
+extend the conclusion from the canonical system to every system. \removednote{\textbf{unclassified}, 31 words, rank 69; \textit{Linearizability respects real-time order: if one operation finishes before another begins, every linearization puts the first ...}} \textcolor{newblue}{Linearizability
 respects real-time order~\cite{herlihy1990linearizability}, so suppose the write
 finishes before the read begins.} \textcolor{newblue}{Every linearization then puts the write
 first, and the read must return $v$.} But each of $p$ and $q$ sees only its own
@@ -1410,21 +1410,21 @@ reconcile them.} \textcolor{newblue}{\proofinfull}
 
 By Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
 available and stay consistent across a partition, which is Gilbert and Lynch's
-theorem. \removednote{\textbf{unclassified}, 96 words, rank 32; \textit{Two differences from Gilbert and Lynch's setting do not affect the conclusion.}} \textcolor{newblue}{The full paper also derives the theorem in Gilbert and Lynch's asynchronous
+theorem. \removednote{\textbf{unclassified}, 96 words, rank 33; \textit{Two differences from Gilbert and Lynch's setting do not affect the conclusion.}} \textcolor{newblue}{The full paper also derives the theorem in Gilbert and Lynch's asynchronous
 model~\cite{hellerstein2026completecalmfull}.}
 
 
-\section{Composition and Proper Coordination}
+\section{Composition and Tight Coordination}
 \label{sec:composition}
 
 A replicated key-value store poses a puzzle. \textcolor{newblue}{With mutable values it is
 non-monotone, and its replicas can diverge without
 coordination~\cite{alvaro2011bloom}.} \textcolor{newblue}{The pragmatic solution puts a consensus
 log upstream of the replicas, \`a la Multi-Paxos~\cite{lamport2001paxos}, so
-all replicas execute the same commands in the same order.} \removednote{\textbf{unclassified}, 24 words, rank 78; \textit{But consensus is itself non-monotone: when two commands arrive concurrently, either may be appended next, and ...}} \textcolor{newblue}{But consensus is
+all replicas execute the same commands in the same order.} \removednote{\textbf{unclassified}, 24 words, rank 79; \textit{But consensus is itself non-monotone: when two commands arrive concurrently, either may be appended next, and ...}} \textcolor{newblue}{But consensus is
 itself non-monotone: two concurrent commands may be appended in either order.} \textcolor{newblue}{The standard solution to non-monotonicity is more non-monotonicity!} Why does
-it work? \removednote{\textbf{unclassified}, 95 words, rank 33; \textit{That puzzle is explained by our framework.}} \textcolor{newblue}{Our framework answers by locating the stage that makes the
-\commitments (\S\ref{sec:proper-coordination}).}
+it work? \removednote{\textbf{unclassified}, 100 words, rank 29; \textit{That puzzle is explained by our framework.}} \textcolor{newblue}{Our framework answers by locating the stage that makes the
+\commitments (\S\ref{sec:tight-coordination}).}
 \label{sec:sequential-composition}
 
 Formally, consider two \spectype[s]
@@ -1440,8 +1440,8 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$. Their
 \end{split}
   \label{eq:spec-composition}
 \end{equation}
-where $\pi$ and $\Join$ are relational projection and equijoin. \removednote{\textbf{unclassified}, 27 words, rank 73; \textit{Every [math] has a nonempty fiber in [math], since [math] is total on [math] and [math] ...}} We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
-its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$. \removednote{\textbf{unclassified}, 23 words, rank 79; \textit{Appendix allows each spec to have an input of its own as well, as when a ...}} \textcolor{newblue}{In the replicated
+where $\pi$ and $\Join$ are relational projection and equijoin. \removednote{\textbf{unclassified}, 27 words, rank 74; \textit{Every [math] has a nonempty fiber in [math], since [math] is total on [math] and [math] ...}} We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
+its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$. \removednote{\textbf{unclassified}, 23 words, rank 80; \textit{Appendix allows each spec to have an input of its own as well, as when a ...}} \textcolor{newblue}{In the replicated
 store, $\Spec_1$ orders the proposed commands into a log, and $\Spec_2$
 executes the log and outputs the responses.}
 
@@ -1453,30 +1453,31 @@ If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the
 
 \textcolor{newblue}{\proofinfull}
 
-By associativity the lemma extends to finite pipelines. \removednote{\textbf{formal definition/notation}, 16 words, rank 89; \textit{For a function [math], its table [math] satisfies Lifted Monotonicity exactly when [math] is monotone ().}} \removednote{\textbf{unclassified}, 84 words, rank 40; \textit{We return to the replicated store of the opening.}}
+By associativity the lemma extends to finite pipelines. \removednote{\textbf{formal definition/notation}, 16 words, rank 90; \textit{For a function [math], its table [math] satisfies Lifted Monotonicity exactly when [math] is monotone ().}} \removednote{\textbf{unclassified}, 84 words, rank 40; \textit{We return to the replicated store of the opening.}}
 
-\subsection{Proper Coordination}
-\label{sec:proper-coordination}
+\subsection{Tight Coordination}
+\label{sec:tight-coordination}
 
 Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
-$\Spec_1$. \removednote{\textbf{unclassified}, 19 words, rank 87; \textit{We say that [math] satisfies Lifted Monotonicity on a set [math] when its restriction to inputs ...}}
+$\Spec_1$. \removednote{\textbf{unclassified}, 19 words, rank 88; \textit{We say that [math] satisfies Lifted Monotonicity on a set [math] when its restriction to inputs ...}}
 
-\begin{definition}[Guarded pipeline]
-\label{def:guarded}
-A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{guarded} when
+\begin{definition}[Sufficient guard]
+\label{def:sufficient-guard}
+$\Spec_1$ is a \emph{sufficient guard} for $\Spec_2$ when
 $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
-reaches without \commitment is legal. \removednote{\textbf{unclassified}, 11 words, rank 104; \textit{Applying the No- test (Proposition ) to [math] gives a static test.}} \removednote{\textbf{unclassified}, 47 words, rank 53; \textit{A pipeline in which [math] guards [math] is guarded exactly when [math] satisfies Lifted Monotonicity on ...}} \removednote{\textbf{unclassified}, 16 words, rank 90; \textit{Suppose a pipeline in which [math] guards [math] is guarded, and fix any system for [math].}}
+reaches without \commitment is legal. \removednote{\textbf{unclassified}, 11 words, rank 104; \textit{Applying the No- test (Proposition ) to [math] gives a static test.}} \removednote{\textbf{unclassified}, 45 words, rank 59; \textit{[math] is a sufficient guard for [math] exactly when [math] satisfies Lifted Monotonicity on the outputs ...}}
 \end{definition}
 
 \begin{proposition}[Guard test]
 \label{prop:guard-test}
-\textcolor{newblue}{By the No-\commitment test, a pipeline is guarded exactly when
-$\Spec_2|_{\Spec_1}$ satisfies Lifted Monotonicity.}
+\textcolor{newblue}{By the No-\commitment test, $\Spec_1$ is a sufficient guard for $\Spec_2$
+exactly when $\Spec_2|_{\Spec_1}$ satisfies Lifted Monotonicity.}
 \end{proposition}
 
-\begin{theorem}[Guarded pipelines]
-\label{thm:guarded-pipelines}
-\textcolor{newblue}{In a guarded pipeline, fix any system for $\Spec_1$.} \textcolor{newblue}{Then
+\begin{theorem}[Sufficient guards]
+\label{thm:sufficient-guards}
+\textcolor{newblue}{Let $\Spec_1$ be a sufficient guard for $\Spec_2$, and fix any system for
+$\Spec_1$.} \textcolor{newblue}{Then
 $\Spec_2|_{\Spec_1}$ answers each of its outputs without \commitment, and the
 pipeline's runs are consistent whenever the system's are.} \removednote{\textbf{unclassified}, 126 words, rank 23; \textit{Specifically, replacing each output of [math] by its answers, and dropping the events of [math], gives ...}}
 \end{theorem}
@@ -1490,36 +1491,39 @@ two stages keep yields runs of $P_2\circ P_1$.} \textcolor{newblue}{\fullproof}
 
 \begin{corollary}[Upstream \commitments]
 \label{cor:upstream-commitments}
-If a guarded pipeline's composite $P_2\circ P_1$ is not lifted monotone, some
-output of $\Spec_1$ needs a \commitment. \removednote{\textbf{unclassified}, 42 words, rank 59; \textit{Otherwise [math] satisfies Lifted Monotonicity by the No- test, and [math] does by Proposition .}}
+If $\Spec_1$ is a sufficient guard for $\Spec_2$ and the composite
+$P_2\circ P_1$ is not lifted monotone, some output of $\Spec_1$ needs a
+\commitment. \removednote{\textbf{unclassified}, 42 words, rank 60; \textit{Otherwise [math] satisfies Lifted Monotonicity by the No- test, and [math] does by Proposition .}}
 \end{corollary}
 
 This answers the opening puzzle. \textcolor{newblue}{The store restricted to logs needs no
 \commitment, so locks in the store would be pure overhead, and the pipeline is
-consistent whenever the log is.} \removednote{\textbf{unclassified}, 158 words, rank 15; \textit{The store as a whole is not monotone, so by Corollary some output of the log ...}} \textcolor{newblue}{The store as a whole is not monotone, so some
+consistent whenever the log is.} \removednote{\textbf{unclassified}, 96 words, rank 34; \textit{The store as a whole is not monotone, so by Corollary some output of the log ...}} \textcolor{newblue}{The store as a whole is not monotone, so some
 output of the log needs a \commitment, and consensus provides it.}
 
-\paragraph{Tight and proper pipelines.}
-\textcolor{newblue}{A guarded pipeline's upstream may still commit more than the composition
-needs.} \textcolor{newblue}{If commands $A$ and $B$ commute and the store reports only its state,
+\paragraph{Necessary and tight guards.}
+\textcolor{newblue}{A sufficient guard may still commit more than the composition
+needs.} \removednote{\textbf{unclassified}, 49 words, rank 52; \textit{Suppose two commands [math] and [math] commute, and the store's outputs do not record their order, ...}} \textcolor{newblue}{If commands $A$ and $B$ commute and the store reports only its state,
 emitting the log $[A]$ rules out $[B,A]$ by \commitment, though both logs
 yield the same output.} That \commitment is \emph{unnecessary}: it prevents a
 failure of Lifted Monotonicity in the upstream that leads to no failure in the
 composite.
 
-\begin{definition}[Tight pipeline, Proper Coordination]
-\label{def:tight}
-\label{def:proper-coordination}
-A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
-upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
+\begin{definition}[Necessary guard, tight guard]
+\label{def:necessary-guard}
+\label{def:tight-guard}
+$\Spec_1$ is a \emph{necessary guard} for $\Spec_2$ when it makes no
+unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
 of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
 $(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
 are inconsistent at $k$ in $P_2\circ P_1$.
 
-A pipeline's coordination is \emph{proper} when it is guarded and tight.
+$\Spec_1$ is a \emph{tight guard} for $\Spec_2$ when it is both a
+sufficient and a necessary guard, and the pipeline's coordination is then
+\emph{tight}.
 \end{definition}
 
-Tightness compares the upstream's canonical \commitments with those the
+Necessity compares the upstream's canonical \commitments with those the
 composite needs. The upstream's order on $M$ decides which \commitments are
 canonical, and the commuting log shows it can demand too many: it orders
 $[A,B]$ and $[B,A]$, although the store treats them alike. We therefore ask
@@ -1530,36 +1534,39 @@ of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments
 that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$. For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
 $f(m)\OutputOrd f(m')$.
 
-\begin{theorem}[Upstream Canonicalization]
-\label{thm:upstream-canonicalization}
+\begin{theorem}[Guard Tightening]
+\label{thm:guard-tightening}
 Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
 \item
-An order on $M$ keeps the pipeline guarded exactly when it is
-        contained in $\sqsubseteq$ on the outputs of $\Spec_1$.
-\item
-Under every such order, the upstream's canonical \commitments include
-        those under $\sqsubseteq$, and these include every \commitment the
+$\sqsubseteq$ is the coarsest order on $M$ under which $\Spec_1$ is a
+        sufficient guard for $\Spec_2$, and the upstream's canonical
+        \commitments under $\sqsubseteq$ include every \commitment the
         composite needs.
 \item
 If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
         functional, the upstream's canonical \commitments under $\sqsubseteq$
-        are exactly the composite's. So a guarded pipeline is proper exactly
-        when $\preceq_M$ requires no more \commitments than $\sqsubseteq$. \removednote{\textbf{unclassified}, 93 words, rank 35; \textit{(1) restates Proposition through the common-extension condition.}}
+        are exactly the composite's. So a sufficient guard is tight exactly
+        when $\preceq_M$ requires no more \commitments than $\sqsubseteq$. \removednote{\textbf{unclassified}, 171 words, rank 13; \textit{(1) Through the common-extension condition, Proposition says that the orders on [math] under which [math] is ...}}
 \end{enumerate}
 \end{theorem}
 \textcolor{newblue}{\proofinfull}
 
-Upstream canonicalization is the route to Proper Coordination: when the
-downstream's answers have greatest elements, an upstream ordered by
+\textcolor{newblue}{A greatest element of $P_2(m)$ is one answer to $m$ that extends every
+other, as a functional downstream trivially has.} Guard Tightening is the route
+to tight coordination: when the downstream's answers have greatest elements, an upstream ordered by
 $\sqsubseteq$ makes exactly the \commitments the composition needs. Since
 $\sqsubseteq$ is transitive but need not be an order, adopting it means
 treating values the downstream answers alike, such as logs that differ only in
-the order of commuting commands, as equal. The commuting log is guarded but
-not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$
-under the prefix order but consistent there under $\sqsubseteq$. Generalized
-Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} move
-toward $\sqsubseteq$ by ordering only commands that do not commute. \removednote{\textbf{unclassified}, 138 words, rank 20; \textit{Reversing the order on [math] in the boolean toggle below is reordering by [math].}} \removednote{\textbf{unclassified}, 13 words, rank 99; \textit{Guarded pipelines show how an upstream stage can discharge a pipeline's obligations.}} \textcolor{newblue}{Without
+the order of commuting commands, as equal. \textcolor{newblue}{When the store's responses record the commands that produced them, the
+consensus log is a tight guard: execution is monotone and reflects the prefix
+order, so every \commitment the log makes is one the store's clients can
+observe.} The commuting log is a sufficient guard but not a necessary one:
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
+prefix order but consistent there under $\sqsubseteq$. When commands commute
+and responses do not record their order, a log that orders only non-commuting
+commands, as in Generalized Paxos~\cite{lamport2005generalized} and
+EPaxos~\cite{moraru2013epaxos}, restores tightness. \removednote{\textbf{unclassified}, 138 words, rank 20; \textit{Reversing the order on [math] in the boolean toggle below is reordering by [math].}} \removednote{\textbf{unclassified}, 13 words, rank 99; \textit{Sufficient guards show how an upstream stage can discharge a pipeline's obligations.}} \textcolor{newblue}{Without
 greatest answers a gap can remain: when the downstream may give any of several
 answers, the upstream must commit before it sees which one, while a single
 implementation of the composite could correlate the two choices~\extended.} \textcolor{newblue}{That gap is the price of splitting the work into stages.}
@@ -1570,8 +1577,8 @@ implementation of the composite could correlate the two choices~\extended.} \tex
 also erase a downstream stage's need.} \textcolor{newblue}{A double-digit threshold test whose
 answers must be final, so that its output order is equality, cannot emit
 \textsf{false} without a \commitment, since a later count of $10$ would
-contradict it.} \removednote{\textbf{unclassified}, 787 words, rank 4; \textit{Yet when composed after the capped counter, the pair of stages needs no .}; labels prop:joint-monotone, sec:intersection, def:intersection, prop:intersection-bound} \textcolor{newblue}{Behind a counter capped at $9$, it only ever answers
-\textsf{false}, which is monotone under any order: the pipeline is guarded
+contradict it.} \removednote{\textbf{unclassified}, 788 words, rank 4; \textit{Yet when composed after the capped counter, the pair of stages needs no .}; labels prop:joint-monotone, sec:intersection, def:intersection, prop:intersection-bound} \textcolor{newblue}{Behind a counter capped at $9$, it only ever answers
+\textsf{false}, which is monotone under any order: the counter is a sufficient guard
 (Proposition~\ref{prop:guard-test}), and since the counter is monotone,
 neither stage needs a \commitment.} \textcolor{newblue}{The full paper extends these results to
 longer pipelines and acyclic graphs of stages~\extended.}
@@ -1661,11 +1668,11 @@ $q$ is monotone on the states $s$ can reach.} \textcolor{newblue}{For example, a
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
 test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{The composite is then
-not monotone, and since the semilattice stage needs no \commitment, the pipeline is
-not guarded (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
+not monotone, and since the semilattice stage needs no \commitment, the semilattice
+stage is not a sufficient guard (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
 on the query.} \textcolor{newblue}{An answer that exposes an element as present blocks its removal
 before it arrives, the third pattern above.} \textcolor{newblue}{The two-phase set does not enforce the block: it accepts the
-removal, and the answer is contradicted.} \removednote{\textbf{unclassified}, 38 words, rank 61; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 16; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 110; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{The CRDT's join is one
+removal, and the answer is contradicted.} \removednote{\textbf{unclassified}, 38 words, rank 62; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 16; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 110; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{The CRDT's join is one
 way to make states converge, but Complete CALM asks for less: answers need some
 common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).}
 
@@ -1684,7 +1691,7 @@ store's \emph{read rule}.}
 \label{def:hat-spec}
 \textcolor{newblue}{An input is a history: a set of events, partially ordered by happens-before,
 of three kinds.} \textcolor{newblue}{A read is tagged with its replica; a commit carries its
-timestamp and write set; an arrival brings a committed write to a replica.} \removednote{\textbf{unclassified}, 28 words, rank 71; \textit{The history preserves each client's program order and each replica's arrival order, and a transaction's reads ...}} One
+timestamp and write set; an arrival brings a committed write to a replica.} \removednote{\textbf{unclassified}, 28 words, rank 72; \textit{The history preserves each client's program order and each replica's arrival order, and a transaction's reads ...}} One
 input \inrel another when it adds events, none of which happens before an event
 already present. An output is a set of read answers, ordered by inclusion. \textcolor{newblue}{An
 isolation level $L$ is defined by the phenomena it
@@ -1760,7 +1767,7 @@ it includes must be closed and valid.
 \begin{proposition}[Invariant confluence as Lifted Monotonicity]
 \label{prop:iconfluence-lm}
 $T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
-Monotonicity, that is, if and only if the runs of $\Spec_{\mathcal I}$ are consistent. \removednote{\textbf{signposting}, 166 words, rank 13; \textit{See Appendix .}}
+Monotonicity, that is, if and only if the runs of $\Spec_{\mathcal I}$ are consistent. \removednote{\textbf{signposting}, 166 words, rank 14; \textit{See Appendix .}}
 \end{proposition}
 \textcolor{newblue}{\proofinfull}
 
@@ -1770,7 +1777,7 @@ states has two employees with ID~7, violating the invariant, so $T$ is not
 invariant confluent.} \textcolor{newblue}{Unique IDs ask each assignment of ID~7 to choose one
 employee among those competing for it, the second pattern of
 \S\ref{sec:instances}.} Without a \commitment, each replica chooses its own,
-and the merged state violates the invariant. \removednote{\textbf{unclassified}, 2535 words, rank 1; \textit{A system must reserve IDs, reject one creation, or weaken the invariant.}; labels sec:operational-models, def:projection, prop:projection, def:automaton-system, prop:automaton-system, def:confluent-automaton, prop:automaton-confluence, prop:declared-specification} \removednote{\textbf{unclassified}, 25 words, rank 76; \textit{Several observations that motivated CALM can now be explained in context.}}
+and the merged state violates the invariant. \removednote{\textbf{unclassified}, 2535 words, rank 1; \textit{A system must reserve IDs, reject one creation, or weaken the invariant.}; labels sec:operational-models, def:projection, prop:projection, def:automaton-system, prop:automaton-system, def:confluent-automaton, prop:automaton-confluence, prop:declared-specification} \removednote{\textbf{unclassified}, 25 words, rank 77; \textit{Several observations that motivated CALM can now be explained in context.}}
 
 \subsection{Operational models and scope}
 \label{sec:scope}
@@ -1843,13 +1850,13 @@ or protocol in mind.
 
 
 
-\textcolor{newblue}{Raising the level to specs also enables more refined analysis.} \removednote{\textbf{unclassified}, 32 words, rank 67; \textit{Bloom flagged syntactic non-monotonicity in programs and conservatively injected coordination code in front of it.}} \textcolor{newblue}{Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs,
+\textcolor{newblue}{Raising the level to specs also enables more refined analysis.} \removednote{\textbf{unclassified}, 32 words, rank 68; \textit{Bloom flagged syntactic non-monotonicity in programs and conservatively injected coordination code in front of it.}} \textcolor{newblue}{Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in programs,
 and recommended more non-monotone coordination code in front of it: the puzzle of
 Section~\ref{sec:composition}.} \textcolor{newblue}{Later tools moved from syntax to declared
 contracts and invariants in specific
 contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
 operation the weakest consistency or isolation level a storage system offers that still
-satisfies them.} \removednote{\textbf{unclassified}, 61 words, rank 48; \textit{We ask what a spec itself requires, independent of any menu of levels, and by Observable ...}} \textcolor{newblue}{Proper Coordination instead shows where a composition's \commitments belong and which of them are unnecessary, without a fixed menu of levels.}
+satisfies them.} \removednote{\textbf{unclassified}, 61 words, rank 48; \textit{We ask what a spec itself requires, independent of any menu of levels, and by Observable ...}} \textcolor{newblue}{Tight coordination instead shows where a composition's \commitments belong and which of them are unnecessary, without a fixed menu of levels.}
 
 \textcolor{newblue}{Underlying these issues is a reassessment of Codd's lesson of declarativity: how
 little structure must be declared to be
@@ -1874,11 +1881,11 @@ formally specifying programs at an even higher level.}
 
 \textcolor{newblue}{The simplicity of \spectype[s] provides a unified foundation for the
 coordination literature.} It also clarifies the intrinsic purpose of
-coordination: removing possibilities via \commitments. \removednote{\textbf{unclassified}, 198 words, rank 9; \textit{The question of coordination-free consistency becomes clear in this model: when must a system make a ...}} \textcolor{newblue}{This simplicity
+coordination: removing possibilities via \commitments. \removednote{\textbf{unclassified}, 203 words, rank 9; \textit{The question of coordination-free consistency becomes clear in this model: when must a system make a ...}} \textcolor{newblue}{This simplicity
 leads to the generality of Complete CALM: a spec's runs are consistent exactly
 when it is lifted monotone, which reduces to textbook monotonicity for
 functional specs.} \textcolor{newblue}{Complete CAP follows as a corollary.} \textcolor{newblue}{\Commitments
-lead to Proper Coordination, explaining how to make the right commitments in compositions of non-monotone specs.}
+lead to tight coordination, explaining how to make the right commitments in compositions of non-monotone specs.}
 
 
 
@@ -1893,7 +1900,7 @@ needed to determine a spec. \textcolor{newblue}{Another is Determination Provena
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, bringing formal models of provenance to
 concurrent systems.} A third direction is to provide general-purpose static
-analysis and synthesis of properly coordinated systems in practical programming frameworks.
+analysis and synthesis of tightly coordinated systems in practical programming frameworks.
 
 \begin{acks}
 \textcolor{newblue}{Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.} \textcolor{newblue}{Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin

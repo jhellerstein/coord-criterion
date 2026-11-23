@@ -43,7 +43,7 @@ composition is the library's `Comp.seq`; the values an upstream can offer are
   `offered_available` (on the offered interface the empty-basis downstream
   admits a commitment-free following run for every admitted upstream run),
   `Component.proper_follows`, `Component.proper_run` (Theorem
-  Theorem `thm:guarded-pipelines` for the runs a component admits),
+  Theorem `thm:sufficient-guards` for the runs a component admits),
   `ofSys_free`, `ofSys_eraseSys_commitmentFree`.
 
 Modeling choices: an `OperationalRun` names its initial input and one emitted
@@ -279,8 +279,8 @@ def Pipeline.ContractProper {upSpec : Spec I M} {downSpec : Spec M O}
     (_p : Pipeline upSpec downSpec) : Prop :=
   CEOn downSpec (Img upSpec)
 
-/-- Contract properness is Proper Coordination (`Guard.Proper`,
-Def. `def:proper-coordination`). -/
+/-- Contract properness is the sufficient-guard property (`Guard.Proper`,
+Def. `def:tight-guard`). -/
 theorem contractProper_iff_guardProper {upSpec : Spec I M} {downSpec : Spec M O}
     (p : Pipeline upSpec downSpec) : p.ContractProper ↔ Guard.Proper upSpec downSpec :=
   proper_iff.symm
@@ -480,7 +480,7 @@ theorem threshold_component :
 
 end Threshold
 
-/-! ## Bridges to Proper Coordination (`Appendix/Guarded.lean`) -/
+/-! ## Bridges to sufficient guards (`Appendix/Guarded.lean`) -/
 
 section Bridges
 variable {I M O : Type} [PO I] [PO M] [PO O]
@@ -551,7 +551,7 @@ theorem offered_compositeSpec {sp : Spec I M} {sk : Spec M O} (c : Component sp)
     (k : Component (rest sp sk)) : (Pipeline.offered c k).compositeSpec = seq sp sk :=
   seq_core sp sk
 
-/-- On the offered interface, contract properness is Proper Coordination. -/
+/-- On the offered interface, contract properness is the sufficient-guard property. -/
 theorem offered_contractProper_iff {sp : Spec I M} {sk : Spec M O} (c : Component sp)
     (k : Component (rest sp sk)) : (Pipeline.offered c k).ContractProper ↔ Guard.Proper sp sk := by
   rw [proper_iff_ce]
@@ -561,7 +561,7 @@ theorem offered_contractProper_iff {sp : Spec I M} {sk : Spec M O} (c : Componen
   · intro h
     exact ceOn_of_ce h _
 
-/-- **Availability on the offered interface.**  If Proper Coordination holds,
+/-- **Availability on the offered interface.**  If the upstream is a sufficient guard,
 then for every run an upstream implementation admits, the maximally
 permissive empty-basis implementation of `𝒮₂|_{𝒮₁}` admits a following run:
 a feed witness whose upstream run has the same input and named output and
@@ -590,7 +590,7 @@ theorem offered_available {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp 
   exact ⟨implementationProper_of_downstream_commitmentFree p (ofCommitmentBasis_empty_commitmentFree _),
     w, hin, hout, sysExec_emptyCommitmentBasis_coordFree hx⟩
 
-/-- **Theorem `thm:guarded-pipelines`, following, for the runs an
+/-- **Theorem `thm:sufficient-guards`, following, for the runs an
 implementation admits.**  In a proper pipeline, for every run an upstream
 implementation admits that emits `m :: ms`, the empty-basis `𝒮₂|_{𝒮₁}`
 follows it, and the merged trace is a run of `P₂ ∘ P₁` (`Guard.proper_follows`). -/
@@ -606,7 +606,7 @@ theorem Component.proper_follows {sp : Spec I M} {sk : Spec M O} (hP : Guard.Pro
         ρ'.cur = r.final.cur :=
   Guard.proper_follows hP (c.sound r h).legal he
 
-/-- **Theorem `thm:guarded-pipelines`, the composite run, for the runs an
+/-- **Theorem `thm:sufficient-guards`, the composite run, for the runs an
 implementation admits** (`Guard.proper_run`): any empty-basis run of
 `𝒮₂|_{𝒮₁}` that receives each output of an admitted upstream run and answers
 it any number of times gives a run of `P₂ ∘ P₁` whose table contains the

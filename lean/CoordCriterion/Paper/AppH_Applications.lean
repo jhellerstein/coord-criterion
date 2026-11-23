@@ -477,7 +477,7 @@ the first compare-and-swap, the same value in every response.  Each process
 decides the value in its response.  That decision stage is a monotone function
 of the object's responses, so it needs no commitment on them (Proposition
 `prop:guard-test`), and the object's ordering is the only commitment the
-pipeline needs (Theorem `thm:guarded-pipelines`)."  The object is any upstream stage `sp` whose
+pipeline needs (Theorem `thm:sufficient-guards`)."  The object is any upstream stage `sp` whose
 outputs are response maps (a partial map from processes to the value named in
 their response, ordered by extension) in which all responses name the same
 value; the decision stage is the identity on response maps.  Conclusions: the

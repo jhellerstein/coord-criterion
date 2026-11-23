@@ -123,8 +123,8 @@ What of coordination?  A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments.  Our criterion identifies exactly
 the \commitments a spec's outputs require, independent of mechanism.
-In a composition of specs, \emph{Proper Coordination}
-identifies which stage must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs.  In state-machine replication, for example, the consensus log
+In a composition of specs, coordination is \emph{tight}
+when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  Guard Tightening shows how to order the upstream's outputs to achieve it.  In state-machine replication, for example, the consensus log
 makes every \commitment; the replicated store needs none, so any coordination it employs is overhead (Section~\ref{sec:composition}).
 
 Distributed histories are captured under the same consistency criteria as
@@ -152,7 +152,7 @@ We make contributions in four categories:
 \emph{3. Constructive results for coordination.} We define \commitments,
         the underlying contracts that coordination mechanisms can enforce,
         and identify exactly the \commitments a non-monotone spec requires.
-        Specs compose by equijoin, and Proper Coordination identifies the stage that must make the \commitments, certifying that later stages need none and that it makes no more than the composition needs.
+        Specs compose by equijoin.  Coordination is tight when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  Guard Tightening shows how to order the upstream's outputs to achieve it.
 
 \noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant

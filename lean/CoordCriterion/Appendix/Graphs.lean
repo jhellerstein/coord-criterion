@@ -6,7 +6,7 @@ import CoordCriterion.Appendix.JointMono
 
 Namespace `CC.Graph`.  Not cited by the paper.  Can arbitrary DAGs of
 stages be assembled from sequential composition (`Comp.seq`) and a few
-combinators, and do Lifted Monotonicity and Proper Coordination compose along
+combinators, and do Lifted Monotonicity and sufficient guards compose along
 them?
 
 * **Product** `prod sa sb` (independent sources side by side):
@@ -31,9 +31,9 @@ them?
   test `Expr.Ok`; `ok_ceOn`, `ok_liftedMono` (every node passes ⇒ the whole
   expression is LM on the offered inputs); `imgOn_prod` (independent sources
   offer the product of their images), `imgOn_seqTee` (a tee offers the
-  diagonal), `ok_seq_node_iff` (the test of a node is Proper Coordination of
+  diagonal), `ok_seq_node_iff` (the test of a node is the sufficient-guard property of
   its upstream).
-* **Proper Coordination for products**: `img_prod`, `proper_prod`,
+* **Sufficient guards for products**: `img_prod`, `proper_prod`,
   `proper_prod_iff`, `proper_merge_iff` (a merging stage after two guards is
   proper iff it is LM on the product of their images), `proper_union`.
 * **Parameterized composition** (App. D) as `seq (prod F id) G` up to
@@ -543,7 +543,7 @@ theorem ok_fn {A B : POT} {f : A.carrier → B.carrier} {D : A.carrier → Prop}
     (hf : ∀ a b, D a → D b → a ≼ b → f a ≼ f b) : (node (graph f)).Ok D :=
   graph_ceOn hf
 
-/-- **The test of a node is Proper Coordination** of its upstream: a node
+/-- **The test of a node is the sufficient-guard property** of its upstream: a node
 `𝒦` after `e` passes iff `e` passes and the pipeline `e` guarding `𝒦` is
 proper. -/
 theorem ok_comp_node_iff {A B C : POT} (e : Expr A B) (sk : Spec B.carrier C.carrier) :
@@ -592,7 +592,7 @@ theorem dupE_not : ¬ dupE.Ok (fun _ => True) ∧ ¬ dupE.sem.LiftedMono := by
 
 end ExprExample
 
-/-! ### Proper Coordination for products -/
+/-! ### Sufficient guards for products -/
 
 section ProperProd
 variable {Ia Ib Ma Mb Oa Ob O : Type} [PO Ia] [PO Ib] [PO Ma] [PO Mb] [PO Oa] [PO Ob] [PO O]

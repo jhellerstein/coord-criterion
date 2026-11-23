@@ -21,7 +21,7 @@ ORDER = [
     ("S3_CompleteCALM", "§3 Complete CALM", "sections/complete-calm.tex"),
     ("S4_Distributed", "§4.1–4.3 Distributed execution", "sections/distributed-histories.tex, sections/distributed.tex"),
     ("S4_5_CompleteCAP", "§4.4 Complete CAP", "sections/distributed.tex"),
-    ("S5_Composition", "§5 Composition and Proper Coordination", "sections/composition.tex"),
+    ("S5_Composition", "§5 Composition and Tight Coordination", "sections/composition.tex"),
     ("S6_Instances", "§6 Instances", "sections/instances.tex"),
     ("AppA_Notation", "Appendix A: Notation", "appendices/notation.tex"),
     ("AppB_Proofs", "Appendix B: Deferred Proofs", "appendices/proof-machinery.tex"),

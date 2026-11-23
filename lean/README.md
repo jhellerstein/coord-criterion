@@ -25,7 +25,7 @@ The index below lists every `Paper/` declaration.  The library files carry
 module docstrings that name the paper section they support, what they
 contain, and their modeling choices.
 
-What is argued only in prose, not in Lean: the reading of consistency in §2 as a safety property of a spec's runs that guarantees a common state exists but not that a system reaches it, and the remark in §1 and §5 that a system omitting a required commitment can produce inconsistent runs or that a mutable replicated store's replicas can diverge without coordination; in Appendix F, Lynch's result that atomicity is a safety property (Lean takes atomicity of an infinite execution to be atomicity of each finite prefix, `«prop:gl-async/fair-executions»`); the description of the 2PL and MVTO protocols themselves (which arrival makes a lock wait, issues a timestamp, or triggers the write rule; Appendix G, where Lean checks the commitments those steps apply, when `order(A,B)` removes nothing, and the MVTO run driven by arrivals); the messaging of two-phase commit in §4.3 (prepare messages, logging, blocking; Lean checks that a prepare reports the owner's commitments, that the decision is monotone, applies no commitment, and commits exactly when every owner's commitments allow commit); that consensus is the mechanism that provides the log's commitment in §5.1 (Lean checks that some output of the log needs a commitment, `«sec:proper-coordination/locks-overhead»`); the
+What is argued only in prose, not in Lean: the reading of consistency in §2 as a safety property of a spec's runs that guarantees a common state exists but not that a system reaches it, and the remark in §1 and §5 that a system omitting a required commitment can produce inconsistent runs or that a mutable replicated store's replicas can diverge without coordination; in Appendix F, Lynch's result that atomicity is a safety property (Lean takes atomicity of an infinite execution to be atomicity of each finite prefix, `«prop:gl-async/fair-executions»`); the description of the 2PL and MVTO protocols themselves (which arrival makes a lock wait, issues a timestamp, or triggers the write rule; Appendix G, where Lean checks the commitments those steps apply, when `order(A,B)` removes nothing, and the MVTO run driven by arrivals); the messaging of two-phase commit in §4.3 (prepare messages, logging, blocking; Lean checks that a prepare reports the owner's commitments, that the decision is monotone, applies no commitment, and commits exactly when every owner's commitments allow commit); that consensus is the mechanism that provides the log's commitment in §5.1 (Lean checks that some output of the log needs a commitment, `«sec:tight-coordination/locks-overhead»`); that, in §5.2, a log ordering only non-commuting commands, as in Generalized Paxos and EPaxos, restores tightness in general (Lean proves it for two commuting increments, `«sec:tight-coordination/partial-order-log»`); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman as statements about transducer
 runs (which input order policy-aware, domain-guided and original placement
@@ -119,8 +119,9 @@ first and supporting claims and examples follow.
 | `Instances/IOTraceExamples.lean` | `CC.IOT` | §6.5 | The early-closing registrar (consistent projected spec, not confluent; a run of the projected spec no execution has); a hidden internal choice that is a commitment event; racing and recording counters; neither declared-spec obligation suffices alone; a declared rule for the recording counter |
 | `Instances/TestingLimits.lean` | `CC.Testing` | §6.5 | Testing cannot show Lifted Monotonicity: for every finite set of explored inputs, two specs agree on those fibers, one Lifted Monotone and one not |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
-| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no exclusion; pipeline runs as composite runs, confluence, where the upstream must apply an exclusion), systems with strategies, exclusion-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
+| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, sufficient guards (`𝒮₂` restricted to the outputs of `𝒮₁` needs no exclusion; pipeline runs as composite runs, confluence, where the upstream must apply an exclusion), systems with strategies, exclusion-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
+| `Appendix/Tight.lean` | `CC.Tight` | §5.2, App. D | Necessary and tight guards: rows inconsistent under a relation on `M`, the downstream order `dle` (`⊑`), Guard Tightening, sufficient conditions (`tight_of_liftedMono`, `tight_of_reflects`), the consensus log as a tight guard, the commuting and partial-order logs, and the gap example |
 | `Appendix/Components.lean` | `CC.Components` | §5, App. D | Components and typed pipelines: component implementations (basis, admitted output-annotated runs, soundness certificates, implementation-form metadata), feed witnesses, external observations, boundary safety; contract properness (= `Guard.Proper`) vs. implementation properness, with the early-lock and capped-counter counterexamples; bridges to Proper Coordination (upstream retyped at its offered outputs, empty-basis `𝒮₂\|_{𝒮₁}` admits a following run, `Guard.proper_follows`/`proper_run` for admitted runs) |
 | `Appendix/ComponentSystems.lean` | `CC.Components` | §4.3–4.4, App. D | A system as one component implementation (participant runs of produced histories); process and cluster forms; the 2PC timeout exclusion, which rules out future inputs containing a late vote, as a process (coordinator alone) and as a cluster (replicated) |
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
@@ -135,7 +136,7 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/CommitEvent.lean` | `CC.Txn.Partial.CommitEx` | §4.3 | 2PL exclusion event `Exclude([order(A,B)])` when `B` waits for `A`'s lock, at three transactions that requested commit, then `[A,C,B]`; lockstep with the canonical run, same final state |
 | `Appendix/Frontiers.lean` | `CC.Front` | §3 (Hoare remark); otherwise not in paper | Hoare preorder vs. the joint refinement lift; remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. E (real-time causal) | Thm. independent products (`thm:product-frontier`), configuration example |
-| `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; Proper Coordination for products; parameterized composition as a product |
+| `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; sufficient guards for products; parameterized composition as a product |
 | `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers) | Causal and linearizable registers, two-write history, causal-register frontier |
 | `Appendix/RealTimeCausal.lean` | `CC.Deploy` | App. E (real-time causal) | Histories with real-time precedence, real-time causal views, their product interface, forcing, maximality for real-time blind strengthenings |
 | `Appendix/MahajanRTC.lean` | `CC.Deploy` | App. E (real-time causal) | Mahajan et al.'s RTC check for one replica's reads is the real-time causal views (single-source writeLists; one element of a set-valued writeList is not enough); always availability as totality plus Deployment Availability; one-way convergence from delivery in the input; implementations that do not observe real time induce real-time blind strengthenings; their Theorem 3.1 derived from Prop. rtc-maximal and Thm. independent products (2), realized in any system with Deployment Availability |
@@ -150,7 +151,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-744 entries.
+749 entries.
 
 ### §2 Functional CALM
 
@@ -400,7 +401,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/response-form»` | theorem | Appendix `app:cap-response` (pointed to from the body's "the theorem holds in their model as well") also extends Complete CAP to systems that choose their re… |
 | `«sec:complete-cap/gl-async»` | theorem | "the theorem holds in their model as well (Appendix `app:cap-response`)": |
 
-### §5 Composition and Proper Coordination
+### §5 Composition and Tight Coordination
 
 File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 
@@ -412,22 +413,25 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone (Section `sec:lifted-monotonicity`)." Lean: |
-| `«sec:proper-coordination/kvs-on-logs»` | theorem | "We return to the replicated store of the opening. |
-| `«def:guarded»` | theorem | **Definition `def:guarded`** (Guarded pipeline): |
+| `«sec:tight-coordination/kvs-on-logs»` | theorem | "We return to the replicated store of the opening. |
+| `«def:sufficient-guard»` | theorem | **Definition `def:sufficient-guard`** (Sufficient guard): |
 | `«prop:guard-test»` | theorem | **Proposition `prop:guard-test`** (Guard test): |
-| `«thm:guarded-pipelines»` | theorem | **Theorem `thm:guarded-pipelines`** (Guarded pipelines): |
+| `«thm:sufficient-guards»` | theorem | **Theorem `thm:sufficient-guards`** (Sufficient guards): |
 | `«cor:upstream-commitments»` | theorem | **Corollary `cor:upstream-commitments`** (Upstream commitments): |
-| `«sec:proper-coordination/locks-overhead»` | theorem | "This answers the opening puzzle. |
-| `«sec:proper-coordination/nesting»` | theorem | "Longer pipelines nest: |
-| `«sec:proper-coordination/components»` | theorem | "A downstream implementation may still take commitments the specs do not require, as a store that takes locks behind a log would. |
-| `«sec:proper-coordination/inconsistent-rows»` | theorem | From Def. |
-| `«def:tight»` | theorem | **Definition `def:tight`** (Tight pipeline): |
-| `«def:proper-coordination»` | def | **Definition `def:proper-coordination`** (Proper Coordination): |
-| `«sec:proper-coordination/downstream-order»` | theorem | "To measure the upstream against the downstream, write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read cons… |
-| `«thm:upstream-canonicalization»` | theorem | **Theorem `thm:upstream-canonicalization`** (Upstream Canonicalization): |
-| `«thm:upstream-canonicalization/any-order»` | theorem | Theorem `thm:upstream-canonicalization`(2), first half, for an arbitrary order: |
-| `«sec:proper-coordination/commuting-log»` | theorem | "The commuting log is guarded but not tight: |
-| `«sec:proper-coordination/gap»` | theorem | "Without greatest answers, a gap can remain. |
+| `«sec:tight-coordination/locks-overhead»` | theorem | "This answers the opening puzzle. |
+| `«sec:tight-coordination/nesting»` | theorem | "Longer pipelines nest: |
+| `«sec:tight-coordination/components»` | theorem | "A downstream implementation may still take commitments the specs do not require, as a store that takes locks behind a log would. |
+| `«sec:tight-coordination/inconsistent-rows»` | theorem | Before Theorem `thm:guard-tightening`: |
+| `«def:necessary-guard»` | theorem | **Definition `def:necessary-guard`** (Necessary guard): |
+| `«def:tight-guard»` | def | **Definition `def:tight-guard`** (Tight guard): |
+| `«sec:tight-coordination/downstream-order»` | theorem | "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read consistency of rows of `P₁` under `⊑`, and the canon… |
+| `«thm:guard-tightening»` | theorem | **Theorem `thm:guard-tightening`** (Guard Tightening): |
+| `«sec:tight-coordination/greatest»` | theorem | After Theorem `thm:guard-tightening`: |
+| `«thm:guard-tightening/any-order»` | theorem | `thm:guard-tightening`, for every order: |
+| `«sec:tight-coordination/consensus-log»` | theorem | "When the store's responses record the commands that produced them, the consensus log is a tight guard: |
+| `«sec:tight-coordination/commuting-log»` | theorem | "The commuting log is a sufficient guard but not a necessary one: |
+| `«sec:tight-coordination/partial-order-log»` | theorem | "When commands commute and responses do not record their order, a log that orders only non-commuting commands, as in Generalized Paxos and EPaxos, restores t… |
+| `«sec:tight-coordination/gap»` | theorem | "Without greatest answers, a gap can remain. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
@@ -740,10 +744,10 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/components-commit»` | theorem | "A monotone composite can also leave a non-monotone upstream unable to emit. |
 | `«app:composition/image-canon»` | theorem | "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write `R ⋈ T = {(k,x) : |
 | `«app:composition/pipeline-run»` | theorem | "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of `𝒮₂\|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`. |
-| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts about a guarded pipeline, in which `𝒮₂\|_{𝒮₁}` satisfies the common-extension condition (Propositions `prop:exposure-bou… |
-| `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:guarded-pipelines`: |
+| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts that hold when `𝒮₁` is a sufficient guard, so that `𝒮₂\|_{𝒮₁}` satisfies the common-extension condition (Propositions `p… |
+| `«app:composition/sufficient-lockstep»` | theorem | Proof of Theorem `thm:sufficient-guards`: |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of the stronger form of Corollary `cor:upstream-commitments`: |
-| `«app:composition/guardedness-needed»` | theorem | "Guardedness is needed in Corollary `cor:upstream-commitments`. |
+| `«app:composition/sufficient-guard-needed»` | theorem | "The sufficient-guard hypothesis is needed in Corollary `cor:upstream-commitments`. |
 | `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with its commitment events dropped." Lean: |
 | `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
 | `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
@@ -759,6 +763,8 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
+| `«prop:tight-guards»` | theorem | **Proposition `prop:tight-guards`** (Tight guards): |
+| `«app:tight/logs»` | theorem | "Both parts apply to logs. |
 | `«app:intersection/bound»` | theorem | Proof of Proposition `prop:intersection-bound`: |
 | `«app:intersection/example»` | theorem | "In the example of Section `sec:intersection`, both specs satisfy Lifted Monotonicity: |
 | `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run). |
@@ -766,10 +772,10 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component. |
 | `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision discussed after Proposition `prop:commitment-conflict` can take either form. |
 | `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Feed, typed pipeline, external observation). |
-| `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (contract-guarded, implementation-guarded). |
+| `«def:sufficient-pipeline»` | theorem | **Definition `def:sufficient-pipeline`** (Contract-sufficient, implementation-sufficient). |
 | `«app:components/feed-is-input»` | theorem | "The value `m` is the downstream run's initial input, so receiving it is not a commitment of `C₂`." Lean: |
 | `«prop:typed-pipelines»` | theorem | **Proposition `prop:typed-pipelines`** (Typed pipelines): |
-| `«app:components/follows»` | theorem | "Item (5) covers one upstream output, while Theorem `thm:guarded-pipelines` follows the entire emitted stream. |
+| `«app:components/follows»` | theorem | "Item (5) covers one upstream output, while Theorem `thm:sufficient-guards` follows the entire emitted stream. |
 
 ### Appendix E: Deployment
 

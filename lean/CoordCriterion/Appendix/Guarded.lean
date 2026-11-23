@@ -3,7 +3,7 @@ import CoordCriterion.Distributed.Systems
 import CoordCriterion.Instances.Examples
 
 /-!
-# Guarded composition and Proper Coordination (Section 5, Appendix D)
+# Composition behind a sufficient guard (Section 5, Appendix D)
 
 Namespace `CC.Guard`.  An upstream specification `𝒫 : Spec I M` (e.g. a log
 authority, Paxos) feeds a downstream store `𝒦 = graph f` with `f : M → O`
@@ -53,7 +53,7 @@ emits.  The first sections treat a function store `graph f`; section
   of times, possibly never.  `eraseSys`, `Obs`, `erase_simulates` — the
   commitment-erased replacement.  `grun_composite`, `GEmits`, `pipeline_step`,
   `pipeline_coordination_free` — pipelines.
-* Proper Coordination (section `ProperCoord`): `rest sp sk` is `𝒮₂|_{𝒮₁}`,
+* Sufficient guards (section `ProperCoord`): `rest sp sk` is `𝒮₂|_{𝒮₁}`,
   `NeedsNoCommit`, `Proper` (Def.); `proper_iff`, `proper_iff_consistent`
   (Thm. (1)); `proper_follows`, `proper_run`, `proper_confluent` (Thm. (2), via
   `core`, `core_lockstep`, `seq_core`); `proper_needs_commit` (Thm. (3));
@@ -841,7 +841,7 @@ theorem sysExec_lastIn {B : CommitmentBasis sq} {σ ρ : State sq} {es : List (S
 
 end Systems
 
-/-! ### General stores: Proper Coordination
+/-! ### General stores: sufficient guards
 
 From here on the store is any ordered relational specification
 `sk : Spec M O` satisfying Lifted Monotonicity (used through the
@@ -1619,11 +1619,11 @@ theorem pipeline_coordination_free (hP : sp.LiftedMono) (hK : sk.LiftedMono)
 
 end General
 
-/-! ### Proper Coordination
+/-! ### Sufficient guards
 
 `𝒮₁ = sp` guards `𝒮₂ = sk`.  `𝒮₂|_{𝒮₁}` is `rest sp sk`, the downstream
 restricted to the outputs of the upstream (`Joint.restrictTo (Joint.Img sp)`).
-The pipeline is proper (the paper's *guarded*, Def. `def:guarded`) when
+The pipeline is proper (the paper's *guarded*, Def. `def:sufficient-guard`) when
 `𝒮₂|_{𝒮₁}` needs no commitment.  The definition
 does not mention the system that runs `𝒮₁`, so every result below holds for
 every system for `𝒮₁`. -/
@@ -1641,7 +1641,7 @@ reaches without commitment is exposable. -/
 def NeedsNoCommit {J X : Type} [PO J] [PO X] (sq : Spec J X) : Prop :=
   ∀ τ : State sq, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o
 
-/-- **Definition (Proper Coordination).**  The pipeline in which `𝒮₁` guards
+/-- **Definition (Sufficient guard).**  The pipeline in which `𝒮₁` guards
 `𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no commitment. -/
 def Proper (sp : Spec I M) (sk : Spec M O) : Prop := NeedsNoCommit (rest sp sk)
 
@@ -1650,7 +1650,7 @@ boundary). -/
 theorem proper_iff_ce : Proper sp sk ↔ (rest sp sk).CommonExpansion :=
   (exposure_boundary _).symm
 
-/-- **Theorem (Proper Coordination) (1).**  The pipeline is proper exactly
+/-- **Theorem (Sufficient guards) (1).**  The pipeline is proper exactly
 when `𝒮₂` satisfies Lifted Monotonicity on the outputs of `𝒮₁`. -/
 theorem proper_iff : Proper sp sk ↔ CEOn sk (Img sp) := by
   rw [proper_iff_ce, ← liftedMono_iff_commonExpansion, ← ceOn_iff_restrictTo]
@@ -1795,7 +1795,7 @@ theorem emitted_img {B : CommitmentBasis sp} {σ ρ : State sp} {es : List (SEve
       · exact ⟨σ.cur, σ.sub _ _ (containment hs).2.1⟩
       · exact ih m hm
 
-/-- **Theorem (Proper Coordination) (2), the composite run.**  In a proper
+/-- **Theorem (Sufficient guards) (2), the composite run.**  In a proper
 pipeline, let `𝒮₁` run under any basis, emitting `m :: ms`, and let
 `𝒮₂|_{𝒮₁}` run under the empty basis from `σ(m)`, receiving each later output
 and answering any number of times (possibly never).  Then `𝒮₁`'s run, with
@@ -1823,7 +1823,7 @@ theorem proper_run (hP : Proper sp sk) {B : CommitmentBasis sp} {i : I} {es : Li
     fun k m hk => hab1 k ⟨m, k, ρ.sub _ _ hk⟩ (hsρ k ⟨m, k, ρ.sub _ _ hk⟩ hk)⟩
   rw [merge_congr es es' _ hsk.symm]; exact hx'
 
-/-- **Theorem (Proper Coordination) (2), following.**  In a proper pipeline,
+/-- **Theorem (Sufficient guards) (2), following.**  In a proper pipeline,
 `𝒮₂|_{𝒮₁}` under the empty basis follows every run of `𝒮₁` under any basis:
 it starts at the first output `m`, answers it, and receives and answers each
 later output, with no commitment.  The result is a run of `P₂ ∘ P₁`. -/
@@ -1857,7 +1857,7 @@ theorem proper_follows (hP : Proper sp sk) {B : CommitmentBasis sp} {i : I} {es 
     rw [List.map_map]; rfl
   rw [← e]; exact hx'
 
-/-- **Theorem (Proper Coordination) (2), confluence.**  In a proper pipeline,
+/-- **Theorem (Sufficient guards) (2), confluence.**  In a proper pipeline,
 consider triples of a state of `𝒮₁`, a run state of `𝒮₂|_{𝒮₁}` below every
 output in `𝒮₁`'s table, and a run state of `P₂ ∘ P₁` containing the join of
 their tables.  If the states of `𝒮₁` can be continued (under any bases) to one
@@ -1901,7 +1901,7 @@ theorem proper_confluent (hP : Proper sp sk)
       (hallu (pick p) (List.mem_map.2 ⟨p, hp, rfl⟩))
   exact hsub p hp j m u hI (hm' p hp) hpu
 
-/-- **Theorem (Proper Coordination) (3).**  In a proper pipeline, if
+/-- **Theorem (Sufficient guards) (3).**  In a proper pipeline, if
 `P₂ ∘ P₁` violates Lifted Monotonicity, some composite output `o` is not
 exposable at a canonical state `σ(i)`, and `𝒮₁` must apply a commitment to emit any `m`
 with `o ∈ P₂(m)` there: no such `m` is exposable at `σ_{𝒮₁}(i)`, and under the

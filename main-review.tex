@@ -117,7 +117,7 @@ specs, they say only that coordination is needed somewhere.} Our
 unified framework offers constructive results on both sides: it says exactly
 what coordination a spec needs, and when. \textcolor{reviewed}{A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
-enforceable by coordination mechanisms like locks, atomics, or consensus.} \textcolor{reviewed}{\emph{Proper Coordination} identifies which stage of a composition must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs, explaining designs such
+enforceable by coordination mechanisms like locks, atomics, or consensus.} \textcolor{reviewed}{A composition of specs has \emph{tight coordination} when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.} \textcolor{reviewed}{We show how to order the upstream's outputs to achieve it, explaining designs such
 as consensus logs in front of a replicated store.}
 
 \end{abstract}
@@ -268,8 +268,8 @@ CALM acronym.}
 \textcolor{reviewed}{What of coordination?} \textcolor{reviewed}{A \commitment isolates the contract a coordination
 mechanism achieves, apart from how it achieves it: locks, barriers,
 and other mechanisms all enforce \commitments.} \textcolor{reviewed}{Our criterion identifies exactly
-the \commitments a spec's outputs require, independent of mechanism.} \textcolor{reviewed}{In a composition of specs, \emph{Proper Coordination}
-identifies which stage must make the \commitments, certifies that later stages need none, and checks that the upstream makes no more than the composition needs.} \textcolor{reviewed}{In state-machine replication, for example, the consensus log
+the \commitments a spec's outputs require, independent of mechanism.} \textcolor{reviewed}{In a composition of specs, coordination is \emph{tight}
+when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.} \textcolor{reviewed}{Guard Tightening shows how to order the upstream's outputs to achieve it.} \textcolor{reviewed}{In state-machine replication, for example, the consensus log
 makes every \commitment; the replicated store needs none, so any coordination it employs is overhead (Section~\ref{sec:composition}).}
 
 \textcolor{reviewed}{Distributed histories are captured under the same consistency criteria as
@@ -296,7 +296,7 @@ partition.} \textcolor{reviewed}{The Gilbert--Lynch CAP Theorem~\cite{gilbert200
 \textcolor{reviewed}{\noindent
 \emph{3. Constructive results for coordination.} We define \commitments,
         the underlying contracts that coordination mechanisms can enforce,
-        and identify exactly the \commitments a non-monotone spec requires.} \textcolor{reviewed}{Specs compose by equijoin, and Proper Coordination identifies the stage that must make the \commitments, certifying that later stages need none and that it makes no more than the composition needs.}
+        and identify exactly the \commitments a non-monotone spec requires.} \textcolor{reviewed}{Specs compose by equijoin.} \textcolor{reviewed}{Coordination is tight when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.} \textcolor{reviewed}{Guard Tightening shows how to order the upstream's outputs to achieve it.}
 
 \textcolor{reviewed}{\noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant
@@ -1988,7 +1988,7 @@ in the input, while their model takes it from the execution; the theorem holds
 in their model as well (Appendix~\ref{app:cap-response}).
 
 
-\section{Composition and Proper Coordination}
+\section{Composition and Tight Coordination}
 \label{sec:composition}
 
 \textcolor{reviewed}{A replicated key-value store poses a puzzle.} \textcolor{reviewed}{With mutable values, it is
@@ -2004,11 +2004,11 @@ That puzzle is explained by our framework. As we'll see, two specs compose by eq
 and the composition of two monotone specs is also monotone. Moreover, for non-monotone specs,
 as in our puzzle, we
 can reason about which stage actually makes \commitments under composition. When the
-downstream needs no \commitment on the inputs the upstream offers, we say the
-pipeline is \emph{guarded}, and the upstream's \commitments then suffice for
+downstream needs no \commitment on the inputs the upstream offers, the
+upstream is a \emph{sufficient guard}, and its \commitments then suffice for
 the whole pipeline. When, in addition, the upstream makes no \commitment the
-composition does not need, the pipeline's coordination is \emph{proper}
-(\S\ref{sec:proper-coordination}). Proofs are in
+composition does not need, it is a \emph{tight guard}, and the pipeline's
+coordination is tight (\S\ref{sec:tight-coordination}). Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
 
@@ -2046,8 +2046,8 @@ in Appendix~\ref{app:composition}.
 its table $\{(i,f(i))\}$ satisfies Lifted Monotonicity exactly when $f$ is
 monotone (\S\ref{sec:lifted-monotonicity}).
 
-\subsection{Proper Coordination}
-\label{sec:proper-coordination}
+\subsection{Tight Coordination}
+\label{sec:tight-coordination}
 
 We return to the replicated store of the opening. The key-value store is not
 monotone on its own, but it is monotone on what the log offers: a log fixes
@@ -2060,9 +2060,9 @@ let $\Spec_2$ run under a system of its own. \textcolor{reviewed}{Write $\Spec_2
 $\Spec_1$.} We say that $P_2$ satisfies Lifted Monotonicity \emph{on} a set
 $D\subseteq M$ when its restriction to inputs in $D$ does.
 
-\begin{definition}[Guarded pipeline]
-\label{def:guarded}
-\textcolor{reviewed}{A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{guarded} when
+\begin{definition}[Sufficient guard]
+\label{def:sufficient-guard}
+\textcolor{reviewed}{$\Spec_1$ is a \emph{sufficient guard} for $\Spec_2$ when
 $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
 reaches without \commitment is legal.}
 \end{definition}
@@ -2072,7 +2072,7 @@ to $\Spec_2|_{\Spec_1}$ gives a static test.
 
 \begin{proposition}[Guard test]
 \label{prop:guard-test}
-A pipeline in which $\Spec_1$ guards $\Spec_2$ is guarded exactly when
+$\Spec_1$ is a sufficient guard for $\Spec_2$ exactly when
 $\Spec_2$ satisfies Lifted Monotonicity on the outputs of $\Spec_1$.
 \end{proposition}
 
@@ -2081,12 +2081,12 @@ Apply the No-\commitment test to $\Spec_2|_{\Spec_1}$, whose inputs are the
 outputs of $\Spec_1$. Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-A guarded pipeline leaves every \commitment to the upstream stage.
+A sufficient guard leaves no \commitment to the downstream stage.
 
-\begin{theorem}[Guarded pipelines]
-\label{thm:guarded-pipelines}
-Suppose a pipeline in which $\Spec_1$ guards $\Spec_2$ is guarded, and fix any
-system for $\Spec_1$. Then $\Spec_2|_{\Spec_1}$ answers each output of a run
+\begin{theorem}[Sufficient guards]
+\label{thm:sufficient-guards}
+\textcolor{reviewed}{Suppose $\Spec_1$ is a sufficient guard for $\Spec_2$, and fix any
+system for $\Spec_1$.} Then $\Spec_2|_{\Spec_1}$ answers each output of a run
 $\rho$ of that system without \commitment, and the pipeline's runs are
 consistent whenever those of the system for $\Spec_1$ are. Specifically,
 replacing each output of $\rho$ by its answers, and dropping the \commitment
@@ -2109,8 +2109,9 @@ not monotone.
 
 \begin{corollary}[Upstream \commitments]
 \label{cor:upstream-commitments}
-\textcolor{reviewed}{If a guarded pipeline's composite $P_2\circ P_1$ is not lifted monotone, some
-output of $\Spec_1$ needs a \commitment.}
+\textcolor{reviewed}{If $\Spec_1$ is a sufficient guard for $\Spec_2$ and the composite
+$P_2\circ P_1$ is not lifted monotone, some output of $\Spec_1$ needs a
+\commitment.}
 \end{corollary}
 
 \begin{proof}
@@ -2123,14 +2124,14 @@ Monotonicity by Lemma~\ref{lem:composition}, a contradiction.
 
 \textcolor{reviewed}{This answers the opening puzzle.} By Proposition~\ref{prop:guard-test}, the
 store restricted to logs needs no \commitment, so locks in the store would be
-pure overhead, and by Theorem~\ref{thm:guarded-pipelines} the pipeline is
+pure overhead, and by Theorem~\ref{thm:sufficient-guards} the pipeline is
 consistent whenever the log is. The store as a whole is not monotone, so by
 Corollary~\ref{cor:upstream-commitments} some output of the log needs a
 \commitment: the upstream log is where that belongs, and consensus provides
 it.
 
-Longer pipelines nest: the composite $P_2\circ P_1$ of a guarded pipeline can
-itself guard a third stage, and the theorem applies again
+Longer pipelines nest: when $\Spec_1$ is a sufficient guard for $\Spec_2$,
+the composite $P_2\circ P_1$ can itself guard a third stage, and the theorem applies again
 (Appendix~\ref{app:composition}).
 
 A downstream implementation may still take \commitments the specs do not
@@ -2138,9 +2139,9 @@ require, as a store that takes locks behind a log would. An implementation of
 $\Spec_2$ alone, rather than of $\Spec_2|_{\Spec_1}$, may also fail to answer
 some upstream outputs (Appendix~\ref{app:components}).
 
-\paragraph{Tight and proper pipelines.}
-A guarded pipeline's \commitments suffice, but the upstream may make more of
-them than the composition needs. Suppose two commands $A$ and $B$ commute,
+\paragraph{Necessary and tight guards.}
+\textcolor{reviewed}{A sufficient guard may still make more \commitments than the composition
+needs.} Suppose two commands $A$ and $B$ commute,
 and the store's outputs do not record their order, as when it reports its
 state. Emitting the log $[A]$ then rules out the log $[B,A]$ by \commitment,
 yet the composite needs no \commitment there, since both logs lead to the same
@@ -2148,19 +2149,21 @@ output. \textcolor{reviewed}{That \commitment is \emph{unnecessary}: it prevents
 failure of Lifted Monotonicity in the upstream that leads to no failure in the
 composite.}
 
-\begin{definition}[Tight pipeline, Proper Coordination]
-\label{def:tight}
-\label{def:proper-coordination}
-\textcolor{reviewed}{A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{tight} when its
-upstream makes no unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
+\begin{definition}[Necessary guard, tight guard]
+\label{def:necessary-guard}
+\label{def:tight-guard}
+\textcolor{reviewed}{$\Spec_1$ is a \emph{necessary guard} for $\Spec_2$ when it makes no
+unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
 of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
 $(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
 are inconsistent at $k$ in $P_2\circ P_1$.}
 
-\textcolor{reviewed}{A pipeline's coordination is \emph{proper} when it is guarded and tight.}
+\textcolor{reviewed}{$\Spec_1$ is a \emph{tight guard} for $\Spec_2$ when it is both a
+sufficient and a necessary guard, and the pipeline's coordination is then
+\emph{tight}.}
 \end{definition}
 
-\textcolor{reviewed}{Tightness compares the upstream's canonical \commitments with those the
+\textcolor{reviewed}{Necessity compares the upstream's canonical \commitments with those the
 composite needs.} \textcolor{reviewed}{The upstream's order on $M$ decides which \commitments are
 canonical, and the commuting log shows it can demand too many: it orders
 $[A,B]$ and $[B,A]$, although the store treats them alike.} \textcolor{reviewed}{We therefore ask
@@ -2171,55 +2174,65 @@ of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments
 that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$.} \textcolor{reviewed}{For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
 $f(m)\OutputOrd f(m')$.}
 
-\begin{theorem}[Upstream Canonicalization]
-\label{thm:upstream-canonicalization}
+\begin{theorem}[Guard Tightening]
+\label{thm:guard-tightening}
 \textcolor{reviewed}{Let $\Spec_1$ guard $\Spec_2$.}
 \begin{enumerate}
 \item
-\textcolor{reviewed}{An order on $M$ keeps the pipeline guarded exactly when it is
-        contained in $\sqsubseteq$ on the outputs of $\Spec_1$.}
-\item
-\textcolor{reviewed}{Under every such order, the upstream's canonical \commitments include
-        those under $\sqsubseteq$, and these include every \commitment the
+\textcolor{reviewed}{$\sqsubseteq$ is the coarsest order on $M$ under which $\Spec_1$ is a
+        sufficient guard for $\Spec_2$, and the upstream's canonical
+        \commitments under $\sqsubseteq$ include every \commitment the
         composite needs.}
 \item
 \textcolor{reviewed}{If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
         functional, the upstream's canonical \commitments under $\sqsubseteq$
-        are exactly the composite's.} \textcolor{reviewed}{So a guarded pipeline is proper exactly
+        are exactly the composite's.} \textcolor{reviewed}{So a sufficient guard is tight exactly
         when $\preceq_M$ requires no more \commitments than $\sqsubseteq$.}
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) restates Proposition~\ref{prop:guard-test} through the common-extension
-condition. (2) Suppose $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$. Then
-answers $o\in P_2(m)$ and $y\in P_2(x)$ have extensions in $P_2(m')$, which is
-directed by (1), so some $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$
-are consistent at $k$ in the composite. Any order under which the pipeline is
-guarded is contained in $\sqsubseteq$ by (1), so it makes at least as many
-pairs inconsistent. (3) With
+(1) Through the common-extension condition, Proposition~\ref{prop:guard-test}
+says that the orders on $M$ under which $\Spec_1$ is a sufficient guard are
+those contained in $\sqsubseteq$ on the outputs of $\Spec_1$. Suppose
+$m,x\sqsubseteq m'$ for some $m'\in P_1(k)$. Then answers $o\in P_2(m)$ and
+$y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
+$u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are consistent at $k$ in
+the composite. (2) With
 greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
 and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$. Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
-\textcolor{reviewed}{Upstream canonicalization is the route to Proper Coordination: when the
+A greatest element of $P_2(m)$ is one answer to $m$ that extends every
+other. A functional downstream has one trivially, and the gap example below,
+where $P_2(z)=\mathbb N$, has none. Since every order under which $\Spec_1$ is
+a sufficient guard is contained in $\sqsubseteq$, and a smaller order makes at
+least as many pairs inconsistent, each such order requires at least the
+\commitments that $\sqsubseteq$ does. At the other extreme, equality on $M$
+requires the most, since every order on $M$ contains it.
+
+\textcolor{reviewed}{Guard Tightening is the route to tight coordination: when the
 downstream's answers have greatest elements, an upstream ordered by
 $\sqsubseteq$ makes exactly the \commitments the composition needs.} \textcolor{reviewed}{Since
 $\sqsubseteq$ is transitive but need not be an order, adopting it means
 treating values the downstream answers alike, such as logs that differ only in
-the order of commuting commands, as equal.} \textcolor{reviewed}{The commuting log is guarded but
-not tight: $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$
-under the prefix order but consistent there under $\sqsubseteq$.} \textcolor{reviewed}{Generalized
-Paxos~\cite{lamport2005generalized} and EPaxos~\cite{moraru2013epaxos} move
-toward $\sqsubseteq$ by ordering only commands that do not commute.} Reversing the order
+the order of commuting commands, as equal.} \textcolor{reviewed}{When the store's responses record the commands that produced them, the
+consensus log is a tight guard: execution is monotone and reflects the prefix
+order, so every \commitment the log makes is one the store's clients can
+observe (Appendix~\ref{app:tight}).} \textcolor{reviewed}{The commuting log is a sufficient guard but not a necessary one:
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
+prefix order but consistent there under $\sqsubseteq$.} \textcolor{reviewed}{When commands commute
+and responses do not record their order, a log that orders only non-commuting
+commands, as in Generalized Paxos~\cite{lamport2005generalized} and
+EPaxos~\cite{moraru2013epaxos}, restores tightness.} Reversing the order
 on $M$ in the boolean toggle below is reordering by $\sqsubseteq$. Without
 greatest answers, a gap can remain. Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
 answer $z$ with any number and $n_k$ with $k$. No single $n_k$ covers every number the
 downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are inconsistent at
-$\mathit{hi}$ under $\sqsubseteq$, and by (2) under every order on $M$ for which the pipeline is
-guarded. Yet the composite permits every number at both
+$\mathit{hi}$ under $\sqsubseteq$, and so under every order on $M$ under which
+$\Spec_1$ is a sufficient guard. Yet the composite permits every number at both
 inputs and needs no \commitment: a single implementation could answer at
 $\mathit{lo}$ and later give the same answer at $\mathit{hi}$. The upstream
 must commit before it sees the downstream's answer, and the remaining gap is
@@ -2228,7 +2241,7 @@ the price of splitting the work into stages.
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Guarded pipelines show how an upstream
+Sufficient guards show how an upstream
 stage can discharge a pipeline's \commitment obligations. \emph{Composite CALM} asks a stronger question: when does a pipeline need no
 \commitment at any stage? If every stage is monotone, the answer is immediate:
 by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
@@ -2264,9 +2277,9 @@ monotone. In the example above, the test fails monotonicity only when the
 count passes from single to double digits, and the capped counter never does
 so. Restricted to the counts it does produce, the test always answers
 \textsf{false}; it is constant, and so monotone under any output order,
-including equality. By Proposition~\ref{prop:guard-test}, the pipeline
-is guarded, and since the capped counter is itself monotone, neither stage needs
-a \commitment (Proposition~\ref{prop:joint-monotone}(2)). This is proper
+including equality. By Proposition~\ref{prop:guard-test}, the capped counter
+is a sufficient guard, and since it is itself monotone, neither stage needs
+a \commitment (Proposition~\ref{prop:joint-monotone}(2)). This is tight
 coordination in which the upstream itself needs no \commitment.
 
 Third, a different order on $M$ can make two non-monotone stages monotone. Consider two stages that each negate a boolean, so that their composite is the
@@ -3136,8 +3149,8 @@ when specs are monotone; otherwise \commitment is required. This generalizes CAL
 Complete CALM extends the answer to specs that offer several outputs
 for one input. The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers. When the test fails, some reachable output
-requires a \commitment to rule out a possible input/output pair. Because the model makes \commitments explicit, Proper Coordination can also show where a
-composition coordinates (\S\ref{sec:composition}). For example, a totally ordered log
+requires a \commitment to rule out a possible input/output pair. Because the model makes \commitments explicit, we can also show where a
+composition coordinates, and when that coordination is tight (\S\ref{sec:composition}). For example, a totally ordered log
 and a key-value store are each non-monotone on their own, yet when the log
 guards the store, the log's \commitments are all the composition needs, and
 the store needs none. Multi-Paxos is one way to distribute those
@@ -3151,7 +3164,7 @@ needed to determine a spec.} \textcolor{reviewed}{Another is Determination Prove
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, which brings formal models of provenance to
 concurrent systems.} \textcolor{reviewed}{A third direction is to provide general-purpose static
-analysis and synthesis of properly coordinated systems in practical programming frameworks.}
+analysis and synthesis of tightly coordinated systems in practical programming frameworks.}
 
 
 \appendix
@@ -3291,20 +3304,20 @@ rows at $k$.
   \midrule
   sequential composition $P_2\circ P_1$ & $\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\}$, for stages sharing $(M,\preceq_M)$ & Eq.~\ref{eq:spec-composition}\\
   $\Spec_1$ guards $\Spec_2$ & $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs & Sec.~\ref{sec:sequential-composition}\\
-  restriction $\Spec_2|_{\Spec_1}$ & $\Spec_2$ restricted to the outputs of $\Spec_1$ & Sec.~\ref{sec:proper-coordination}\\
-  Lifted Monotonicity on $D$ & the restriction of $P_2$ to inputs in $D$ satisfies Lifted Monotonicity & Sec.~\ref{sec:proper-coordination}\\
-  guarded & $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it reaches without \commitment is legal & Def.~\ref{def:guarded}\\
-  $m\sqsubseteq m'$ & every finite set of outputs in $P_2(m)$ has a common \outnoun in $P_2(m')$ & Sec.~\ref{sec:proper-coordination}\\
-  tight & every pair of rows of $P_1$ that $\preceq_M$ separates has answers that the composite separates & Def.~\ref{def:tight}\\
-  proper & guarded and tight & Def.~\ref{def:proper-coordination}\\
+  restriction $\Spec_2|_{\Spec_1}$ & $\Spec_2$ restricted to the outputs of $\Spec_1$ & Sec.~\ref{sec:tight-coordination}\\
+  Lifted Monotonicity on $D$ & the restriction of $P_2$ to inputs in $D$ satisfies Lifted Monotonicity & Sec.~\ref{sec:tight-coordination}\\
+  sufficient guard & $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it reaches without \commitment is legal & Def.~\ref{def:sufficient-guard}\\
+  $m\sqsubseteq m'$ & every finite set of outputs in $P_2(m)$ has a common \outnoun in $P_2(m')$ & Sec.~\ref{sec:tight-coordination}\\
+  necessary guard & rows of $P_1$ inconsistent under $\preceq_M$ have answers inconsistent in $P_2\circ P_1$ & Def.~\ref{def:necessary-guard}\\
+  tight guard & a sufficient and necessary guard & Def.~\ref{def:tight-guard}\\
   intersection $\Spec_1\cap\Spec_2$ & table $P_1\cap P_2$, for specs sharing their ordered domains & Def.~\ref{def:intersection}\\
   component & a \commitment basis and a set of admitted runs & Def.~\ref{def:component}\\
   admitted run & a run under the basis from $\sigma(i)$, with an output $o$ it emits and $(i,o)\in P$ & Def.~\ref{def:component}\\
   typed pipeline & two components joined by feeds & Def.~\ref{def:typed-pipeline}\\
   feed & an admitted run of $C_1$ with output $m$, paired with an admitted run of $C_2$ from $\sigma(m)$ & Def.~\ref{def:typed-pipeline}\\
   external observation & the pair $(i,o)$ that a feed shows & Def.~\ref{def:typed-pipeline}\\
-  contract-guarded & the pipeline of $\Spec_1$ and $\Spec_2$ is guarded & Def.~\ref{def:proper-pipeline}\\
-  implementation-guarded & no downstream run of a feed applies a \commitment & Def.~\ref{def:proper-pipeline}\\
+  contract-sufficient & $\Spec_1$ is a sufficient guard for $\Spec_2$ & Def.~\ref{def:sufficient-pipeline}\\
+  implementation-sufficient & no downstream run of a feed applies a \commitment & Def.~\ref{def:sufficient-pipeline}\\
   \bottomrule
 \end{tabular}
 
@@ -4666,8 +4679,8 @@ n]$, whose two outputs are ordered by equality. $\mathcal S_2$ violates
 Lifted Monotonicity, since $[10\le 9]$ and $[10\le 10]$ differ: at
 $\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[10\le m]$ must remove the
 row $(10,\mathit{true})$ by \commitment. But $\mathcal S_2$ satisfies Lifted
-Monotonicity on $\{n\le 9\}$, which contains the outputs of $\mathcal S_1$. So the composite satisfies Lifted Monotonicity by case (2), the pipeline is
-guarded (Proposition~\ref{prop:guard-test}), and under the empty basis
+Monotonicity on $\{n\le 9\}$, which contains the outputs of $\mathcal S_1$. So the composite satisfies Lifted Monotonicity by case (2), $\mathcal S_1$ is a
+sufficient guard for $\mathcal S_2$ (Proposition~\ref{prop:guard-test}), and under the empty basis
 $\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
 
 The boolean toggle is an instance of case (3). Let $I$, $M$, and $O$ be the
@@ -4691,7 +4704,7 @@ to $\mathit{lo}\preceq\mathit{hi}$ makes $\mathcal S_1$ satisfy Lifted
 Monotonicity, since $\mathit{hi}$ subsumes $\mathit{lo}$. By case (3) the
 composite is unchanged.
 
-\subsection{Guarded pipelines}
+\subsection{Sufficient guards}
 
 Throughout, $\Spec_1$ guards $\Spec_2$, and $\mathcal B$ is the basis of the
 system for $\Spec_1$. The inputs of $\Spec_2|_{\Spec_1}$ are the outputs of
@@ -4710,8 +4723,8 @@ $\Spec_2|_{\Spec_1}$, and between these inputs $\Spec_2|_{\Spec_1}$ emits any
 number of outputs, possibly none. The environment observes
 $\mathsf{input}(j)$ and the outputs of $\Spec_2|_{\Spec_1}$.
 
-The proofs below rest on three facts about a guarded pipeline, in which
-$\Spec_2|_{\Spec_1}$ satisfies the common-extension condition
+The proofs below rest on three facts that hold when $\Spec_1$ is a sufficient
+guard, so that $\Spec_2|_{\Spec_1}$ satisfies the common-extension condition
 (Propositions~\ref{prop:exposure-boundary}
 and~\ref{prop:common-expansion-form}). Facts (a) and (b) concern a state $\tau$ that
 $\Spec_2|_{\Spec_1}$ reaches without \commitment.
@@ -4723,7 +4736,7 @@ Every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$. The
   emitted so far.
 \item
 Every output at the current input of $\tau$ is a legal output, by
-  Definition~\ref{def:guarded}.
+  Definition~\ref{def:sufficient-guard}.
 \item
 If an output $m$ at the current input of a state $\sigma$ of $\Spec_1$
   is a legal output, then every $o\in P_2(m)$ is a legal output at the image
@@ -4742,7 +4755,7 @@ the outputs of $\Spec_1$, so this is Lifted Monotonicity of $\Spec_2$ on the
 outputs of $\Spec_1$.
 \end{proof}
 
-\begin{proof}[Proof of Theorem~\ref{thm:guarded-pipelines}]
+\begin{proof}[Proof of Theorem~\ref{thm:sufficient-guards}]
 After $\mathsf{output}(m)$ every row of $\Spec_1$ \outrel $m$
 (Definition~\ref{def:lifted-output-event}), and later events only remove
 rows, so the outputs $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$
@@ -4800,7 +4813,7 @@ is a legal output at $\sigma_{\Spec_1}(i)$. In particular, emitting $m$
 there applies a \commitment.
 \end{proof}
 
-Guardedness is needed in Corollary~\ref{cor:upstream-commitments}. With $\Spec_1$ the identity on the booleans and
+The sufficient-guard hypothesis is needed in Corollary~\ref{cor:upstream-commitments}. With $\Spec_1$ the identity on the booleans and
 $\Spec_2$ negation, the composite is negation, which does not satisfy Lifted
 Monotonicity, yet $\Spec_1$ needs no \commitment.
 
@@ -4809,7 +4822,7 @@ the same strategy, with its \commitment events dropped.
 
 \begin{corollary}[Empty store]
 \label{cor:empty-store}
-\textcolor{reviewed}{In a guarded pipeline, fix any system for $\Spec_2|_{\Spec_1}$.} For every run
+\textcolor{reviewed}{Let $\Spec_1$ be a sufficient guard for $\Spec_2$, and fix any system for $\Spec_2|_{\Spec_1}$.} For every run
 of the pipeline, the replacement has one with the same run of $\Spec_1$ and
 the same inputs and outputs of $\Spec_2|_{\Spec_1}$. After each event, the
 replacement's table contains the original's.
@@ -4843,16 +4856,16 @@ $f([b])$, but the locking store has emptied $[b]$ and cannot receive it.
 
 \begin{corollary}[Pipelines]
 \label{cor:pipelines}
-In a guarded pipeline, with any systems for $\Spec_1$ and
+Let $\Spec_1$ be a sufficient guard for $\Spec_2$. With any systems for $\Spec_1$ and
 $\Spec_2|_{\Spec_1}$, the outputs of every run of the pipeline are emitted by
 a run of $P_2\circ P_1$ under its canonical basis. So the pipeline guards a
-further stage $\Spec_3$, and Theorem~\ref{thm:guarded-pipelines} applies
+further stage $\Spec_3$, and Theorem~\ref{thm:sufficient-guards} applies
 with $P_2\circ P_1$ in place of $\Spec_1$.
 \end{corollary}
 
 \begin{proof}
 By Corollary~\ref{cor:empty-store}, every run of the pipeline has one with the
-same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis. Theorem~\ref{thm:guarded-pipelines}, applied to it and a prefix of the
+same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis. Theorem~\ref{thm:sufficient-guards}, applied to it and a prefix of the
 run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs. The
 canonical basis supplies the canonical \commitment of each output event that
 needs one (Definition~\ref{def:run-under-basis}), so this is a run under the
@@ -4927,7 +4940,7 @@ function $f$ that executes a log on a deterministic state machine, which is
 monotone in the prefix order. Then $\Spec_1$ is non-monotone, since distinct next entries are inconsistent rows in one fiber. So is the key-value store
 $P_2\circ P_1$, since concurrent commands ordered oppositely give inconsistent rows. Multi-Paxos runs $\Spec_1$ under its own basis, deciding one log
 slot at a time~\cite{schneider1990smr,lamport2001paxos}. Since $f$ is
-monotone, the pipeline is guarded. By Theorem~\ref{thm:guarded-pipelines} the store under the empty basis follows every run of the log, and by Corollary~\ref{cor:upstream-commitments} the log's \commitments cannot be
+monotone, the log is a sufficient guard. By Theorem~\ref{thm:sufficient-guards} the store under the empty basis follows every run of the log, and by Corollary~\ref{cor:upstream-commitments} the log's \commitments cannot be
 dropped. By Corollary~\ref{cor:empty-store}, a store that takes locks of its
 own can run with no \commitments at all.
 \end{example}
@@ -4957,7 +4970,7 @@ then needs a \commitment of the store's own. Implementations typically
 enforce it by routing reads through the log.
 \end{example}
 
-\subsection{Tight and proper pipelines}
+\subsection{Necessary and tight guards}
 \label{app:tight}
 
 Throughout, $\Spec_1$ guards $\Spec_2$. Consistency of rows at an input is
@@ -4971,61 +4984,107 @@ in the state's table, and at $\sigma_{P_1}(i)$ that table has the fiber
 $P_1(k)$ at $k$. So a spec satisfies Lifted Monotonicity exactly when no rows $(i,m)$ and $(k,x)$ with $i\InputOrd k$ are inconsistent at $k$
 (Proposition~\ref{prop:common-expansion-form}).
 
-\begin{proof}[Proof of Theorem~\ref{thm:upstream-canonicalization}]
-(1) By Proposition~\ref{prop:guard-test}, the pipeline is guarded exactly when
+\begin{proof}[Proof of Theorem~\ref{thm:guard-tightening}]
+(1) By Proposition~\ref{prop:guard-test}, $\Spec_1$ is a sufficient guard exactly when
 $\Spec_2$ satisfies the common-extension condition on the outputs of
 $\Spec_1$. For outputs $m\preceq_M m'$, that condition at $m'$ for finitely
 many rows of $P_2(m)$ is the statement $m\sqsubseteq m'$, and conversely,
 finitely many rows $(m_r,o_r)$ with a common extension $m'$ of their inputs
 are consistent at $m'$ by $m_r\sqsubseteq m'$ together with directedness of
-$P_2(m')$, which is $m'\sqsubseteq m'$.
+$P_2(m')$, which is $m'\sqsubseteq m'$. So the orders on $M$ under which
+$\Spec_1$ is a sufficient guard are those contained in $\sqsubseteq$ on the
+outputs of $\Spec_1$, and $\sqsubseteq$ is the coarsest.
 
-(2) Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
+Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
 $(k,x)$ of $P_1$, and suppose $(i,m)$ and $(k,x)$ are consistent at $k$ under
 $\sqsubseteq$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$. Then $o$ and $y$
-each have an extension in $P_2(m')$, and since $P_2(m')$ is directed by (1),
+each have an extension in $P_2(m')$, and since $P_2(m')$ is directed by the above,
 some $u\in P_2(m')$ \outrel both. The row $(k,u)$ of $P_2\circ P_1$ shows
-that $(i,o)$ and $(k,y)$ are consistent at $k$. For the second claim, an
-order under which the pipeline is guarded is contained in $\sqsubseteq$ on the
-outputs of $\Spec_1$ by (1), and a smaller order has fewer common extensions,
+that $(i,o)$ and $(k,y)$ are consistent at $k$. Moreover, an
+order under which $\Spec_1$ is a sufficient guard is contained in $\sqsubseteq$ on the
+outputs of $\Spec_1$, and a smaller order has fewer common extensions,
 so every pair inconsistent under $\sqsubseteq$ is inconsistent under it.
 
-(3) Let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$. If
+(2) Let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$. If
 $(i,t)$ and $(k,s)$ are consistent at $k$ in the composite, some row $(k,u)$
 of $P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
 $m'\in P_1(k)$. Every finite set of outputs in $P_2(m)$ lies below $t$, and
 so below $u$, so $m\sqsubseteq m'$, and likewise $x\sqsubseteq m'$. So
 inconsistency under $\sqsubseteq$ implies inconsistency of $(i,t)$ and
-$(k,s)$, and (2) gives the converse for any answers. For the last claim, a
-guarded pipeline is tight exactly when every pair inconsistent under
-$\preceq_M$ is inconsistent under $\sqsubseteq$, and by (2) every pair
+$(k,s)$, and (1) gives the converse for any answers. For the last claim, a
+sufficient guard is tight exactly when every pair inconsistent under
+$\preceq_M$ is inconsistent under $\sqsubseteq$, and by (1) every pair
 inconsistent under $\sqsubseteq$ is inconsistent under $\preceq_M$.
 \end{proof}
 
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd
-f(m')$, and (3) holds without assuming the pipeline guarded.
+f(m')$, and the first claim of (2) holds without assuming that $\Spec_1$ is a
+sufficient guard.
 
-The commuting log of Section~\ref{sec:proper-coordination} is formalized with
+The commuting log of Section~\ref{sec:tight-coordination} is formalized with
 two increments $A$ and $B$, inputs the sets of commands proposed so far, logs
 ordered by prefix, and the store answering a log with its length. The
-pipeline is guarded, since length is monotone in the prefix order. The rows
+log is a sufficient guard, since length is monotone in the prefix order. The rows
 $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
 prefix order, so emitting $[A]$ at $\{A\}$ removes $(\{A,B\},[B,A])$ by
 \commitment. But the composite answers both logs with $1$ and $2$, which have
 the common extension $2$, and under $\sqsubseteq$, which compares lengths, the
-rows are consistent. So the pipeline is guarded but not tight. The log does
+rows are consistent. So the log is a sufficient guard but not a necessary one. The log does
 not satisfy Lifted Monotonicity, while the composite does.
+
+\begin{proposition}[Tight guards]
+\label{prop:tight-guards}
+\textcolor{reviewed}{Let $\Spec_1$ guard $\Spec_2$.}
+\begin{enumerate}
+\item
+If $\Spec_1$ satisfies Lifted Monotonicity, it is a necessary guard
+        for $\Spec_2$.
+\item
+If $\Spec_2$ is induced by a monotone function $f$ that reflects
+        $\preceq_M$ on the outputs of $\Spec_1$, so that
+        $f(m)\OutputOrd f(m')$ implies $m\preceq_M m'$, then $\Spec_1$ is a
+        tight guard for $\Spec_2$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) No rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$ are
+inconsistent at $k$ (Proposition~\ref{prop:common-expansion-form}), so the
+condition of Definition~\ref{def:necessary-guard} holds vacuously.
+
+(2) Since $f$ is monotone, $\Spec_2$ satisfies Lifted Monotonicity, so
+$\Spec_1$ is a sufficient guard by Proposition~\ref{prop:guard-test}. For a
+functional downstream, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd f(m')$,
+so on the outputs of $\Spec_1$ reflection makes $\sqsubseteq$ contained in
+$\preceq_M$. Rows of $P_1$ inconsistent under $\preceq_M$ are then
+inconsistent under $\sqsubseteq$, and by
+Theorem~\ref{thm:guard-tightening}(2) their answers are inconsistent in
+$P_2\circ P_1$.
+\end{proof}
+
+Both parts apply to logs. In Example~\ref{ex:committed-log-composition},
+suppose the store's responses record the commands that produced them, so that
+$f$ maps a log to its commands paired with their responses. The commands of
+$f(b)$ are then $b$ itself, so $f(b)\OutputOrd f(b')$ implies $b\preceq_M b'$, and
+by (2) the log is a tight guard for the store. For two commuting increments,
+a partial-order log that records only which commands it has logged, as a set
+ordered by inclusion, may emit at each input any subset of the commands
+received, and the store answers a set with its size. This log satisfies
+Lifted Monotonicity, since the set of all commands received at a larger input
+extends every earlier output. By (1) it is a necessary guard, and since size
+is monotone it is a tight guard.
+
 
 In the gap example, $M=\{z\}\cup\{n_k:k\in\mathbb N\}$ under equality, with
 $P_1(\mathit{lo})=\{z\}$, $P_1(\mathit{hi})=\{n_k\}$, $P_2(z)=\mathbb N$, and
-$P_2(n_k)=\{k\}$, where $\mathbb N$ has its usual order. The pipeline is
-guarded, since $\mathbb N$ is directed and singletons are. No $n_k$ has
+$P_2(n_k)=\{k\}$, where $\mathbb N$ has its usual order. $\Spec_1$ is a
+sufficient guard, since $\mathbb N$ is directed and singletons are. No $n_k$ has
 $z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no extension in
 $\{k\}$, so $(\mathit{lo},z)$ is inconsistent with every row at $\mathit{hi}$
-under $\sqsubseteq$, and by (2) under every order on $M$ for which the
-pipeline is guarded. The composite has the fiber $\mathbb N$ at both inputs
-and satisfies Lifted Monotonicity, so the pipeline is not tight under any such
-order.
+under $\sqsubseteq$, and so, by the proof of (1), under every order on $M$ under
+which $\Spec_1$ is a sufficient guard. The composite has the fiber $\mathbb N$
+at both inputs and satisfies Lifted Monotonicity, so $\Spec_1$ is not a
+necessary guard under any such order.
 
 \subsection{Intersection}
 \label{app:intersection}
@@ -5048,7 +5107,7 @@ state reachable without \commitment is not legal.
 \subsection{Components and typed pipelines}
 \label{app:components}
 
-Proposition~\ref{prop:guard-test} and Theorem~\ref{thm:guarded-pipelines} concern specs, with a system fixed only
+Proposition~\ref{prop:guard-test} and Theorem~\ref{thm:sufficient-guards} concern specs, with a system fixed only
 for the upstream stage. Here each stage is seen from outside, through the
 runs it admits, so that particular implementations of both stages, each with
 its own basis and participants, can be examined.
@@ -5096,11 +5155,11 @@ observation} $(i,o)$ of each feed; the value $m$, both runs, and their
 \commitments stay hidden.
 \end{definition}
 
-\begin{definition}[Contract-guarded, implementation-guarded]
-\label{def:proper-pipeline}
-A typed pipeline is \emph{contract-guarded} when the pipeline of $\Spec_1$
-and $\Spec_2$ is guarded (Definition~\ref{def:guarded}), and
-\emph{implementation-guarded} when no downstream run of a feed applies a
+\begin{definition}[Contract-sufficient, implementation-sufficient]
+\label{def:sufficient-pipeline}
+A typed pipeline is \emph{contract-sufficient} when $\Spec_1$ is a sufficient
+guard for $\Spec_2$ (Definition~\ref{def:sufficient-guard}), and
+\emph{implementation-sufficient} when no downstream run of a feed applies a
 \commitment.
 \end{definition}
 
@@ -5117,23 +5176,23 @@ their own.
 Every external observation admitted by a typed pipeline is a row of
       $P_2\circ P_1$.
 \item
-If a pipeline is implementation-guarded, the downstream run of every
+If a pipeline is implementation-sufficient, the downstream run of every
       feed, with its \commitments erased, is a \commitment-free run of
       $\Spec_2$, in which every output is legal.
 \item
-Contract guardedness does not imply implementation guardedness: behind a
-      log, the early-lock store is contract-guarded and still issues
+Contract sufficiency does not imply implementation sufficiency: behind a
+      log, the early-lock store is contract-sufficient and still issues
       \commitments.
 \item
-Contract guardedness does not guarantee feeds when the downstream
+Contract sufficiency does not guarantee feeds when the downstream
       component is for $\Spec_2$ rather than $\Spec_2|_{\Spec_1}$: behind the
       capped counter, the maximally permissive empty-basis component for the
       threshold test admits no feed at an offered count.
 \item
-If, in a contract-guarded pipeline, the downstream is instead the
+If, in a contract-sufficient pipeline, the downstream is instead the
       maximally permissive empty-basis component for $\Spec_2|_{\Spec_1}$,
       every admitted upstream boundary run has a feed, and the pipeline is
-      implementation-guarded.
+      implementation-sufficient.
 \end{enumerate}
 \end{proposition}
 
@@ -5144,12 +5203,12 @@ If, in a contract-guarded pipeline, the downstream is instead the
 output events $\mathsf{output}(o)$ applies no \commitment, which holds exactly
 when $o$ is a legal output.
 
-(3) The early-lock store above, fed by a log, is contract-guarded, since the
+(3) The early-lock store above, fed by a log, is contract-sufficient, since the
 store's table satisfies Lifted Monotonicity on logs. From the empty log it
 admits a run whose \commitment event takes the lock.
 
 (4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
-the double-digit threshold test. The pipeline is contract-guarded, since the
+the double-digit threshold test. The pipeline is contract-sufficient, since the
 test satisfies Lifted Monotonicity on the counts the counter offers. An
 admitted run of the test from an offered count $m\le 9$ must emit
 $\mathit{false}$, its answer at $m$. While its current count is below $10$,
@@ -5164,7 +5223,7 @@ $\mathsf{output}(o)$ from $\sigma(m)$ is then an admitted run of $C_2$. Under th
 \end{proof}
 
 Item (5) covers one upstream output, while
-Theorem~\ref{thm:guarded-pipelines} follows the entire emitted stream. Item (4) is why (5) uses a component for $\Spec_2|_{\Spec_1}$ rather than for
+Theorem~\ref{thm:sufficient-guards} follows the entire emitted stream. Item (4) is why (5) uses a component for $\Spec_2|_{\Spec_1}$ rather than for
 $\Spec_2$: its canonical states keep only rows at inputs the upstream offers.
 
 The $\mathsf{Process}$ and $\mathsf{Cluster}$ forms follow Hydro's location
@@ -5944,7 +6003,7 @@ compare-and-swap, each process applies compare-and-swap with its proposal to
 a location that starts empty, and its response names the value of the first
 compare-and-swap, the same value in every response. Each process decides the
 value in its response. That decision stage is a monotone function of the
-object's responses, so it needs no \commitment on them (Proposition~\ref{prop:guard-test}), and the object's ordering is the only \commitment the pipeline needs (Theorem~\ref{thm:guarded-pipelines}). Each process decides after one operation of its own, so the
+object's responses, so it needs no \commitment on them (Proposition~\ref{prop:guard-test}), and the object's ordering is the only \commitment the pipeline needs (Theorem~\ref{thm:sufficient-guards}). Each process decides after one operation of its own, so the
 algorithm is wait-free for any number of processes. Test-and-set gives the
 same for two processes: each process first writes its proposal to its own
 register, the winner of test-and-set decides its own proposal, and the loser
