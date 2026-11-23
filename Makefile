@@ -93,6 +93,7 @@ lean:
 
 clean:
 	rm -rf $(BUILD) scripts/__pycache__
-	rm -f main.pdf cidr.pdf comment.cut *.aux *.log *.out *.bbl *.blg *.toc *.synctex.gz
+	rm -f main.pdf cidr.pdf comment.cut *.aux *.log *.out *.bbl *.blg *.toc *.synctex.gz \
+	  *.fls *.fdb_latexmk *.xdv *-review.pdf *-complexity*.pdf main-changes.pdf *-diff.pdf
 
 FORCE:
