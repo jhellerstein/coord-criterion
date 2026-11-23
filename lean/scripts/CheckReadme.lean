@@ -57,6 +57,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:election-story/not-reconciled»
 #check @CC.Paper.«def:confluence»
 #check @CC.Paper.«def:consistency»
+#check @CC.Paper.«sec:election-story/two-confluences»
 #check @CC.Paper.«sec:election-story/consistency»
 #check @CC.Paper.«lem:run-residual»
 #check @CC.Paper.«eq:run-residual»

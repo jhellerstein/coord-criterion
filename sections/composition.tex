@@ -49,7 +49,7 @@ If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the \specty
 
 \begin{proof}[Proof sketch]
 By Proposition~\ref{prop:common-expansion-form}, it suffices to check the
-common-extension condition.  Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs.  Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The rows $(i_r,m_r)$ are consistent at $j$ in $P_1$, through some $m\in P_1(j)$.  So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are consistent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are consistent at $j$.  Full proof
+common-extension condition.  Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs.  Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The rows $(i_r,m_r)$ are confluent at $j$ in $P_1$, through some $m\in P_1(j)$.  So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are confluent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are confluent at $j$.  Full proof
 in Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -102,7 +102,7 @@ $\rho$ of that system without \commitment, and the pipeline's runs are
 consistent whenever those of the system for $\Spec_1$ are.  Specifically,
 replacing each output of $\rho$ by its answers, and dropping the \commitment
 events of $\rho$, gives a canonical run of $P_2\circ P_1$, and such runs are
-confluent whenever the runs of the system for $\Spec_1$ are.
+confluent at an input whenever the runs of the system for $\Spec_1$ are.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
@@ -165,9 +165,9 @@ composite.
 \label{def:tight-guard}
 $\Spec_1$ is a \emph{necessary guard} for $\Spec_2$ when it makes no
 unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
-of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
+of $P_1$ with $i\InputOrd k$ are not confluent at $k$ in $P_1$, some rows
 $(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
-are inconsistent at $k$ in $P_2\circ P_1$.
+are not confluent at $k$ in $P_2\circ P_1$.
 
 $\Spec_1$ is a \emph{tight guard} for $\Spec_2$ when it is both a
 sufficient and a necessary guard, and the pipeline's coordination is then
@@ -180,9 +180,7 @@ canonical, and the commuting log shows it can demand too many: it orders
 $[A,B]$ and $[B,A]$, although the store treats them alike.  We therefore ask
 for an order on $M$ under which the upstream's canonical \commitments are
 exactly the composite's.  Write $m\sqsubseteq m'$ when every finite set of
-outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read consistency
-of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments
-that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$.
+outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read confluence of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments its failure calls for, with $\sqsubseteq$ in place of $\preceq_M$.
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
 $f(m)\OutputOrd f(m')$.
 
@@ -207,7 +205,7 @@ says that the orders on $M$ under which $\Spec_1$ is a sufficient guard are
 those contained in $\sqsubseteq$ on the outputs of $\Spec_1$.  Suppose
 $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then answers $o\in P_2(m)$ and
 $y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
-$u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are consistent at $k$ in
+$u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are confluent at $k$ in
 the composite.  (2) With
 greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
 and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
@@ -217,8 +215,7 @@ Appendix~\ref{app:composition}.
 A greatest element of $P_2(m)$ is one answer to $m$ that extends every
 other.  A functional downstream has one trivially, and the gap example below,
 where $P_2(z)=\mathbb N$, has none.  Since every order under which $\Spec_1$ is
-a sufficient guard is contained in $\sqsubseteq$, and a smaller order makes at
-least as many pairs inconsistent, each such order requires at least the
+a sufficient guard is contained in $\sqsubseteq$, and a smaller order leaves at least as many pairs not confluent, each such order requires at least the
 \commitments that $\sqsubseteq$ does.  At the other extreme, equality on $M$
 requires the most, since every order on $M$ contains it.
 
@@ -231,8 +228,8 @@ the order of commuting commands, as equal.  When the store's responses record th
 consensus log is a tight guard: execution is monotone and reflects the prefix
 order, so every \commitment the log makes is one the store's clients can
 observe (Appendix~\ref{app:tight}).  The commuting log is a sufficient guard but not a necessary one:
-$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
-prefix order but consistent there under $\sqsubseteq$.  When commands commute
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the
+prefix order but confluent at $\{A,B\}$ under $\sqsubseteq$.  When commands commute
 and responses do not record their order, a log that orders only non-commuting
 commands, as in Generalized Paxos~\cite{lamport2005generalized} and
 EPaxos~\cite{moraru2013epaxos}, restores tightness.  Reversing the order
@@ -240,7 +237,7 @@ on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
 greatest answers, a gap can remain.  Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
 answer $z$ with any number and $n_k$ with $k$.  No single $n_k$ covers every number the
-downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are inconsistent at
+downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are not confluent at
 $\mathit{hi}$ under $\sqsubseteq$, and so under every order on $M$ under which
 $\Spec_1$ is a sufficient guard.  Yet the composite permits every number at both
 inputs and needs no \commitment: a single implementation could answer at

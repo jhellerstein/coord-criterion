@@ -122,7 +122,7 @@ compared or combined, which leaves developers guessing.
 We provide a simple formalism that unifies the literature and
 offers new results.  A minimalist \emph{\spectype} (spec) is a possibility table containing, for
 each input, every output a system may produce, with partial orders on inputs and
-outputs.  Its runs are \emph{consistent} when they are confluent.
+outputs.  Its runs are \emph{consistent} when they are confluent as input grows.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: the runs are consistent exactly when the function is
 monotone.  \emph{Complete CALM}
@@ -252,7 +252,7 @@ Despite its simplicity, our model supports not only application invariants, but 
 \paragraph{Consistency and a criterion for achieving it.}
 The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity.  Our Consistency definition is general: the runs of a spec are
-\emph{consistent} when they are \emph{confluent}, so that states reached along
+\emph{consistent} when they are \emph{confluent} at every input that extends theirs, so that states reached along
 different paths can be brought to a common state.  Applied to different specs,
 this one definition captures classical consistency models, from eventual consistency of replicated data
 through linearizability, serializability and other isolation levels.
@@ -299,7 +299,7 @@ We make contributions in four categories:
 \emph{1. A unified model.} A system's observable behavior is captured via
         \spectype[s], whose runs are sequences of input and output events;
         systems add \commitment events of their own. Consistency is defined as
-        confluence of a spec's runs, unifying general consistency models,
+        confluence of a spec's runs as input grows, unifying general consistency models,
         application-specific requirements, and their distributed executions.
 
 \noindent
@@ -974,7 +974,7 @@ hold.
 Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
 Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls
-for a condition on rows at different inputs: they must be consistent at $j$.  The two conditions turn out to be equivalent.
+for a condition on rows at different inputs: they must be confluent at $j$.  The two conditions turn out to be equivalent.
 In the traceroute spec, one run may trace from \texttt{s} and emit
 $\{\texttt{s}{\to}\texttt{s1}\}$, while another traces from \texttt{t} and
 emits $\{\texttt{t}{\to}\texttt{s2}\}$.  At $\{\texttt{s},\texttt{t}\}$, which \inrel both inputs, the route set $\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ \outrel both outputs.
@@ -1013,8 +1013,7 @@ rows accordingly.
 \begin{definition}[Output subsumption, nondeterministic legality]
 \label{def:subsumed-excluded}
 At a state $(i,R)$ with $o\in R(i)$, let $(k,x)\in R$ be a row with
-$o\not\OutputOrd x$.  It is \emph{subsumed} when it is consistent with
-$(i,o)$ at $k$ in $R$, and \emph{excluded} otherwise; $\Subsumed_o$
+$o\not\OutputOrd x$.  It is \emph{subsumed} when it is confluent with $(i,o)$ at $k$ in $R$, and \emph{excluded} otherwise; $\Subsumed_o$
 and $\Excluded_o$ are the sets of such rows.  The \emph{canonical \commitment}
 $x_o$ removes $\Excluded_o$, and $o$ is \emph{legal} when $\Excluded_o$ is
 empty.
@@ -1056,11 +1055,11 @@ if every output at every state reachable without \commitment is legal.
 \begin{proof}[Proof sketch]
 First assume Lifted Monotonicity, in its common-extension form
 (Proposition~\ref{prop:common-expansion-form}).  At a state reachable without
-\commitment, the row of an output $o$ and each remaining row at a legal input $j$ are consistent at $j$, through a row the state keeps
+\commitment, the row of an output $o$ and each remaining row at a legal input $j$ are confluent at $j$, through a row the state keeps
 (Lemma~\ref{lem:run-residual}), so $o$ is legal.  Now assume every such output
 is legal, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Each $o_r$ is
 legal at $\sigma_P(i_r)$, so, taking the rows one at a time, they are
-consistent at $j$, and Lifted Monotonicity follows.  \fullproof
+confluent at $j$, and Lifted Monotonicity follows.  \fullproof
 \end{proof}
 
 \begin{theorem}[Complete CALM]
@@ -1089,7 +1088,7 @@ Complete CALM connects the two scopes of consistency: a spec's runs are
 consistent exactly when every finite set of its rows is row-consistent
 (Proposition~\ref{prop:common-expansion-form}).  So we can check consistency
 on the table without assessing runs, and pairs of rows suffice.  If every two
-rows are consistent, so is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a
+rows are consistent, so is every finite family: two of its rows are confluent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a
 smaller family, until one row remains.
 
 % ======================================================================
@@ -1153,8 +1152,8 @@ distributed history, every consistent cut is confluent at every common
 
 \begin{proof}[Proof sketch]
 First assume Lifted Monotonicity.  The participant runs at a cut are a finite
-family of runs, so Complete CALM makes them confluent.  Now assume every
-consistent cut is confluent.  Any finite family of runs is the set of
+family of runs, so Complete CALM makes them confluent at every common
+\indesc.  Now assume every consistent cut is confluent at every common \indesc.  Any finite family of runs is the set of
 participant runs at the final cut of a history whose participants exchange no
 messages, so the runs are consistent, and Complete CALM gives Lifted
 Monotonicity.  \fullproof
@@ -1251,8 +1250,8 @@ representation in a system's \commitment basis.
 
 The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow.  Systems may constrain their runs arbitrarily, and
-their remainder tables may lack rows that their canonical runs keep.  So a spec
-can be confluent while a system for it is not.  The registrar is an example: after closing the polls at $ab\cdot$, it cannot
+their remainder tables may lack rows that their canonical runs keep.  So a spec's runs
+can be consistent while a system's runs are not.  The registrar is an example: after closing the polls at $ab\cdot$, it cannot
 accept the late ballot $aba$.  Under the original output order, a canonical run
 can emit $\bot$, accept $aba$, and emit $a$.
 
@@ -1358,11 +1357,11 @@ with input $i_r$, so Availability lets it emit $o_r$.  Partition Consistency
 then lets all participants reach one state at $j$, so some row $(j,u)$ survives
 in every participant's state (Proposition~\ref{prop:confluence}).  By
 Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are
-consistent at $j$, which is Lifted Monotonicity for $E$.
+confluent at $j$, which is Lifted Monotonicity for $E$.
 
 Now assume Lifted Monotonicity for $E$.  The canonical system never waits, so
 it has Availability for $E$.  Let $j$ be an input that \inrel every
-participant's current input.  The rows emitted on all sides are consistent at
+participant's current input.  The rows emitted on all sides are confluent at
 $j$, through some row $(j,u)$.  Each participant makes no \commitments of its own, so it
 still has $(j,u)$ (Lemma~\ref{lem:run-residual}).  All participants can
 therefore continue to one state at $j$, which is Partition Consistency.
@@ -1396,7 +1395,7 @@ respects real-time order~\cite{herlihy1990linearizability}, so suppose the write
 finishes before the read begins.  Every linearization then puts the write
 first, and the read must return $v$.  But each of $p$ and $q$ sees only its own
 request, and Availability requires $p$ to acknowledge the write and $q$ to
-answer $v_0$.  These two rows are inconsistent at the input with both
+answer $v_0$.  These two rows are not confluent at the input with both
 requests, so the spec does not satisfy Lifted Monotonicity for them.  Their theorem concerns
 every system, not only the canonical one, so it needs one more step.
 
@@ -1416,8 +1415,8 @@ then so does the spec's canonical system for $E$.
 % its own output, so no row at $j$ is kept by all.
 % \fullproof
 % \end{proof}
-Intuitively, when Lifted Monotonicity for $E$ fails, rows of $E$ that are
-inconsistent at a common extension of their inputs can sit on opposite sides of a partition:
+Intuitively, when Lifted Monotonicity for $E$ fails, rows of $E$ that are not
+confluent at a common extension of their inputs can sit on opposite sides of a partition:
 availability lets each side emit its row's output, and no later state can
 reconcile them.
 \proofinfull
@@ -1529,9 +1528,9 @@ composite.
 \label{def:tight-guard}
 $\Spec_1$ is a \emph{necessary guard} for $\Spec_2$ when it makes no
 unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
-of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
+of $P_1$ with $i\InputOrd k$ are not confluent at $k$ in $P_1$, some rows
 $(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
-are inconsistent at $k$ in $P_2\circ P_1$.
+are not confluent at $k$ in $P_2\circ P_1$.
 
 $\Spec_1$ is a \emph{tight guard} for $\Spec_2$ when it is both a
 sufficient and a necessary guard, and the pipeline's coordination is then
@@ -1544,9 +1543,7 @@ canonical, and the commuting log shows it can demand too many: it orders
 $[A,B]$ and $[B,A]$, although the store treats them alike.  We therefore ask
 for an order on $M$ under which the upstream's canonical \commitments are
 exactly the composite's.  Write $m\sqsubseteq m'$ when every finite set of
-outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read consistency
-of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments
-that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$.
+outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read confluence of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments its failure calls for, with $\sqsubseteq$ in place of $\preceq_M$.
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
 $f(m)\OutputOrd f(m')$.
 
@@ -1576,8 +1573,8 @@ the order of commuting commands, as equal.  When the store's responses record th
 consensus log is a tight guard: execution is monotone and reflects the prefix
 order, so every \commitment the log makes is one the store's clients can
 observe.  The commuting log is a sufficient guard but not a necessary one:
-$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
-prefix order but consistent there under $\sqsubseteq$.  When commands commute
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the
+prefix order but confluent at $\{A,B\}$ under $\sqsubseteq$.  When commands commute
 and responses do not record their order, a log that orders only non-commuting
 commands, as in Generalized Paxos~\cite{lamport2005generalized} and
 EPaxos~\cite{moraru2013epaxos}, restores tightness.  Without

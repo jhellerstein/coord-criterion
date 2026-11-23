@@ -4,7 +4,7 @@
 This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs
 (Corollary~\ref{cor:convergence}).  We then define systems, relate their runs to
-canonical runs, and show when systems are confluent; Complete CAP follows.
+canonical runs, and show when the runs of systems are consistent; Complete CAP follows.
 
 \input{sections/distributed-histories.tex}
 
@@ -207,8 +207,8 @@ those outputs require are the same.
 
 The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow (Appendix~\ref{app:bases}).  Systems may constrain their runs arbitrarily, and
-their remainder tables may lack rows that their canonical runs keep.  So a spec
-can be confluent while a system for it is not.  The registrar is an example:
+their remainder tables may lack rows that their canonical runs keep.  So a spec's runs
+can be consistent while a system's runs are not.  The registrar is an example:
 after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$.
 Under the original output order, a canonical run can emit $\bot$, accept
 $aba$, and emit $a$.
@@ -435,12 +435,12 @@ $(i_r,o_r)$ of $E$ and an input $j$ that \inrel every $i_r$.  In a partitioned
 history, put each participant $r$ alone on a side with input $i_r$, so
 Availability lets it emit $o_r$.  Partition Consistency makes the final cut
 confluent at $j$, so some row $(j,u)$ survives in every participant's state
-(Proposition~\ref{prop:confluence}).  By Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are consistent at $j$, which is Lifted Monotonicity for $E$.
+(Proposition~\ref{prop:confluence}).  By Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are confluent at $j$, which is Lifted Monotonicity for $E$.
 
 Now assume Lifted Monotonicity for $E$.  The canonical system's participants
 never wait: each can emit any output of $E$ that its state allows, so the
 system has Availability for $E$.  Let $j$ be an input that \inrel every
-participant's current input.  The rows emitted on all sides are rows of $E$, so they are consistent at $j$, through some row $(j,u)$.  Each participant makes no
+participant's current input.  The rows emitted on all sides are rows of $E$, so they are confluent at $j$, through some row $(j,u)$.  Each participant makes no
 \commitments of its own and $u$ \outrel every output it emitted, so it still
 has $(j,u)$ (Lemma~\ref{lem:run-residual}).  All participants can therefore
 continue to one state at $j$, which is Partition Consistency.  Full proof in
@@ -478,7 +478,7 @@ second~\cite{herlihy1990linearizability}.  In the register example, suppose the
 write finishes before the read begins.  Every linearization then puts the write
 first, so the read must return $v$.  But each of $p$ and $q$ sees only its own
 request, and Availability requires $p$ to acknowledge the write and $q$ to
-answer $v_0$.  These two rows are inconsistent at the input with both requests, so
+answer $v_0$.  These two rows are not confluent at the input with both requests, so
 the spec does not satisfy Lifted Monotonicity for them.  Their theorem
 concerns every system, not only the canonical one, so it needs one more step.
 
@@ -491,7 +491,7 @@ then so does the spec's canonical system for $E$.
 \begin{proof}[Proof sketch]
 By Theorem~\ref{thm:complete-cap}, it suffices to show that if Lifted
 Monotonicity for $E$ fails, the system loses Partition Consistency.  Then some
-rows of $E$ are inconsistent at a common extension $j$ of their inputs.  We place each row's participant on
+rows of $E$ are not confluent at a common extension $j$ of their inputs.  We place each row's participant on
 its own side of a partition, and Availability lets each one emit its row's
 output.  By Observable equivalence, a participant keeps no more rows than its
 canonical run, so each row it keeps at $j$ \outrel its own output.  A common

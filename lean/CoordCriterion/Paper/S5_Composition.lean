@@ -145,8 +145,8 @@ Then `𝒮₂|_{𝒮₁}` answers each output of a run `ρ` of that system witho
 commitment, and the pipeline's runs are consistent whenever those of the
 system for `𝒮₁` are.  Specifically, replacing each output of `ρ` by its
 answers, and dropping the commitment events of `ρ`, gives a canonical run of
-`P₂ ∘ P₁`, and such runs are confluent whenever the runs of the system for
-`𝒮₁` are."  Lead-in: "A sufficient guard leaves no commitment to the
+`P₂ ∘ P₁`, and such runs are confluent at an input whenever the runs of the
+system for `𝒮₁` are."  Lead-in: "A sufficient guard leaves no commitment to the
 downstream stage."  Lean, for every run of `𝒮₁` under any basis `B` emitting
 `m :: ms`: `Guard.proper_follows` (the empty-basis `𝒮₂|_{𝒮₁}` starts at
 `σ(m)`, answers `m`, and receives and answers each later output, and the
@@ -282,9 +282,9 @@ theorem «sec:tight-coordination/components» {I M O : Type} [PO I] [PO M] [PO O
 
 /-- Before Theorem `thm:guard-tightening`: "Necessity compares the upstream's
 canonical commitments with those the composite needs."  Rows `(i,m)` and
-`(k,x)` of `P₁` with `i ≼ k` are inconsistent at `k` exactly when emitting `m`
+`(k,x)` of `P₁` with `i ≼ k` are not confluent at `k` exactly when emitting `m`
 at `σ_{P₁}(i)` removes `(k,x)` by canonical commitment (Appendix `app:tight`).
-Lean: rows inconsistent at `k` under a
+Lean: rows not confluent at `k` under a
 relation `r` on `M` is `Tight.Conf P r` (with `r = ≼_M` here, `⊑` in the
 theorem); the removal by commitment is `Tight.excluded_canon_iff`. -/
 theorem «sec:tight-coordination/inconsistent-rows» {I M : Type} [PO I] [PO M] (sp : Spec I M)
@@ -294,9 +294,9 @@ theorem «sec:tight-coordination/inconsistent-rows» {I M : Type} [PO I] [PO M] 
 
 /-- **Definition `def:necessary-guard`** (Necessary guard): "`𝒮₁` is a
 necessary guard for `𝒮₂` when it makes no unnecessary commitment: whenever
-rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k` are inconsistent at `k` in `P₁`,
+rows `(i,m)` and `(k,x)` of `P₁` with `i ≼ k` are not confluent at `k` in `P₁`,
 some rows `(i,o)` and `(k,y)` of `P₂ ∘ P₁`, with `o ∈ P₂(m)` and
-`y ∈ P₂(x)`, are inconsistent at `k` in `P₂ ∘ P₁`."  Lean: `Tight.Tight`, unfolded; in
+`y ∈ P₂(x)`, are not confluent at `k` in `P₂ ∘ P₁`."  Lean: `Tight.Tight`, unfolded; in
 terms of canonical commitments it is `Tight.tight_iff_excluded`. -/
 theorem «def:necessary-guard» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M) (sk : Spec M O) :
     Tight.Tight sp sk ↔ ∀ i m k x, Tight.Conf sp.P PO.le i m k x →
@@ -311,8 +311,8 @@ def «def:tight-guard» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
   Guard.Proper sp sk ∧ Tight.Tight sp sk
 
 /-- "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common
-extension in `P₂(m')`, and read consistency of rows of `P₁` under `⊑`, and the
-canonical commitments that inconsistency calls for, with `⊑` in place of
+extension in `P₂(m')`, and read confluence of rows of `P₁` under `⊑`, and the
+canonical commitments its failure calls for, with `⊑` in place of
 `≼_M`.  For a functional downstream `f`, `m ⊑ m'` exactly when
 `f(m) ≼ f(m')`."  And, after the theorem: "`⊑` is transitive but need not be
 an order."  Lean: `⊑` is `Tight.dle`; `Tight.graph_dle_iff`,
@@ -330,7 +330,7 @@ every commitment the composite needs.  (2) If each `P₂(m)` has a greatest
 element, as when `𝒮₂` is functional, the upstream's canonical commitments
 under `⊑` are exactly the composite's.  So a sufficient guard is tight exactly
 when `≼_M` requires no more commitments than `⊑`."  A canonical commitment
-removing `(k,x)` at `σ_{P₁}(i)` corresponds to a pair inconsistent at `k`
+removing `(k,x)` at `σ_{P₁}(i)` corresponds to a pair not confluent at `k`
 (`Tight.excluded_canon_iff`).  Lean: (1) `Tight.proper_iff_le_dle` (an order
 makes `𝒮₁` a sufficient guard exactly when it is contained in `⊑` on the
 outputs of `𝒮₁`; every other order is `«thm:guard-tightening/any-order»`) and
@@ -365,8 +365,8 @@ theorem «sec:tight-coordination/greatest» {M O : Type} [PO M] [PO O] (g : M �
     omega⟩
 
 /-- `thm:guard-tightening`, for every order: "Since every order under which `𝒮₁`
-is a sufficient guard is contained in `⊑`, and a smaller order makes at least
-as many pairs inconsistent, each such order requires at least the commitments
+is a sufficient guard is contained in `⊑`, and a smaller order leaves at least
+as many pairs not confluent, each such order requires at least the commitments
 that `⊑` does.  At the other extreme, equality on `M` requires the most, since
 every order on `M` contains it."  Lean: `Tight.conf_of_dleConf_under`; `inst`
 is the other order on `M`, and `Joint.underOut`/`Joint.underIn` are the same
@@ -395,8 +395,8 @@ theorem «sec:tight-coordination/consensus-log» {Cmd Stt R : Type} (δ : Stt �
 
 open Tight Tight.Log Comp Guard in
 /-- "The commuting log is a sufficient guard but not a necessary one:
-`({A},[A])` and `({A,B},[B,A])` are inconsistent at `{A,B}` under the prefix
-order but consistent there under `⊑`."  With the motivating paragraph:
+`({A},[A])` and `({A,B},[B,A])` are not confluent at `{A,B}` under the prefix
+order but confluent at `{A,B}` under `⊑`."  With the motivating paragraph:
 "Suppose two commands `A` and `B` commute, and the store's outputs do not
 record their order, as when it reports its state."  Lean:
 `Tight.Log.commuting`, with two increments and the store answering a log with

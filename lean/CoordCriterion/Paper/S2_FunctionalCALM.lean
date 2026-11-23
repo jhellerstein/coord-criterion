@@ -560,25 +560,25 @@ abbrev «def:run/reachable-without-commitment» {I O : Type} [PO I] [PO O] {sp :
     (τ : State sp) : Prop :=
   ReachableCF τ
 
-/-- "Different runs may retain different rows.  Under the equality order, rows
-`(ab·,⊥)` and `(aba,a)` have the *common input extension* `aba`, an input that
-extends both of their inputs, but no *common output extension*: no output at
-`aba` extends both `⊥` and `a`."  And: "Rows with a common output extension at
-`j` are *row-consistent at* `j`, and *row-inconsistent at* `j` otherwise. …
-Rows are *row-consistent* when they are row-consistent at every common input
-extension of their inputs …"  The last conjunct says the two rows are
-row-inconsistent at `aba`. -/
+/-- "Consider the rows `(ab·,⊥)` and `(aba,a)` under the equality order.
+Their inputs have the *common input extension* `aba`, an input that extends
+both. … No output at `aba` extends both `⊥` and `a`, so the rows have no
+*common output extension* there …"  And: "Rows with a common output extension
+at `j` are *confluent at* `j`.  A set of rows is *row-consistent* when it is
+confluent at every common input extension of its inputs, and
+*row-inconsistent* otherwise."  The last conjunct says the two rows are not
+confluent at `aba`. -/
 theorem «sec:election-story/obstruction» :
     elecEq.P bab ⟨.bot⟩ ∧ elecEq.P baba ⟨.win .a⟩ ∧ bab ≼ baba ∧ baba ≼ baba ∧
       ¬ ∃ u, elecEq.P baba u ∧ (⟨.bot⟩ : ResE) ≼ u ∧ (⟨.win .a⟩ : ResE) ≼ u :=
   ⟨by show _ = _; rw [winner_bab], by show _ = _; rw [winner_baba], bab_le_baba, PO.refl _,
    fun ⟨_, _, h₁, h₂⟩ => by cases (show (⟨.bot⟩ : ResE) = ⟨.win .a⟩ from h₁.trans h₂.symm)⟩
 
-/-- "So a run that emits `⊥` at `ab·` must apply `x_⊥`, and can never be
-reconciled at `aba` with a run that receives `aba` and emits `a`.  Under the
-equality order this removal is `⊥`'s canonical commitment, required by the
-spec; in panel (d), under the original order, the registrar made the same
-removal by choice."  (Equality order.)  The two runs end at
+/-- "Suppose one run emits `⊥` at `ab·`, and another receives `aba` and
+emits `a`.  … the two runs can never reach a common state."  And: "Our two
+rows `(ab·,⊥)` and `(aba,a)` are therefore inconsistent under the equality
+order, so a run that emits `⊥` at `ab·` must apply the canonical commitment
+`x_⊥`."  (Equality order.)  The two runs end at
 `(ab·, P[in ⪰ ab·, out ⪰ ⊥])` and `σ_P(aba)`.  Lean takes the second run
 before it emits `a`; emitting `a` only removes rows, so the paper's pair is
 not confluent either. -/
@@ -587,8 +587,9 @@ theorem «sec:election-story/not-reconciled» :
         ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba] baba :=
   elecEq_not_confluent
 
-/-- "Having extracted canonical runs from a spec, we are now ready to define
-consistency."
+/-- "Runs follow the same pattern: they are *confluent at* `j` when they can
+reach a common state with current input `j`, and consistent when they are
+confluent at every common input extension."
 
 **Def. `def:confluence`** (Confluence at an input).  "A finite family of runs
 ending at states `(i₁,R₁),…,(i_k,R_k)` is *confluent at* `j`, a common input
@@ -620,6 +621,16 @@ modeling rationale.
 Lean: `Spec.Consistent`, a property of the spec's runs. -/
 abbrev «def:consistency» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.Consistent
+
+/-- After Def. `def:consistency`: "The two uses of confluence agree: runs are
+confluent at `j` exactly when the rows of the outputs they have emitted are
+confluent at `j` (Lemma `lem:reconciliation`)."  Rows of the emitted outputs
+are confluent at `j` when some `u ∈ P(j)` extends every emitted output.
+Lean: `reconciliation`; `X` is `emittedAll fam`. -/
+theorem «sec:election-story/two-confluences» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (fam : List (RunW sp)) (j : I) (hj : ∀ r ∈ fam, r.fin.cur ≼ j) :
+    ConfluentAt (fam.map RunW.fin) j ↔ ∃ u, sp.P j u ∧ ∀ o ∈ emittedAll fam, o ≼ u :=
+  reconciliation fam j hj
 
 /-- Closing paragraph of §2.1: "The election shows the arc in miniature. …
 An output that is not legal needs a commitment; otherwise, runs that emit it

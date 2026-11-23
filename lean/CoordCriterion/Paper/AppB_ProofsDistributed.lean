@@ -45,9 +45,9 @@ theorem «proof:prop:distributed-consistency» (sp : Spec I O) (D : Type) :
 
 /-- *Exchanging outputs* (table level).  "It can also silently honor `o`
 by restricting its table to `R[out ⪰ o]`. … Silent honoring never changes
-whether a cut is confluent.  It cannot make a cut confluent, because it only
-removes rows … It cannot make a cut non-confluent either.  A row that survives
-at a common input extension already extends every output emitted in the cut
+whether a cut is confluent at a common input extension `j`.  It cannot make a
+cut confluent at `j`, because it only removes rows … It cannot make a cut
+non-confluent at `j` either.  A row that survives at `j` already extends every output emitted in the cut
 (Lemma run-residual), including `o`, so the restriction keeps the row."
 
 Lean: each family member is a state with the residual shape for its emitted

@@ -206,7 +206,7 @@ abbrev «def:distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
 runs of an I/O specification are consistent if and only if its distributed
 histories are consistent."  Proof sketch: "First assume the runs are
 consistent.  The participant runs at a cut are a finite family of runs, so
-every cut is confluent and the histories are consistent.  Now assume the
+every cut is confluent at every common input extension, and the histories are consistent.  Now assume the
 histories are consistent.  Any finite family of runs is the set of participant
 runs at the final cut of a history whose participants exchange no messages, so
 the runs are consistent." -/
@@ -325,7 +325,7 @@ theorem «sec:distributed-consistency/message-data» (sp : Spec I O) (D D' : Typ
   (Dist.consistent_iff_distConsistent sp D).symm.trans (Dist.consistent_iff_distConsistent sp D')
 
 /-- *Message data*: "Participants may also share emitted outputs in `d`; this
-does not change which cuts are confluent (Appendix `app:exchanging-outputs`)."
+does not change at which inputs a cut is confluent (Appendix `app:exchanging-outputs`)."
 The entries are in `Paper/AppB_ProofsDistributed.lean`
 (`«app:exchanging-outputs/cut»`). -/
 theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}

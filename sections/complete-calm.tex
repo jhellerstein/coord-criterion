@@ -233,7 +233,7 @@ directed.
 \paragraph{The common-extension condition.}
 Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
-Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls for a condition on rows at different inputs: they must be consistent at $j$.  The two conditions turn out to be equivalent.
+Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls for a condition on rows at different inputs: they must be confluent at $j$.  The two conditions turn out to be equivalent.
 In the traceroute spec, one run may trace from \texttt{s} and emit
 $\{\texttt{s}{\to}\texttt{s1}\}$, while another traces from a second source
 \texttt{t} and emits $\{\texttt{t}{\to}\texttt{s2}\}$.  At $\{\texttt{s},\texttt{t}\}$, which \inrel both inputs, the route set $\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ \outrel both outputs.
@@ -255,7 +255,7 @@ if it satisfies the common-extension condition.
 \begin{proof}[Proof sketch]
 First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$ to some extension in the fiber at $j$, and that fiber is directed, so those extensions have a common extension there.  Now assume the common-extension
 condition, and take $i\InputOrd j$ and a finite $X\subseteq\fiber{i}$.  The
-rows $(i,x)$ for $x\in X$ are then consistent at $j$, which is what Lifted Monotonicity asks for.  Full proof in
+rows $(i,x)$ for $x\in X$ are then confluent at $j$, which is what Lifted Monotonicity asks for.  Full proof in
 Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
@@ -269,7 +269,7 @@ functional case: at a state $(i,R)$ with $o\in R(i)$, $\mathsf{output}(o)$ emits
 $o$ and keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).
 
-Removing a row $(k,x)$ does not always lose the information in its output.  If $(k,x)$ is consistent with $(i,o)$ at $k$ in $R$, through some $u\in R(k)$, then removing $(k,x)$ loses nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
+Removing a row $(k,x)$ does not always lose the information in its output.  If $(k,x)$ is confluent with $(i,o)$ at $k$ in $R$, through some $u\in R(k)$, then removing $(k,x)$ loses nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
 would have.  This is output subsumption, and we put $(k,x)$ in $\Subsumed_o$.
 Every other removed row goes in $\Excluded_o$.  With several outputs at an
 input, the canonical \commitment $x_o(i,R)=(i,R\setminus\Excluded_o)$ removes
@@ -288,7 +288,7 @@ $o$ is a legal output at a state when $\Excluded_o$ is empty;
 $\mathsf{output}(o)$ then applies no \commitment.  With several
 outputs at one input, this is more permissive than in the functional case,
 since an output event may remove rows by output subsumption without a
-\commitment.  Equivalently, at every legal input $j$, the row $(i,o)$ and each remaining row at $j$ are consistent at $j$ (Appendix~\ref{app:lifted-output-events}).
+\commitment.  Equivalently, at every legal input $j$, the row $(i,o)$ and each remaining row at $j$ are confluent at $j$ (Appendix~\ref{app:lifted-output-events}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -313,9 +313,9 @@ if every output at every state reachable without \commitment is legal.
 \begin{proof}[Proof sketch]
 First assume Lifted Monotonicity, in its common-extension form
 (Proposition~\ref{prop:common-expansion-form}).  At a state reachable without
-\commitment, the row of an output $o$ and each remaining row at a legal input $j$ are consistent at $j$, through a row the state keeps
+\commitment, the row of an output $o$ and each remaining row at a legal input $j$ are confluent at $j$, through a row the state keeps
 (Lemma~\ref{lem:run-residual}), so $o$ is legal.  Now assume every such output
-is legal, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Each $o_r$ is legal at $\sigma_P(i_r)$, so, taking the rows one at a time, they are consistent at $j$, and Lifted Monotonicity follows.  Full proof in
+is legal, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Each $o_r$ is legal at $\sigma_P(i_r)$, so, taking the rows one at a time, they are confluent at $j$, and Lifted Monotonicity follows.  Full proof in
 Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
@@ -342,7 +342,7 @@ consistency asks whether runs can be continued to a common state; by the
 theorem and Proposition~\ref{prop:common-expansion-form}, that holds exactly
 when every finite set of the spec's rows is row-consistent.  So consistency can
 be checked on the table itself, and pairs of rows suffice: if every two rows
-are consistent, so is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a smaller family, until one row remains.
+are consistent, so is every finite family: two of its rows are confluent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a smaller family, until one row remains.
 
 The condition that characterizes consistency of runs is a property of the spec
 alone: Lifted Monotonicity, which for a function is ordinary monotonicity.

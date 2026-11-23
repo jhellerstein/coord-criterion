@@ -151,7 +151,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-749 entries.
+750 entries.
 
 ### §2 Functional CALM
 
@@ -209,10 +209,11 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:transition-system»` | abbrev | **Def. |
 | `«def:run»` | abbrev | **Def. |
 | `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment. |
-| `«sec:election-story/obstruction»` | theorem | "Different runs may retain different rows. |
-| `«sec:election-story/not-reconciled»` | theorem | "So a run that emits `⊥` at `ab·` must apply `x_⊥`, and can never be reconciled at `aba` with a run that receives `aba` and emits `a`. |
-| `«def:confluence»` | abbrev | "Having extracted canonical runs from a spec, we are now ready to define consistency." **Def. |
+| `«sec:election-story/obstruction»` | theorem | "Consider the rows `(ab·,⊥)` and `(aba,a)` under the equality order. |
+| `«sec:election-story/not-reconciled»` | theorem | "Suppose one run emits `⊥` at `ab·`, and another receives `aba` and emits `a`. |
+| `«def:confluence»` | abbrev | "Runs follow the same pattern: |
 | `«def:consistency»` | abbrev | **Def. |
+| `«sec:election-story/two-confluences»` | theorem | After Def. |
 | `«sec:election-story/consistency»` | theorem | Closing paragraph of §2.1: |
 | `«lem:run-residual»` | theorem | "Events are relational selections, and selections commute, so a run's remainder table depends only on its last input and the outputs it emitted:" **Lemma `le… |
 | `«eq:run-residual»` | abbrev | **Eq. |
@@ -424,7 +425,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:tight-coordination/inconsistent-rows»` | theorem | Before Theorem `thm:guard-tightening`: |
 | `«def:necessary-guard»` | theorem | **Definition `def:necessary-guard`** (Necessary guard): |
 | `«def:tight-guard»` | def | **Definition `def:tight-guard`** (Tight guard): |
-| `«sec:tight-coordination/downstream-order»` | theorem | "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read consistency of rows of `P₁` under `⊑`, and the canon… |
+| `«sec:tight-coordination/downstream-order»` | theorem | "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read confluence of rows of `P₁` under `⊑`, and the canoni… |
 | `«thm:guard-tightening»` | theorem | **Theorem `thm:guard-tightening`** (Guard Tightening): |
 | `«sec:tight-coordination/greatest»` | theorem | After Theorem `thm:guard-tightening`: |
 | `«thm:guard-tightening/any-order»` | theorem | `thm:guard-tightening`, for every order: |

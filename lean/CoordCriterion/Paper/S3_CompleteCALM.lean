@@ -363,7 +363,7 @@ theorem «sec:lifted-monotonicity/traceroute-common-extension» (x y : Figures.T
 /-- **Def. `def:common-expansion-condition`** (Common-extension condition).
 "An I/O specification satisfies the common-extension condition when every
 finite set of rows of `P` is consistent."  Rows are row-consistent when
-they are consistent at every common input extension `j` of their inputs, that is, some
+they are confluent at every common input extension `j` of their inputs, that is, some
 `u ∈ P(j)` extends every `o_r`.  Lean:
 `Spec.CommonExpansion`, the rows as a list. -/
 abbrev «def:common-expansion-condition» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
@@ -469,12 +469,12 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- Prop. `prop:exposure-boundary`, proof sketch: "First assume Lifted
 Monotonicity, in its common-extension form (Proposition
 `prop:common-expansion-form`).  At a state reachable without commitment, the
-row of an output `o` and each remaining row at a legal input `j` are consistent
+row of an output `o` and each remaining row at a legal input `j` are confluent
 at `j`, through a row the state keeps (Lemma `lem:run-residual`), so `o` is
 legal.  Now assume every such output is legal, and take rows `(i_r,o_r)` with
 a common extension `j` of their inputs.  Each `o_r` is legal at `σ_P(i_r)`, so,
-taking the rows one at a time, they are consistent at `j`, and Lifted Monotonicity
-follows."  (Consistent at `j`: some `u ∈ P(j)` extends every `o_r`.)  (The legal-output test, Prop.
+taking the rows one at a time, they are confluent at `j`, and Lifted Monotonicity
+follows."  (Confluent at `j`: some `u ∈ P(j)` extends every `o_r`.)  (The legal-output test, Prop.
 `prop:exposability`, is the step "so `o` is legal".)
 The common-extension form of the proposition; its forward direction
 (`commonExpansion_exposable`) uses the rows-remaining lemma directly, not

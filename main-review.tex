@@ -105,7 +105,7 @@ compared or combined, which leaves developers guessing.}
 \textcolor{reviewed}{We provide a simple formalism that unifies the literature and
 offers new results.} \textcolor{reviewed}{A minimalist \spectype (spec) is a \emph{possibility table} containing, for
 each input, every output a system may produce, with partial orders on inputs and
-outputs.} \textcolor{reviewed}{Its runs are \emph{consistent} when they are confluent.} \textcolor{reviewed}{\emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
+outputs.} \textcolor{reviewed}{Its runs are \emph{consistent} when they are confluent as input grows.} \textcolor{reviewed}{\emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: the runs are consistent exactly when the function is
 monotone.} \textcolor{reviewed}{\emph{Complete CALM}
 extends this to nondeterministic specs, where the test is
@@ -241,7 +241,7 @@ Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 \subsection{Consistency and a criterion for achieving it}
 \textcolor{reviewed}{The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity.} \textcolor{reviewed}{Our Consistency definition is general: the runs of a spec are
-\emph{consistent} when they are \emph{confluent}, so that states reached along
+\emph{consistent} when they are \emph{confluent} at every input that extends theirs, so that states reached along
 different paths can be brought to a common state.} \textcolor{reviewed}{Applied to different specs,
 this one definition captures classical consistency models, from eventual
 consistency of replicated data through linearizability, serializability and
@@ -284,7 +284,7 @@ partition.} \textcolor{reviewed}{The Gilbert--Lynch CAP Theorem~\cite{gilbert200
 \noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
         \spectype[s]. \textcolor{reviewed}{Consistency is defined as
-        confluence of a spec's runs, unifying general consistency models,
+        confluence of a spec's runs as input grows, unifying general consistency models,
         application-specific requirements, and distributed consistency.}
 
 \textcolor{reviewed}{\noindent
@@ -700,30 +700,24 @@ written, we assume that any permitted behavior may occur. A run is
 \commitment. A state is \emph{reachable without \commitment} when some
 \commitment-free run reaches it.
 
-\textcolor{reviewed}{Different runs may retain different rows.} \textcolor{reviewed}{Under the equality order, rows
-$(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
-that \inrel both of their inputs, but no \emph{common \outnoun}: no output at
-$aba$ \outrel both $\bot$ and $a$.}
+\textcolor{reviewed}{Different runs may retain different rows.} \textcolor{reviewed}{Intuitively, two runs can still
+reach a common state only if some later output extends what each has emitted.} \textcolor{reviewed}{Consider the rows $(ab\cdot,\bot)$ and $(aba,a)$ under the equality order.} \textcolor{reviewed}{Their inputs have the \emph{common \indesc} $aba$, an input that \inrel both.} \textcolor{reviewed}{Suppose one run emits $\bot$ at $ab\cdot$, and another receives $aba$ and
+emits $a$.} \textcolor{reviewed}{No output at $aba$ \outrel both $\bot$ and $a$, so the rows have
+no \emph{common \outnoun} there, and the two runs can never reach a common
+state.}
 
-\textcolor{reviewed}{Common \outnouns give us a row-level notion of consistency.} \textcolor{reviewed}{Rows with a common
-\outnoun at $j$ are \emph{row-consistent at} $j$, and \emph{row-inconsistent
-at} $j$ otherwise.} \textcolor{reviewed}{\Commitment-free runs that emit their outputs can be
-reconciled at $j$ exactly when the rows are row-consistent there, so row
-consistency is consistency of particular runs: the \commitment-free runs that
-emit the rows' outputs.} \textcolor{reviewed}{Rows are \emph{row-consistent} when they are
-row-consistent at every common \indesc of their inputs, and
-\emph{row-inconsistent} otherwise.} \textcolor{reviewed}{When the context is clearly about rows, we
-say simply that they are \emph{consistent}.}
+\textcolor{reviewed}{This motivates our first use of confluence, for rows.} \textcolor{reviewed}{Rows with a common
+\outnoun at $j$ are \emph{confluent at} $j$.} \textcolor{reviewed}{A set of rows is
+\emph{row-consistent} when it is confluent at every common \indesc of its
+inputs, and \emph{row-inconsistent} otherwise.} \textcolor{reviewed}{When the context is clearly
+about rows, we say simply \emph{consistent} or \emph{inconsistent}.}
 
-\textcolor{reviewed}{Because our two rows $(ab\cdot,\bot)$ and $(aba,a)$ are inconsistent under the
-equality order, a run that emits $\bot$ at $ab\cdot$ must apply $x_\bot$, and
-can never be reconciled at $aba$ with a run that receives $aba$ and emits
-$a$.} \textcolor{reviewed}{Under the equality order this removal is $\bot$'s canonical
-\commitment, required by the spec; in panel~(d), under the original order, the
-registrar made the same removal by choice.}
+\textcolor{reviewed}{Our two rows $(ab\cdot,\bot)$ and $(aba,a)$ are therefore inconsistent under the
+equality order, so a run that emits $\bot$ at $ab\cdot$ must apply the canonical \commitment $x_\bot$.}
 
-\textcolor{reviewed}{Having extracted canonical runs from a spec, we are now ready to define
-consistency for all of a spec's runs.}
+\textcolor{reviewed}{Runs follow the same pattern: they are \emph{confluent at} $j$ when they can
+reach a common state with current input $j$, and consistent when they are
+confluent at every common \indesc.}
 
 \begin{definition}[Confluence at an input]
 \label{def:confluence}
@@ -735,6 +729,10 @@ consistency for all of a spec's runs.}
 \textcolor{reviewed}{The runs of an \spectype are \emph{consistent} when every finite family of
 them is confluent at every common \indesc of their current inputs.}
 \end{definition}
+
+The two uses of confluence agree: runs are confluent at $j$ exactly when the
+rows of the outputs they have emitted are confluent at $j$
+(Lemma~\ref{lem:reconciliation}).
 
 Consistency requires confluence at every common extension of the runs' current
 inputs, not just at some larger common extension that arrives later. Otherwise
@@ -826,13 +824,13 @@ run applies a \commitment.}
 
 \begin{proof}[Proof sketch]
 First assume the runs are consistent, and suppose some run's output event
-$\mathsf{output}(o)$ applies $x_o$. It removes some row $(k,x)$ inconsistent with $(i,o)$ at $k$. Compare that run with one from the state
+$\mathsf{output}(o)$ applies $x_o$. It removes some row $(k,x)$ that is not confluent with $(i,o)$ at $k$. Compare that run with one from the state
 before that event that instead takes $\mathsf{input}(k)$ and then emits $x$:
 the two share no row at $k$, so by the Survivor test they are not confluent at
 $k$, a contradiction. Now assume no output event applies a \commitment, and
 take a family of runs and a common extension $j$ of their current inputs. Each run keeps a row
 $(i_r,u_r)$ at its current input whose output \outrel everything it emitted
-(Lemma~\ref{lem:run-residual}), and $u_r$ is legal at $\sigma_P(i_r)$. Applying that legality one run at a time shows that these rows are consistent at $j$, and the Survivor test gives confluence. Full proof in
+(Lemma~\ref{lem:run-residual}), and $u_r$ is legal at $\sigma_P(i_r)$. Applying that legality one run at a time shows that these rows are confluent at $j$, and the Survivor test gives confluence. Full proof in
 Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
@@ -1145,7 +1143,7 @@ directed.
 
 \paragraph{The common-extension condition.}
 \textcolor{reviewed}{Lifted Monotonicity is stated for one input and its extensions, but runs may
-emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.} \textcolor{reviewed}{Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls for a condition on rows at different inputs: they must be consistent at $j$.} \textcolor{reviewed}{The two conditions turn out to be equivalent.} \textcolor{reviewed}{In the traceroute spec, one run may trace from \texttt{s} and emit
+emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.} \textcolor{reviewed}{Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls for a condition on rows at different inputs: they must be confluent at $j$.} \textcolor{reviewed}{The two conditions turn out to be equivalent.} \textcolor{reviewed}{In the traceroute spec, one run may trace from \texttt{s} and emit
 $\{\texttt{s}{\to}\texttt{s1}\}$, while another traces from a second source
 \texttt{t} and emits $\{\texttt{t}{\to}\texttt{s2}\}$.} \textcolor{reviewed}{At $\{\texttt{s},\texttt{t}\}$, which \inrel both inputs, the route set $\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ \outrel both outputs.}
 
@@ -1166,7 +1164,7 @@ if it satisfies the common-extension condition.}
 \begin{proof}[Proof sketch]
 \textcolor{reviewed}{First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.} Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$ to some extension in the fiber at $j$, and that fiber is directed, so those extensions have a common extension there. Now assume the common-extension
 condition, and take $i\InputOrd j$ and a finite $X\subseteq\fiber{i}$. The
-rows $(i,x)$ for $x\in X$ are then consistent at $j$, which is what Lifted Monotonicity asks for. Full proof in
+rows $(i,x)$ for $x\in X$ are then confluent at $j$, which is what Lifted Monotonicity asks for. Full proof in
 Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
@@ -1180,7 +1178,7 @@ functional case: at a state $(i,R)$ with $o\in R(i)$, $\mathsf{output}(o)$ emits
 $o$ and keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).}
 
-\textcolor{reviewed}{Removing a row $(k,x)$ does not always lose the information in its output.} If $(k,x)$ is consistent with $(i,o)$ at $k$ in $R$, through some $u\in R(k)$, then removing $(k,x)$ loses nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
+\textcolor{reviewed}{Removing a row $(k,x)$ does not always lose the information in its output.} If $(k,x)$ is confluent with $(i,o)$ at $k$ in $R$, through some $u\in R(k)$, then removing $(k,x)$ loses nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
 would have. This is output subsumption, and we put $(k,x)$ in $\Subsumed_o$. Every other removed row goes in $\Excluded_o$. With several outputs at an
 input, the canonical \commitment $x_o(i,R)=(i,R\setminus\Excluded_o)$ removes
 only the rows in $\Excluded_o$; the output event still removes the rows in
@@ -1197,7 +1195,7 @@ $o$ is a legal output at a state when $\Excluded_o$ is empty;
 $\mathsf{output}(o)$ then applies no \commitment. With several
 outputs at one input, this is more permissive than in the functional case,
 since an output event may remove rows by output subsumption without a
-\commitment. Equivalently, at every legal input $j$, the row $(i,o)$ and each remaining row at $j$ are consistent at $j$ (Appendix~\ref{app:lifted-output-events}).
+\commitment. Equivalently, at every legal input $j$, the row $(i,o)$ and each remaining row at $j$ are confluent at $j$ (Appendix~\ref{app:lifted-output-events}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1222,9 +1220,9 @@ if every output at every state reachable without \commitment is legal.}
 \begin{proof}[Proof sketch]
 \textcolor{reviewed}{First assume Lifted Monotonicity, in its common-extension form
 (Proposition~\ref{prop:common-expansion-form}).} \textcolor{reviewed}{At a state reachable without
-\commitment, the row of an output $o$ and each remaining row at a legal input $j$ are consistent at $j$, through a row the state keeps
+\commitment, the row of an output $o$ and each remaining row at a legal input $j$ are confluent at $j$, through a row the state keeps
 (Lemma~\ref{lem:run-residual}), so $o$ is legal.} \textcolor{reviewed}{Now assume every such output
-is legal, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.} \textcolor{reviewed}{Each $o_r$ is legal at $\sigma_P(i_r)$, so, taking the rows one at a time, they are consistent at $j$, and Lifted Monotonicity follows.} Full proof in
+is legal, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.} \textcolor{reviewed}{Each $o_r$ is legal at $\sigma_P(i_r)$, so, taking the rows one at a time, they are confluent at $j$, and Lifted Monotonicity follows.} Full proof in
 Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
@@ -1251,7 +1249,7 @@ consistency asks whether runs can be continued to a common state; by the
 theorem and Proposition~\ref{prop:common-expansion-form}, that holds exactly
 when every finite set of the spec's rows is row-consistent. \textcolor{reviewed}{So consistency can
 be checked on the table itself, and pairs of rows suffice: if every two rows
-are consistent, so is every finite family: two of its rows are consistent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a smaller family, until one row remains.}
+are consistent, so is every finite family: two of its rows are confluent at the family's common extension $j$, and replacing them with one row at $j$ that \outrel both leaves a smaller family, until one row remains.}
 
 The condition that characterizes consistency of runs is a property of the spec
 alone: Lifted Monotonicity, which for a function is ordinary monotonicity. Both theorems also hold for distributed histories
@@ -1268,7 +1266,7 @@ Proposition~\ref{prop:functional-exposure-boundary}.
 \textcolor{reviewed}{This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs
 (Corollary~\ref{cor:convergence}).} We then define systems, relate their runs to
-canonical runs, and show when systems are confluent; Complete CAP follows.
+canonical runs, and show when the runs of systems are consistent; Complete CAP follows.
 
 
 \subsection{Distributed histories}
@@ -1440,7 +1438,7 @@ histories are consistent.
 
 \begin{proof}[Proof sketch]
 \textcolor{reviewed}{First assume the runs are consistent.} The participant runs at a cut are a
-finite family of runs, so every cut is confluent and the histories are
+finite family of runs, so every cut is confluent at every common \indesc, and the histories are
 consistent. Now assume the histories are consistent. \textcolor{reviewed}{Any finite family of
 runs is the set of participant runs at the final cut of a history whose
 participants exchange no messages, so the runs are consistent.} Full proof in
@@ -1486,7 +1484,7 @@ participant chooses to send, such as timestamps, version vectors, gossip, or vot
 can influence which history events occur next at the receiver, but can
 never directly change the receiver's specification state, and nothing in the
 definitions above depends on it. Participants may also share emitted outputs in $d$; this does not change
-which cuts are confluent (Appendix~\ref{app:exchanging-outputs}).
+at which inputs a cut is confluent (Appendix~\ref{app:exchanging-outputs}).
 
 
 \subsection{Systems and canonical runs}
@@ -1681,8 +1679,8 @@ those outputs require are the same.
 
 \textcolor{reviewed}{The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow (Appendix~\ref{app:bases}).} \textcolor{reviewed}{Systems may constrain their runs arbitrarily, and
-their remainder tables may lack rows that their canonical runs keep.} \textcolor{reviewed}{So a spec
-can be confluent while a system for it is not.} \textcolor{reviewed}{The registrar is an example:
+their remainder tables may lack rows that their canonical runs keep.} \textcolor{reviewed}{So a spec's runs
+can be consistent while a system's runs are not.} \textcolor{reviewed}{The registrar is an example:
 after closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$.} \textcolor{reviewed}{Under the original output order, a canonical run can emit $\bot$, accept
 $aba$, and emit $a$.}
 
@@ -1908,12 +1906,12 @@ $(i_r,o_r)$ of $E$ and an input $j$ that \inrel every $i_r$.} \textcolor{reviewe
 history, put each participant $r$ alone on a side with input $i_r$, so
 Availability lets it emit $o_r$.} \textcolor{reviewed}{Partition Consistency makes the final cut
 confluent at $j$, so some row $(j,u)$ survives in every participant's state
-(Proposition~\ref{prop:confluence}).} \textcolor{reviewed}{By Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are consistent at $j$, which is Lifted Monotonicity for $E$.}
+(Proposition~\ref{prop:confluence}).} \textcolor{reviewed}{By Lemma~\ref{lem:run-residual}, $u$ \outrel every $o_r$, so the rows are confluent at $j$, which is Lifted Monotonicity for $E$.}
 
 \textcolor{reviewed}{Now assume Lifted Monotonicity for $E$.} The canonical system's participants
 never wait: each can emit any output of $E$ that its state allows, so the
 system has Availability for $E$. \textcolor{reviewed}{Let $j$ be an input that \inrel every
-participant's current input.} \textcolor{reviewed}{The rows emitted on all sides are rows of $E$, so they are consistent at $j$, through some row $(j,u)$.} Each participant makes no
+participant's current input.} \textcolor{reviewed}{The rows emitted on all sides are rows of $E$, so they are confluent at $j$, through some row $(j,u)$.} Each participant makes no
 \commitments of its own and $u$ \outrel every output it emitted, so it still
 has $(j,u)$ (Lemma~\ref{lem:run-residual}). \textcolor{reviewed}{All participants can therefore
 continue to one state at $j$, which is Partition Consistency.} Full proof in
@@ -1949,7 +1947,7 @@ second~\cite{herlihy1990linearizability}. In the register example, suppose the
 write finishes before the read begins. \textcolor{reviewed}{Every linearization then puts the write
 first, so the read must return $v$.} \textcolor{reviewed}{But each of $p$ and $q$ sees only its own
 request, and Availability requires $p$ to acknowledge the write and $q$ to
-answer $v_0$.} \textcolor{reviewed}{These two rows are inconsistent at the input with both requests, so
+answer $v_0$.} \textcolor{reviewed}{These two rows are not confluent at the input with both requests, so
 the spec does not satisfy Lifted Monotonicity for them.} \textcolor{reviewed}{Their theorem
 concerns every system, not only the canonical one, so it needs one more step.}
 
@@ -1962,7 +1960,7 @@ then so does the spec's canonical system for $E$.}
 \begin{proof}[Proof sketch]
 By Theorem~\ref{thm:complete-cap}, it suffices to show that if Lifted
 Monotonicity for $E$ fails, the system loses Partition Consistency. Then some
-rows of $E$ are inconsistent at a common extension $j$ of their inputs. We place each row's participant on
+rows of $E$ are not confluent at a common extension $j$ of their inputs. We place each row's participant on
 its own side of a partition, and Availability lets each one emit its row's
 output. By Observable equivalence, a participant keeps no more rows than its
 canonical run, so each row it keeps at $j$ \outrel its own output. A common
@@ -2038,7 +2036,7 @@ of its own as well, as when a store serves reads that bypass the log.
 
 \begin{proof}[Proof sketch]
 By Proposition~\ref{prop:common-expansion-form}, it suffices to check the
-common-extension condition. Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs. Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$. The rows $(i_r,m_r)$ are consistent at $j$ in $P_1$, through some $m\in P_1(j)$. So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are consistent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are consistent at $j$. Full proof
+common-extension condition. Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs. Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$. The rows $(i_r,m_r)$ are confluent at $j$ in $P_1$, through some $m\in P_1(j)$. So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are confluent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are confluent at $j$. Full proof
 in Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -2091,7 +2089,7 @@ $\rho$ of that system without \commitment, and the pipeline's runs are
 consistent whenever those of the system for $\Spec_1$ are. Specifically,
 replacing each output of $\rho$ by its answers, and dropping the \commitment
 events of $\rho$, gives a canonical run of $P_2\circ P_1$, and such runs are
-confluent whenever the runs of the system for $\Spec_1$ are.
+confluent at an input whenever the runs of the system for $\Spec_1$ are.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
@@ -2154,9 +2152,9 @@ composite.}
 \label{def:tight-guard}
 \textcolor{reviewed}{$\Spec_1$ is a \emph{necessary guard} for $\Spec_2$ when it makes no
 unnecessary \commitment: whenever rows $(i,m)$ and $(k,x)$
-of $P_1$ with $i\InputOrd k$ are inconsistent at $k$ in $P_1$, some rows
+of $P_1$ with $i\InputOrd k$ are not confluent at $k$ in $P_1$, some rows
 $(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
-are inconsistent at $k$ in $P_2\circ P_1$.}
+are not confluent at $k$ in $P_2\circ P_1$.}
 
 \textcolor{reviewed}{$\Spec_1$ is a \emph{tight guard} for $\Spec_2$ when it is both a
 sufficient and a necessary guard, and the pipeline's coordination is then
@@ -2169,9 +2167,7 @@ canonical, and the commuting log shows it can demand too many: it orders
 $[A,B]$ and $[B,A]$, although the store treats them alike.} \textcolor{reviewed}{We therefore ask
 for an order on $M$ under which the upstream's canonical \commitments are
 exactly the composite's.} \textcolor{reviewed}{Write $m\sqsubseteq m'$ when every finite set of
-outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read consistency
-of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments
-that inconsistency calls for, with $\sqsubseteq$ in place of $\preceq_M$.} \textcolor{reviewed}{For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
+outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read confluence of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments its failure calls for, with $\sqsubseteq$ in place of $\preceq_M$.} \textcolor{reviewed}{For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
 $f(m)\OutputOrd f(m')$.}
 
 \begin{theorem}[Guard Tightening]
@@ -2197,7 +2193,7 @@ says that the orders on $M$ under which $\Spec_1$ is a sufficient guard are
 those contained in $\sqsubseteq$ on the outputs of $\Spec_1$. Suppose
 $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$. Then answers $o\in P_2(m)$ and
 $y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
-$u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are consistent at $k$ in
+$u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are confluent at $k$ in
 the composite. (2) With
 greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
 and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$. Full proof in
@@ -2207,8 +2203,7 @@ Appendix~\ref{app:composition}.
 A greatest element of $P_2(m)$ is one answer to $m$ that extends every
 other. A functional downstream has one trivially, and the gap example below,
 where $P_2(z)=\mathbb N$, has none. Since every order under which $\Spec_1$ is
-a sufficient guard is contained in $\sqsubseteq$, and a smaller order makes at
-least as many pairs inconsistent, each such order requires at least the
+a sufficient guard is contained in $\sqsubseteq$, and a smaller order leaves at least as many pairs not confluent, each such order requires at least the
 \commitments that $\sqsubseteq$ does. At the other extreme, equality on $M$
 requires the most, since every order on $M$ contains it.
 
@@ -2221,8 +2216,8 @@ the order of commuting commands, as equal.} \textcolor{reviewed}{When the store'
 consensus log is a tight guard: execution is monotone and reflects the prefix
 order, so every \commitment the log makes is one the store's clients can
 observe (Appendix~\ref{app:tight}).} \textcolor{reviewed}{The commuting log is a sufficient guard but not a necessary one:
-$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
-prefix order but consistent there under $\sqsubseteq$.} \textcolor{reviewed}{When commands commute
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the
+prefix order but confluent at $\{A,B\}$ under $\sqsubseteq$.} \textcolor{reviewed}{When commands commute
 and responses do not record their order, a log that orders only non-commuting
 commands, as in Generalized Paxos~\cite{lamport2005generalized} and
 EPaxos~\cite{moraru2013epaxos}, restores tightness.} Reversing the order
@@ -2230,7 +2225,7 @@ on $M$ in the boolean toggle below is reordering by $\sqsubseteq$. Without
 greatest answers, a gap can remain. Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
 answer $z$ with any number and $n_k$ with $k$. No single $n_k$ covers every number the
-downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are inconsistent at
+downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are not confluent at
 $\mathit{hi}$ under $\sqsubseteq$, and so under every order on $M$ under which
 $\Spec_1$ is a sufficient guard. Yet the composite permits every number at both
 inputs and needs no \commitment: a single implementation could answer at
@@ -3201,8 +3196,8 @@ rows at $k$.
   $o\OutputOrd u$; $u$ \outrel $o$ & $u$ subsumes every externally visible claim in $o$; $u$ is an \outnoun of $o$ & Sec.~\ref{sec:functional-specifications}\\
   common \indesc & an input that \inrel each given input & Sec.~\ref{sec:functional-specifications}\\
   common \outnoun & an output that \outrel each given output & Sec.~\ref{sec:functional-specifications}\\
-  row-consistent at $j$ & the rows have a common \outnoun at $j$, a common \indesc of their inputs & Sec.~\ref{sec:functional-specifications}\\
-  row-consistent & row-consistent at every common \indesc of their inputs & Sec.~\ref{sec:functional-specifications}\\
+  confluent at $j$ (rows) & the rows have a common \outnoun at $j$, a common \indesc of their inputs & Sec.~\ref{sec:functional-specifications}\\
+  row-consistent & confluent at every common \indesc of their inputs & Sec.~\ref{sec:functional-specifications}\\
   $(k,u)$ \outrelpast by $(k,w)$ & $w$ \outrel $u$, for two rows at the same input & Sec.~\ref{sec:functional-specifications}\\
   monotone (functional) & $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity}\\
   selection $R[\ldots]$ & the rows of $R$ that satisfy a predicate on $\mathrm{in}$ and $\mathrm{out}$; commas separate conjuncts & Sec.~\ref{sec:functional-specifications}\\
@@ -3225,7 +3220,7 @@ rows at $k$.
   canonical run (run) & a finite sequence of specification events from a canonical state & Def.~\ref{def:run}\\
   \commitment-free run & a run none of whose output events applies a \commitment & Sec.~\ref{sec:executions}\\
   reachable without \commitment & reached by some \commitment-free run & Sec.~\ref{sec:executions}\\
-  confluent at $j$ & each run of a finite family can be continued to one common state with current input $j$ & Def.~\ref{def:confluence}\\
+  confluent at $j$ (runs) & each run of a finite family can be continued to one common state with current input $j$ & Def.~\ref{def:confluence}\\
   consistent (runs) & every finite family of runs is confluent at every common \indesc of their current inputs & Def.~\ref{def:consistency}\\
   \bottomrule
 \end{tabular}
@@ -3308,7 +3303,7 @@ rows at $k$.
   Lifted Monotonicity on $D$ & the restriction of $P_2$ to inputs in $D$ satisfies Lifted Monotonicity & Sec.~\ref{sec:tight-coordination}\\
   sufficient guard & $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it reaches without \commitment is legal & Def.~\ref{def:sufficient-guard}\\
   $m\sqsubseteq m'$ & every finite set of outputs in $P_2(m)$ has a common \outnoun in $P_2(m')$ & Sec.~\ref{sec:tight-coordination}\\
-  necessary guard & rows of $P_1$ inconsistent under $\preceq_M$ have answers inconsistent in $P_2\circ P_1$ & Def.~\ref{def:necessary-guard}\\
+  necessary guard & rows of $P_1$ not confluent under $\preceq_M$ have answers not confluent in $P_2\circ P_1$ & Def.~\ref{def:necessary-guard}\\
   tight guard & a sufficient and necessary guard & Def.~\ref{def:tight-guard}\\
   intersection $\Spec_1\cap\Spec_2$ & table $P_1\cap P_2$, for specs sharing their ordered domains & Def.~\ref{def:intersection}\\
   component & a \commitment basis and a set of admitted runs & Def.~\ref{def:component}\\
@@ -3624,10 +3619,11 @@ silently honor $o$ by restricting its table to $R[\mathrm{out}\OutputGe o]$. The
 is not always a specification state. Silent honoring is therefore not a
 specification event, and we reason about it on tables.
 
-Silent honoring never changes whether a cut is confluent. It cannot make a
-cut confluent, because it only removes rows, and confluence asks for a row
-that survives everywhere (Proposition~\ref{prop:confluence}). It cannot make
-a cut non-confluent either. A row that survives at a common \indesc already
+Silent honoring never changes whether a cut is confluent at a common \indesc
+$j$. It cannot make a cut confluent at $j$, because it only removes rows, and
+confluence asks for a row that survives everywhere
+(Proposition~\ref{prop:confluence}). It cannot make a cut non-confluent at
+$j$ either. A row that survives at $j$ already
 \outrel every output emitted in the cut (Lemma~\ref{lem:run-residual}),
 including $o$, so the restriction keeps the row. The confluence of a cut
 therefore depends on which outputs were emitted, not on who has heard about
@@ -4973,15 +4969,15 @@ enforce it by routing reads through the log.
 \subsection{Necessary and tight guards}
 \label{app:tight}
 
-Throughout, $\Spec_1$ guards $\Spec_2$. Consistency of rows at an input is
+Throughout, $\Spec_1$ guards $\Spec_2$. Confluence of rows at an input is
 as in Section~\ref{sec:functional-calm}, read under $\preceq_M$, under
 $\sqsubseteq$, or under any other relation on $M$ put in its place; rows of
-$P_2\circ P_1$ are read under $\OutputOrd$. At a canonical state, inconsistent
-pairs are exactly the rows that canonical \commitments remove: for
+$P_2\circ P_1$ are read under $\OutputOrd$. At a canonical state, canonical
+\commitments remove exactly the rows that are not confluent with the emitted row: for
 $(i,m)\in P_1$, emitting $m$ at $\sigma_{P_1}(i)$ puts $(k,x)$ in
-$\Excluded_m$ exactly when $(i,m)$ and $(k,x)$ are inconsistent at $k$. Indeed $(k,x)$ is subsumed exactly when it is consistent with $(i,m)$ at $k$
+$\Excluded_m$ exactly when $(i,m)$ and $(k,x)$ are not confluent at $k$. Indeed $(k,x)$ is subsumed exactly when it is confluent with $(i,m)$ at $k$
 in the state's table, and at $\sigma_{P_1}(i)$ that table has the fiber
-$P_1(k)$ at $k$. So a spec satisfies Lifted Monotonicity exactly when no rows $(i,m)$ and $(k,x)$ with $i\InputOrd k$ are inconsistent at $k$
+$P_1(k)$ at $k$. So a spec satisfies Lifted Monotonicity exactly when all rows $(i,m)$ and $(k,x)$ with $i\InputOrd k$ are confluent at $k$
 (Proposition~\ref{prop:common-expansion-form}).
 
 \begin{proof}[Proof of Theorem~\ref{thm:guard-tightening}]
@@ -4990,31 +4986,31 @@ $\Spec_2$ satisfies the common-extension condition on the outputs of
 $\Spec_1$. For outputs $m\preceq_M m'$, that condition at $m'$ for finitely
 many rows of $P_2(m)$ is the statement $m\sqsubseteq m'$, and conversely,
 finitely many rows $(m_r,o_r)$ with a common extension $m'$ of their inputs
-are consistent at $m'$ by $m_r\sqsubseteq m'$ together with directedness of
+are confluent at $m'$ by $m_r\sqsubseteq m'$ together with directedness of
 $P_2(m')$, which is $m'\sqsubseteq m'$. So the orders on $M$ under which
 $\Spec_1$ is a sufficient guard are those contained in $\sqsubseteq$ on the
 outputs of $\Spec_1$, and $\sqsubseteq$ is the coarsest.
 
 Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
-$(k,x)$ of $P_1$, and suppose $(i,m)$ and $(k,x)$ are consistent at $k$ under
+$(k,x)$ of $P_1$, and suppose $(i,m)$ and $(k,x)$ are confluent at $k$ under
 $\sqsubseteq$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$. Then $o$ and $y$
 each have an extension in $P_2(m')$, and since $P_2(m')$ is directed by the above,
 some $u\in P_2(m')$ \outrel both. The row $(k,u)$ of $P_2\circ P_1$ shows
-that $(i,o)$ and $(k,y)$ are consistent at $k$. Moreover, an
+that $(i,o)$ and $(k,y)$ are confluent at $k$. Moreover, an
 order under which $\Spec_1$ is a sufficient guard is contained in $\sqsubseteq$ on the
 outputs of $\Spec_1$, and a smaller order has fewer common extensions,
-so every pair inconsistent under $\sqsubseteq$ is inconsistent under it.
+so every pair not confluent at $k$ under $\sqsubseteq$ is not confluent at $k$ under it.
 
 (2) Let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$. If
-$(i,t)$ and $(k,s)$ are consistent at $k$ in the composite, some row $(k,u)$
+$(i,t)$ and $(k,s)$ are confluent at $k$ in the composite, some row $(k,u)$
 of $P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
 $m'\in P_1(k)$. Every finite set of outputs in $P_2(m)$ lies below $t$, and
 so below $u$, so $m\sqsubseteq m'$, and likewise $x\sqsubseteq m'$. So
-inconsistency under $\sqsubseteq$ implies inconsistency of $(i,t)$ and
-$(k,s)$, and (1) gives the converse for any answers. For the last claim, a
-sufficient guard is tight exactly when every pair inconsistent under
-$\preceq_M$ is inconsistent under $\sqsubseteq$, and by (1) every pair
-inconsistent under $\sqsubseteq$ is inconsistent under $\preceq_M$.
+if $(i,m)$ and $(k,x)$ are not confluent at $k$ under $\sqsubseteq$, neither are
+$(i,t)$ and $(k,s)$, and (1) gives the converse for any answers. For the last claim, a
+sufficient guard is tight exactly when every pair not confluent under
+$\preceq_M$ is not confluent under $\sqsubseteq$, and by (1) every pair
+not confluent under $\sqsubseteq$ is not confluent under $\preceq_M$.
 \end{proof}
 
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd
@@ -5025,11 +5021,11 @@ The commuting log of Section~\ref{sec:tight-coordination} is formalized with
 two increments $A$ and $B$, inputs the sets of commands proposed so far, logs
 ordered by prefix, and the store answering a log with its length. The
 log is a sufficient guard, since length is monotone in the prefix order. The rows
-$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are inconsistent at $\{A,B\}$ under the
+$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the
 prefix order, so emitting $[A]$ at $\{A\}$ removes $(\{A,B\},[B,A])$ by
 \commitment. But the composite answers both logs with $1$ and $2$, which have
 the common extension $2$, and under $\sqsubseteq$, which compares lengths, the
-rows are consistent. So the log is a sufficient guard but not a necessary one. The log does
+rows are confluent at $\{A,B\}$. So the log is a sufficient guard but not a necessary one. The log does
 not satisfy Lifted Monotonicity, while the composite does.
 
 \begin{proposition}[Tight guards]
@@ -5048,17 +5044,17 @@ If $\Spec_2$ is induced by a monotone function $f$ that reflects
 \end{proposition}
 
 \begin{proof}
-(1) No rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$ are
-inconsistent at $k$ (Proposition~\ref{prop:common-expansion-form}), so the
+(1) All rows $(i,m)$ and $(k,x)$ of $P_1$ with $i\InputOrd k$ are
+confluent at $k$ (Proposition~\ref{prop:common-expansion-form}), so the
 condition of Definition~\ref{def:necessary-guard} holds vacuously.
 
 (2) Since $f$ is monotone, $\Spec_2$ satisfies Lifted Monotonicity, so
 $\Spec_1$ is a sufficient guard by Proposition~\ref{prop:guard-test}. For a
 functional downstream, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd f(m')$,
 so on the outputs of $\Spec_1$ reflection makes $\sqsubseteq$ contained in
-$\preceq_M$. Rows of $P_1$ inconsistent under $\preceq_M$ are then
-inconsistent under $\sqsubseteq$, and by
-Theorem~\ref{thm:guard-tightening}(2) their answers are inconsistent in
+$\preceq_M$. Rows of $P_1$ not confluent under $\preceq_M$ are then
+not confluent under $\sqsubseteq$, and by
+Theorem~\ref{thm:guard-tightening}(2) their answers are not confluent in
 $P_2\circ P_1$.
 \end{proof}
 
@@ -5080,7 +5076,7 @@ $P_1(\mathit{lo})=\{z\}$, $P_1(\mathit{hi})=\{n_k\}$, $P_2(z)=\mathbb N$, and
 $P_2(n_k)=\{k\}$, where $\mathbb N$ has its usual order. $\Spec_1$ is a
 sufficient guard, since $\mathbb N$ is directed and singletons are. No $n_k$ has
 $z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no extension in
-$\{k\}$, so $(\mathit{lo},z)$ is inconsistent with every row at $\mathit{hi}$
+$\{k\}$, so $(\mathit{lo},z)$ is not confluent at $\mathit{hi}$ with any row at $\mathit{hi}$
 under $\sqsubseteq$, and so, by the proof of (1), under every order on $M$ under
 which $\Spec_1$ is a sufficient guard. The composite has the fiber $\mathbb N$
 at both inputs and satisfies Lifted Monotonicity, so $\Spec_1$ is not a
