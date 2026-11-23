@@ -11,13 +11,29 @@
 #   make lean                   Lean build and checks (see AGENTS.md)
 #   make clean
 #
-# Plain `tectonic main.tex` and `tectonic cidr.tex` also work from the repo
-# root; they write their PDFs next to the sources.
+# ENGINE=pdflatex (default) builds with latexmk and pdflatex; ENGINE=tectonic
+# builds with tectonic, e.g. `make ENGINE=tectonic main`.  Plain
+# `pdflatex`/`latexmk`/`tectonic` on main.tex or cidr.tex also work from the
+# repo root; they write their outputs next to the sources.
 
-TECTONIC ?= $(shell command -v tectonic 2>/dev/null || echo $(HOME)/.local/bin/tectonic)
+ENGINE   ?= pdflatex
 PYTHON   ?= python3
 BUILD    := build
-TEXC     := $(TECTONIC) -X compile
+
+ifeq ($(ENGINE),tectonic)
+TECTONIC ?= $(shell command -v tectonic 2>/dev/null || echo $(HOME)/.local/bin/tectonic)
+# $(call texc,FILE,OUTDIR[,EXTRA]): class and bibliographies found from the repo root.
+texc       = $(TECTONIC) -X compile -Z search-path=$(CURDIR) $(3) --outdir $(2) $(1)
+# $(call texc_alone,FILE,OUTDIR): only the file's own directory (arXiv test).
+texc_alone = $(TECTONIC) -X compile --outdir $(2) $(1)
+KEEP       = --keep-intermediates
+else
+LATEXMK  ?= latexmk
+LMK        = $(LATEXMK) -pdf -interaction=nonstopmode -halt-on-error -outdir=$(2) $(1)
+texc       = TEXINPUTS=$(CURDIR): BIBINPUTS=$(CURDIR): BSTINPUTS=$(CURDIR): $(LMK)
+texc_alone = $(LMK)
+KEEP       =
+endif
 
 PAPER    := $(wildcard paper/*.tex)
 CLASS    := cidr-2027.cls acmart-preload-hook.tex
@@ -42,10 +58,10 @@ $(BUILD):
 	@mkdir -p $@
 
 $(BUILD)/main.pdf: $(MAIN_IN) | $(BUILD)
-	@$(TEXC) --outdir $(BUILD) main.tex
+	@$(call texc,main.tex,$(BUILD))
 
 $(BUILD)/cidr.pdf: $(CIDR_IN) | $(BUILD)
-	@$(TEXC) --outdir $(BUILD) cidr.tex
+	@$(call texc,cidr.tex,$(BUILD))
 
 # Markup sources, written to build/ by the scripts.
 $(BUILD)/cidr-review.tex: cidr.tex $(PAPER) scripts/cidr_review.py scripts/cidr_categories.json | $(BUILD)
@@ -67,9 +83,9 @@ $(BUILD)/main-complexity-initial.tex: main.tex $(PAPER) cidr.tex scripts/main_co
 $(BUILD)/main-changes.tex: FORCE | $(BUILD)
 	@$(PYTHON) scripts/main_changes.py $(BASE)
 
-# Markup PDFs: the class and bibliographies are found from the repo root.
+# Markup PDFs.
 $(BUILD)/%.pdf: $(BUILD)/%.tex references.bib $(CLASS)
-	@$(TEXC) -Z search-path=. --outdir $(BUILD) $<
+	@$(call texc,$<,$(BUILD))
 
 # arXiv: main.tex, the paper/ files it inputs, references.bib, the
 # precompiled bibliography (arXiv does not run BibTeX), and the class files.
@@ -77,12 +93,12 @@ $(BUILD)/%.pdf: $(BUILD)/%.tex references.bib $(CLASS)
 arxiv: $(MAIN_IN) | $(BUILD)
 	@rm -rf $(BUILD)/arxiv $(BUILD)/arxiv-tmp $(BUILD)/arxiv.tar.gz
 	@mkdir -p $(BUILD)/arxiv/paper $(BUILD)/arxiv-tmp
-	@$(TEXC) --keep-intermediates --outdir $(BUILD)/arxiv-tmp main.tex
+	@$(call texc,main.tex,$(BUILD)/arxiv-tmp,$(KEEP))
 	@cp main.tex references.bib $(CLASS) $(BUILD)/arxiv/
 	@cp $(BUILD)/arxiv-tmp/main.bbl $(BUILD)/arxiv/
 	@for f in $$(sed -n 's/^[[:space:]]*\\input{\(paper\/[^}]*\)}.*/\1/p' main.tex $(PAPER)); do \
 	  cp $$f $(BUILD)/arxiv/$$f; done
-	@cd $(BUILD)/arxiv && $(TEXC) --outdir ../arxiv-tmp main.tex
+	@cd $(BUILD)/arxiv && $(call texc_alone,main.tex,../arxiv-tmp)
 	@tar czf $(BUILD)/arxiv.tar.gz -C $(BUILD)/arxiv .
 	@rm -rf $(BUILD)/arxiv-tmp
 	@echo "arXiv bundle: $(BUILD)/arxiv.tar.gz"; tar tzf $(BUILD)/arxiv.tar.gz | sort

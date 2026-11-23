@@ -53,8 +53,10 @@ current.
   markups (`cidr-review`, `cidr-complexity`, `main-review`,
   `main-complexity`, `main-complexity-initial`, `main-changes`); `make arxiv`
   for the arXiv bundle (`build/arxiv.tar.gz`); `make lean` for the Lean
-  checks below.  Plain `~/.local/bin/tectonic main.tex` (or `cidr.tex`) also
-  works from the repo root.  Tectonic's console output does not report
+  checks below.  The default engine is pdflatex via latexmk; add
+  `ENGINE=tectonic` where only tectonic is installed (as on the cloud
+  desktop, `~/.local/bin/tectonic`).  Plain `pdflatex`, `latexmk`, or
+  `tectonic` on `main.tex` or `cidr.tex` also works from the repo root.  Tectonic's console output does not report
   undefined references, so check the PDF: an unresolved `\ref` or `\cite`
   renders as `⁇`.  With pypdf on the path
   (`PYTHONPATH=.infinity/research/python`), count them with
