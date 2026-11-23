@@ -216,6 +216,27 @@ theorem dleConf_iff_compConf {sp : Spec I M} {sk : Spec M O} (hP : Proper sp sk)
   · rintro ⟨o, y, hm, hx, hc⟩
     exact dleConf_of_compConf hP hi hk hm hx hc
 
+/-- **Exactness with greatest answers, without sufficiency.**  When every
+downstream fiber at an upstream output has a greatest element, the fibers are
+directed, so the sufficient-guard hypothesis of `dleConf_iff_compConf` is not
+needed. -/
+theorem dleConf_iff_compConf_top {sp : Spec I M} {sk : Spec M O}
+    (htop : ∀ m, Img sp m → ∃ t, HasTop sk.P m t) {i m k x} (hi : sp.P i m) (hk : sp.P k x) :
+    Conf sp.P (dle sk.P) i m k x ↔
+      ∃ o y, sk.P m o ∧ sk.P x y ∧ Conf (seq sp sk).P PO.le i o k y := by
+  constructor
+  · intro hc
+    obtain ⟨t, ht⟩ := htop m ⟨i, hi⟩
+    obtain ⟨s, hs⟩ := htop x ⟨k, hk⟩
+    exact ⟨t, s, ht.1, hs.1, compConf_of_dleConf ht hs hc⟩
+  · rintro ⟨o, y, hm, hx, hc⟩
+    refine ⟨hc.1, hi, hk, fun ⟨m', hm', h1, h2⟩ => ?_⟩
+    obtain ⟨u1, hu1, h1'⟩ := h1 [o] (by simp) (by simpa using hm)
+    obtain ⟨u2, hu2, h2'⟩ := h2 [y] (by simp) (by simpa using hx)
+    obtain ⟨t, ht⟩ := htop m' ⟨k, hm'⟩
+    exact hc.2.2.2 ⟨t, ⟨m', hm', ht.1⟩, PO.trans (h1' o (by simp)) (ht.2 u1 hu1),
+      PO.trans (h2' y (by simp)) (ht.2 u2 hu2)⟩
+
 /-! ### Tight pipelines -/
 
 /-- The upstream is **tight** when every pair of rows its canonical commitments
@@ -323,6 +344,44 @@ theorem conf_of_dleConf_under {instM : PO M} (inst : PO M) (sp : @Spec I M _ ins
   @conf_of_dleConf I M O _ inst _ (underOut inst sp) (underIn inst sk) hP i m k x h
 
 end Optimal
+
+/-! ### Ordering `M` by `⊑` -/
+
+section DleOrder
+variable {I M O : Type} [PO I] [PO O]
+
+/-- With greatest answers, `⊑` is reflexive. -/
+theorem dle_refl_of_top {P₂ : Table M O} (htop : ∀ m, ∃ t, HasTop P₂ m t) (m : M) :
+    dle P₂ m m := by
+  intro X _ hX
+  obtain ⟨t, ht⟩ := htop m
+  exact ⟨t, ht.1, fun x hx => ht.2 x (hX x hx)⟩
+
+/-- `⊑` as an order on `M`, when it is reflexive and antisymmetric. -/
+def dleOrder (P₂ : Table M O) (hr : ∀ m, dle P₂ m m)
+    (ha : ∀ a b, dle P₂ a b → dle P₂ b a → a = b) : PO M where
+  le := dle P₂
+  refl := hr
+  trans := dle_trans
+  antisymm := ha _ _
+
+/-- **Ordering `M` by `⊑` gives a tight guard.**  If each `P₂(m)` has a
+greatest element and `⊑` is antisymmetric (so an order), then with `M` ordered
+by `⊑` the upstream is a sufficient and a necessary guard. -/
+theorem tightGuard_dleOrder {instM : PO M} (sp : @Spec I M _ instM) (sk : @Spec M O instM _)
+    (htop : ∀ m, ∃ t, HasTop sk.P m t)
+    (ha : ∀ a b, dle sk.P a b → dle sk.P b a → a = b) :
+    let inst := dleOrder sk.P (dle_refl_of_top htop) ha
+    @Proper I M O _ inst _ (underOut inst sp) (underIn inst sk) ∧
+      @Tight I M O _ inst _ (underOut inst sp) (underIn inst sk) := by
+  intro inst
+  have hP : @Proper I M O _ inst _ (underOut inst sp) (underIn inst sk) :=
+    (@proper_iff_le_dle I M O _ inst _ (underOut inst sp) (underIn inst sk)).2
+      (fun _ _ _ _ h => h)
+  exact ⟨hP, (@tight_iff I M O _ inst _ (underOut inst sp) (underIn inst sk) hP
+    (fun m _ => htop m)).2 (fun _ _ _ _ => Iff.rfl)⟩
+
+end DleOrder
 
 /-! ### Tight guards: two sufficient conditions for necessity -/
 

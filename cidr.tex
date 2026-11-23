@@ -1547,14 +1547,14 @@ $\preceq_M$.
 \label{thm:guard-tightening}
 Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item An order on $M$ makes $\Spec_1$ a sufficient guard for $\Spec_2$
+    \item An order on $M$ makes $\Spec_1$ a sufficient guard for $\Spec_2$
         exactly when it is contained in $\sqsubseteq$ on the outputs of
-        $\Spec_1$.  The canonical \commitments under $\sqsubseteq$ include
-        every \commitment the composite needs.
+        $\Spec_1$.
   \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
-        functional, the canonical \commitments under $\sqsubseteq$ are
-        exactly the composite's, so a sufficient guard is tight exactly when
-        $\preceq_M$ requires no more \commitments than $\sqsubseteq$.
+        functional, the \commitments the composite needs are exactly the
+        canonical \commitments under $\sqsubseteq$.  So if $\sqsubseteq$ is an
+        order (reflexive, antisymmetric, transitive), ordering $M$ by it makes
+        $\Spec_1$ a tight guard.
 \end{enumerate}
 \end{theorem}
 \proofinfull
@@ -1562,12 +1562,12 @@ Let $\Spec_1$ guard $\Spec_2$.
 When the KVS answers each command in turn, as in state-machine replication,
 $\sqsubseteq$ is the prefix order, and the consensus log is a tight guard.
 When the KVS reports only its state and $A$ and $B$ commute, $[A,B]$ and
-$[B,A]$ cover each other, and the prefix order makes the log a sufficient
-guard but not a necessary one.  Tightening means identifying such values, as
-a log that orders only non-commuting commands does (Generalized
-Paxos~\cite{lamport2005generalized},
-EPaxos~\cite{moraru2013epaxos}).  Without greatest answers a gap can
-remain~\extended.
+$[B,A]$ cover each other and fail antisymmetry.  The prefix order keeps them
+apart, so it makes the log a sufficient guard but not a necessary one.
+Tightening means identifying such values, as a log that orders only
+non-commuting commands does (Generalized Paxos~\cite{lamport2005generalized},
+EPaxos~\cite{moraru2013epaxos}).  Without greatest elements, no order on $M$
+may make $\Spec_1$ a tight guard~\extended.
 
 \paragraph{Composite CALM.}
 \label{sec:composite-calm}

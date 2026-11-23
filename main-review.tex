@@ -2178,25 +2178,28 @@ $f(m)\OutputOrd f(m')$.
 \item
 \textcolor{reviewed}{An order on $M$ makes $\Spec_1$ a sufficient guard for $\Spec_2$
         exactly when it is contained in $\sqsubseteq$ on the outputs of
-        $\Spec_1$.} \textcolor{reviewed}{The canonical \commitments under $\sqsubseteq$ include
-        every \commitment the composite needs.}
+        $\Spec_1$.}
 \item
-\textcolor{reviewed}{If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
-        functional, the canonical \commitments under $\sqsubseteq$ are
-        exactly the composite's, so a sufficient guard is tight exactly when
-        $\preceq_M$ requires no more \commitments than $\sqsubseteq$.}
+If $\Spec_1$ is a sufficient guard for $\Spec_2$, every \commitment
+        the composite needs is a canonical \commitment under $\sqsubseteq$. If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
+        functional, this holds without that assumption, and the converse
+        holds too. \textcolor{reviewed}{So if $\sqsubseteq$ is an
+        order (reflexive, antisymmetric, transitive), ordering $M$ by it makes
+        $\Spec_1$ a tight guard.}
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) The first claim is Proposition~\ref{prop:guard-test}, through the
-common-extension condition. Suppose
+(1) is Proposition~\ref{prop:guard-test}, through the
+common-extension condition. (2) Suppose
 $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$. Then answers $o\in P_2(m)$ and
 $y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
 $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are confluent at $k$ in
-the composite. (2) With
+the composite. With
 greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
-and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$. Full proof in
+and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$. When
+$\sqsubseteq$ is an order, (1) makes $\Spec_1$ a sufficient guard under it,
+and its canonical \commitments are then exactly the composite's. Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -2214,16 +2217,17 @@ composition needs. When the store answers each command in turn, as in
 state-machine replication, $\sqsubseteq$ is the prefix order, and the
 consensus log is a tight guard: execution is monotone and reflects the prefix
 order, so every \commitment the log makes is one the store's clients can
-observe (Appendix~\ref{app:tight}). When the store reports only its state and
-$A$ and $B$ commute, $[A,B]$ and $[B,A]$ cover each other. The commuting log
-is then a sufficient guard but not a necessary one: $(\{A\},[A])$ and
+observe (Appendix~\ref{app:tight}). \textcolor{reviewed}{When the store reports only its state and
+$A$ and $B$ commute, $[A,B]$ and $[B,A]$ cover each other and fail
+antisymmetry.} The prefix order keeps them apart: $(\{A\},[A])$ and
 $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the prefix order but
-confluent at $\{A,B\}$ under $\sqsubseteq$. \textcolor{reviewed}{Tightening means identifying
+confluent at $\{A,B\}$ under $\sqsubseteq$. So the commuting log is a
+sufficient guard but not a necessary one. \textcolor{reviewed}{Tightening means identifying
 values that cover each other, as a log that orders only non-commuting
 commands does (Generalized Paxos~\cite{lamport2005generalized},
 EPaxos~\cite{moraru2013epaxos}).} Reversing the order
-on $M$ in the boolean toggle below is reordering by $\sqsubseteq$. \textcolor{reviewed}{Without
-greatest answers, a gap can remain.} Let $\Spec_1$ emit $z$ at input
+on $M$ in the boolean toggle below is reordering by $\sqsubseteq$. Without
+greatest answers, a gap can remain. Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
 answer $z$ with any number and $n_k$ with $k$. No $n_k$ covers $z$, since no single
 answer $k$ extends every number the downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are not confluent at
@@ -4992,7 +4996,7 @@ $P_2(m')$, which is $m'\sqsubseteq m'$. So the orders on $M$ under which
 $\Spec_1$ is a sufficient guard are those contained in $\sqsubseteq$ on the
 outputs of $\Spec_1$.
 
-Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
+(2) Let $(i,o)$ and $(k,y)$ be rows of $P_2\circ P_1$ through $(i,m)$ and
 $(k,x)$ of $P_1$, and suppose $(i,m)$ and $(k,x)$ are confluent at $k$ under
 $\sqsubseteq$: some $m'\in P_1(k)$ has $m,x\sqsubseteq m'$. Then $o$ and $y$
 each have an extension in $P_2(m')$, and since $P_2(m')$ is directed by the above,
@@ -5002,20 +5006,22 @@ order under which $\Spec_1$ is a sufficient guard is contained in $\sqsubseteq$ 
 outputs of $\Spec_1$, and a smaller order has fewer common extensions,
 so every pair not confluent at $k$ under $\sqsubseteq$ is not confluent at $k$ under it.
 
-(2) Let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$. If
+Now let $t$ and $s$ be the greatest elements of $P_2(m)$ and $P_2(x)$. If
 $(i,t)$ and $(k,s)$ are confluent at $k$ in the composite, some row $(k,u)$
 of $P_2\circ P_1$ has $t,s\OutputOrd u$, and $u\in P_2(m')$ for some
 $m'\in P_1(k)$. Every finite set of outputs in $P_2(m)$ lies below $t$, and
 so below $u$, so $m\sqsubseteq m'$, and likewise $x\sqsubseteq m'$. So
 if $(i,m)$ and $(k,x)$ are not confluent at $k$ under $\sqsubseteq$, neither are
-$(i,t)$ and $(k,s)$, and (1) gives the converse for any answers. For the last claim, a
-sufficient guard is tight exactly when every pair not confluent under
-$\preceq_M$ is not confluent under $\sqsubseteq$, and by (1) every pair
-not confluent under $\sqsubseteq$ is not confluent under $\preceq_M$.
+$(i,t)$ and $(k,s)$, and the first part gives the converse for any answers. Greatest elements also make each $P_2(m')$ directed, so the first part holds
+without assuming a sufficient guard. For the last claim, let $\sqsubseteq$ be an order and order $M$ by it. By
+(1), $\Spec_1$ is a sufficient guard, and its pairs not confluent under its
+order are those not confluent under $\sqsubseteq$, which are exactly those
+with answers not confluent in the composite. So $\Spec_1$ is also a
+necessary guard.
 \end{proof}
 
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when $f(m)\OutputOrd
-f(m')$, and the first claim of (2) holds without assuming that $\Spec_1$ is a
+f(m')$, and the converse in (2) holds without assuming that $\Spec_1$ is a
 sufficient guard.
 
 The commuting log of Section~\ref{sec:tight-coordination} is formalized with
@@ -5078,7 +5084,7 @@ $P_2(n_k)=\{k\}$, where $\mathbb N$ has its usual order. $\Spec_1$ is a
 sufficient guard, since $\mathbb N$ is directed and singletons are. No $n_k$ has
 $z\sqsubseteq n_k$, since $\{k+1\}\subseteq P_2(z)$ has no extension in
 $\{k\}$, so $(\mathit{lo},z)$ is not confluent at $\mathit{hi}$ with any row at $\mathit{hi}$
-under $\sqsubseteq$, and so, by the proof of (1), under every order on $M$ under
+under $\sqsubseteq$, and so, by the proof of (2), under every order on $M$ under
 which $\Spec_1$ is a sufficient guard. The composite has the fiber $\mathbb N$
 at both inputs and satisfies Lifted Monotonicity, so $\Spec_1$ is not a
 necessary guard under any such order.

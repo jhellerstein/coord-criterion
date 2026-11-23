@@ -325,33 +325,38 @@ theorem «sec:tight-coordination/downstream-order» {M O : Type} [PO M] [PO O] (
 
 /-- **Theorem `thm:guard-tightening`** (Guard Tightening): "Let `𝒮₁` guard
 `𝒮₂`.  (1) An order on `M` makes `𝒮₁` a sufficient guard for `𝒮₂` exactly
-when it is contained in `⊑` on the outputs of `𝒮₁`.  The canonical commitments
-under `⊑` include every commitment the composite needs.  (2) If each `P₂(m)`
-has a greatest element, as when `𝒮₂` is functional, the canonical commitments
-under `⊑` are exactly the composite's, so a sufficient guard is tight exactly
-when `≼_M` requires no more commitments than `⊑`."  A canonical commitment
-removing `(k,x)` at `σ_{P₁}(i)` corresponds to a pair not confluent at `k`
-(`Tight.excluded_canon_iff`).  Lean: (1) `Tight.proper_iff_le_dle` (an order
-makes `𝒮₁` a sufficient guard exactly when it is contained in `⊑` on the
-outputs of `𝒮₁`; every other order is `«thm:guard-tightening/any-order»`) and
-`Tight.dleConf_of_compConf`; (2) `Tight.dleConf_iff_compConf` and
-`Tight.tight_iff` (a greatest element is `Tight.HasTop`).  The functional
-case of (2) needs no sufficiency: `Tight.graph_conf_iff`. -/
+when it is contained in `⊑` on the outputs of `𝒮₁`.  (2) If `𝒮₁` is a
+sufficient guard for `𝒮₂`, every commitment the composite needs is a canonical
+commitment under `⊑`.  If each `P₂(m)` has a greatest element, as when `𝒮₂` is
+functional, this holds without that assumption, and the converse holds too.
+So if `⊑` is an order (reflexive, antisymmetric, transitive), ordering `M` by
+it makes `𝒮₁` a tight guard."  (CIDR states (2) without its first sentence.)
+A canonical commitment removing `(k,x)` at `σ_{P₁}(i)` corresponds to a pair
+not confluent at `k` (`Tight.excluded_canon_iff`).  Lean: (1)
+`Tight.proper_iff_le_dle`, for any order on `M` (other orders:
+`«thm:guard-tightening/any-order»`); (2) `Tight.dleConf_of_compConf`,
+`Tight.dleConf_iff_compConf_top`, and `Tight.tightGuard_dleOrder` (`⊑` as the
+order `Tight.dleOrder`, reflexive by `Tight.dle_refl_of_top`; `inst` is that
+order, and `Joint.underOut`/`Joint.underIn` are the same tables with `M`
+ordered by it). -/
 theorem «thm:guard-tightening» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
     (Guard.Proper sp sk ↔ ∀ m m', Joint.Img sp m → Joint.Img sp m' → m ≼ m' →
       Tight.dle sk.P m m') ∧
     (Guard.Proper sp sk → ∀ i m k x o y, sp.P i m → sp.P k x → sk.P m o → sk.P x y →
       Tight.Conf (Comp.seq sp sk).P PO.le i o k y → Tight.Conf sp.P (Tight.dle sk.P) i m k x) ∧
-    (Guard.Proper sp sk → (∀ m, Joint.Img sp m → ∃ t, Tight.HasTop sk.P m t) →
-      (∀ i m k x, sp.P i m → sp.P k x → (Tight.Conf sp.P (Tight.dle sk.P) i m k x ↔
+    ((∀ m, Joint.Img sp m → ∃ t, Tight.HasTop sk.P m t) →
+      ∀ i m k x, sp.P i m → sp.P k x → (Tight.Conf sp.P (Tight.dle sk.P) i m k x ↔
         ∃ o y, sk.P m o ∧ sk.P x y ∧ Tight.Conf (Comp.seq sp sk).P PO.le i o k y)) ∧
-      («def:tight-guard» sp sk ↔
-        ∀ i m k x, Tight.Conf sp.P PO.le i m k x ↔ Tight.Conf sp.P (Tight.dle sk.P) i m k x)) :=
+    (∀ (htop : ∀ m, ∃ t, Tight.HasTop sk.P m t)
+       (ha : ∀ a b, Tight.dle sk.P a b → Tight.dle sk.P b a → a = b),
+      let inst := Tight.dleOrder sk.P (Tight.dle_refl_of_top htop) ha
+      @Guard.Proper I M O _ inst _ (Joint.underOut inst sp) (Joint.underIn inst sk) ∧
+        @Tight.Tight I M O _ inst _ (Joint.underOut inst sp) (Joint.underIn inst sk)) :=
   ⟨Tight.proper_iff_le_dle sp sk,
    fun hP _ _ _ _ _ _ hi hk hm hx hc => Tight.dleConf_of_compConf hP hi hk hm hx hc,
-   fun hP htop => ⟨fun _ _ _ _ hi hk => Tight.dleConf_iff_compConf hP htop hi hk,
-     ⟨fun h => (Tight.tight_iff hP htop).1 h.2, fun h => ⟨hP, (Tight.tight_iff hP htop).2 h⟩⟩⟩⟩
+   fun htop _ _ _ _ hi hk => Tight.dleConf_iff_compConf_top htop hi hk,
+   fun htop ha => Tight.tightGuard_dleOrder sp sk htop ha⟩
 
 /-- After Theorem `thm:guard-tightening`: "A greatest element of `P₂(m)` is one
 answer to `m` that extends every other.  A functional downstream has one

@@ -189,26 +189,30 @@ $f(m)\OutputOrd f(m')$.
 \label{thm:guard-tightening}
 Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item An order on $M$ makes $\Spec_1$ a sufficient guard for $\Spec_2$
+    \item An order on $M$ makes $\Spec_1$ a sufficient guard for $\Spec_2$
         exactly when it is contained in $\sqsubseteq$ on the outputs of
-        $\Spec_1$.  The canonical \commitments under $\sqsubseteq$ include
-        every \commitment the composite needs.
-  \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
-        functional, the canonical \commitments under $\sqsubseteq$ are
-        exactly the composite's, so a sufficient guard is tight exactly when
-        $\preceq_M$ requires no more \commitments than $\sqsubseteq$.
+        $\Spec_1$.
+    \item If $\Spec_1$ is a sufficient guard for $\Spec_2$, every \commitment
+        the composite needs is a canonical \commitment under $\sqsubseteq$.
+        If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
+        functional, this holds without that assumption, and the converse
+        holds too.  So if $\sqsubseteq$ is an
+        order (reflexive, antisymmetric, transitive), ordering $M$ by it makes
+        $\Spec_1$ a tight guard.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) The first claim is Proposition~\ref{prop:guard-test}, through the
-common-extension condition.  Suppose
+(1) is Proposition~\ref{prop:guard-test}, through the
+common-extension condition.  (2) Suppose
 $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then answers $o\in P_2(m)$ and
 $y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
 $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are confluent at $k$ in
-the composite.  (2) With
+the composite.  With
 greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
-and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  Full proof in
+and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  When
+$\sqsubseteq$ is an order, (1) makes $\Spec_1$ a sufficient guard under it,
+and its canonical \commitments are then exactly the composite's.  Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -227,10 +231,11 @@ state-machine replication, $\sqsubseteq$ is the prefix order, and the
 consensus log is a tight guard: execution is monotone and reflects the prefix
 order, so every \commitment the log makes is one the store's clients can
 observe (Appendix~\ref{app:tight}).  When the store reports only its state and
-$A$ and $B$ commute, $[A,B]$ and $[B,A]$ cover each other.  The commuting log
-is then a sufficient guard but not a necessary one: $(\{A\},[A])$ and
+$A$ and $B$ commute, $[A,B]$ and $[B,A]$ cover each other and fail
+antisymmetry.  The prefix order keeps them apart: $(\{A\},[A])$ and
 $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the prefix order but
-confluent at $\{A,B\}$ under $\sqsubseteq$.  Tightening means identifying
+confluent at $\{A,B\}$ under $\sqsubseteq$.  So the commuting log is a
+sufficient guard but not a necessary one.  Tightening means identifying
 values that cover each other, as a log that orders only non-commuting
 commands does (Generalized Paxos~\cite{lamport2005generalized},
 EPaxos~\cite{moraru2013epaxos}).  Reversing the order
