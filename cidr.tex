@@ -1602,14 +1602,13 @@ longer pipelines and acyclic graphs of stages~\cite{hellerstein2026completecalmf
 \label{sec:instances}
 \label{sec:related}
 
-Complete CALM provides a unified lens for many results across literatures.
-For the key related ideas, we provide mappings here to our specification model.
-Each setting declares an input, an output, and their orders before
-applying either CALM theorem.  The full paper~\cite{hellerstein2026completecalmfull}
-gives each mapping in detail, with deployments, response
-obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
-and applications to classical distributed-computing problems: registers, consensus,
-leader election, snapshots, queues, and search structures.
+Complete CALM provides a unified lens for coordination results. For
+the key related ideas, we provide mappings here to our specification model. Each
+setting declares an input, an output, and their orders before applying either
+CALM theorem.  The full paper~\cite{hellerstein2026completecalmfull} gives each
+mapping in detail, with additional mappings for the transaction protocols 2PL
+and MVTO, and classical distributed-computing problems
+including consensus, leader election and snapshots.
 
 Three patterns of non-monotonicity recur in this literature.  In each, an output settles something the input
 has not:
@@ -1683,14 +1682,14 @@ and Lemma~\ref{lem:composition} the composite $q\circ s$ is consistent whenever
 $q$ is monotone on the states $s$ can reach.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.  The composite is then
-not monotone, and since the semilattice stage needs no \commitment, it\rv{14}
-is not a sufficient guard (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
-on the query.  An answer that exposes an element as present blocks its removal
-before it arrives, the third pattern above.  The two-phase set does not enforce the block: it accepts the
-removal, and the answer is contradicted.  The CRDT's join is one
-way to make states converge, but Complete CALM asks for less: answers need some
-common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).
+test: a later removal grows $R$ and shrinks the answer.  
+The composite is then not monotone, so by
+Corollary~\ref{cor:upstream-commitments} the \commitment falls on the query. An
+answer that exposes an element as present blocks its removal before it arrives,
+the third pattern above.  The two-phase set does not enforce the block: it
+accepts the removal, and the answer is contradicted.  Complete CALM asks for
+less than a semilattice join: answers need some common extension, not a least one
+(\S\ref{sec:lifted-monotonicity}).
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
