@@ -658,30 +658,42 @@ canonical state $\sigma_P(i)$ at some input $i$, each applied to the state the o
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
-Different runs may retain different rows.  Under the equality order, rows
-$(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
-that \inrel both of their inputs, but no \emph{common \outnoun}: no output at
-$aba$ \outrel both $\bot$ and $a$.
+% Different runs may retain different rows.  Under the equality order, rows
+% $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
+% that \inrel both of their inputs, but no \emph{common \outnoun}: no output at
+% $aba$ \outrel both $\bot$ and $a$.
 
-This leads to a row-level definition of (in)consistency.  Rows with a common
-\outnoun at $j$ are \emph{row-consistent at} $j$, and \emph{row-inconsistent
-at} $j$ otherwise.  \Commitment-free runs that emit their outputs can be
-reconciled at $j$ exactly when the rows are row-consistent there, so row
-consistency is consistency of particular runs: the \commitment-free runs that
-emit the rows' outputs.  Rows are \emph{row-consistent} when they are
-row-consistent at every common \indesc of their inputs, and
-\emph{row-inconsistent} otherwise.  When the context is clearly about rows, we
-say simply that they are \emph{consistent}.
+% This leads to a row-level definition of (in)consistency.  Rows with a common
+% \outnoun at $j$ are \emph{row-consistent at} $j$, and \emph{row-inconsistent
+% at} $j$ otherwise.  \Commitment-free runs that emit their outputs can be
+% reconciled at $j$ exactly when the rows are row-consistent there, so row
+% consistency is consistency of particular runs: the \commitment-free runs that
+% emit the rows' outputs.  Rows are \emph{row-consistent} when they are
+% row-consistent at every common \indesc of their inputs, and
+% \emph{row-inconsistent} otherwise.  When the context is clearly about rows, we
+% say simply that they are \emph{consistent}.
 
-Because our two rows $(ab\cdot,\bot)$ and $(aba,a)$ are inconsistent under the
-equality order, a run that emits $\bot$ at $ab\cdot$ must apply $x_\bot$, and
-can never be reconciled at $aba$ with a run that receives $aba$ and emits
-$a$.  Under the equality order this removal is $\bot$'s canonical
-\commitment, required by the spec; in panel~(d), under the original order, the
-registrar made the same removal by choice.
+Different runs may retain different rows.  Intuitively, two runs can still
+reach a common state only if some later output extends what each has emitted.
+Consider the rows $(ab\cdot,\bot)$ and $(aba,a)$ under the equality order.
+Their inputs have the \emph{common \indesc} $aba$, an input that \inrel both.
+Suppose one run emits $\bot$ at $ab\cdot$, and another receives $aba$ and
+emits $a$.  No output at $aba$ \outrel both $\bot$ and $a$, so the rows have
+no \emph{common \outnoun} there, and the two runs can never reach a common
+state.
 
-Having extracted canonical runs from a spec, we are now ready to define
-consistency for all of a spec's runs.
+This motivates our first use of confluence, for rows.  Rows with a common
+\outnoun at $j$ are \emph{confluent at} $j$.  A set of rows is
+\emph{row-consistent} when it is confluent at every common \indesc of its
+inputs, and \emph{row-inconsistent} otherwise.  When the context is clearly
+about rows, we say simply \emph{consistent} or \emph{inconsistent}.
+
+Our two rows $(ab\cdot,\bot)$ and $(aba,a)$ are therefore inconsistent under the
+equality order, so a run that emits $\bot$ at $ab\cdot$ must apply the canonical \commitment $x_\bot$.
+
+Runs follow the same pattern: they are \emph{confluent at} $j$ when they can
+reach a common state with current input $j$, and consistent when they are
+confluent at every common \indesc.
 
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
