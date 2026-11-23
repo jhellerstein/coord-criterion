@@ -360,9 +360,10 @@ theorem «sec:lifted-monotonicity/traceroute-common-extension» (x y : Figures.T
     (Figures.Trace.inFib .st (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) :=
   ⟨Figures.Trace.common_extension_example, Figures.Trace.common_extension x y hx hy⟩
 
-/-- **Def. `def:common-expansion-condition`** (Common-extension condition).
-"An I/O specification satisfies the common-extension condition when every
-finite set of rows of `P` is consistent."  Rows are row-consistent when
+/-- **Def. `def:common-expansion-condition`** (Row-consistency condition).
+"An I/O specification satisfies the row-consistency condition when every
+finite set of rows of `P` is consistent: the rows have a common output
+extension at every common input extension of their inputs."  Rows are row-consistent when
 they are confluent at every common input extension `j` of their inputs, that is, some
 `u ∈ P(j)` extends every `o_r`.  Lean:
 `Spec.CommonExpansion`, the rows as a list. -/
@@ -377,9 +378,9 @@ theorem «def:common-expansion-condition/empty» {I O : Type} [PO I] [PO O]
     (∃ u, sp.P j u ∧ ∀ r ∈ ([] : List (I × O)), r.2 ≼ u) :=
   let ⟨u, hu⟩ := sp.total j; ⟨u, hu, fun _ h => nomatch h⟩
 
-/-- **Prop. `prop:common-expansion-form`** (Common-extension form of Lifted
+/-- **Prop. `prop:common-expansion-form`** (Row-consistency form of Lifted
 Monotonicity).  "An I/O specification satisfies Lifted
-Monotonicity if and only if it satisfies the common-extension condition." -/
+Monotonicity if and only if it satisfies the row-consistency condition." -/
 theorem «prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=
   liftedMono_iff_commonExpansion sp
@@ -450,7 +451,7 @@ consistency of runs is a property of the spec alone: Lifted Monotonicity,
 which for a function is ordinary monotonicity."
 
 Lean: the first conjunct is `complete_calm_via_legality`, assembled in the
-paper's order; the second is the common-extension form. -/
+paper's order; the second is the row-consistency form. -/
 theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (sp.Consistent ↔ sp.LiftedMono) ∧ (sp.Consistent ↔ sp.CommonExpansion) :=
   ⟨complete_calm_via_legality sp, complete_calm_commonExpansion sp⟩
@@ -458,7 +459,7 @@ theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- **Prop. `prop:exposure-boundary`** (No-commitment test).  "An ordered
 specification satisfies Lifted Monotonicity if and only if every output at
 every state reachable without commitment is a legal output."  The proof sketch
-goes through the common-extension condition (Prop.
+goes through the row-consistency condition (Prop.
 `prop:common-expansion-form`); `«prop:exposure-boundary/common-expansion»`
 is that form. -/
 theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
@@ -467,7 +468,7 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
   (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
 
 /-- Prop. `prop:exposure-boundary`, proof sketch: "First assume Lifted
-Monotonicity, in its common-extension form (Proposition
+Monotonicity, in its row-consistency form (Proposition
 `prop:common-expansion-form`).  At a state reachable without commitment, the
 row of an output `o` and each remaining row at a legal input `j` are confluent
 at `j`, through a row the state keeps (Lemma `lem:run-residual`), so `o` is
@@ -476,7 +477,7 @@ a common extension `j` of their inputs.  Each `o_r` is legal at `σ_P(i_r)`, so,
 taking the rows one at a time, they are confluent at `j`, and Lifted Monotonicity
 follows."  (Confluent at `j`: some `u ∈ P(j)` extends every `o_r`.)  (The legal-output test, Prop.
 `prop:exposability`, is the step "so `o` is legal".)
-The common-extension form of the proposition; its forward direction
+The row-consistency form of the proposition; its forward direction
 (`commonExpansion_exposable`) uses the rows-remaining lemma directly, not
 Complete CALM. -/
 theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
@@ -485,7 +486,7 @@ theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (
   exposure_boundary sp
 
 /-- After Prop. `prop:exposure-boundary`: "For functional specs, Lifted
-Monotonicity and the common-extension condition are both functional
+Monotonicity and the row-consistency condition are both functional
 monotonicity, so Complete CALM and Proposition `prop:exposure-boundary` reduce to Functional
 CALM and Proposition `prop:functional-exposure-boundary`." -/
 theorem «prop:exposure-boundary/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}

@@ -49,7 +49,7 @@ If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the \specty
 
 \begin{proof}[Proof sketch]
 By Proposition~\ref{prop:common-expansion-form}, it suffices to check the
-common-extension condition.  Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs.  Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The rows $(i_r,m_r)$ are confluent at $j$ in $P_1$, through some $m\in P_1(j)$.  So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are confluent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are confluent at $j$.  Full proof
+row-consistency condition.  Take finitely many rows $(i_r,o_r)$ of $P_2\circ P_1$ and a common extension $j$ of their inputs.  Each row comes from an intermediate value $m_r$ with $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The rows $(i_r,m_r)$ are confluent at $j$ in $P_1$, through some $m\in P_1(j)$.  So $m$ extends every $m_r$, the rows $(m_r,o_r)$ are confluent at $m$ in $P_2$, through some $o\in P_2(m)$, and $(j,o)$ is a row of $P_2\circ P_1$ through which the rows $(i_r,o_r)$ are confluent at $j$.  Full proof
 in Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -174,9 +174,10 @@ sufficient and a necessary guard, and the pipeline's coordination is then
 \emph{tight}.
 \end{definition}
 
-Necessity compares the upstream's canonical \commitments with those the
-composite needs.  Which \commitments are canonical depends on $\preceq_M$, and
-the prefix order of the commuting log demands too many for the store.  We compare
+Necessity compares the rows the upstream's output events must exclude via
+canonical \commitments with those the composite's must exclude.  Which rows the
+canonical \commitments exclude depends on $\preceq_M$, and the prefix order of
+the commuting log excludes too many for the store.  We compare
 $\preceq_M$ with a relation derived from $P_2$: $m'$ \emph{covers} $m$,
 written $m\sqsubseteq m'$, when every finite set of outputs in $P_2(m)$ has a
 common extension in $P_2(m')$.  Confluence of rows and canonical
@@ -204,7 +205,7 @@ Let $\Spec_1$ guard $\Spec_2$.
 
 \begin{proof}[Proof sketch]
 (1) is Proposition~\ref{prop:guard-test}, through the
-common-extension condition.  (2) Suppose
+row-consistency condition.  (2) Suppose
 $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then answers $o\in P_2(m)$ and
 $y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
 $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are confluent at $k$ in

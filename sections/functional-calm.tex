@@ -251,8 +251,8 @@ upper fiber \outrel $o$.
 
 So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  Possibilities
 can also be removed deliberately.  Closing the polls in panel~(d) rules out
-$aba$ and $abb$, and no remaining row covers them: this is the fateful
-decision of the introduction.  A row $(k,u)$ is \emph{\outrelpast} by another
+$aba$ and $abb$, and no remaining row \outrel them: this is a \commitment,
+the fateful decision of the introduction.  A row $(k,u)$ is \emph{\outrelpast} by another
 row $(k,w)$ at the same input when $w$ \outrel $u$.
 
 \begin{definition}[\Commitment]
@@ -344,7 +344,7 @@ remove rows, and a row at the current input always remains.
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order $\OutputOrd$: it defines a new spec in which all
 outputs are incomparable.
-Under this order (called the \emph{equality order}), no output \outrel both $\bot$ and a future winner, so it is not legal at $ab\cdot$, and emitting it applies
+Under this order (called the \emph{equality order}), no output \outrel both $\bot$ and a future winner, so $\bot$ is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.  That change in the output
 order is Functional CALM in miniature: the spec is monotone under the original
 order, so later outputs \outrelbase every earlier one; under the equality order
@@ -357,7 +357,7 @@ a registrar that, when it emits $\bot$ at $ab\cdot$, also closes the polls,
 removing the still-possible rows $aba$ and $abb$ and keeping the current input
 unchanged.  The output was already legal; every output still possible
 \outrelpast $\bot$.  After the event, the upper fiber is determined at
-$\{\bot\}$.  Closing the polls was the registrar's own fateful decision.
+$\{\bot\}$.  Closing the polls was a \commitment the registrar chose to make, unforced by output.
 Section~\ref{sec:systems} models such choices; a spec itself has only input and
 output events, and this section uses only canonical \commitments.
 
@@ -411,14 +411,15 @@ equality order, so a run that emits $\bot$ at $ab\cdot$ must apply the canonical
 
 Runs follow the same pattern: they are \emph{confluent at} $j$ when they can
 reach a common state with current input $j$, and consistent when they are
-confluent at every common \indesc.
+confluent at every common \indesc.  A spec is consistent when all of its
+runs are.
 
 \begin{definition}[Confluence at an input]
 \label{def:confluence}
 A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{confluent at} $j$, a common \indesc of their current inputs, when each can be continued to a common state with current input $j$.
 \end{definition}
 
-\begin{definition}[Consistency]
+\begin{definition}[Consistency of a spec]
 \label{def:consistency}
 The runs of an \spectype are \emph{consistent} when every finite family of
 them is confluent at every common \indesc of their current inputs.
@@ -519,8 +520,8 @@ run applies a \commitment.
 
 \begin{proof}[Proof sketch]
 First assume the runs are consistent, and suppose some run's output event
-$\mathsf{output}(o)$ applies $x_o$.  It removes some row $(k,x)$ that is not confluent with $(i,o)$ at $k$.  Compare that run with one from the state
-before that event that instead takes $\mathsf{input}(k)$ and then emits $x$:
+$\mathsf{output}(o)$ applies $x_o$.  It removes some row $(k,y)$ that is not confluent with $(i,o)$ at $k$.  Compare that run with one from the state
+before that event that instead takes $\mathsf{input}(k)$ and then emits $y$:
 the two share no row at $k$, so by the Survivor test they are not confluent at
 $k$, a contradiction.  Now assume no output event applies a \commitment, and
 take a family of runs and a common extension $j$ of their current inputs.  Each run keeps a row

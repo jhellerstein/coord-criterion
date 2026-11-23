@@ -237,7 +237,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 /-- "Suppose `|𝒩| ≥ 2` and `E_p = P` for every `p`.  Then every pair of rows can be split
 across a partition, and every single row can be paired with a silent
 participant at the common input extension.  Pairs of rows suffice for the
-common-extension condition (Appendix `app:pairs-suffice`), so monotonicity
+row-consistency condition (Appendix `app:pairs-suffice`), so monotonicity
 across partitions is then Lifted Monotonicity." -/
 theorem «app:deployment/full-deployment» (hn : 2 ≤ n) (Dp : Deployment sp n)
     (hA : ∀ p, Dp.A p = sp.P) : MonoAcrossPartitions Dp ↔ sp.LiftedMono :=

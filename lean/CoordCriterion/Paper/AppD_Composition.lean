@@ -311,7 +311,7 @@ theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M
   ⟨Iff.rfl, Iff.rfl, fun _ _ _ => rfl⟩
 
 /-- "The proofs below rest on three facts that hold when `𝒮₁` is a sufficient
-guard, so that `𝒮₂|_{𝒮₁}` satisfies the common-extension condition (Propositions
+guard, so that `𝒮₂|_{𝒮₁}` satisfies the row-consistency condition (Propositions
 `prop:exposure-boundary` and `prop:common-expansion-form`).  Facts (a) and (b)
 concern a state `τ` that `𝒮₂|_{𝒮₁}` reaches without commitment.  (a) Every
 input `j ⪰_M τ.cur` has a row in `τ`. … (b) Every output at the current input
@@ -321,7 +321,7 @@ every `o ∈ P₂(m)` is a legal output at the image of `σ`. … Either way `(k
 is a row of the image that extends both `o` and `x`, so `o` is legal
 (Proposition `prop:exposability`)."  Lean: the first two hold
 at every run state (`Guard.row_at`, `commonExpansion_exposable`, with the
-common-extension condition of `𝒮₂|_{𝒮₁}` from `Guard.proper_iff_ce`); states
+row-consistency condition of `𝒮₂|_{𝒮₁}` from `Guard.proper_iff_ce`); states
 reached without commitment are run states (`Guard.isRun_sysExec_empty`); the
 third is `Guard.cf_stepK_on`. -/
 theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
@@ -344,7 +344,7 @@ theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp 
 input of `𝒮₂|_{𝒮₁}`. … Each answer `o` has `(m,o) ∈ T`, so `(i,o) ∈ R_ρ`.  The
 composite's `output(o)` keeps `R_ρ[out ⪰ o]`, and `𝒮₂|_{𝒮₁}` keeps
 `T[out ⪰ o]`, so the join stays inside the composite's table."  Lean, for a
-downstream with the common-extension condition (here `𝒮₂|_{𝒮₁}`, whose inputs
+downstream with the row-consistency condition (here `𝒮₂|_{𝒮₁}`, whose inputs
 are typed as outputs of `𝒮₁`, `Guard.core_lockstep`): `Guard.Inv`; before the
 first output `Guard.merge_inputs`; afterwards `Guard.merge_lockstep`, with the
 answers to one input `Guard.answer_run`; assembled in `Guard.composite_run`
@@ -363,7 +363,7 @@ theorem «app:composition/sufficient-lockstep» {I M O : Type} [PO I] [PO M] [PO
   ⟨fun he ρ' hI => Guard.merge_inputs h he ρ' hI, Guard.merge_lockstep hC h⟩
 
 /-- Proof of the stronger form of Corollary `cor:upstream-commitments`: "The proof of
-Proposition `prop:exposure-boundary` derives the common-extension condition
+Proposition `prop:exposure-boundary` derives the row-consistency condition
 from legality at canonical states alone." -/
 theorem «app:composition/canonical-states-suffice» {I O : Type} [PO I] [PO O] :
     ∀ {sp : Spec I O}, (∀ i o, sp.P i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
@@ -419,7 +419,7 @@ each event its table contains the original's.  By fact (b), each output the
 original emits is a legal output for the replacement, so the empty basis
 suffices.  The replacement's strategy allows each event, since the original's
 did."  Lean: `Guard.erase_lockstep` (for any downstream with the
-common-extension condition) and `Guard.compliant_eraseSys`. -/
+row-consistency condition) and `Guard.compliant_eraseSys`. -/
 theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M O}
     (hC : sk.CommonExpansion) {BK : CommitmentBasis sk} {σ ρ : State sk}
     {es : List (SEvent sk)} (h : SysExec BK σ es ρ) (σ' : State sk) (hr : IsRun σ')

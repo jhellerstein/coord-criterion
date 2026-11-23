@@ -120,7 +120,7 @@ theorem «proof:thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
 Monotonicity … Relational Monotonicity gives, for each `r`, a `u_r ∈ P(j)`
 with `o_r ≼ u_r`.  The `u_r` all lie in the one fiber `P(j)`, which is
 directed, so some `u ∈ P(j)` extends every `u_r`, hence every `o_r`.
-Now assume the common-extension condition, … the rows `{(i,x) : x ∈ X}` have common input extension `j`, so some
+Now assume the row-consistency condition, … the rows `{(i,x) : x ∈ X}` have common input extension `j`, so some
 `u ∈ P(j)` extends all of `X`."  Both directions. -/
 theorem «proof:prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=
@@ -182,7 +182,7 @@ theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
   ⟨consistent_iff_runsLegal sp, runsLegal_iff_legalReachLegal sp,
     legalReachLegal_iff_liftedMono sp, complete_calm_via_legality sp⟩
 
-/-! ### Pairs suffice for the common-extension condition (`app:pairs-suffice`) -/
+/-! ### Pairs suffice for the row-consistency condition (`app:pairs-suffice`) -/
 
 /-- `app:pairs-suffice`: "Suppose every two rows with a common input extension
 `j` have a common output extension in `P(j)`.  Then the condition holds for
@@ -190,7 +190,7 @@ every finite family of rows with common input extension `j`.  We replace the
 first two rows of the family by a row `(j,u)` whose output `u` extends both, and
 repeat until one row remains; a single row, paired with any row at `j`, has an
 output extension in `P(j)`."   `CALM.Pairs sp` is the pair condition over all
-rows of `P`; it is equivalent to the common-extension condition. -/
+rows of `P`; it is equivalent to the row-consistency condition. -/
 theorem «app:pairs-suffice» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (∀ i₁ o₁ i₂ o₂ j, sp.P i₁ o₁ → sp.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
         ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ↔ sp.CommonExpansion :=
@@ -198,7 +198,7 @@ theorem «app:pairs-suffice» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 
 /-- `app:pairs-suffice`: "The pairwise hypothesis must cover all rows of `P`,
 including rows at `j` itself, since the replacement rows are at `j`."   On a four-input specification, every two rows at inputs other
-than the common input extension are compatible there, but the common-extension
+than the common input extension are compatible there, but the row-consistency
 condition fails. -/
 theorem «app:pairs-suffice/rows-at-j» :
     (∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.P i₁ o₁ → spec4.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
@@ -225,7 +225,7 @@ theorem «app:pairs-suffice/k-at-a-time» (k : Nat) (hk : 1 ≤ k) :
    KSet.not_all_compatible k⟩
 
 /-- Consequence for `app:pairs-suffice`: the `k`-set agreement specification
-fails the common-extension condition, hence is not monotone. -/
+fails the row-consistency condition, hence is not monotone. -/
 theorem «app:pairs-suffice/k-set-not-monotone» (k : Nat) (hk : 1 ≤ k) :
     ¬ (KSet.spec k).CommonExpansion ∧ ¬ (KSet.spec k).LiftedMono :=
   ⟨KSet.not_commonExpansion k hk, KSet.not_liftedMono k hk⟩

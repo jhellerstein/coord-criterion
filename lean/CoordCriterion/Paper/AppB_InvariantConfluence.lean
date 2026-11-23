@@ -127,7 +127,7 @@ theorem «app:iconfluence/total» {V Tx : Type} (M : IConf.Model V Tx) (h : ICon
 
 /-! ## Proof of Proposition `prop:iconfluence-lm` -/
 
-/-- "We use the common-extension form of Lifted Monotonicity
+/-- "We use the row-consistency form of Lifted Monotonicity
 (Prop. `prop:common-expansion-form`)."  Lean: the proposition in that form. -/
 theorem «app:iconfluence/proof-common-expansion-form» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent ↔ (IConf.SI M).CommonExpansion :=

@@ -279,7 +279,7 @@ disjoint sets of participants." and "Its necessary half is the partition
 argument above, applied to histories that respect their placement."
 
 Lean, first conjunct: node monotonicity (`QRef.NodeMono`, their Def. 7) is
-the common-extension condition for two rows at disjoint networks and any
+the row-consistency condition for two rows at disjoint networks and any
 common input extension (`QRef.DisjointPairExpansion`).  Second conjunct (the
 argument, in our model): an anonymous cluster consistent on placed histories
 realizes rows (`BK.realized`, the rows it emits) that have a common output
@@ -309,7 +309,7 @@ and no message crosses a partition, the inputs of the two sides never share a
 fact.  In our model, an input event at any participant may contain any fact, so
 input events on both sides may contain the same fact, and for nondeterministic
 behaviors node monotonicity is strictly weaker than Lifted Monotonicity."
-Lean (strictness: `«sec:query-instance/matching»`): the common-extension condition (equivalently Lifted
+Lean (strictness: `«sec:query-instance/matching»`): the row-consistency condition (equivalently Lifted
 Monotonicity, the condition of Theorem `thm:complete-cap` with `E = P`), which
 also covers sides with overlapping inputs, implies node monotonicity, which
 asks it only for inputs at disjoint networks.  That their placement gives
@@ -364,7 +364,7 @@ for the group, makes commitments that keep such rows consistent."
 
 Lean: a spanning-tree behavior (`QRef.tree`, a concrete instance of their
 `Top_span`, Example 8) is node monotone, yet no total explicit relation inside
-it satisfies the common-extension condition: the pairwise-overlapping networks
+it satisfies the row-consistency condition: the pairwise-overlapping networks
 `{0,1}`, `{1,2}`, `{0,2}` would need a tree on `{0,1,2}` with all three edges.
 So by Theorem `thm:complete-cap` no system for it has Availability for such a
 relation and Partition Consistency, although it is node monotone.  Their
@@ -1236,7 +1236,7 @@ output events, with tables `IOT.Live` and `IOT.Canon`, and `IOT.Removed`
 (canonical rows no longer reachable) is the canonical part of the set `Δ` of
 Prop. `prop:system-confluence` (`Dist.Removed`, by `Dist.table_decomp`);
 `IOT.confluent_iff_removed`; (3) `IOT.consistent_of_confluent` (through the
-common-extension form), and the registrar `IOT.Poll.M`
+row-consistency form), and the registrar `IOT.Poll.M`
 (`IOT.Poll.consistent`, `IOT.Poll.not_confluent`). -/
 theorem «prop:automaton-confluence» {A : Type} (M : IOA.Automaton A) :
     (Guard.SysConsistent (IOT.SysRun (M := M)) ↔ IOT.Confluent M) ∧
@@ -1421,7 +1421,7 @@ i.e. of an execution), and Domination (`dom`).  The paper's order isomorphism
 is an order embedding that is onto; ontoness is not assumed, since
 Realizability and totality of `D` imply it.  `IOT.declared`, through
 `liftedMono_iff_of_cofinalAlong`, whose proof follows the sketch through the
-common-extension form.  The closing paragraph ("Together, the two obligations
+row-consistency form.  The closing paragraph ("Together, the two obligations
 let `D` stand in for the projected spec: Lifted Monotonicity is checked on `D`
 exactly as everywhere else in this paper.  Whether the automaton itself is confluent
 is a question about its executions (Proposition

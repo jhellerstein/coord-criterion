@@ -199,7 +199,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«sec:functional-events/determination-examples»` | theorem | "*Determination* is the process of reaching a determined state. |
 | `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state with that output: |
 | `«fig:nonmonotone-frame»` | theorem | Fig. |
-| `«sec:election-story/equality-order-commitment»` | theorem | "Under this order (called the *equality order*), no output extends both `⊥` and a future winner, so it is not legal at `ab·`, and emitting it applies `x_⊥`,… |
+| `«sec:election-story/equality-order-commitment»` | theorem | "Under this order (called the *equality order*), no output extends both `⊥` and a future winner, so `⊥` is not legal at `ab·`, and emitting it applies `x_⊥`,… |
 | `«fig:election-frames/d»` | theorem | Fig. |
 | `«fig:election-frames/d-gray»` | theorem | Fig. |
 | `«fig:election-frames/bot-alone»` | theorem | Fig. |
@@ -553,7 +553,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/directed-outputs»` | abbrev | *directed fibers* — every fiber of the spec is directed (Def. |
 | `«app:notation/joint-lift»` | abbrev | *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` has a common extension in `B` (Eq. |
 | `«app:notation/lifted-monotonicity»` | abbrev | *Lifted Monotonicity* (*monotone*) — `i ≼ j ⇒ P(i) ⊑ P(j)` (Def. |
-| `«app:notation/common-expansion-condition»` | abbrev | *common-extension condition* — rows with a common input extension `j` have a common output extension in `P(j)` (Def. |
+| `«app:notation/common-expansion-condition»` | abbrev | *row-consistency condition* — rows with a common input extension `j` have a common output extension in `P(j)` (Def. |
 | `«app:notation/ruled-out»` | abbrev | *ruled out by `o`* — a row whose output does not extend `o` (App. |
 | `«app:notation/Subsumed»` | abbrev | *`Subsumed_o`* — removed rows `(k,x)` for which some output at `k` extends both `x` and `o` (Eq. |
 | `«app:notation/Excluded»` | abbrev | *`Excluded_o`* — all other removed rows (Eq. |
@@ -650,7 +650,7 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 | `«app:iconfluence/inputs-closed»` | theorem | "The spec `𝒮_𝓘` has the locally valid histories as inputs; a closed sub-history of a locally valid history is locally valid, so the inputs are closed under t… |
 | `«app:iconfluence/spec»` | theorem | "An output is a state, and `u` covers `s` when `s ⊆ u`. |
 | `«app:iconfluence/total»` | theorem | "Taking `g` empty gives `s₀`, so the spec is total." |
-| `«app:iconfluence/proof-common-expansion-form»` | theorem | "We use the common-extension form of Lifted Monotonicity (Prop. |
+| `«app:iconfluence/proof-common-expansion-form»` | theorem | "We use the row-consistency form of Lifted Monotonicity (Prop. |
 | `«app:iconfluence/proof-valid-reachable»` | theorem | First step: |
 | `«app:iconfluence/proof-union-valid»` | theorem | (⇒), key step: |
 | `«app:iconfluence/proof-merge-reachable»` | theorem | (⇒), inline: |
@@ -746,7 +746,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/components-commit»` | theorem | "A monotone composite can also leave a non-monotone upstream unable to emit. |
 | `«app:composition/image-canon»` | theorem | "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write `R ⋈ T = {(k,x) : |
 | `«app:composition/pipeline-run»` | theorem | "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of `𝒮₂\|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`. |
-| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts that hold when `𝒮₁` is a sufficient guard, so that `𝒮₂\|_{𝒮₁}` satisfies the common-extension condition (Propositions `p… |
+| `«app:composition/store-facts»` | theorem | "The proofs below rest on three facts that hold when `𝒮₁` is a sufficient guard, so that `𝒮₂\|_{𝒮₁}` satisfies the row-consistency condition (Propositions `pr… |
 | `«app:composition/sufficient-lockstep»` | theorem | Proof of Theorem `thm:sufficient-guards`: |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of the stronger form of Corollary `cor:upstream-commitments`: |
 | `«app:composition/sufficient-guard-needed»` | theorem | "The sufficient-guard hypothesis is needed in Corollary `cor:upstream-commitments`. |
@@ -882,7 +882,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«lem:locality»` | theorem | **Lemma `lem:locality` (Locality).** "For each participant `p` in some set of participants, let `ℓ_p` be a local history that `p`'s strategy can produce from… |
 | `«def:response-interface»` | theorem | **Def. |
 | `«def:response-interface/lm-for-T»` | theorem | "Lifted Monotonicity for `T` is that of Definition `def:lm-for-A`, and the reconciling output may lie outside `T`." Lean: |
-| `«def:response-interface/T-eq-S»` | theorem | "With `T = P` it is the common-extension condition of Proposition `prop:common-expansion-form`." |
+| `«def:response-interface/T-eq-S»` | theorem | "With `T = P` it is the row-consistency condition of Proposition `prop:common-expansion-form`." |
 | `«def:response-interface/confluence»` | theorem | "and by Lemma `lem:reconciliation` it is confluence of the canonical runs whose emitted rows lie in `T`." Lean: |
 | `«app:cap-response/serve-interface»` | theorem | "A system can always serve a response interface. |
 | `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).** "For an I/O specification `P` and a uniform obligation `Q`, the following are e… |

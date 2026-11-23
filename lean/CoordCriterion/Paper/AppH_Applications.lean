@@ -90,7 +90,7 @@ relation `<_o` on events, the pairs that `o` places in order, such that (1)
 `a <_{o₁} b` and `b <_{o₂} a`, then the spec is not monotone.  If
 `i₁ = i₂ = j`, the fiber at `j` is not directed."  Proof: "A common output
 extension `u` of `o₁` and `o₂` in `P(j)` would have `a <_u b` and `b <_u a` by
-(1), which contradicts (2).  So the common-extension condition fails, and by
+(1), which contradicts (2).  So the row-consistency condition fails, and by
 Proposition `prop:common-expansion-form` so does Lifted Monotonicity.  When
 `i₁ = i₂ = j`, the same argument shows that `o₁` and `o₂` are incompatible in
 `P(j)`."  `<_o` is `before o`. -/
@@ -116,7 +116,7 @@ a set `D(o)` of values it decides, such that (1) `o ⪯ u` implies
 `v_r ∈ D(o_r)`, then they cannot all grow to one output at `j`, so the spec is
 not monotone."  Proof: "A common output extension `u` of the `k+1` outputs in
 `P(j)` would have all `k+1` values in `D(u)` by (1), which contradicts (2).  So
-the common-extension condition fails, and Proposition
+the row-consistency condition fails, and Proposition
 `prop:common-expansion-form` applies."  `D(o)` is `dec o`; "at most `k`
 values": covered by a list of length `≤ k`. -/
 theorem «lem:bounded-values» {I O V : Type} [PO I] [PO O] {sp : Spec I O}
@@ -135,7 +135,7 @@ of an I/O specification are sets ordered by `⊆`, and its outputs are pairs
 componentwise by `⊆`.  If rows `(i,(A,B))` and `(j,(A',B'))` with `i ⊆ j` have
 a fact `f ∈ B ∩ A'`, the spec is not monotone."  Proof: "A common output
 extension `(A'',B'')` of the two outputs in `P(j)` has `f ∈ B ⊆ B''` and
-`f ∈ A' ⊆ A''`, but `A''` and `B''` are disjoint.  So the common-extension
+`f ∈ A' ⊆ A''`, but `A''` and `B''` are disjoint.  So the row-consistency
 condition fails, and Proposition `prop:common-expansion-form` applies."
 Generic in the input order and in the output type: `acc o` and `blk o` are the
 accepted and blocked facts, each growing with `⪯` (as componentwise `⊆`
@@ -389,7 +389,7 @@ theorem «app:additional-applications/evidence-spec» {I O : Type} [PO I] [PO O]
 implies `c(i) ⪯ c(j)`, the evidence spec is monotone, and every output at every
 state reachable without commitment is legal."  Proof: "Take rows `(iᵣ,oᵣ)` with
 a common input extension `j`.  Each `oᵣ ⪯ c(iᵣ) ⪯ c(j)`, and `c(j)` is
-permitted at `j`.  So the common-extension condition holds, and Proposition
+permitted at `j`.  So the row-consistency condition holds, and Proposition
 `prop:common-expansion-form` gives Lifted Monotonicity.  The second claim
 follows by Proposition `prop:exposure-boundary`."  The hypothesis is the
 paper's "protocol safety"; that Paxos provides it is cited, not proved. -/
@@ -654,7 +654,7 @@ every item causally before a listed one, order every causally ordered pair of
 listed items causally, and never place an item before itself, and that every
 causally closed set of items is the set of some dequeue history it permits.  Then it
 permits exactly the dequeue histories of the causal queue."  Proof: "(1) We check the
-common-extension condition.  Given rows `(h_r,(D_r,→))` with a common input
+row-consistency condition.  Given rows `(h_r,(D_r,→))` with a common input
 extension `j`, the union `D` of the `D_r` is causally closed in `j`, and
 `(D,→)` extends each `(D_r,→)`: causal precedence on `D_r` is the same in
 `h_r` and `j`, and an item causally before an item of `D_r` lies in `D_r`.

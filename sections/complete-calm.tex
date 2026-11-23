@@ -230,7 +230,7 @@ two agree when $B$ is directed.  Unlike the Hoare preorder, the joint
 refinement lift is not reflexive: $A\LiftedOrd A$ holds only when $A$ is
 directed.
 
-\paragraph{The common-extension condition.}
+\paragraph{The row-consistency condition.}
 Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
 Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls for a condition on rows at different inputs: they must be confluent at $j$.  The two conditions turn out to be equivalent.
@@ -238,22 +238,22 @@ In the traceroute spec, one run may trace from \texttt{s} and emit
 $\{\texttt{s}{\to}\texttt{s1}\}$, while another traces from a second source
 \texttt{t} and emits $\{\texttt{t}{\to}\texttt{s2}\}$.  At $\{\texttt{s},\texttt{t}\}$, which \inrel both inputs, the route set $\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ \outrel both outputs.
 
-\begin{definition}[Common-extension condition]
+\begin{definition}[Row-consistency condition]
 \label{def:common-expansion-condition}
-An \spectype satisfies the \emph{common-extension condition} when every finite set of rows of $P$ is consistent.
+An \spectype satisfies the \emph{row-consistency condition} when every finite set of rows of $P$ is consistent: the rows have a common \outnoun at every common \indesc of their inputs.
 \end{definition}
 
 For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
 follows from $P$ being total on $I$.
 
-\begin{proposition}[Common-extension form of Lifted Monotonicity]
+\begin{proposition}[Row-consistency form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
 An \spectype satisfies Lifted Monotonicity if and only
-if it satisfies the common-extension condition.
+if it satisfies the row-consistency condition.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$ to some extension in the fiber at $j$, and that fiber is directed, so those extensions have a common extension there.  Now assume the common-extension
+First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Lifted Monotonicity gives Relational Monotonicity, which carries each $o_r$ to some extension in the fiber at $j$, and that fiber is directed, so those extensions have a common extension there.  Now assume the row-consistency
 condition, and take $i\InputOrd j$ and a finite $X\subseteq\fiber{i}$.  The
 rows $(i,x)$ for $x\in X$ are then confluent at $j$, which is what Lifted Monotonicity asks for.  Full proof in
 Appendix~\ref{app:proofs-sec3}.
@@ -269,8 +269,8 @@ functional case: at a state $(i,R)$ with $o\in R(i)$, $\mathsf{output}(o)$ emits
 $o$ and keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).
 
-Removing a row $(k,x)$ does not always lose the information in its output.  If $(k,x)$ is confluent with $(i,o)$ at $k$ in $R$, through some $u\in R(k)$, then removing $(k,x)$ loses nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
-would have.  This is output subsumption, and we put $(k,x)$ in $\Subsumed_o$.
+Removing a row $(k,y)$ does not always lose the information in its output.  If some $u\in R(k)$ \outrel both $y$ and $o$, then removing $(k,y)$ loses nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $y$
+would have.  This is output subsumption, and we put $(k,y)$ in $\Subsumed_o$.
 Every other removed row goes in $\Excluded_o$.  With several outputs at an
 input, the canonical \commitment $x_o(i,R)=(i,R\setminus\Excluded_o)$ removes
 only the rows in $\Excluded_o$; the output event still removes the rows in
@@ -311,7 +311,7 @@ if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-First assume Lifted Monotonicity, in its common-extension form
+First assume Lifted Monotonicity, in its row-consistency form
 (Proposition~\ref{prop:common-expansion-form}).  At a state reachable without
 \commitment, the row of an output $o$ and each remaining row at a legal input $j$ are confluent at $j$, through a row the state keeps
 (Lemma~\ref{lem:run-residual}), so $o$ is legal.  Now assume every such output
@@ -349,7 +349,7 @@ alone: Lifted Monotonicity, which for a function is ordinary monotonicity.
 Both theorems also hold for distributed histories
 (Section~\ref{sec:distributed-consistency}).
 
-For functional specs, Lifted Monotonicity and the common-extension condition
+For functional specs, Lifted Monotonicity and the row-consistency condition
 are both functional monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.

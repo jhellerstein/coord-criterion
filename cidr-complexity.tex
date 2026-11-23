@@ -335,14 +335,18 @@ that can keep every permitted output both available and consistent during a
 partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.\cxbar{15}{0.4 0.4 1}{e}
 
 \paragraph{Coordination is for \commitment.} \color{black}\cxtag{16}{N/M}\cxbar{16}{0.4 0.4 1}{s}What of coordination?  A
-\commitment isolates the contract a coordination mechanism achieves, apart from
-how it achieves it: locks, barriers, and other mechanisms all enforce
-\commitments.  Our criterion identifies exactly the \commitments a spec's
-outputs require, independent of mechanism. In a composition of specs,
+\commitment isolates the contract a coordination mechanism achieves.
+% and apart from
+% \commitments.
+Our criterion identifies exactly the \commitments a spec's
+outputs require, independent of
+how they are implemented: via locks, barriers, consensus, etc.
+An implementation is then correct when its mechanisms enforce those \commitments.
+In a composition of specs,
 coordination is \emph{tight} when an upstream stage makes every \commitment the
-composition needs (sufficient), so later stages need none, and no others
+composition needs (sufficient), and no others
 (necessary).\rv{8}  Guard Tightening shows how to order the upstream's
-outputs to achieve it.  In state-machine replication, for example, the consensus
+outputs to achieve this.  In state-machine replication, for example, the consensus
 log makes every \commitment; the replicated store needs none, so any
 coordination it employs is overhead (\S\ref{sec:composition}).\cxbar{16}{0.4 0.4 1}{e}
 
@@ -364,7 +368,7 @@ coordination it employs is overhead (\S\ref{sec:composition}).\cxbar{16}{0.4 0.4
 
 \color{black}\noindent
 \cxtag{20}{N/M}\cxbar{20}{0.4 0.4 1}{s}\emph{3. Constructive results for coordination.} We define \commitments, the
-        underlying contracts that coordination mechanisms can enforce, and
+        underlying contracts that coordination mechanisms enforce, and
         identify exactly the \commitments a non-monotone spec requires.\rv{1}  Specs compose by equijoin, and Guard Tightening
         shows how to order an upstream stage's outputs to achieve tight coordination.\cxbar{20}{0.4 0.4 1}{e}
 
@@ -607,7 +611,8 @@ $o$.\cxbar{39}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{40}{N/M}\cxbar{40}{0.4 0.4 1}{s}So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  Possibilities
 can also be removed deliberately.  Closing the polls in panel~(d) rules out
-$aba$ and $abb$, and no remaining row \outrel them.\rv{5}\cxbar{40}{0.4 0.4 1}{e}
+$aba$ and $abb$, and no remaining row \outrel them: this is a \commitment, the
+fateful decision of the introduction.\rv{5}\cxbar{40}{0.4 0.4 1}{e}
 
 \color{black}\begin{definition}[\Commitment]
 \label{def:commitment}
@@ -692,7 +697,7 @@ a registrar that, when it emits $\bot$ at $ab\cdot$, also closes the polls,
 removing the still-possible rows $aba$ and $abb$ and keeping the current input
 unchanged.  The output was already legal; every output still possible
 \outrelpast $\bot$.  After the event, the upper fiber is determined at
-$\{\bot\}$.  Closing the polls was the registrar's own choice.\rv{5}
+$\{\bot\}$.  Closing the polls was a \commitment the registrar chose to make, unforced by output.\rv{5}
 Section~\ref{sec:systems} models such choices; a spec itself has only input and
 output events.\cxbar{46}{0.4 0.4 1}{e}
 
@@ -733,18 +738,19 @@ emits $a$.  No output at $aba$ \outrel both $\bot$ and $a$, so the rows have
 no \emph{common \outnoun} there, and the two runs can never reach a common
 state.\cxbar{49}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{50}{N/M}\cxbar{50}{0.4 0.4 1}{s}This motivates our first use of confluence, for rows.  Rows with a common
-\outnoun at $j$ are \emph{confluent at} $j$.  A set of rows is
+\color{black}\cxtag{50}{N/M}\cxbar{50}{0.4 0.4 1}{s}This motivates our first use of confluence, for rows.  We say that rows are
+\emph{confluent at} $j$ when they have a common \outnoun at $j$.  A set of rows is
 \emph{row-consistent} when it is confluent at every common \indesc of its
 inputs, and \emph{row-inconsistent} otherwise.  When the context is clearly
 about rows, we say simply \emph{consistent} or \emph{inconsistent}.
 Our example rows $(ab\cdot,\bot)$ and $(aba,a)$ are therefore inconsistent, so a run that emits $\bot$ at $ab\cdot$ must apply the canonical \commitment $x_\bot$.\cxbar{50}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{51}{N/M}\cxbar{51}{0.4 0.4 1}{s}Runs follow the same pattern: they are \emph{confluent at} $j$ when they can
+\color{black}\cxtag{51}{N/M}\cxbar{51}{0.4 0.4 1}{s}Runs follow the same pattern as rows: runs are \emph{confluent at} $j$ when they can
 reach a common state with current input $j$, and consistent when they are
-confluent at every common \indesc.\cxbar{51}{0.4 0.4 1}{e}
+confluent at every common \indesc.  A spec is consistent when all of its
+runs are:\cxbar{51}{0.4 0.4 1}{e}
 
-\color{black}\begin{definition}[Consistency, confluence at an input]
+\color{black}\begin{definition}[Confluence at an input, consistency of a spec]
 \label{def:consistency}
 \cxtag{52}{N/M}\cxbar{52}{0.4 0.4 1}{s}Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are \emph{confluent at} a
 common \indesc $j$ of their current inputs when each can be continued to one
@@ -1019,7 +1025,7 @@ $X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.\cxbar{8
 Monotonicity holds exactly when both Relational Monotonicity and directed fibers
 hold.
 
-\paragraph{The common-extension condition.}
+\paragraph{The row-consistency condition.}
 \color{black}\cxtag{84}{N/S}Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
 Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls
@@ -1028,19 +1034,19 @@ In the traceroute spec, one run may trace from \texttt{s} and emit
 $\{\texttt{s}{\to}\texttt{s1}\}$, while another traces from \texttt{t} and
 emits $\{\texttt{t}{\to}\texttt{s2}\}$.  At $\{\texttt{s},\texttt{t}\}$, which \inrel both inputs, the route set $\{\texttt{s}{\to}\texttt{s1},\ \texttt{t}{\to}\texttt{s2}\}$ \outrel both outputs.
 
-\color{black}\begin{definition}[Common-extension condition]
+\color{black}\begin{definition}[Row-consistency condition]
 \label{def:common-expansion-condition}
-\cxtag{85}{N/M}\cxbar{85}{0.4 0.4 1}{s}An \spectype satisfies the \emph{common-extension condition} when every finite set of rows of $P$ is consistent.\cxbar{85}{0.4 0.4 1}{e}
+\cxtag{85}{N/M}\cxbar{85}{0.4 0.4 1}{s}An \spectype satisfies the \emph{row-consistency condition} when every finite set of rows of $P$ is consistent: the rows have a common \outnoun at every common \indesc of their inputs.\cxbar{85}{0.4 0.4 1}{e}
 \end{definition}
 
-\color{black}\begin{proposition}[Common-extension form of Lifted Monotonicity]
+\color{black}\begin{proposition}[Row-consistency form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
 \cxtag{86}{N/M}\cxbar{86}{0.4 0.4 1}{s}An \spectype satisfies Lifted Monotonicity if and only
-if it satisfies the common-extension condition.\cxbar{86}{0.4 0.4 1}{e}
+if it satisfies the row-consistency condition.\cxbar{86}{0.4 0.4 1}{e}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{87}{N/M}\cxbar{87}{0.4 0.4 1}{s}First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Lifted Monotonicity at $i_r\InputOrd j$ carries each $o_r$ to an extension in the fiber at $j$, and at $j$ itself it gives those a common extension.  Now assume the common-extension condition.  Lifted
+\cxtag{87}{N/M}\cxbar{87}{0.4 0.4 1}{s}First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Lifted Monotonicity at $i_r\InputOrd j$ carries each $o_r$ to an extension in the fiber at $j$, and at $j$ itself it gives those a common extension.  Now assume the row-consistency condition.  Lifted
 Monotonicity is its special case in which all the rows share one input.
 \fullproof\cxbar{87}{0.4 0.4 1}{e}
 \end{proof}
@@ -1102,7 +1108,7 @@ if every output at every state reachable without \commitment is legal.\cxbar{94}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{95}{N/M}\cxbar{95}{0.4 0.4 1}{s}First assume Lifted Monotonicity, in its common-extension form
+\cxtag{95}{N/M}\cxbar{95}{0.4 0.4 1}{s}First assume Lifted Monotonicity, in its row-consistency form
 (Proposition~\ref{prop:common-expansion-form}).  At a state reachable without
 \commitment, the row of an output $o$ and each remaining row at a legal input $j$ are confluent at $j$, through a row the state keeps
 (Lemma~\ref{lem:run-residual}), so $o$ is legal.  Now assume every such output
@@ -1464,8 +1470,8 @@ then so does the spec's canonical system for $E$.\cxbar{139}{0.4 0.4 1}{e}
 % its own output, so no row at $j$ is kept by all.
 % \fullproof
 % \end{proof}
-\color{black}\cxtag{140}{N/M}\cxbar{140}{0.4 0.4 1}{s}Intuitively, when Lifted Monotonicity for $E$ fails, rows of $E$ that are not
-confluent at a common extension of their inputs can sit on opposite sides of a partition:
+\color{black}\cxtag{140}{N/M}\cxbar{140}{0.4 0.4 1}{s}Intuitively, when Lifted Monotonicity for $E$ fails, inconsistent rows of $E$
+can sit on opposite sides of a partition:
 availability lets each side emit its row's output, and no later state can
 reconcile them.\cxbar{140}{0.4 0.4 1}{e}
 \proofinfull
@@ -1585,9 +1591,10 @@ are not confluent at $k$ in $P_2\circ P_1$.\cxbar{154}{0.4 0.4 1}{e}
 sufficient and a necessary guard; the pipeline has \emph{tight} coordination.\cxbar{155}{0.4 0.4 1}{e}
 \end{definition}
 
-\color{black}\cxtag{156}{N/M}\cxbar{156}{0.4 0.4 1}{s}Necessity compares the upstream's canonical \commitments with those the
-composite needs.  Which \commitments are canonical depends on $\preceq_M$, and
-the prefix order demands too many for the commuting KVS.  We compare
+\color{black}\cxtag{156}{N/M}\cxbar{156}{0.4 0.4 1}{s}Necessity compares the rows the upstream's output events must exclude via
+canonical \commitments with those the composite's must exclude.  Which rows the
+canonical \commitments exclude depends on $\preceq_M$, and the prefix order
+excludes too many for the commuting KVS.  We compare
 $\preceq_M$ with a relation derived from $P_2$: $m'$ \emph{covers} $m$,
 written $m\sqsubseteq m'$, when every finite set of outputs in $P_2(m)$ has a
 common extension in $P_2(m')$.  Confluence of rows and canonical
@@ -1613,7 +1620,7 @@ $\preceq_M$.\cxbar{156}{0.4 0.4 1}{e}
 \color{black}\cxtag{158}{N/M}\cxbar{158}{0.4 0.4 1}{s}When the KVS answers each command in turn, as in state-machine replication,
 $\sqsubseteq$ is the log's prefix order, and the consensus log is a tight guard.
 When the KVS reports only its state and $A$ and $B$ commute, $[A,B]$ and
-$[B,A]$ cover each other and fail antisymmetry.  The prefix order keeps them
+$[B,A]$ cover each other and hence $\sqsubseteq$ fails antisymmetry.  The prefix order keeps them
 apart, so it makes the log a sufficient guard but not a necessary one.
 Tightening means identifying such values, as a log that orders only
 non-commuting commands does (Generalized Paxos~\cite{lamport2005generalized},

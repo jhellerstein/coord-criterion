@@ -107,9 +107,8 @@ abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
 availability can still coexist when each commitment is made by a single
 participant, as the voters in the election of Section `sec:election-story`
 show" (prose-only signpost): "Return to the election of Section
-`sec:election-story`.  That discussion centered on the spec for vote
-collection, as performed by the registrar.  Here we consider the spec for the
-voters; the registrar is an observer of this spec.  Each voter's ballot is a row
+`sec:election-story`, now with the spec for the voters, which the registrar
+observes.  Each voter's ballot is a row
 of `E`, while the sets of ballots the registrar may observe across voters are
 implicit outputs in `P \ E`."
 
@@ -354,7 +353,7 @@ theorem «sec:complete-cap/canonical-never-waits» (sp : Spec I O) (D : Type) (E
   availabilityFor_resp E
 
 /-- Supporting step for `«thm:complete-cap/E-eq-P»`: with `E = P`, Lifted
-Monotonicity for `E` is the common-extension condition
+Monotonicity for `E` is the row-consistency condition
 (Def. `def:common-expansion-condition`). -/
 theorem «sec:complete-cap/lm-for-S» (sp : Spec I O) :
     «def:lm-for-A» sp sp.P ↔ sp.CommonExpansion :=

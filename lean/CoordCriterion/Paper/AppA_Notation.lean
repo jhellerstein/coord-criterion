@@ -231,7 +231,7 @@ abbrev «app:notation/joint-lift» (A B : O → Prop) : Prop := JointLift A B
 (Def. `def:lifted-monotonicity`).  Lean: `Spec.LiftedMono`. -/
 abbrev «app:notation/lifted-monotonicity» (sp : Spec I O) : Prop := sp.LiftedMono
 
-/-- *common-extension condition* — rows with a common input extension `j` have a
+/-- *row-consistency condition* — rows with a common input extension `j` have a
 common output extension in `P(j)` (Def. `def:common-expansion-condition`).  Lean:
 `Spec.CommonExpansion`. -/
 abbrev «app:notation/common-expansion-condition» (sp : Spec I O) : Prop := sp.CommonExpansion

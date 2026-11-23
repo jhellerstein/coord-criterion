@@ -322,7 +322,7 @@ theorem «def:response-interface/lm-for-T» (T : Table I O) :
         ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u :=
   Iff.rfl
 
-/-- "With `T = P` it is the common-extension condition of Proposition
+/-- "With `T = P` it is the row-consistency condition of Proposition
 `prop:common-expansion-form`." -/
 theorem «def:response-interface/T-eq-S» : ConsistentOn sp sp.P ↔ sp.CommonExpansion :=
   consistentOn_S

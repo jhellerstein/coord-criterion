@@ -324,8 +324,8 @@ theorem «sec:election-story/exposable-panels» :
   elec_panels_exposable
 
 /-- "Possibilities can also be removed deliberately.  Closing the polls in
-panel (d) rules out `aba` and `abb`, and no remaining row covers them: this is
-the fateful decision of the introduction.  A row `(k,u)` is *extended* by
+panel (d) rules out `aba` and `abb`, and no remaining row extends them: this is
+a commitment, the fateful decision of the introduction.  A row `(k,u)` is *extended* by
 another row `(k,w)` at the same input when `w` extends `u`."
 
 **Def. `def:commitment`** (Commitment).  "A *commitment* is a partial function
@@ -450,7 +450,7 @@ theorem «fig:nonmonotone-frame» :
       ∀ k o, outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) :=
   ⟨elecEq_bot_excludes, elecEq_bot_single_row⟩
 
-/-- "Under this order (called the *equality order*), no output extends both `⊥` and a future winner, so it is not legal at `ab·`, and emitting it applies `x_⊥`,
+/-- "Under this order (called the *equality order*), no output extends both `⊥` and a future winner, so `⊥` is not legal at `ab·`, and emitting it applies `x_⊥`,
 which removes `(aba,a)` and `(abb,b)`."  Lean: at `σ_P(ab·)`, `⊥` is not a
 legal output under `elecEq`. -/
 theorem «sec:election-story/equality-order-commitment» :
@@ -511,8 +511,8 @@ theorem «fig:nonmonotone-frame/matches-d» (k : Ballots) (r : Res) :
 
 /-- "Panel (d) of Figure `fig:election-frames`, by contrast, reflects a
 commitment that the spec does not require.  A *system* that implements a spec
-may make one through a *commitment event*. … Closing the polls was the
-registrar's own fateful decision.  Section `sec:systems` models such choices;
+may make one through a *commitment event*. … Closing the polls was a
+commitment the registrar chose to make, unforced by output.  Section `sec:systems` models such choices;
 a spec itself has only input and output events, and this section uses only
 canonical commitments."  For the registrar of panel (d): its run
 `apply([closePolls])`, `output(⊥)` has an observably equivalent `output(⊥)` of
@@ -589,7 +589,8 @@ theorem «sec:election-story/not-reconciled» :
 
 /-- "Runs follow the same pattern: they are *confluent at* `j` when they can
 reach a common state with current input `j`, and consistent when they are
-confluent at every common input extension."
+confluent at every common input extension.  A spec is consistent when all of
+its runs are."
 
 **Def. `def:confluence`** (Confluence at an input).  "A finite family of runs
 ending at states `(i₁,R₁),…,(i_k,R_k)` is *confluent at* `j`, a common input
@@ -601,7 +602,7 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (fam : List (State sp)) (j : I) : Prop :=
   ConfluentAt fam j
 
-/-- **Def. `def:consistency`** (Consistency).  "The runs of an I/O
+/-- **Def. `def:consistency`** (Consistency of a spec).  "The runs of an I/O
 specification are *consistent* when every finite family of them is confluent
 at every common input extension of their current inputs."  The common input
 extension `j` ranges over every `j` above all current inputs, including inputs
@@ -718,9 +719,9 @@ theorem «sec:functional-calm-theorem/safety-of-runs» {I O : Type} [PO I] [PO O
 of an I/O specification are consistent if and only if no output event of any
 run applies a commitment."  Proof sketch: "First assume the runs are
 consistent, and suppose some run's output event `output(o)` applies `x_o`.  It
-removes some row `(k,x)` such that no row at `k` extends both `x` and `o`.
+removes some row `(k,y)` that is not confluent with `(i,o)` at `k`.
 Compare that run with one from the state before that event that instead takes
-`input(k)` and then emits `x`: the two share no row at `k`, so by the Survivor
+`input(k)` and then emits `y`: the two share no row at `k`, so by the Survivor
 test they are not confluent at `k`, a contradiction.  Now assume no output
 event applies a commitment, and take a family of runs and a common input
 extension `j`.  Each run keeps a row `(i_r,u_r)` at its current input whose

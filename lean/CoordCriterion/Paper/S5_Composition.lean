@@ -280,8 +280,9 @@ theorem «sec:tight-coordination/components» {I M O : Type} [PO I] [PO M] [PO O
 
 /-! ### Necessary and tight guards -/
 
-/-- Before Theorem `thm:guard-tightening`: "Necessity compares the upstream's
-canonical commitments with those the composite needs."  Rows `(i,m)` and
+/-- Before Theorem `thm:guard-tightening`: "Necessity compares the rows the
+upstream's output events must exclude via canonical commitments with those the
+composite's must exclude."  Rows `(i,m)` and
 `(k,x)` of `P₁` with `i ≼ k` are not confluent at `k` exactly when emitting `m`
 at `σ_{P₁}(i)` removes `(k,x)` by canonical commitment (Appendix `app:tight`).
 Lean: rows not confluent at `k` under a

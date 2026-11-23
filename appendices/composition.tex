@@ -8,7 +8,7 @@ the replicated store with bare reads.
 \subsection{Sequential composition}
 
 \begin{proof}[Proof of Lemma~\ref{lem:composition}]
-We verify the common-extension condition
+We verify the row-consistency condition
 (Proposition~\ref{prop:common-expansion-form}).  Let rows $(i_r,o_r)$ of
 $P_2\circ P_1$, finitely many, have common \indesc $j$, and choose $m_r$ with
 $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The condition for $\Spec_1$ gives
@@ -68,7 +68,7 @@ with table $G\star F$ satisfies Lifted Monotonicity.
 \begin{proof}
 Let rows $((i_r,j_r,a_r),c_r)$, finitely many, have common \indesc $(i,j,a)$,
 with witnesses $b_r$ from Equation~\ref{eq:parameterized-composition}.  The
-common-extension condition for $\Spec_F$ at $(i,a)$ gives $b\in F(i,a)$
+row-consistency condition for $\Spec_F$ at $(i,a)$ gives $b\in F(i,a)$
 \outrelpart every $b_r$.  Then $(j,b)$ is a common \indesc of the
 $(j_r,b_r)$, and the condition for $\Spec_G$ gives $c\in G(j,b)$ \outrelpart
 every $c_r$.  So $((i,j,a),c)\in G\star F$ is the required common \outnoun.
@@ -127,7 +127,7 @@ empty-basis guard, and by induction no stage of the pipeline issues a
 
 (2) Let $D$ contain the outputs of $\Spec_1$.  Take rows $(i_r,o_r)$ of $P_2\circ
 P_1$ with a common \indesc $j$, and intermediate values $m_r$ with
-$(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The common-extension condition for
+$(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The row-consistency condition for
 $\Spec_1$ gives $m\in P_1(j)$ that \outrel every $m_r$.  All of $m_r$ and $m$
 lie in $D$, so the condition for $\Spec_2$ on $D$ gives $o\in P_2(m)$ that
 \outrel every $o_r$, and $(j,o)\in P_2\circ P_1$.  No closure property of $D$
@@ -216,13 +216,13 @@ number of outputs, possibly none.  The environment observes
 $\mathsf{input}(j)$ and the outputs of $\Spec_2|_{\Spec_1}$.
 
 The proofs below rest on three facts that hold when $\Spec_1$ is a sufficient
-guard, so that $\Spec_2|_{\Spec_1}$ satisfies the common-extension condition
+guard, so that $\Spec_2|_{\Spec_1}$ satisfies the row-consistency condition
 (Propositions~\ref{prop:exposure-boundary}
 and~\ref{prop:common-expansion-form}).  Facts (a) and (b) concern a state $\tau$ that
 $\Spec_2|_{\Spec_1}$ reaches without \commitment.
 \begin{enumerate}[label=(\alph*)]
 \item Every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$.  The
-  common-extension condition gives $u\in P_2(j)$ that \outrel an output $v$ at
+  row-consistency condition gives $u\in P_2(j)$ that \outrel an output $v$ at
   the current input.  The row $(j,u)$ survives, since $v$ \outrel every output
   emitted so far.
 \item Every output at the current input of $\tau$ is a legal output, by
@@ -230,7 +230,7 @@ $\Spec_2|_{\Spec_1}$ reaches without \commitment.
 \item If an output $m$ at the current input of a state $\sigma$ of $\Spec_1$
   is a legal output, then every $o\in P_2(m)$ is a legal output at the image
   of $\sigma$.  Each row $(k,x)$ of the image comes from $(k,m')\in R_\sigma$
-  and $(m',x)\in P_2$.  If $m\preceq_M m'$, the common-extension condition for
+  and $(m',x)\in P_2$.  If $m\preceq_M m'$, the row-consistency condition for
   the rows $(m,o)$ and $(m',x)$ at $m'$ gives $u\in P_2(m')$ with
   $o,x\OutputOrd u$.  Otherwise legality of $m$ gives $(k,w)\in R_\sigma$ with
   $m,m'\preceq_M w$, and the condition at $w$ gives such a $u\in P_2(w)$.
@@ -284,7 +284,7 @@ $\rho_1,\ldots,\rho_n$.  Suppose each $\sigma_r$ continues under some basis to
 a common state with a row $(j,m)$.  Events never add rows, so $(j,m)\in
 R_{\sigma_r}$, and by the invariant above $m$ is above the current input of
 each $\tau_r$.  Let $v_r$ be an output at the current input of $\tau_r$.  The
-common-extension condition gives $u\in P_2(m)$ that \outrel every $v_r$, and
+row-consistency condition gives $u\in P_2(m)$ that \outrel every $v_r$, and
 $(m,u)$ survives in every $\tau_r$.  So $(j,u)\in R_{\rho_r}$ for every $r$,
 and the composite runs are confluent at $j$
 (Proposition~\ref{prop:confluence}).
@@ -295,7 +295,7 @@ output of $\Spec_1$ that needs a \commitment can be taken at a canonical state.
 
 \begin{proof}[Proof of the stronger form]
 The proof of Proposition~\ref{prop:exposure-boundary} derives the
-common-extension condition from legality at canonical states alone.  So if
+row-consistency condition from legality at canonical states alone.  So if
 Lifted Monotonicity fails for $P_2\circ P_1$, some $o$ with $(i,m)\in P_1$ and
 $o\in P_2(m)$ is not a legal output at $\sigma_{P_2\circ P_1}(i)$, the image
 of $\sigma_{\Spec_1}(i)$.  By fact (c), no $m'\in P_1(i)$ with $o\in P_2(m')$
@@ -484,7 +484,7 @@ $P_1(k)$ at $k$.  So a spec satisfies Lifted Monotonicity exactly when all rows 
 
 \begin{proof}[Proof of Theorem~\ref{thm:guard-tightening}]
 (1) By Proposition~\ref{prop:guard-test}, $\Spec_1$ is a sufficient guard exactly when
-$\Spec_2$ satisfies the common-extension condition on the outputs of
+$\Spec_2$ satisfies the row-consistency condition on the outputs of
 $\Spec_1$.  For outputs $m\preceq_M m'$, that condition at $m'$ for finitely
 many rows of $P_2(m)$ is the statement $m\sqsubseteq m'$, and conversely,
 finitely many rows $(m_r,o_r)$ with a common extension $m'$ of their inputs
