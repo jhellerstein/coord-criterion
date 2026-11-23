@@ -8,7 +8,7 @@ import CoordCriterion.Appendix.Deployment
 import CoordCriterion.CAP.LocalCommitment
 
 /-!
-# Paper Appendix A: notation and terms (`appendices/notation.tex`)
+# Paper Appendix A: notation and terms (`paper/app-notation.tex`)
 
 One declaration per row of the appendix's tables, in table order, each
 resolving to the Lean definition of the term, for the tables of Sections

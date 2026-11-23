@@ -1,7 +1,7 @@
 import CoordCriterion.Foundations.Runs
 
 /-!
-# Functional CALM (Section 2, `sections/functional-calm.tex`)
+# Functional CALM (Section 2, `paper/functional-calm.tex`)
 
 * `functional_calm` — Theorem functional-calm;
 * `state_by_input` — Corollary state-by-input;

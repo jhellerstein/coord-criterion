@@ -13,7 +13,7 @@ paper.  `lean/CoordCriterion/Paper/*.lean` mirrors the paper section by
 section: each LaTeX label is a declaration `CC.Paper.«label»` whose docstring
 quotes the paper.
 
-After any change to `sections/*.tex` or `appendices/*.tex`:
+After any change to `paper/*.tex`:
 
 1. If a definition, statement, or proved claim changed, update the Lean so it
    still proves the current statement (library under `lean/CoordCriterion/`,
@@ -40,14 +40,29 @@ when it is made, since the Lean may not prove it yet.
 Prose-only claims (no Lean) are listed in `lean/README.md`; keep that list
 current.
 
+## Repository layout
+
+* Top level: `main.tex` (full paper), `cidr.tex` (CIDR version),
+  `references.bib`, the class files `cidr-2027.cls` and
+  `acmart-preload-hook.tex`, and the `Makefile`.
+* `paper/`: everything `main.tex` inputs; appendices are `paper/app-*.tex`.
+* `tex/`: CIDR-only bibliography style and extra entries.
+* `scripts/`: review and complexity markup generators and their ratings.
+* `lean/`, `reviews/`, `notes/`, `drafts/`, `attic/`.
+* `build/`: generated output (gitignored); `make clean` removes it.
+
 ## Building
 
-* Paper: `~/.local/bin/tectonic main.tex` (and `cidr.tex` for the CIDR
-  version).  Tectonic's console output does not report undefined references,
-  so check the PDF: an unresolved `\ref` or `\cite` renders as `⁇`.  With
-  pypdf on the path
+* `make main`, `make cidr` (PDFs in `build/`); `make reviews` for the
+  markups (`cidr-review`, `cidr-complexity`, `main-review`,
+  `main-complexity`, `main-complexity-initial`, `main-changes`); `make arxiv`
+  for the arXiv bundle (`build/arxiv.tar.gz`); `make lean` for the Lean
+  checks below.  Plain `~/.local/bin/tectonic main.tex` (or `cidr.tex`) also
+  works from the repo root.  Tectonic's console output does not report
+  undefined references, so check the PDF: an unresolved `\ref` or `\cite`
+  renders as `⁇`.  With pypdf on the path
   (`PYTHONPATH=.infinity/research/python`), count them with
-  `python3 -c "import pypdf; r=pypdf.PdfReader('main.pdf'); print(sum(p.extract_text().count('⁇') for p in r.pages))"`;
+  `python3 -c "import pypdf; r=pypdf.PdfReader('build/main.pdf'); print(sum(p.extract_text().count('⁇') for p in r.pages))"`;
   the count must be 0.
 * Lean: `export ELAN_HOME=$HOME/.cache/elan PATH=$HOME/.cache/elan/bin:$PATH`,
   then `lake build` in `lean/` (Lean 4 core only, no Mathlib).
@@ -90,12 +105,17 @@ Avoid:
 * Imperative "do X, and Y" constructions ("Compose them…, and…", "Write X
   down, and…", "Model X as Y", "Partition a database…").  Use "Consider…",
   "We model…", "Given…".  Standard proof imperatives ("Let", "Fix") are fine.
+* Bare second-person commands to the reader ("Follow the events", "Take as
+  input…", "Return to the example", "Look at panel (b)"); use "we" ("we can
+  follow the events", "We return to…").  "Consider", "Recall that", "Note
+  that", "Write $X$ for…", and proof imperatives are fine.
 * Results or sections as agents ("the results ask one question"); abstract
   nouns as subjects ("This characterization yields…").
 * Vague "boundary", "object", "machinery", "notion"; generic openers ("central
   goal", "core structures"); intensifiers ("crucially", "key insight").
 * Semicolon chains of three or more clauses; stacked appositives and
-  parentheticals; runs of "not X but Y"; slogan-like paragraph closers;
+  parentheticals; runs of "not X but Y"; slogan-like paragraph closers,
+  except the named CALM mnemonics placed next to their formal criteria;
   restating what was just said; "In other words" (use "Said differently",
   "Simply put").
 * Cute flourishes ("someone is watching"), "Simple as it is" (prefer "Despite

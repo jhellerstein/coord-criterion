@@ -3,7 +3,7 @@ import CoordCriterion.Appendix.TransactionBases.MVTO
 /-!
 # Paper, Appendix D, subsection: Commitment bases for 2PL and MVTO (`app:cc-bases`)
 
-Source: subsection `app:cc-bases` of `appendices/distributed.tex`.
+Source: subsection `app:cc-bases` of `paper/app-distributed.tex`.
 
 How to read this file: it follows the appendix paragraph by paragraph
 (Specification, Commitments, 2PL, MVTO, Comparison).  The appendix has no

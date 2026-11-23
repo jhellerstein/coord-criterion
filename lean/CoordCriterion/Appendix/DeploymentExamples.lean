@@ -4,7 +4,7 @@ import CoordCriterion.Appendix.Frontiers
 /-!
 # Deployment: generic facts and the leader example (Appendix `app:deployment`)
 
-Claims of `appendices/deployment.tex` beyond the definitions and the
+Claims of `paper/app-deployment.tex` beyond the definitions and the
 proposition in `Appendix/Deployment.lean`, all for the definitions of
 `CC.Deploy`:
 

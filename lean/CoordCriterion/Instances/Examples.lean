@@ -5,8 +5,8 @@ import CoordCriterion.FunctionalCALM.Theorem
 /-!
 # Instances (Section 6) and composition examples (Section 5, Appendix D)
 
-Claims of `sections/instances.tex`, with the examples of
-`app:iconfluence` (Appendix B) and `appendices/composition.tex` that use the
+Claims of `paper/instances.tex`, with the examples of
+`app:iconfluence` (Appendix B) and `paper/app-composition.tex` that use the
 same models (namespace `CC.Inst`):
 
 * Sec. `crdt-instance`, state-based CRDTs: a commutative, associative,

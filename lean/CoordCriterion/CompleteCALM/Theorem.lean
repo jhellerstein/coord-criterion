@@ -2,7 +2,7 @@ import CoordCriterion.Foundations.Core
 import CoordCriterion.Foundations.Runs
 
 /-!
-# Complete CALM (Section 3, `sections/complete-calm.tex`)
+# Complete CALM (Section 3, `paper/complete-calm.tex`)
 
 * `liftedMono_iff_relMono_directed` — Lifted Monotonicity ↔ Relational
   Monotonicity ∧ directed fibers (paragraph after Def. lifted-monotonicity);

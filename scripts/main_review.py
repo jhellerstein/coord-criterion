@@ -9,9 +9,10 @@
 * Headings, labels, displays, figures, and tables are left untouched.
 
 main.tex and the section files are not modified.  Usage, from the repo root:
-    python3 scripts/main_review.py && ~/.local/bin/tectonic main-review.tex
+    make main-review              # writes and builds build/main-review.tex
 """
 import difflib
+import os
 import re
 import sys
 
@@ -99,7 +100,8 @@ def main():
               "\\% similar), already reviewed.}"
               " Black: full version only, or worded differently.}\\par\\medskip\n")
     text = "\n".join(out).replace("\\maketitle", "\\maketitle\n" + legend, 1)
-    open("main-review.tex", "w").write(head + macros + "\\begin{document}" + text +
+    os.makedirs("build", exist_ok=True)
+    open("build/main-review.tex", "w").write(head + macros + "\\begin{document}" + text +
                                        "\n\\bibliographystyle" + tail)
     print(f"sentences gray {n_gray}, black {n_black}")
 

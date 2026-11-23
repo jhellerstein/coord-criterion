@@ -3,8 +3,8 @@ import CoordCriterion.Appendix.ProductFrontier
 /-!
 # Registers (Appendix `app:registers`) and the causal-register frontier
 
-The register examples of `appendices/deployment.tex` (subsection Registers)
-and their frontier application in `appendices/frontiers.tex`:
+The register examples of `paper/app-deployment.tex` (subsection Registers)
+and their frontier application in `paper/app-frontiers.tex`:
 
 * strict total orders on finite sets and linear extensions of finite strict
   partial orders (`STO`, `linExt`, `concat_sto`, `sto_max`);

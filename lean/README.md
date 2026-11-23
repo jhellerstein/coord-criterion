@@ -155,7 +155,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 ### §2 Functional CALM
 
-File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`.
+File `Paper/S2_FunctionalCALM.lean`; paper source `paper/functional-calm.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -232,7 +232,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 
 ### §3 Complete CALM
 
-File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
+File `Paper/S3_CompleteCALM.lean`; paper source `paper/complete-calm.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -279,7 +279,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 
 ### §4.1–4.3 Distributed execution
 
-File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.tex, sections/distributed.tex`.
+File `Paper/S4_Distributed.lean`; paper source `paper/distributed-histories.tex, paper/distributed.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -355,7 +355,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 
 ### §4.4 Complete CAP
 
-File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
+File `Paper/S4_5_CompleteCAP.lean`; paper source `paper/distributed.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -404,7 +404,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 
 ### §5 Composition and Tight Coordination
 
-File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
+File `Paper/S5_Composition.lean`; paper source `paper/composition.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -449,7 +449,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 
 ### §6 Instances
 
-File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
+File `Paper/S6_Instances.lean`; paper source `paper/instances.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -512,7 +512,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 
 ### Appendix A: Notation
 
-File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
+File `Paper/AppA_Notation.lean`; paper source `paper/app-notation.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -596,7 +596,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 
 ### Appendix B: Deferred Proofs
 
-File `Paper/AppB_Proofs.lean`; paper source `appendices/proof-machinery.tex`.
+File `Paper/AppB_Proofs.lean`; paper source `paper/app-proof-machinery.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -619,7 +619,7 @@ File `Paper/AppB_Proofs.lean`; paper source `appendices/proof-machinery.tex`.
 
 ### Appendix B: Deferred Proofs for §4
 
-File `Paper/AppB_ProofsDistributed.lean`; paper source `appendices/proof-machinery.tex`.
+File `Paper/AppB_ProofsDistributed.lean`; paper source `paper/app-proof-machinery.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -635,7 +635,7 @@ File `Paper/AppB_ProofsDistributed.lean`; paper source `appendices/proof-machine
 
 ### Appendix B: Invariant confluence
 
-File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machinery.tex`.
+File `Paper/AppB_InvariantConfluence.lean`; paper source `paper/app-proof-machinery.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -665,7 +665,7 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 
 ### Appendix B: The HAT taxonomy
 
-File `Paper/AppB_HATTaxonomy.lean`; paper source `appendices/proof-machinery.tex`.
+File `Paper/AppB_HATTaxonomy.lean`; paper source `paper/app-proof-machinery.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -689,7 +689,7 @@ File `Paper/AppB_HATTaxonomy.lean`; paper source `appendices/proof-machinery.tex
 
 ### Appendix C: Commitment bases
 
-File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-bases-general.tex`.
+File `Paper/AppC_CommitmentBases.lean`; paper source `paper/app-commitment-bases-general.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -727,7 +727,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 
 ### Appendix D: Proofs and Details for Composition
 
-File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
+File `Paper/AppD_Composition.lean`; paper source `paper/app-composition.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -781,7 +781,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 
 ### Appendix E: Deployment
 
-File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
+File `Paper/AppE_Deployment.lean`; paper source `paper/app-deployment.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -857,7 +857,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 
 ### Appendix F: Response availability and Gilbert–Lynch
 
-File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-response.tex`.
+File `Paper/AppF_ResponseAvailability.lean`; paper source `paper/app-cap-response.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -918,7 +918,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 
 ### Appendix G: 2PL and MVTO
 
-File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bases.tex`.
+File `Paper/AppG_TransactionBases.lean`; paper source `paper/app-commitment-bases.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -966,7 +966,7 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 
 ### Appendix G: Classical problems in distributed computing
 
-File `Paper/AppH_Applications.lean`; paper source `appendices/classical-problems.tex`.
+File `Paper/AppH_Applications.lean`; paper source `paper/app-classical-problems.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|

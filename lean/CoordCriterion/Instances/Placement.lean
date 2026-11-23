@@ -3,7 +3,7 @@ import CoordCriterion.Instances.QueryRefinements
 /-!
 # Placement models and the input orders they justify (Section 6.1)
 
-Supports the sentences of `sec:query-instance` (`sections/instances.tex`)
+Supports the sentences of `sec:query-instance` (`paper/instances.tex`)
 "We model each data placement by an input order.  For the placement that
 Ameloot et al. call “policy-aware”, `I ∪ J` extends `I` only when `J` is
 domain-distinct from `I`; for “domain-guided” placement, only when `J` is

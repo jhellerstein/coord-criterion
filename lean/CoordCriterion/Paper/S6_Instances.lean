@@ -16,10 +16,10 @@ import CoordCriterion.Instances.HATTaxonomyWitness
 import CoordCriterion.Instances.HATAppB
 
 /-!
-# Paper §6, "Instances Across the Literature" (`sections/instances.tex`)
+# Paper §6, "Instances Across the Literature" (`paper/instances.tex`)
 
 Statement layer for Section `sec:instances`.  Read it side by side with
-`sections/instances.tex`: the `/-! ## … -/` headers follow the paper's
+`paper/instances.tex`: the `/-! ## … -/` headers follow the paper's
 subsections, entries appear in paper order, and each entry quotes the claim
 it formalizes.
 

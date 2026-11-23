@@ -5,10 +5,10 @@ import CoordCriterion.Appendix.Intersection
 import CoordCriterion.Appendix.Tight
 
 /-!
-# Paper §5, "Composition and Tight Coordination" (`sections/composition.tex`)
+# Paper §5, "Composition and Tight Coordination" (`paper/composition.tex`)
 
 Statement layer for Section `sec:composition`.  Read it side by side with
-`sections/composition.tex`: the `/-! ## … -/` headers follow the section's
+`paper/composition.tex`: the `/-! ## … -/` headers follow the section's
 subsections, entries appear in paper order, and each entry quotes the claim
 it formalizes.  Numbered results and displayed equations are named by their
 LaTeX label; unlabeled claims are `«sec:composition/<slug>»`.  The proofs

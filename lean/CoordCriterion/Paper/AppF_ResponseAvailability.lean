@@ -4,7 +4,7 @@ import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.CAP.ChosenAvailability
 
 /-!
-# Paper Appendix D, subsection "Choosing the explicit relation" (`appendices/distributed.tex`, `app:cap-response`)
+# Paper Appendix D, subsection "Choosing the explicit relation" (`paper/app-distributed.tex`, `app:cap-response`)
 
 Statement layer for Appendix `app:cap-response`, in paper order: the response
 obligation, continuations within a side, Response Availability, Response

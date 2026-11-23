@@ -6,7 +6,7 @@ import CoordCriterion.Appendix.TransactionBases.NoReads
 # Paper Appendices C and D: lifted output events (`app:lifted-output-events`) and commitment bases (`app:bases`) (statement layer)
 
 This file mirrors subsection `app:lifted-output-events` of
-`appendices/complete-calm.tex` and subsection `app:bases` of `appendices/distributed.tex`.  A ruled-out row is
+`paper/app-complete-calm.tex` and subsection `app:bases` of `paper/app-distributed.tex`.  A ruled-out row is
 `Subsumed` when a surviving row at the same input extends it, and `Excluded`
 otherwise.  The canonical event applies at most one `canonicalCommitment`.
 -/

@@ -3,12 +3,12 @@ import CoordCriterion.CompleteCALM.Legality
 import CoordCriterion.Appendix.Frontiers
 
 /-!
-# Paper §3: Complete CALM (`sections/complete-calm.tex`)
+# Paper §3: Complete CALM (`paper/complete-calm.tex`)
 
 Statement layer for Section 3 (`sec:complete-calm`), including
 Figure `fig:ambiguity-frames`.
 
-How to read this file: open `sections/complete-calm.tex` next to it.  The
+How to read this file: open `paper/complete-calm.tex` next to it.  The
 headers below are the paper's subsections, in order.  Every numbered result is
 a declaration named by its LaTeX label in guillemets (`«thm:complete-calm»`);
 inline claims are named `«<enclosing label>/<slug>»`.  Each docstring quotes

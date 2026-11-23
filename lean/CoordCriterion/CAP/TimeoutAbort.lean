@@ -5,7 +5,7 @@ import CoordCriterion.Figures
 # Two-phase commit: aborting on timeout (§4.3)
 
 Supports the sentences of the paragraph "Locks in a shared-nothing database"
-of `sections/distributed.tex` on a coordinator that aborts on timeout, before
+of `paper/distributed.tex` on a coordinator that aborts on timeout, before
 the last vote arrives.  Two readings of that abort are checked.
 
 *As a commitment that empties fibers* (closing the polls on the decision specification `voteSpec`):

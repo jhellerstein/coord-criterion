@@ -6,7 +6,7 @@ import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.Coordination
 
 /-!
-# Paper Appendix D: proofs for §4 (`appendices/distributed.tex`)
+# Paper Appendix D: proofs for §4 (`paper/app-distributed.tex`)
 
 Statement layer for the subsection *Proofs* of Appendix
 `app:proofs-sec4`: the proofs of Prop. `prop:distributed-consistency`, the

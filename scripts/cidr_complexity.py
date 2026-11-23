@@ -22,7 +22,7 @@ reruns automatically); bars split across column and page breaks.
 cidr.tex itself is not modified.  Usage, from the repo root:
     python3 scripts/cidr_complexity.py            # write cidr-complexity.tex
     python3 scripts/cidr_complexity.py --list     # print numbered paragraphs
-    tectonic cidr-complexity.tex
+    make cidr-complexity          # or: tectonic -Z search-path=. build/cidr-complexity.tex
 """
 import json
 import os
@@ -30,7 +30,7 @@ import re
 import sys
 
 SRC = "cidr.tex"
-OUT = "cidr-complexity.tex"
+OUT = "build/cidr-complexity.tex"
 COMPLEXITY = os.path.join("scripts", "cidr_complexity.json")
 REWRITE = os.path.join("scripts", "cidr_rewrite.json")
 TEXT_COLORS = {"R": "red!80!black", "O": "orange!90!black", "B": "blue!75!black"}
@@ -198,6 +198,7 @@ def main():
                  BAR_COLORS["XL"], BAR_COLORS["L"], BAR_COLORS["M"]))
     res = res.replace("\\maketitle\n", legend, 1)
     res = "\n".join(ln.rstrip() for ln in res.split("\n"))
+    os.makedirs("build", exist_ok=True)
     open(OUT, "w").write(res)
     print(f"{len(paras)} paragraphs; " +
           ", ".join(f"{k}: {v}" for k, v in sorted(counts.items())))

@@ -5,7 +5,7 @@ import CoordCriterion.Foundations.Runs
 
 Supports the remark after Prop. `prop:commitment-conflict`
 ("Conflicting events cannot be reconciled") in
-`sections/distributed.tex`: the conflict is confined to the current input.
+`paper/distributed.tex`: the conflict is confined to the current input.
 
 The specification: inputs `i ≺ j` (a two-element chain), outputs `o`, `x`,
 `u` with `o ≼ u`, `x ≼ u` and `o`, `x` incomparable; `P(i) = {o, x}` and

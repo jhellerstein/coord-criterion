@@ -6,7 +6,7 @@ with difflib, so moved or split paragraphs show as removed and added.
 
 Usage, from the repo root:
     python3 scripts/main_changes.py [BASE]      # BASE defaults to origin/main
-    tectonic main-changes.tex
+    make main-changes             # or: tectonic -Z search-path=. build/main-changes.tex
     python3 scripts/main_changes.py [BASE] --summary   # text summary only
 """
 import difflib
@@ -18,13 +18,24 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cidr_complexity as cx  # noqa: E402
 
-OUT = "main-changes.tex"
+OUT = "build/main-changes.tex"
 NEWC, OLDC = "blue!70!black", "black!50"
 
 
+def old_path(path):
+    """Location of a paper/ file before the repo layout change."""
+    base = os.path.basename(path)
+    if not path.startswith("paper/"):
+        return path
+    return "appendices/" + base[4:] if base.startswith("app-") else "sections/" + base
+
+
 def git_show(ref, path):
-    r = subprocess.run(["git", "show", f"{ref}:{path}"], capture_output=True, text=True)
-    return r.stdout if r.returncode == 0 else ""
+    for p in (path, old_path(path)):
+        r = subprocess.run(["git", "show", f"{ref}:{p}"], capture_output=True, text=True)
+        if r.returncode == 0:
+            return r.stdout
+    return ""
 
 
 def input_files(src):
@@ -109,6 +120,7 @@ def main():
               "\\textcolor{%s}{small gray [was]} is the old version.  %d paragraphs changed.}}"
               "\\par\\medskip\n" % (base.replace("_", "\\_"), NEWC, OLDC, n_changed))
     res = res.replace("\\maketitle", "\\maketitle\n" + legend, 1)
+    os.makedirs("build", exist_ok=True)
     open(OUT, "w").write(res)
     print(f"{n_changed} new or changed paragraphs; wrote {OUT}")
 

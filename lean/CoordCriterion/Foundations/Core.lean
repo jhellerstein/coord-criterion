@@ -3,8 +3,8 @@
 /-!
 # Core definitions (Sections 2–3, Appendix A)
 
-Supports `sections/functional-calm.tex`, `sections/complete-calm.tex` and the
-notation of `appendices/notation.tex`: partial orders (`PO`), ordered
+Supports `paper/functional-calm.tex`, `paper/complete-calm.tex` and the
+notation of `paper/app-notation.tex`: partial orders (`PO`), ordered
 specifications (`Spec`) and tables, states `(i, R)` (`State`), input/output
 events and their transition relation (`Event`, `Step`, `Exec`, `Reach`), the
 canonical state `σ_P(i)` (`canon`), exposability, Functional / Relational /

@@ -3,7 +3,7 @@ import CoordCriterion.CAP.Register
 /-!
 # Gilbert–Lynch's Theorem 1 from Corollary `cor:gilbert-lynch` (Appendix F)
 
-Supports the last paragraph of `appendices/cap-response.tex` ("Recovering
+Supports the last paragraph of `paper/app-cap-response.tex` ("Recovering
 Gilbert–Lynch": the asynchronous theorem follows from the corollary).
 
 Gilbert and Lynch (2002), Theorem 1: in the asynchronous network model, no

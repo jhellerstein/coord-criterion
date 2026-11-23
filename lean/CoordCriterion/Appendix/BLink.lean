@@ -4,7 +4,7 @@ import CoordCriterion.Appendix.ClassicalFrontiers
 # B-link trees: forward reachability equals the remembered exact claims
 
 Namespace `CC.BLink`.  Supports the subsection `app:search` of
-`appendices/classical-problems.tex` (Props. `prop:persistent-forwarding` and
+`paper/app-classical-problems.tex` (Props. `prop:persistent-forwarding` and
 `prop:remembered-claims`(4)).
 
 * **Histories of states.**  `SRestr` generalizes `Front.Restructuring`:

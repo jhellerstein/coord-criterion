@@ -4,8 +4,8 @@ import CoordCriterion.CompleteCALM.Theorem
 /-!
 # Supporting lemmas for Sections 2–3 and Appendix B (`app:proofs`)
 
-Supports `sections/functional-calm.tex`, `sections/complete-calm.tex` and the
-deferred proofs of `appendices/proof-machinery.tex` (except `app:iconfluence`,
+Supports `paper/functional-calm.tex`, `paper/complete-calm.tex` and the
+deferred proofs of `paper/app-proof-machinery.tex` (except `app:iconfluence`,
 which is in `Instances/InvariantConfluence.lean`).  The main theorems are in
 `FunctionalCALM/Theorem.lean` and `CompleteCALM/Theorem.lean`; this file adds
 the remaining claims of the text and re-proves the theorems along the paper's

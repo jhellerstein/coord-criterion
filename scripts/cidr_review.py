@@ -2,13 +2,13 @@
 """Generate cidr-review.tex: cidr.tex with review markup.
 
 * Sentences of cidr.tex that do not appear verbatim (up to whitespace) in the
-  full version's sections/ are colored blue: text written or edited for the
+  full version's paper/ sections are colored blue: text written or edited for the
   CIDR cut.
 * Runs of full-version sentences (and labels) that cidr.tex dropped are noted
   in place, in red, after the last kept sentence that precedes them.
 
 cidr.tex itself is not modified.  Usage, from the repo root:
-    python3 scripts/cidr_review.py && ~/.local/bin/tectonic cidr-review.tex
+    make cidr-review              # writes and builds build/cidr-review.tex
 """
 import re
 import difflib
@@ -121,7 +121,7 @@ CATNAME = {"F": "formal definition/notation", "C": "formal caution", "E": "examp
 
 
 def main():
-    corpus_text = "\n".join(expand_inputs(strip_comments(open(f"sections/{n}.tex").read()))
+    corpus_text = "\n".join(expand_inputs(strip_comments(open(f"paper/{n}.tex").read()))
                             for n in SECTIONS)
     corpus_norm = norm(corpus_text)
     src = open("cidr.tex").read()
@@ -263,7 +263,8 @@ def main():
               "\\noindent{\\color{newblue}Blue: new or edited for CIDR.}\\quad"
               "{\\color{cutred}Red: removed from the full version.}\\par\n"
               + "\n".join(out) + "\n\\bibliographystyle" + tail)
-    open("cidr-review.tex", "w").write(review)
+    os.makedirs("build", exist_ok=True)
+    open("build/cidr-review.tex", "w").write(review)
     json.dump(BLOCKS, open(os.environ.get("TMPDIR", ".") + "/cidr_blocks.json", "w"), indent=1)
     print(f"sentences kept {n_old}, new/edited {n_new}, removed-note anchors "
           f"{len(used)}, unplaced {len(unplaced)}")

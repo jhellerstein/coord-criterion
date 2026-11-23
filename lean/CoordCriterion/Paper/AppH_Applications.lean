@@ -5,7 +5,7 @@ import CoordCriterion.Appendix.BLink
 /-!
 # Paper, Appendix G: Classical problems in distributed computing (`app:additional-applications`)
 
-Source: `appendices/classical-problems.tex` (the whole appendix: patterns
+Source: `paper/app-classical-problems.tex` (the whole appendix: patterns
 and the table of classical problems; broadcast; consensus, with
 `k`-set agreement and the shared-memory remark; leader election; snapshots;
 queues; search structures).

@@ -19,7 +19,7 @@ Usage, from the repo root:
     python3 scripts/main_complexity.py              # write main-complexity.tex
     python3 scripts/main_complexity.py --list [F]   # print unshared paragraphs
     python3 scripts/main_complexity.py --stats
-    tectonic main-complexity.tex
+    make main-complexity          # or: tectonic -Z search-path=. build/main-complexity.tex
 """
 import json
 import os
@@ -31,7 +31,7 @@ import cidr_complexity as cx  # noqa: E402
 from cidr_review import norm, split_sentences  # noqa: E402
 import main_review as mr  # noqa: E402
 
-OUT = "main-complexity.tex"
+OUT = "build/main-complexity.tex"
 RATINGS = os.path.join("scripts", "main-ratings")
 SHARED = 0.6  # fraction of a paragraph's characters in CIDR sentences
 INITIAL = "--initial" in sys.argv  # show the first-pass ratings r0/c0
@@ -95,11 +95,14 @@ def shared_fraction(par):
 
 
 def ratings_file(path):
-    """scripts/main-ratings/<basename>.json; an appendix whose basename is also
-    a section file gets <basename>-app.json."""
+    """scripts/main-ratings/<name>.json for paper/<name>.tex; an appendix
+    paper/app-<name>.tex gets <name>-app.json when paper/<name>.tex also
+    exists, and <name>.json otherwise."""
     base = os.path.basename(path)[:-4]
-    if path.startswith("appendices/") and os.path.exists(os.path.join("sections", base + ".tex")):
-        base += "-app"
+    if base.startswith("app-"):
+        base = base[4:]
+        if os.path.exists(os.path.join(os.path.dirname(path), base + ".tex")):
+            base += "-app"
     return os.path.join(RATINGS, base + ".json")
 
 
@@ -189,6 +192,7 @@ def main():
     res = res.replace("\\maketitle", "\\maketitle\n" + legend, 1)
     res = "\n".join(ln.rstrip() for ln in res.split("\n"))
     out_name = OUT.replace(".tex", "-initial.tex") if INITIAL else OUT
+    os.makedirs("build", exist_ok=True)
     open(out_name, "w").write(res)
     n_sh = sum(1 for r in rows if r[5])
     print(f"{len(rows)} paragraphs, {n_sh} shared with CIDR, {len(rows) - n_sh} to rate")

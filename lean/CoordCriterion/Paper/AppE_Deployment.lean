@@ -11,8 +11,8 @@ import CoordCriterion.Appendix.DeploymentCAP
 /-!
 # Paper, Appendix D.4 (deployments) and Appendix F (registers, real-time causal consistency)
 
-Source: `appendices/distributed.tex` (subsection `app:deployment`) and
-`appendices/instances.tex` (subsections `app:registers`, `app:rtc`); formerly one appendix, including
+Source: `paper/app-distributed.tex` (subsection `app:deployment`) and
+`paper/app-instances.tex` (subsections `app:registers`, `app:rtc`); formerly one appendix, including
 subsections `app:registers` and `app:rtc`).
 
 How to read this file: open it beside the appendix.  Every numbered result

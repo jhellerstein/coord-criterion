@@ -2,10 +2,10 @@ import CoordCriterion.Instances.HATAppB
 import CoordCriterion.Instances.HATWriteSkew
 
 /-!
-# Paper App. F, subsection "The HAT taxonomy" (`appendices/instances.tex`, `app:hat-taxonomy`)
+# Paper App. F, subsection "The HAT taxonomy" (`paper/app-instances.tex`, `app:hat-taxonomy`)
 
 Statement layer for subsection `app:hat-taxonomy` of
-`appendices/instances.tex`.  Read it side by side with the `.tex`:
+`paper/app-instances.tex`.  Read it side by side with the `.tex`:
 entries follow the paper's paragraphs in order; each quotes the claim it
 formalizes.  Unlabeled claims are named `«app:hat-taxonomy/<slug>»`.
 

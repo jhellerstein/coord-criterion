@@ -8,8 +8,8 @@ import CoordCriterion.CAP.ResponseForm
 /-!
 # Systems, canonical systems, and commitments (Sections 4.1–4.3, Appendix C)
 
-Claims of `sections/distributed-histories.tex`, `sections/distributed.tex`
-(through the commitment-conflict examples) and `appendices/commitment-bases-general.tex`
+Claims of `paper/distributed-histories.tex`, `paper/distributed.tex`
+(through the commitment-conflict examples) and `paper/app-commitment-bases-general.tex`
 (`app:bases`) beyond the core development of `Distributed/Histories.lean`
 and `Distributed/Commitments.lean`, stated in the paper's form (namespace
 `CC.Dist`):

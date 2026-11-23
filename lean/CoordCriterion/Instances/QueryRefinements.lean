@@ -7,7 +7,7 @@ import CoordCriterion.Instances.Examples
 # Variants of relational-transducer CALM (Section 6.1)
 
 Supports the second paragraph of `sec:query-instance` and the paragraph on
-Baccaert and Ketsman that follows it (`sections/instances.tex`).  The
+Baccaert and Ketsman that follows it (`paper/instances.tex`).  The
 transducer models of those papers are not formalized; this file checks only
 the mapping into our frame.
 

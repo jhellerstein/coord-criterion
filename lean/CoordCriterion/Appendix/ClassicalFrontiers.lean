@@ -9,7 +9,7 @@ import CoordCriterion.Appendix.DeploymentCAP
 # Classical problems: leader election, snapshots, queues, search structures (Appendix G)
 
 Namespace `CC.Apps`.  Supports the subsections of
-`appendices/classical-problems.tex` on queues, search structures, and
+`paper/app-classical-problems.tex` on queues, search structures, and
 snapshots.
 
 * **The causal queue.**  Inputs are causal histories of enqueues (`Hist`); an

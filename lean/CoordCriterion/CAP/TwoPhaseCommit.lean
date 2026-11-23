@@ -5,7 +5,7 @@ import CoordCriterion.CALM.Lemmas
 # Two-phase commit: counting votes over a fixed membership (§4.3)
 
 Supports the paragraph "Locks in a shared-nothing database" of
-`sections/distributed.tex`, case "No coordination": "the coordinator's
+`paper/distributed.tex`, case "No coordination": "the coordinator's
 unanimity decision over a fixed set of participants is monotone, so it issues
 no commitment that requires coordination."  `decide2PC_detects` checks the
 sentence after it: the decision aborts exactly when the votes do not all say

@@ -16,9 +16,9 @@ import CoordCriterion.Instances.QueryRefinements
 /-!
 # Paper §4.1–4.3: Distributed Execution (statement layer)
 
-Covers `sections/distributed-histories.tex` (§4.1 Distributed histories, §4.2
+Covers `paper/distributed-histories.tex` (§4.1 Distributed histories, §4.2
 Distributed consistency, with the paragraph *Message data*) and
-`sections/distributed.tex` §4.3 Systems and canonical runs (it stops before
+`paper/distributed.tex` §4.3 Systems and canonical runs (it stops before
 §4.4 The Complete CAP theorem).  The paragraph *Exchanging outputs* and the
 proofs of §4 are in Appendix `app:proofs-sec4`
 (`Paper/AppB_ProofsDistributed.lean`).

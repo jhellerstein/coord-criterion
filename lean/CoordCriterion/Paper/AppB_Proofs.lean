@@ -2,12 +2,12 @@ import CoordCriterion.CALM.Examples
 import CoordCriterion.CompleteCALM.Legality
 
 /-!
-# Paper Appendices B and C: proofs for §2–§3 (`appendices/functional-calm.tex`, `appendices/complete-calm.tex`)
+# Paper Appendices B and C: proofs for §2–§3 (`paper/app-functional-calm.tex`, `paper/app-complete-calm.tex`)
 
 Statement layer for Appendices `app:proofs-sec2` and `app:proofs-sec3` (the
 proofs; invariant confluence, `app:iconfluence`, is handled with §6).
 
-How to read this file: open `appendices/functional-calm.tex` and `appendices/complete-calm.tex` next to it.  The
+How to read this file: open `paper/app-functional-calm.tex` and `paper/app-complete-calm.tex` next to it.  The
 headers are the appendix's subsections, in order.  For each "Proof of …"
 paragraph there is a declaration `«proof:<label>»` whose statement is the
 result proved, or the key step of the written proof, and whose Lean proof

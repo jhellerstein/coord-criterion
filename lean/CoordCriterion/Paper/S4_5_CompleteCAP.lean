@@ -11,10 +11,10 @@ import CoordCriterion.Appendix.Registers
 import CoordCriterion.CALM.Examples
 
 /-!
-# Paper §4.4, "The Complete CAP theorem" (`sections/distributed.tex`)
+# Paper §4.4, "The Complete CAP theorem" (`paper/distributed.tex`)
 
 Statement layer for Section `sec:complete-cap`, from the subsection header to
-the end of `sections/distributed.tex`: Definitions `def:partitioned-history`,
+the end of `paper/distributed.tex`: Definitions `def:partitioned-history`,
 `def:explicit-relation`, `def:local-continuation`, `def:partition-notions`,
 `def:partition-consistency`, `def:lm-for-A`, and `def:escapes-cap`, the
 canonical system for `E`, Theorem `thm:complete-cap` and Corollary

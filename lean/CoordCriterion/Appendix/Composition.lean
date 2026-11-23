@@ -1,7 +1,7 @@
 import CoordCriterion.CompleteCALM.Theorem
 
 /-!
-# Composition (Section 5, `sections/composition.tex`; proofs in Appendix D)
+# Composition (Section 5, `paper/composition.tex`; proofs in Appendix D)
 
 Namespace `CC.Comp`.  Further examples of the appendix (curried form on graph
 tables, the replicated store, bare reads) are in `Instances/Examples.lean`;

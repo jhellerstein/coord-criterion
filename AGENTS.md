@@ -9,7 +9,7 @@ paper.  `lean/CoordCriterion/Paper/*.lean` mirrors the paper section by
 section: each LaTeX label is a declaration `CC.Paper.«label»` whose docstring
 quotes the paper.
 
-After any change to `sections/*.tex` or `appendices/*.tex`:
+After any change to `paper/*.tex`:
 
 1. If a definition, statement, or proved claim changed, update the Lean so it
    still proves the current statement (library under `lean/CoordCriterion/`,
@@ -36,14 +36,29 @@ when it is made, since the Lean may not prove it yet.
 Prose-only claims (no Lean) are listed in `lean/README.md`; keep that list
 current.
 
+## Repository layout
+
+* Top level: `main.tex` (full paper), `cidr.tex` (CIDR version),
+  `references.bib`, the class files `cidr-2027.cls` and
+  `acmart-preload-hook.tex`, and the `Makefile`.
+* `paper/`: everything `main.tex` inputs; appendices are `paper/app-*.tex`.
+* `tex/`: CIDR-only bibliography style and extra entries.
+* `scripts/`: review and complexity markup generators and their ratings.
+* `lean/`, `reviews/`, `notes/`, `drafts/`, `attic/`.
+* `build/`: generated output (gitignored); `make clean` removes it.
+
 ## Building
 
-* Paper: `~/.local/bin/tectonic main.tex` (and `cidr.tex` for the CIDR
-  version).  Tectonic's console output does not report undefined references,
-  so check the PDF: an unresolved `\ref` or `\cite` renders as `⁇`.  With
-  pypdf on the path
+* `make main`, `make cidr` (PDFs in `build/`); `make reviews` for the
+  markups (`cidr-review`, `cidr-complexity`, `main-review`,
+  `main-complexity`, `main-complexity-initial`, `main-changes`); `make arxiv`
+  for the arXiv bundle (`build/arxiv.tar.gz`); `make lean` for the Lean
+  checks below.  Plain `~/.local/bin/tectonic main.tex` (or `cidr.tex`) also
+  works from the repo root.  Tectonic's console output does not report
+  undefined references, so check the PDF: an unresolved `\ref` or `\cite`
+  renders as `⁇`.  With pypdf on the path
   (`PYTHONPATH=.infinity/research/python`), count them with
-  `python3 -c "import pypdf; r=pypdf.PdfReader('main.pdf'); print(sum(p.extract_text().count('⁇') for p in r.pages))"`;
+  `python3 -c "import pypdf; r=pypdf.PdfReader('build/main.pdf'); print(sum(p.extract_text().count('⁇') for p in r.pages))"`;
   the count must be 0.
 * Lean: `export ELAN_HOME=$HOME/.cache/elan PATH=$HOME/.cache/elan/bin:$PATH`,
   then `lake build` in `lean/` (Lean 4 core only, no Mathlib).

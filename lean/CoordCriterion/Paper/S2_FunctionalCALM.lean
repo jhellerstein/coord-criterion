@@ -2,12 +2,12 @@ import CoordCriterion.Figures
 import CoordCriterion.CompleteCALM.Legality
 
 /-!
-# Paper §2: Functional CALM (`sections/functional-calm.tex`)
+# Paper §2: Functional CALM (`paper/functional-calm.tex`)
 
 Statement layer for Section 2 (`sec:functional-calm`), including
 Figure `fig:election-frames` and Figure `fig:nonmonotone-frame`.
 
-How to read this file: open `sections/functional-calm.tex` next to it.  The
+How to read this file: open `paper/functional-calm.tex` next to it.  The
 paper's §2 has two subsections.  §2.1, "The framework by example", carries the
 labels `sec:election-story`, `sec:functional-specifications`,
 `sec:functional-events` and `sec:executions`; its four paragraphs ("Specs and

@@ -3,8 +3,8 @@ import CoordCriterion.CALM.Lemmas
 /-!
 # Examples for Sections 2–3 and Appendix B
 
-Worked examples of `sections/functional-calm.tex`, `sections/complete-calm.tex`
-and `appendices/proof-machinery.tex`:
+Worked examples of `paper/functional-calm.tex`, `paper/complete-calm.tex`
+and `paper/app-proof-machinery.tex`:
 
 * the `k`-set agreement example used for `app:pairs-suffice` (single-proposal-input
   rows do not suffice even `k` at a time): `KSet.proposal_row`,

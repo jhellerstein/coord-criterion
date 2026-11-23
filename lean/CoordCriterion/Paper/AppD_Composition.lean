@@ -5,7 +5,7 @@ import CoordCriterion.Appendix.Intersection
 import CoordCriterion.Paper.S5_Composition
 
 /-!
-# Paper App. E, "Composition: Proofs and Details" (`appendices/composition.tex`)
+# Paper App. E, "Composition: Proofs and Details" (`paper/app-composition.tex`)
 
 Statement layer for Appendix `app:composition`.  The results it proves are
 stated in Section `sec:composition` and recorded in
