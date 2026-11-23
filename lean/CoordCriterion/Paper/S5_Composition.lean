@@ -310,12 +310,12 @@ def «def:tight-guard» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) : Prop :=
   Guard.Proper sp sk ∧ Tight.Tight sp sk
 
-/-- "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common
-extension in `P₂(m')`, and read confluence of rows of `P₁` under `⊑`, and the
-canonical commitments its failure calls for, with `⊑` in place of
-`≼_M`.  For a functional downstream `f`, `m ⊑ m'` exactly when
-`f(m) ≼ f(m')`."  And, after the theorem: "`⊑` is transitive but need not be
-an order."  Lean: `⊑` is `Tight.dle`; `Tight.graph_dle_iff`,
+/-- "We compare `≼_M` with a relation derived from `P₂`: `m'` *covers* `m`,
+written `m ⊑ m'`, when every finite set of outputs in `P₂(m)` has a common
+extension in `P₂(m')`.  Confluence of rows and canonical commitments *under*
+`⊑` use `⊑` in place of `≼_M`.  For a functional downstream `f`, `m ⊑ m'`
+exactly when `f(m) ≼ f(m')`."  `⊑` is transitive; it need not be an order.
+Lean: `⊑` is `Tight.dle`; `Tight.graph_dle_iff`,
 `Tight.dle_trans`. -/
 theorem «sec:tight-coordination/downstream-order» {M O : Type} [PO M] [PO O] (g : M → O)
     (P₂ : Table M O) :
@@ -324,11 +324,11 @@ theorem «sec:tight-coordination/downstream-order» {M O : Type} [PO M] [PO O] (
   ⟨fun _ _ => Tight.graph_dle_iff, fun _ _ _ h1 h2 => Tight.dle_trans h1 h2⟩
 
 /-- **Theorem `thm:guard-tightening`** (Guard Tightening): "Let `𝒮₁` guard
-`𝒮₂`.  (1) `⊑` is the coarsest order on `M` under which `𝒮₁` is a sufficient
-guard for `𝒮₂`, and the upstream's canonical commitments under `⊑` include
-every commitment the composite needs.  (2) If each `P₂(m)` has a greatest
-element, as when `𝒮₂` is functional, the upstream's canonical commitments
-under `⊑` are exactly the composite's.  So a sufficient guard is tight exactly
+`𝒮₂`.  (1) An order on `M` makes `𝒮₁` a sufficient guard for `𝒮₂` exactly
+when it is contained in `⊑` on the outputs of `𝒮₁`.  The canonical commitments
+under `⊑` include every commitment the composite needs.  (2) If each `P₂(m)`
+has a greatest element, as when `𝒮₂` is functional, the canonical commitments
+under `⊑` are exactly the composite's, so a sufficient guard is tight exactly
 when `≼_M` requires no more commitments than `⊑`."  A canonical commitment
 removing `(k,x)` at `σ_{P₁}(i)` corresponds to a pair not confluent at `k`
 (`Tight.excluded_canon_iff`).  Lean: (1) `Tight.proper_iff_le_dle` (an order
@@ -382,21 +382,38 @@ theorem «thm:guard-tightening/any-order» {I M O : Type} [PO I] [PO O] {_instM 
    fun h => Tight.conf_mono (fun a b _ _ e => e ▸ @PO.refl M inst a) h⟩
 
 open Tight Tight.SMR in
-/-- "When the store's responses record the commands that produced them, the
-consensus log is a tight guard: execution is monotone and reflects the prefix
-order, so every commitment the log makes is one the store's clients can
-observe (Appendix `app:tight`)."  Lean: `Tight.SMR.log_tight_guard`, for any
-deterministic state machine `δ`, whose execution `Inst.execF` records each
-command with its response (`Tight.SMR.execF_reflects`). -/
+/-- "When the store answers each command in turn, as in state-machine
+replication, `⊑` is the prefix order, and the consensus log is a tight guard:
+execution is monotone and reflects the prefix order, so every commitment the
+log makes is one the store's clients can observe (Appendix `app:tight`)."
+Lean, for any deterministic state machine `δ`, whose execution `Inst.execF`
+pairs each command with its response: `⊑` is the prefix order
+(`Tight.graph_dle_iff`, `Inst.execF_monotone`, `Tight.SMR.execF_reflects`), and
+`Tight.SMR.log_tight_guard`. -/
 theorem «sec:tight-coordination/consensus-log» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R)
     (σ0 : Stt) :
+    (∀ a b : Inst.Pfx Cmd, Tight.dle (graph (Inst.execF δ σ0)).P a b ↔ a ≼ b) ∧
     «def:tight-guard» (Inst.smrS1 (Cmd := Cmd)) (graph (Inst.execF δ σ0)) :=
-  log_tight_guard δ σ0
+  ⟨fun a b => Tight.graph_dle_iff.trans
+      ⟨execF_reflects δ σ0 a b, Inst.execF_monotone δ σ0 a b⟩,
+   log_tight_guard δ σ0⟩
 
 open Tight Tight.Log Comp Guard in
-/-- "The commuting log is a sufficient guard but not a necessary one:
-`({A},[A])` and `({A,B},[B,A])` are not confluent at `{A,B}` under the prefix
-order but confluent at `{A,B}` under `⊑`."  With the motivating paragraph:
+/-- "When the store reports only its state and `A` and `B` commute, `[A,B]`
+and `[B,A]` cover each other."  Lean: both logs have length `2`. -/
+theorem «sec:tight-coordination/cover-each-other» :
+    Tight.dle (graph Tight.Log.len).P .ab .ba ∧ Tight.dle (graph Tight.Log.len).P .ba .ab ∧
+      Tight.Log.L.ab ≠ .ba :=
+  ⟨Tight.graph_dle_iff.2 (PO.refl (2 : Nat)), Tight.graph_dle_iff.2 (PO.refl (2 : Nat)),
+   by decide⟩
+
+open Tight Tight.Log Comp Guard in
+/-- "When the store reports only its state and `A` and `B` commute, `[A,B]`
+and `[B,A]` cover each other.  The commuting log is then a sufficient guard but
+not a necessary one: `({A},[A])` and `({A,B},[B,A])` are not confluent at
+`{A,B}` under the prefix order but confluent at `{A,B}` under `⊑`."  (Covering
+each other is `«sec:tight-coordination/cover-each-other»`.)  With the
+motivating paragraph:
 "Suppose two commands `A` and `B` commute, and the store's outputs do not
 record their order, as when it reports its state."  Lean:
 `Tight.Log.commuting`, with two increments and the store answering a log with
@@ -409,9 +426,8 @@ theorem «sec:tight-coordination/commuting-log» :
   Tight.Log.commuting
 
 open Tight Tight.Log Comp Guard in
-/-- "When commands commute and responses do not record their order, a log that
-orders only non-commuting commands, as in Generalized Paxos and EPaxos,
-restores tightness."  Lean, for the two commuting increments of the commuting
+/-- "Tightening means identifying values that cover each other, as a log that
+orders only non-commuting commands does (Generalized Paxos, EPaxos)."  Lean, for the two commuting increments of the commuting
 log: `Tight.Log.partial_order_log`, a log that records only which commands it
 has logged, behind a store answering with their number, is a tight guard
 (Appendix `app:tight`, Proposition `prop:tight-guards`(1)).  The general

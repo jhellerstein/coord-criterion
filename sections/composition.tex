@@ -175,12 +175,13 @@ sufficient and a necessary guard, and the pipeline's coordination is then
 \end{definition}
 
 Necessity compares the upstream's canonical \commitments with those the
-composite needs.  The upstream's order on $M$ decides which \commitments are
-canonical, and the commuting log shows it can demand too many: it orders
-$[A,B]$ and $[B,A]$, although the store treats them alike.  We therefore ask
-for an order on $M$ under which the upstream's canonical \commitments are
-exactly the composite's.  Write $m\sqsubseteq m'$ when every finite set of
-outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read confluence of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments its failure calls for, with $\sqsubseteq$ in place of $\preceq_M$.
+composite needs.  Which \commitments are canonical depends on $\preceq_M$, and
+the prefix order of the commuting log demands too many for the store.  We compare
+$\preceq_M$ with a relation derived from $P_2$: $m'$ \emph{covers} $m$,
+written $m\sqsubseteq m'$, when every finite set of outputs in $P_2(m)$ has a
+common extension in $P_2(m')$.  Confluence of rows and canonical
+\commitments \emph{under} $\sqsubseteq$ use $\sqsubseteq$ in place of
+$\preceq_M$.
 For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
 $f(m)\OutputOrd f(m')$.
 
@@ -188,21 +189,20 @@ $f(m)\OutputOrd f(m')$.
 \label{thm:guard-tightening}
 Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item $\sqsubseteq$ is the coarsest order on $M$ under which $\Spec_1$ is a
-        sufficient guard for $\Spec_2$, and the upstream's canonical
-        \commitments under $\sqsubseteq$ include every \commitment the
-        composite needs.
+  \item An order on $M$ makes $\Spec_1$ a sufficient guard for $\Spec_2$
+        exactly when it is contained in $\sqsubseteq$ on the outputs of
+        $\Spec_1$.  The canonical \commitments under $\sqsubseteq$ include
+        every \commitment the composite needs.
   \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
-        functional, the upstream's canonical \commitments under $\sqsubseteq$
-        are exactly the composite's.  So a sufficient guard is tight exactly
-        when $\preceq_M$ requires no more \commitments than $\sqsubseteq$.
+        functional, the canonical \commitments under $\sqsubseteq$ are
+        exactly the composite's, so a sufficient guard is tight exactly when
+        $\preceq_M$ requires no more \commitments than $\sqsubseteq$.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) Through the common-extension condition, Proposition~\ref{prop:guard-test}
-says that the orders on $M$ under which $\Spec_1$ is a sufficient guard are
-those contained in $\sqsubseteq$ on the outputs of $\Spec_1$.  Suppose
+(1) The first claim is Proposition~\ref{prop:guard-test}, through the
+common-extension condition.  Suppose
 $m,x\sqsubseteq m'$ for some $m'\in P_1(k)$.  Then answers $o\in P_2(m)$ and
 $y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
 $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are confluent at $k$ in
@@ -220,24 +220,25 @@ a sufficient guard is contained in $\sqsubseteq$, and a smaller order leaves at 
 requires the most, since every order on $M$ contains it.
 
 Guard Tightening is the route to tight coordination: when the
-downstream's answers have greatest elements, an upstream ordered by
-$\sqsubseteq$ makes exactly the \commitments the composition needs.  Since
-$\sqsubseteq$ is transitive but need not be an order, adopting it means
-treating values the downstream answers alike, such as logs that differ only in
-the order of commuting commands, as equal.  When the store's responses record the commands that produced them, the
+downstream's answers have greatest elements, an upstream whose order requires
+no more \commitments than $\sqsubseteq$ makes exactly the \commitments the
+composition needs.  When the store answers each command in turn, as in
+state-machine replication, $\sqsubseteq$ is the prefix order, and the
 consensus log is a tight guard: execution is monotone and reflects the prefix
 order, so every \commitment the log makes is one the store's clients can
-observe (Appendix~\ref{app:tight}).  The commuting log is a sufficient guard but not a necessary one:
-$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the
-prefix order but confluent at $\{A,B\}$ under $\sqsubseteq$.  When commands commute
-and responses do not record their order, a log that orders only non-commuting
-commands, as in Generalized Paxos~\cite{lamport2005generalized} and
-EPaxos~\cite{moraru2013epaxos}, restores tightness.  Reversing the order
+observe (Appendix~\ref{app:tight}).  When the store reports only its state and
+$A$ and $B$ commute, $[A,B]$ and $[B,A]$ cover each other.  The commuting log
+is then a sufficient guard but not a necessary one: $(\{A\},[A])$ and
+$(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the prefix order but
+confluent at $\{A,B\}$ under $\sqsubseteq$.  Tightening means identifying
+values that cover each other, as a log that orders only non-commuting
+commands does (Generalized Paxos~\cite{lamport2005generalized},
+EPaxos~\cite{moraru2013epaxos}).  Reversing the order
 on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
 greatest answers, a gap can remain.  Let $\Spec_1$ emit $z$ at input
 $\mathit{lo}$ and any $n_k$ at a larger input $\mathit{hi}$, and let $\Spec_2$
-answer $z$ with any number and $n_k$ with $k$.  No single $n_k$ covers every number the
-downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are not confluent at
+answer $z$ with any number and $n_k$ with $k$.  No $n_k$ covers $z$, since no single
+answer $k$ extends every number the downstream may answer to $z$, so $(\mathit{lo},z)$ and each row at $\mathit{hi}$ are not confluent at
 $\mathit{hi}$ under $\sqsubseteq$, and so under every order on $M$ under which
 $\Spec_1$ is a sufficient guard.  Yet the composite permits every number at both
 inputs and needs no \commitment: a single implementation could answer at

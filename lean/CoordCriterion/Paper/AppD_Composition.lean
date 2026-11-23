@@ -671,8 +671,8 @@ theorem «prop:tight-guards» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M
    fun f hm hr => Tight.tightGuard_of_monotone_reflects sp f hm hr⟩
 
 /-- "Both parts apply to logs.  In Example `ex:committed-log-composition`,
-suppose the store's responses record the commands that produced them, so that
-`f` maps a log to its commands paired with their responses.  The commands of
+suppose the store answers each command in turn, so that `f` maps a log to its
+commands paired with their responses.  The commands of
 `f(b)` are then `b` itself, so `f(b) ≼ f(b')` implies `b ≼_M b'`, and by (2)
 the log is a tight guard for the store.  For two commuting increments, a
 partial-order log that records only which commands it has logged, as a set

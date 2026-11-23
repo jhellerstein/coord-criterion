@@ -151,7 +151,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-750 entries.
+751 entries.
 
 ### §2 Functional CALM
 
@@ -425,13 +425,14 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:tight-coordination/inconsistent-rows»` | theorem | Before Theorem `thm:guard-tightening`: |
 | `«def:necessary-guard»` | theorem | **Definition `def:necessary-guard`** (Necessary guard): |
 | `«def:tight-guard»` | def | **Definition `def:tight-guard`** (Tight guard): |
-| `«sec:tight-coordination/downstream-order»` | theorem | "Write `m ⊑ m'` when every finite set of outputs in `P₂(m)` has a common extension in `P₂(m')`, and read confluence of rows of `P₁` under `⊑`, and the canoni… |
+| `«sec:tight-coordination/downstream-order»` | theorem | "We compare `≼_M` with a relation derived from `P₂`: |
 | `«thm:guard-tightening»` | theorem | **Theorem `thm:guard-tightening`** (Guard Tightening): |
 | `«sec:tight-coordination/greatest»` | theorem | After Theorem `thm:guard-tightening`: |
 | `«thm:guard-tightening/any-order»` | theorem | `thm:guard-tightening`, for every order: |
-| `«sec:tight-coordination/consensus-log»` | theorem | "When the store's responses record the commands that produced them, the consensus log is a tight guard: |
-| `«sec:tight-coordination/commuting-log»` | theorem | "The commuting log is a sufficient guard but not a necessary one: |
-| `«sec:tight-coordination/partial-order-log»` | theorem | "When commands commute and responses do not record their order, a log that orders only non-commuting commands, as in Generalized Paxos and EPaxos, restores t… |
+| `«sec:tight-coordination/consensus-log»` | theorem | "When the store answers each command in turn, as in state-machine replication, `⊑` is the prefix order, and the consensus log is a tight guard: |
+| `«sec:tight-coordination/cover-each-other»` | theorem | "When the store reports only its state and `A` and `B` commute, `[A,B]` and `[B,A]` cover each other." Lean: |
+| `«sec:tight-coordination/commuting-log»` | theorem | "When the store reports only its state and `A` and `B` commute, `[A,B]` and `[B,A]` cover each other. |
+| `«sec:tight-coordination/partial-order-log»` | theorem | "Tightening means identifying values that cover each other, as a log that orders only non-commuting commands does (Generalized Paxos, EPaxos)." Lean, for the… |
 | `«sec:tight-coordination/gap»` | theorem | "Without greatest answers, a gap can remain. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |

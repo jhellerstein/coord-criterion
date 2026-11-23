@@ -1535,56 +1535,39 @@ sufficient and a necessary guard; the pipeline has \emph{tight} coordination.
 \end{definition}
 
 Necessity compares the upstream's canonical \commitments with those the
-composite needs.  The upstream's order on $M$ decides which \commitments are
-canonical, and the commuting log's prefix order demands too many for the KVS.
-We therefore seek a new order $\preceq_M^{P_2}$ on $M$ that commits just enough for downstream consistency.
-
-\begin{definition}[Downstream order]
-\label{def:downstream-order}
-In the \emph{downstream order}, $m\preceq_M^{P_2} m'$
-when every finite set of outputs in $P_2(m)$ has a common extension in
-$P_2(m')$.
-\end{definition}
-
-Confluence and canonical \commitments \emph{under} $\preceq_M^{P_2}$ are those of
-$P_1$ with $M$ ordered by $\preceq_M^{P_2}$. For a functional downstream $f$, $m\preceq_M^{P_2} m'$ exactly when
-$f(m)\OutputOrd f(m')$.
+composite needs.  Which \commitments are canonical depends on $\preceq_M$, and
+the prefix order demands too many for the commuting KVS.  We compare
+$\preceq_M$ with a relation derived from $P_2$: $m'$ \emph{covers} $m$,
+written $m\sqsubseteq m'$, when every finite set of outputs in $P_2(m)$ has a
+common extension in $P_2(m')$.  Confluence of rows and canonical
+\commitments \emph{under} $\sqsubseteq$ use $\sqsubseteq$ in place of
+$\preceq_M$.
 
 \begin{theorem}[Guard Tightening]
 \label{thm:guard-tightening}
 Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item The downstream order $\preceq_M^{P_2}$ is the coarsest order on $M$ under
-        which $\Spec_1$ is a sufficient guard for $\Spec_2$; the
-        upstream's canonical \commitments under $\preceq_M^{P_2}$ include every
-        \commitment the composite needs.
+  \item An order on $M$ makes $\Spec_1$ a sufficient guard for $\Spec_2$
+        exactly when it is contained in $\sqsubseteq$ on the outputs of
+        $\Spec_1$.  The canonical \commitments under $\sqsubseteq$ include
+        every \commitment the composite needs.
   \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
-        functional, the upstream's canonical \commitments under $\preceq_M^{P_2}$
-        are exactly the composite's.  So a sufficient guard is tight exactly
-        when $\preceq_M$ requires no more \commitments than $\preceq_M^{P_2}$.
+        functional, the canonical \commitments under $\sqsubseteq$ are
+        exactly the composite's, so a sufficient guard is tight exactly when
+        $\preceq_M$ requires no more \commitments than $\sqsubseteq$.
 \end{enumerate}
 \end{theorem}
 \proofinfull
 
-A greatest element of $P_2(m)$ is one answer to $m$ that extends every
-other, as a functional downstream trivially has.  Guard Tightening is the route
-to tight coordination: when the downstream's answers have greatest elements, an upstream ordered by
-$\preceq_M^{P_2}$ makes exactly the \commitments the composition needs.  Since
-$\preceq_M^{P_2}$ is transitive but need not be an order, adopting it means
-treating values the downstream answers alike, such as logs that differ only in
-the order of commuting commands, as equal.  When the KVS responses record the commands that produced them, the
-consensus log is a tight guard: execution is monotone and reflects the prefix
-order, so every \commitment the log makes is one the KVS's clients can
-observe.  The commuting log is a sufficient guard but not a necessary one:
-$(\{A\},[A])$ and $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the
-prefix order but confluent at $\{A,B\}$ under $\preceq_M^{P_2}$.  When commands commute
-and responses do not record their order, a log that orders only non-commuting
-commands, as in Generalized Paxos~\cite{lamport2005generalized} and
-EPaxos~\cite{moraru2013epaxos}, restores tightness.  Without
-greatest answers a gap can remain: when the downstream may give any of several
-answers, the upstream must commit before it sees which one, while a single
-implementation of the composite could correlate the two choices~\extended.
-That gap is the price of splitting the work into stages.
+When the KVS answers each command in turn, as in state-machine replication,
+$\sqsubseteq$ is the prefix order, and the consensus log is a tight guard.
+When the KVS reports only its state and $A$ and $B$ commute, $[A,B]$ and
+$[B,A]$ cover each other, and the prefix order makes the log a sufficient
+guard but not a necessary one.  Tightening means identifying such values, as
+a log that orders only non-commuting commands does (Generalized
+Paxos~\cite{lamport2005generalized},
+EPaxos~\cite{moraru2013epaxos}).  Without greatest answers a gap can
+remain~\extended.
 
 \paragraph{Composite CALM.}
 \label{sec:composite-calm}

@@ -246,6 +246,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:tight-coordination/greatest»
 #check @CC.Paper.«thm:guard-tightening/any-order»
 #check @CC.Paper.«sec:tight-coordination/consensus-log»
+#check @CC.Paper.«sec:tight-coordination/cover-each-other»
 #check @CC.Paper.«sec:tight-coordination/commuting-log»
 #check @CC.Paper.«sec:tight-coordination/partial-order-log»
 #check @CC.Paper.«sec:tight-coordination/gap»
