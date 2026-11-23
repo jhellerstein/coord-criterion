@@ -302,7 +302,7 @@ captures only observable behavior (\S\ref{sec:scope}).
 Despite its simplicity, our model supports not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
 \S\ref{sec:hat-instance}).\cxbar{11}{0.4 0.4 1}{e}
 
-\paragraph{Consistency and the CALM criterion.}
+\paragraph{Consistency and Monotonicity.}
 \color{black}\cxtag{12}{N/M}\cxbar{12}{0.4 0.4 1}{s}The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity.  Our Consistency definition is general: a spec's runs
 (sequences of input and output events) are \emph{consistent} when they are
@@ -334,7 +334,7 @@ sequential runs (\S\ref{sec:distributed-execution}).  Complete CAP
 that can keep every permitted output both available and consistent during a
 partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.\cxbar{15}{0.4 0.4 1}{e}
 
-\paragraph{Coordination is for \commitment.} \color{black}\cxtag{16}{N/M}\cxbar{16}{0.4 0.4 1}{s}What of coordination?  A
+\paragraph{Coordination, \commitment and composition.} \color{black}\cxtag{16}{N/M}\cxbar{16}{0.4 0.4 1}{s}What of coordination?  A
 \commitment isolates the contract a coordination mechanism achieves.
 % and apart from
 % \commitments.
@@ -1051,8 +1051,11 @@ if it satisfies the row-consistency condition.\cxbar{87}{0.4 0.4 1}{e}
 \end{proposition}
 
 \color{black}\begin{proof}[Proof sketch]
-\cxtag{88}{N/M}\cxbar{88}{0.4 0.4 1}{s}First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs.  Lifted Monotonicity at $i_r\InputOrd j$ carries each $o_r$ to an extension in the fiber at $j$, and at $j$ itself it gives those a common extension.  Now assume the row-consistency condition.  Lifted
-Monotonicity is its special case in which all the rows share one input.
+\cxtag{88}{N/M}\cxbar{88}{0.4 0.4 1}{s}First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common
+\indesc $j$.  Lifted Monotonicity at $i_r\InputOrd j$ carries
+each $o_r$ to an extension $j$ in the fiber, and at $j$ itself it gives those
+a common extension.  Now assume the row-consistency condition.  Lifted
+Monotonicity is its special case in which all rows share one input.
 \fullproof\cxbar{88}{0.4 0.4 1}{e}
 \end{proof}
 
@@ -1429,7 +1432,7 @@ therefore continue to one state at $j$, which is Partition Consistency.
 
 \color{black}\cxtag{136}{N/M}\cxbar{136}{0.4 0.4 1}{s}For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.\cxbar{136}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{137}{N/M}\cxbar{137}{0.4 0.4 1}{s}Return to the election of Section~\ref{sec:election-story}, now with the spec
+\color{black}\cxtag{137}{N/M}\cxbar{137}{0.4 0.4 1}{s}We return to the election of Section~\ref{sec:election-story}, but shift focus to the spec
 for the voters, which the registrar observes.\rv{11}  Each
 voter's ballot is a row of $E$, and the sets of ballots the registrar may
 observe are implicit outputs in $P\setminus E$.  A voter's choice between $a$
@@ -1554,7 +1557,7 @@ $\Spec_2|_{\Spec_1}$ answers each of its outputs without \commitment, and the
 pipeline's runs are consistent whenever the system's are.
 \end{theorem}
 \begin{proof}[Proof sketch]
-The outputs of a run of $\Spec_1$ form a chain, which $\Spec_2|_{\Spec_1}$
+Outputs of a run of $\Spec_1$ form a chain, which $\Spec_2|_{\Spec_1}$
 answers legally by Proposition~\ref{prop:guard-test}; joining the rows the
 two stages keep yields runs of $P_2\circ P_1$.  \fullproof\cxbar{150}{0.4 0.4 1}{e}
 \end{proof}
@@ -1648,14 +1651,13 @@ longer pipelines and acyclic graphs of stages~\cite{hellerstein2026completecalmf
 \label{sec:instances}
 \label{sec:related}
 
-\color{black}\cxtag{161}{N/M}\cxbar{161}{0.4 0.4 1}{s}Complete CALM provides a unified lens for many results across literatures.
-For the key related ideas, we provide mappings here to our specification model.
-Each setting declares an input, an output, and their orders before
-applying either CALM theorem.  The full paper~\cite{hellerstein2026completecalmfull}
-gives each mapping in detail, with deployments, response
-obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
-and applications to classical distributed-computing problems: registers, consensus,
-leader election, snapshots, queues, and search structures.\cxbar{161}{0.4 0.4 1}{e}
+\color{black}\cxtag{161}{N/M}\cxbar{161}{0.4 0.4 1}{s}Complete CALM provides a unified lens for coordination results. For
+the key related ideas, we provide mappings here to our specification model. Each
+setting declares an input, an output, and their orders before applying either
+CALM theorem.  The full paper~\cite{hellerstein2026completecalmfull} gives each
+mapping in detail, with additional mappings for the transaction protocols 2PL
+and MVTO, and classical distributed-computing problems
+including consensus, leader election, and snapshots.\cxbar{161}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{162}{N/S}Three patterns of non-monotonicity recur in this literature.  In each, an output settles something the input
 has not:
@@ -1729,14 +1731,14 @@ and Lemma~\ref{lem:composition} the composite $q\circ s$ is consistent whenever
 $q$ is monotone on the states $s$ can reach.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.  The composite is then
-not monotone, and since the semilattice stage needs no \commitment, it\rv{14}
-is not a sufficient guard (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
-on the query.  An answer that exposes an element as present blocks its removal
-before it arrives, the third pattern above.  The two-phase set does not enforce the block: it accepts the
-removal, and the answer is contradicted.  The CRDT's join is one
-way to make states converge, but Complete CALM asks for less: answers need some
-common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).\cxbar{166}{0.4 0.4 1}{e}
+test: a later removal grows $R$ and shrinks the answer.
+The composite is then not monotone, so by
+Corollary~\ref{cor:upstream-commitments} the \commitment falls on the query. An
+answer that exposes an element as present blocks its removal before it arrives,
+the third pattern above.  The two-phase set does not enforce the block: it
+accepts the removal, and the answer is contradicted.  Complete CALM asks for
+less than a semilattice join: answers need some common extension, not a least one
+(\S\ref{sec:lifted-monotonicity}).\cxbar{166}{0.4 0.4 1}{e}
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
@@ -1956,9 +1958,9 @@ formally specifying programs at an even higher level.\cxbar{184}{0.4 0.4 1}{e}
 coordination literature. It also clarifies the intrinsic purpose of
 coordination: removing possibilities via \commitments. This simplicity
 leads to the generality of Complete CALM: a spec's runs are consistent exactly
-when it is lifted monotone, which reduces to textbook monotonicity for
+when it is lifted monotone, which is textbook monotonicity for
 functional specs. Complete CAP follows as a corollary. \Commitments
-lead to tight coordination, explaining how to make the right commitments in compositions of non-monotone specs.\cxbar{185}{0.4 0.4 1}{e}
+lead to tight coordination: making the right commitments in compositions of non-monotone specs.\cxbar{185}{0.4 0.4 1}{e}
 %  A totally ordered log
 % and a KVS are each non-monotone on their own, yet when the log
 % guards the store, the log's \commitments are all the composition needs, and

@@ -170,7 +170,7 @@ as consensus logs in front of a replicated store.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 109 & 12046\\
+unclassified & 109 & 12063\\
 signposting & 6 & 444\\
 explanation & 2 & 256\\
 formal definition/notation & 6 & 116\\
@@ -278,7 +278,7 @@ protocols; we show how an automaton can be projected onto an \spectype[] that
 captures only observable behavior (\S\ref{sec:scope}).} \textcolor{newblue}{Despite its simplicity, our model supports not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
 \S\ref{sec:hat-instance}).}
 
-\paragraph{Consistency and the CALM criterion.}
+\paragraph{Consistency and Monotonicity.}
 The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity. \textcolor{newblue}{Our Consistency definition is general: a spec's runs
 (sequences of input and output events) are \emph{consistent} when they are
@@ -309,7 +309,7 @@ sequential runs (\S\ref{sec:distributed-execution}).} \textcolor{newblue}{Comple
 that can keep every permitted output both available and consistent during a
 partition.} The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.
 
-\paragraph{Coordination is for \commitment.}
+\paragraph{Coordination, \commitment and composition.}
 What of coordination? A
 \commitment isolates the contract a coordination mechanism achieves.
 
@@ -525,7 +525,7 @@ the rows of $P$ whose input \inrel $i$, and commas separate conjuncts, as in
 $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$.} \removednote{\textbf{unclassified}, 8 words, rank 112; \textit{Here [math] and [math] are the converse orders.}} \textcolor{newblue}{In
 Figure~\ref{fig:election-frames}(b), $P[\mathrm{in}\InputGe ab\cdot]$ is the
 three rows not grayed out.} We write
-$\pi_{\mathrm{out}}(R)$ for the set of outputs in $R$. \removednote{\textbf{unclassified}, 61 words, rank 47; \textit{Not every input can still arrive in a state:}; labels def:legal-input} \textcolor{newblue}{A run starts from the
+$\pi_{\mathrm{out}}(R)$ for the set of outputs in $R$. \removednote{\textbf{unclassified}, 61 words, rank 48; \textit{Not every input can still arrive in a state:}; labels def:legal-input} \textcolor{newblue}{A run starts from the
 \emph{canonical state} at its first input, which has received $i$, emitted
 nothing, and removed no rows:}
 \begin{equation}
@@ -1010,8 +1010,11 @@ if it satisfies the row-consistency condition.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common extension $j$ of their inputs. \removednote{\textbf{unclassified}, 63 words, rank 46; \textit{Lifted Monotonicity gives Relational Monotonicity, which carries each [math] to some extension in the fiber at ...}} \textcolor{newblue}{Lifted Monotonicity at $i_r\InputOrd j$ carries each $o_r$ to an extension in the fiber at $j$, and at $j$ itself it gives those a common extension.} \textcolor{newblue}{Now assume the row-consistency condition.} \textcolor{newblue}{Lifted
-Monotonicity is its special case in which all the rows share one input.} \textcolor{newblue}{\fullproof}
+\textcolor{newblue}{First assume Lifted Monotonicity, and take rows $(i_r,o_r)$ with a common
+\indesc $j$.} \removednote{\textbf{unclassified}, 63 words, rank 47; \textit{Lifted Monotonicity gives Relational Monotonicity, which carries each [math] to some extension in the fiber at ...}} \textcolor{newblue}{Lifted Monotonicity at $i_r\InputOrd j$ carries
+each $o_r$ to an extension $j$ in the fiber, and at $j$ itself it gives those
+a common extension.} \textcolor{newblue}{Now assume the row-consistency condition.} \textcolor{newblue}{Lifted
+Monotonicity is its special case in which all rows share one input.} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \subsection{Lifted output events}
@@ -1025,7 +1028,7 @@ ending at $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).}
 
 \textcolor{newblue}{However, removing a row $(k,y)$\rv{3} does not always lose the information in its output.} \textcolor{newblue}{If
 some output $u\in R(k)$ \outrel both $y$ and $o$, the row $(k,u)$ is kept, and
-a later output $u$ reports everything $y$ would have.} \removednote{\textbf{unclassified}, 69 words, rank 44; \textit{This is output subsumption, and we put [math] in [math].}} \textcolor{newblue}{We separate the removed
+a later output $u$ reports everything $y$ would have.} \removednote{\textbf{unclassified}, 69 words, rank 45; \textit{This is output subsumption, and we put [math] in [math].}} \textcolor{newblue}{We separate the removed
 rows accordingly.}
 
 \begin{definition}[Output subsumption, nondeterministic legality]
@@ -1047,7 +1050,7 @@ legality and $x_o$ are as in Definitions~\ref{def:exposable}
 and~\ref{def:output-event}.} If $x_o$ removes every row at $k$, it rules out the
 input $k$; otherwise it rules out only the excluded outputs at $k$. \removednote{\textbf{unclassified}, 14 words, rank 99; \textit{In the functional case every removed row is excluded, so [math] is as before.}}
 
-The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split. Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$. \textcolor{newblue}{The route sets removed in panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.} \removednote{\textbf{signposting}, 70 words, rank 43; \textit{Appendix gives the formal definitions.}} \removednote{\textbf{unclassified}, 66 words, rank 45; \textit{Specification states, input events, runs, -free runs, and consistency are defined as before.}}
+The two specs of Figure~\ref{fig:ambiguity-frames} fall on opposite sides of this split. Emitting $[A,B]$ in panel~(f) puts the row for $[B,A]$ in $\Excluded_o$, ruling out that output at $\{A,B\}$. \textcolor{newblue}{The route sets removed in panel~(g) are in $\Subsumed_o$, so that output needs no \commitment.} \removednote{\textbf{signposting}, 70 words, rank 44; \textit{Appendix gives the formal definitions.}} \removednote{\textbf{unclassified}, 66 words, rank 46; \textit{Specification states, input events, runs, -free runs, and consistency are defined as before.}}
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1378,12 +1381,12 @@ still has $(j,u)$ (Lemma~\ref{lem:run-residual}).} All participants can
 therefore continue to one state at $j$, which is Partition Consistency. \removednote{\textbf{signposting}, 4 words, rank 118; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
-For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \textcolor{newblue}{\Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.}
+For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \textcolor{newblue}{\Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.} \removednote{\textbf{unclassified}, 73 words, rank 43; \textit{Return to the election of Section , now with the spec for the voters, which the ...}}
 
-\textcolor{newblue}{Return to the election of Section~\ref{sec:election-story}, now with the spec
+\textcolor{newblue}{We return to the election of Section~\ref{sec:election-story}, but shift focus to the spec
 for the voters, which the registrar observes.\rv{11}  Each
 voter's ballot is a row of $E$, and the sets of ballots the registrar may
-observe are implicit outputs in $P\setminus E$.} \removednote{\textbf{unclassified}, 56 words, rank 50; \textit{Each voter's ballot is a row of [math], while the sets of ballots the registrar may ...}} \textcolor{newblue}{A voter's choice between $a$
+observe are implicit outputs in $P\setminus E$.} \textcolor{newblue}{A voter's choice between $a$
 and $b$ is a \commitment: voting $a$ rules out every set of ballots in which it
 votes $b$.} \textcolor{newblue}{But it is a single-voter \commitment involving no communication, so
 the voter can make it and emit its ballot during a partition.} \removednote{\textbf{unclassified}, 37 words, rank 64; \textit{Each ballot is cast by a different voter, so ballots emitted on different sides of a ...}} \textcolor{newblue}{Ballots on
@@ -1503,7 +1506,7 @@ $\Spec_2|_{\Spec_1}$ answers each of its outputs without \commitment, and the
 pipeline's runs are consistent whenever the system's are.} \removednote{\textbf{unclassified}, 129 words, rank 23; \textit{Specifically, replacing each output of [math] by its answers, and dropping the events of [math], gives ...}}
 \end{theorem}
 \begin{proof}[Proof sketch]
-\textcolor{newblue}{The outputs of a run of $\Spec_1$ form a chain, which $\Spec_2|_{\Spec_1}$
+\textcolor{newblue}{Outputs of a run of $\Spec_1$ form a chain, which $\Spec_2|_{\Spec_1}$
 answers legally by Proposition~\ref{prop:guard-test}; joining the rows the
 two stages keep yields runs of $P_2\circ P_1$.} \textcolor{newblue}{\fullproof}
 \end{proof}
@@ -1596,12 +1599,13 @@ longer pipelines and acyclic graphs of stages~\cite{hellerstein2026completecalmf
 \label{sec:instances}
 \label{sec:related}
 
-Complete CALM provides a unified lens for many results across literatures. For the key related ideas, we provide mappings here to our specification model. Each setting declares an input, an output, and their orders before
-applying either CALM theorem. \removednote{\textbf{unclassified}, 76 words, rank 42; \textit{Three patterns of non-monotonicity recur in the mappings below and in coordinated systems generally.}} \textcolor{newblue}{The full paper~\cite{hellerstein2026completecalmfull}
-gives each mapping in detail, with deployments, response
-obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
-and applications to classical distributed-computing problems: registers, consensus,
-leader election, snapshots, queues, and search structures.}
+\textcolor{newblue}{Complete CALM provides a unified lens for coordination results.} For
+the key related ideas, we provide mappings here to our specification model. Each
+setting declares an input, an output, and their orders before applying either
+CALM theorem. \removednote{\textbf{unclassified}, 76 words, rank 42; \textit{Three patterns of non-monotonicity recur in the mappings below and in coordinated systems generally.}} \textcolor{newblue}{The full paper~\cite{hellerstein2026completecalmfull} gives each
+mapping in detail, with additional mappings for the transaction protocols 2PL
+and MVTO, and classical distributed-computing problems
+including consensus, leader election, and snapshots.}
 
 \textcolor{newblue}{Three patterns of non-monotonicity recur in this literature.} In each, an output settles something the input
 has not:
@@ -1674,14 +1678,13 @@ and Lemma~\ref{lem:composition} the composite $q\circ s$ is consistent whenever
 $q$ is monotone on the states $s$ can reach.} \textcolor{newblue}{For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
-test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{The composite is then
-not monotone, and since the semilattice stage needs no \commitment, it\rv{14}
-is not a sufficient guard (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
-on the query.} \textcolor{newblue}{An answer that exposes an element as present blocks its removal
-before it arrives, the third pattern above.} \textcolor{newblue}{The two-phase set does not enforce the block: it accepts the
-removal, and the answer is contradicted.} \removednote{\textbf{unclassified}, 38 words, rank 63; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 16; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 114; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{The CRDT's join is one
-way to make states converge, but Complete CALM asks for less: answers need some
-common extension, not a least one, as illustrated above (\S\ref{sec:lifted-monotonicity}).}
+test: a later removal grows $R$ and shrinks the answer.} \textcolor{newblue}{The composite is then not monotone, so by
+Corollary~\ref{cor:upstream-commitments} the \commitment falls on the query.} \textcolor{newblue}{An
+answer that exposes an element as present blocks its removal before it arrives,
+the third pattern above.} \textcolor{newblue}{The two-phase set does not enforce the block: it
+accepts the removal, and the answer is contradicted.} \removednote{\textbf{unclassified}, 38 words, rank 63; \textit{Operation-based CRDTs fit too, with the causally closed set of delivered operations as input .}} \removednote{\textbf{unclassified}, 153 words, rank 16; \textit{Bailis et al. define isolation levels by Adya's phenomena, adding sessions and per-item dependencies, and give ...}} \removednote{\textbf{unclassified}, 8 words, rank 114; \textit{An input is a history ordered by happens-before.}} \textcolor{newblue}{Complete CALM asks for
+less than a semilattice join: answers need some common extension, not a least one
+(\S\ref{sec:lifted-monotonicity}).}
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
@@ -1734,7 +1737,7 @@ is ordered before the version it read: a G1c cycle, which read committed
 proscribes. The algorithm as written therefore does not guarantee read
 committed. Our framework exposed the problem directly as we were writing this
 up, since the read rule's output at such an input is not in $P_{\mathrm{RC}}$. Taking each timestamp at commit, above every version read, repairs the
-algorithm. \removednote{\textbf{unclassified}, 592 words, rank 5; \textit{The extended paper's algorithm for monotonic atomic view has the same error bailis2013hatextended .}} \removednote{\textbf{related-work detail}, 61 words, rank 48; \textit{An invariant is a predicate that every state must satisfy.}} \textcolor{newblue}{Details are in \extended.} \textcolor{newblue}{The same reasoning recovers the rest of
+algorithm. \removednote{\textbf{unclassified}, 592 words, rank 5; \textit{The extended paper's algorithm for monotonic atomic view has the same error bailis2013hatextended .}} \removednote{\textbf{related-work detail}, 61 words, rank 49; \textit{An invariant is a predicate that every state must satisfy.}} \textcolor{newblue}{Details are in \extended.} \textcolor{newblue}{The same reasoning recovers the rest of
 Bailis et al.'s classification of isolation levels and session guarantees, with
 sticky availability as a deployment (see \extended).}
 
@@ -1864,7 +1867,7 @@ Section~\ref{sec:composition}.} \textcolor{newblue}{Later tools moved from synta
 contracts and invariants in specific
 contexts~\cite{sivaramakrishnan2015quelea,kaki2018alone}, picking for each
 operation the weakest consistency or isolation level a storage system offers that still
-satisfies them.} \removednote{\textbf{unclassified}, 61 words, rank 49; \textit{We ask what a spec itself requires, independent of any menu of levels, and by Observable ...}} \textcolor{newblue}{Tight coordination instead shows where a composition's \commitments belong and which of them are unnecessary, without a fixed menu of levels.}
+satisfies them.} \removednote{\textbf{unclassified}, 61 words, rank 50; \textit{We ask what a spec itself requires, independent of any menu of levels, and by Observable ...}} \textcolor{newblue}{Tight coordination instead shows where a composition's \commitments belong and which of them are unnecessary, without a fixed menu of levels.}
 
 \textcolor{newblue}{Underlying these issues is a reassessment of Codd's lesson of declarativity: how
 little structure must be declared to be
@@ -1891,9 +1894,9 @@ formally specifying programs at an even higher level.}
 coordination literature.} It also clarifies the intrinsic purpose of
 coordination: removing possibilities via \commitments. \removednote{\textbf{unclassified}, 203 words, rank 10; \textit{The question of coordination-free consistency becomes clear in this model: when must a system make a ...}} \textcolor{newblue}{This simplicity
 leads to the generality of Complete CALM: a spec's runs are consistent exactly
-when it is lifted monotone, which reduces to textbook monotonicity for
+when it is lifted monotone, which is textbook monotonicity for
 functional specs.} \textcolor{newblue}{Complete CAP follows as a corollary.} \textcolor{newblue}{\Commitments
-lead to tight coordination, explaining how to make the right commitments in compositions of non-monotone specs.}
+lead to tight coordination: making the right commitments in compositions of non-monotone specs.}
 
 
 
