@@ -249,7 +249,7 @@ captures only observable behavior (\S\ref{sec:scope}).
 Despite its simplicity, our model supports not only application invariants, but also general-purpose consistency definitions (\S\ref{sec:complete-cap},
 \S\ref{sec:hat-instance}).
 
-\paragraph{Consistency and a criterion for achieving it.}
+\paragraph{Consistency and the CALM criterion.}
 The model provides clean definitions for the two sides of CALM: Consistency
 and Monotonicity.  Our Consistency definition is general: the runs of a spec are
 \emph{consistent} when they are \emph{confluent} at every input that extends theirs, so that states reached along
@@ -687,9 +687,7 @@ This motivates our first use of confluence, for rows.  Rows with a common
 \emph{row-consistent} when it is confluent at every common \indesc of its
 inputs, and \emph{row-inconsistent} otherwise.  When the context is clearly
 about rows, we say simply \emph{consistent} or \emph{inconsistent}.
-
-Our two rows $(ab\cdot,\bot)$ and $(aba,a)$ are therefore inconsistent under the
-equality order, so a run that emits $\bot$ at $ab\cdot$ must apply the canonical \commitment $x_\bot$.
+Our example rows $(ab\cdot,\bot)$ and $(aba,a)$ are therefore inconsistent, so a run that emits $\bot$ at $ab\cdot$ must apply the canonical \commitment $x_\bot$.
 
 Runs follow the same pattern: they are \emph{confluent at} $j$ when they can
 reach a common state with current input $j$, and consistent when they are
@@ -1282,7 +1280,7 @@ $E\subseteq P$ of rows whose outputs participants actually emit.  Write $E(i)$
 for its outputs at input $i$.
 \end{definition}
 
-Like Gilbert and Lynch, we examine a replicated register: a key-value store
+Like Gilbert and Lynch, we examine a replicated register: a KVS
 with a single key, starting at $v_0$.  Participant $p$ receives write $w(v)$
 and emits its acknowledgment; concurrently, participant $q$ receives the read
 $r$ and emits $v_0$.  These two outputs are in $E$.  A client that collects
@@ -1430,7 +1428,7 @@ model~\cite{hellerstein2026completecalmfull}.
 \section{Composition and Tight Coordination}
 \label{sec:composition}
 
-A replicated key-value store poses a puzzle.  With mutable values it is
+A replicated key-value store (KVS) poses a puzzle.  With mutable values it is
 non-monotone, and its replicas can diverge without
 coordination~\cite{alvaro2011bloom}.  The pragmatic solution puts a consensus
 log upstream of the replicas, \`a la Multi-Paxos~\cite{lamport2001paxos}, so
@@ -1456,7 +1454,7 @@ in which the output domain of $\Spec_1$ is the input domain of $\Spec_2$.  Their
 \end{equation}
 where $\pi$ and $\Join$ are relational projection and equijoin.  We run the two specs as a pipeline: $\Spec_2$ takes the outputs of $\Spec_1$ as
 its inputs, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.  In the replicated
-store, $\Spec_1$ orders the proposed commands into a log, and $\Spec_2$
+KVS, $\Spec_1$ orders the proposed commands into a log, and $\Spec_2$
 executes the log and outputs the responses.
 
 \begin{lemma}[Composition]
@@ -1510,16 +1508,16 @@ $P_2\circ P_1$ is not lifted monotone, some output of $\Spec_1$ needs a
 \commitment.
 \end{corollary}
 
-This answers the opening puzzle.  The store restricted to logs needs no
-\commitment, so locks in the store would be pure overhead, and the pipeline is
-consistent whenever the log is.  The store as a whole is not monotone, so some
-output of the log needs a \commitment, and consensus provides it.
+This answers the opening puzzle.  The KVS restricted to log outputs needs no
+\commitment, so locks in the KVS would be pure overhead, and the pipeline is
+consistent whenever the log is.  The composition as a whole is not monotone, so some
+output of the log needs a \commitment; consensus provides it.
 
 \paragraph{Necessary and tight guards.}
-A sufficient guard may still commit more than the composition
-needs.  If commands $A$ and $B$ commute and the store reports only its state,
+A sufficient guard may commit more than the composition
+needs.  If commands $A$ and $B$ commute in their effects on the KVS,
 emitting the log $[A]$ rules out $[B,A]$ by \commitment, though both logs
-yield the same output.  That \commitment is \emph{unnecessary}: it prevents a
+yield the same KVS outputs.  That \commitment is \emph{unnecessary}: it prevents a
 failure of Lifted Monotonicity in the upstream that leads to no failure in the
 composite.
 
@@ -1533,32 +1531,37 @@ $(i,o)$ and $(k,y)$ of $P_2\circ P_1$, with $o\in P_2(m)$ and $y\in P_2(x)$,
 are not confluent at $k$ in $P_2\circ P_1$.
 
 $\Spec_1$ is a \emph{tight guard} for $\Spec_2$ when it is both a
-sufficient and a necessary guard, and the pipeline's coordination is then
-\emph{tight}.
+sufficient and a necessary guard; the pipeline has \emph{tight} coordination.
 \end{definition}
 
 Necessity compares the upstream's canonical \commitments with those the
 composite needs.  The upstream's order on $M$ decides which \commitments are
-canonical, and the commuting log shows it can demand too many: it orders
-$[A,B]$ and $[B,A]$, although the store treats them alike.  We therefore ask
-for an order on $M$ under which the upstream's canonical \commitments are
-exactly the composite's.  Write $m\sqsubseteq m'$ when every finite set of
-outputs in $P_2(m)$ has a common extension in $P_2(m')$, and read confluence of rows of $P_1$ \emph{under} $\sqsubseteq$, and the canonical \commitments its failure calls for, with $\sqsubseteq$ in place of $\preceq_M$.
-For a functional downstream $f$, $m\sqsubseteq m'$ exactly when
+canonical, and the commuting log's prefix order demands too many for the KVS.
+We therefore seek a new order $\preceq_M^{P_2}$ on $M$ that commits just enough for downstream consistency.
+
+\begin{definition}[Downstream order]
+\label{def:downstream-order}
+In the \emph{downstream order}, $m\preceq_M^{P_2} m'$
+when every finite set of outputs in $P_2(m)$ has a common extension in
+$P_2(m')$.
+\end{definition}
+
+Confluence and canonical \commitments \emph{under} $\preceq_M^{P_2}$ are those of
+$P_1$ with $M$ ordered by $\preceq_M^{P_2}$. For a functional downstream $f$, $m\preceq_M^{P_2} m'$ exactly when
 $f(m)\OutputOrd f(m')$.
 
 \begin{theorem}[Guard Tightening]
 \label{thm:guard-tightening}
 Let $\Spec_1$ guard $\Spec_2$.
 \begin{enumerate}
-  \item $\sqsubseteq$ is the coarsest order on $M$ under which $\Spec_1$ is a
-        sufficient guard for $\Spec_2$, and the upstream's canonical
-        \commitments under $\sqsubseteq$ include every \commitment the
-        composite needs.
+  \item The downstream order $\preceq_M^{P_2}$ is the coarsest order on $M$ under
+        which $\Spec_1$ is a sufficient guard for $\Spec_2$; the
+        upstream's canonical \commitments under $\preceq_M^{P_2}$ include every
+        \commitment the composite needs.
   \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
-        functional, the upstream's canonical \commitments under $\sqsubseteq$
+        functional, the upstream's canonical \commitments under $\preceq_M^{P_2}$
         are exactly the composite's.  So a sufficient guard is tight exactly
-        when $\preceq_M$ requires no more \commitments than $\sqsubseteq$.
+        when $\preceq_M$ requires no more \commitments than $\preceq_M^{P_2}$.
 \end{enumerate}
 \end{theorem}
 \proofinfull
@@ -1566,15 +1569,15 @@ Let $\Spec_1$ guard $\Spec_2$.
 A greatest element of $P_2(m)$ is one answer to $m$ that extends every
 other, as a functional downstream trivially has.  Guard Tightening is the route
 to tight coordination: when the downstream's answers have greatest elements, an upstream ordered by
-$\sqsubseteq$ makes exactly the \commitments the composition needs.  Since
-$\sqsubseteq$ is transitive but need not be an order, adopting it means
+$\preceq_M^{P_2}$ makes exactly the \commitments the composition needs.  Since
+$\preceq_M^{P_2}$ is transitive but need not be an order, adopting it means
 treating values the downstream answers alike, such as logs that differ only in
-the order of commuting commands, as equal.  When the store's responses record the commands that produced them, the
+the order of commuting commands, as equal.  When the KVS responses record the commands that produced them, the
 consensus log is a tight guard: execution is monotone and reflects the prefix
-order, so every \commitment the log makes is one the store's clients can
+order, so every \commitment the log makes is one the KVS's clients can
 observe.  The commuting log is a sufficient guard but not a necessary one:
 $(\{A\},[A])$ and $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the
-prefix order but confluent at $\{A,B\}$ under $\sqsubseteq$.  When commands commute
+prefix order but confluent at $\{A,B\}$ under $\preceq_M^{P_2}$.  When commands commute
 and responses do not record their order, a log that orders only non-commuting
 commands, as in Generalized Paxos~\cite{lamport2005generalized} and
 EPaxos~\cite{moraru2013epaxos}, restores tightness.  Without
@@ -1914,7 +1917,7 @@ when it is lifted monotone, which reduces to textbook monotonicity for
 functional specs. Complete CAP follows as a corollary. \Commitments
 lead to tight coordination, explaining how to make the right commitments in compositions of non-monotone specs.
 %  A totally ordered log
-% and a key-value store are each non-monotone on their own, yet when the log
+% and a KVS are each non-monotone on their own, yet when the log
 % guards the store, the log's \commitments are all the composition needs, and
 % the store needs none.  Multi-Paxos is one way to distribute them.
 % Complete CAP is the partition form of the same equivalence: a spec escapes
