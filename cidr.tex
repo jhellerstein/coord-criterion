@@ -286,14 +286,18 @@ that can keep every permitted output both available and consistent during a
 partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.
 
 \paragraph{Coordination is for \commitment.} What of coordination?  A
-\commitment isolates the contract a coordination mechanism achieves, apart from
-how it achieves it: locks, barriers, and other mechanisms all enforce
-\commitments.  Our criterion identifies exactly the \commitments a spec's
-outputs require, independent of mechanism. In a composition of specs,
+\commitment isolates the contract a coordination mechanism achieves. 
+% and apart from
+% \commitments.  
+Our criterion identifies exactly the \commitments a spec's
+outputs require, independent of 
+how it they are implemented: via locks, barriers, consensus, etc.
+This raises the question of whether an implementation is correct.
+In a composition of specs,
 coordination is \emph{tight} when an upstream stage makes every \commitment the
-composition needs (sufficient), so later stages need none, and no others
+composition needs (sufficient), and no others
 (necessary).\rv{8}  Guard Tightening shows how to order the upstream's
-outputs to achieve it.  In state-machine replication, for example, the consensus
+outputs to achieve this.  In state-machine replication, for example, the consensus
 log makes every \commitment; the replicated store needs none, so any
 coordination it employs is overhead (\S\ref{sec:composition}).
 
@@ -315,7 +319,7 @@ We make contributions in four categories:
 
 \noindent
 \emph{3. Constructive results for coordination.} We define \commitments, the
-        underlying contracts that coordination mechanisms can enforce, and
+        underlying contracts that coordination mechanisms enforce, and
         identify exactly the \commitments a non-monotone spec requires.\rv{1}  Specs compose by equijoin, and Guard Tightening
         shows how to order an upstream stage's outputs to achieve tight coordination.
 
@@ -558,7 +562,8 @@ $o$.
 
 So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  Possibilities
 can also be removed deliberately.  Closing the polls in panel~(d) rules out
-$aba$ and $abb$, and no remaining row \outrel them.\rv{5}
+$aba$ and $abb$, and no remaining row \outrel them: this is a \commitment: a
+fateful decision as described in the introduction.\rv{5}
 
 \begin{definition}[\Commitment]
 \label{def:commitment}
@@ -643,7 +648,7 @@ a registrar that, when it emits $\bot$ at $ab\cdot$, also closes the polls,
 removing the still-possible rows $aba$ and $abb$ and keeping the current input
 unchanged.  The output was already legal; every output still possible
 \outrelpast $\bot$.  After the event, the upper fiber is determined at
-$\{\bot\}$.  Closing the polls was the registrar's own choice.\rv{5}
+$\{\bot\}$.  Closing the polls was a \commitment the registrar chose to make, unforced by output.\rv{5}
 Section~\ref{sec:systems} models such choices; a spec itself has only input and
 output events.
 
@@ -684,17 +689,18 @@ emits $a$.  No output at $aba$ \outrel both $\bot$ and $a$, so the rows have
 no \emph{common \outnoun} there, and the two runs can never reach a common
 state.
 
-This motivates our first use of confluence, for rows.  Rows with a common
-\outnoun at $j$ are \emph{confluent at} $j$.  A set of rows is
+This motivates our first use of confluence, for rows.  We say that rows are 
+\emph{confluent at} $j$ when they have a common \outnoun at $j$.  A set of rows is
 \emph{row-consistent} when it is confluent at every common \indesc of its
 inputs, and \emph{row-inconsistent} otherwise.  When the context is clearly
 about rows, we say simply \emph{consistent} or \emph{inconsistent}.
 Our example rows $(ab\cdot,\bot)$ and $(aba,a)$ are therefore inconsistent, so a run that emits $\bot$ at $ab\cdot$ must apply the canonical \commitment $x_\bot$.
 
-Runs follow the same pattern: they are \emph{confluent at} $j$ when they can
+Runs follow the same pattern as rows: runs are \emph{confluent at} $j$ when they can
 reach a common state with current input $j$, and consistent when they are
 confluent at every common \indesc.
 
+\jmh{Signpost/label better: our overall definition of consistency for a spec is that all its runs are consistent.}
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
 Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are \emph{confluent at} a
@@ -742,6 +748,8 @@ output \outrel each $o_r$.
 A set of runs can be continued to a common state exactly when their current
 remainder tables share a row at the target input:
 
+\jmh{we should avoid using ``confluent'' now that we've defined consistent at j for rows and consistent for runs, no?
+Probably should sweet the doc and review all uses of ``confluent'' to see if ``consistent'' is better.}
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
 Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent at a common
@@ -971,6 +979,8 @@ Monotonicity holds exactly when both Relational Monotonicity and directed fibers
 hold.
 
 \paragraph{The common-extension condition.}
+\jmh{should we rename to the ``row-consistency condition'' throughout? That would presage the 
+new discussion after Complete CALM.}
 Lifted Monotonicity is stated for one input and its extensions, but runs may
 emit outputs at incomparable inputs, say $o_1$ at $i_1$ and $o_2$ at $i_2$.
 Such runs can be reconciled only at a common extension $j$ of $i_1$ and $i_2$, which calls
@@ -1416,6 +1426,7 @@ then so does the spec's canonical system for $E$.
 % \fullproof
 % \end{proof}
 Intuitively, when Lifted Monotonicity for $E$ fails, rows of $E$ that are not
+\jmh{should we simply say consistent, instead of confluent at a common extension of their inputs?}
 confluent at a common extension of their inputs can sit on opposite sides of a partition:
 availability lets each side emit its row's output, and no later state can
 reconcile them.
@@ -1543,7 +1554,9 @@ $\preceq_M$ with a relation derived from $P_2$: $m'$ \emph{covers} $m$,
 written $m\sqsubseteq m'$, when every finite set of outputs in $P_2(m)$ has a
 common extension in $P_2(m')$.  Confluence of rows and canonical
 \commitments \emph{under} $\sqsubseteq$ use $\sqsubseteq$ in place of
-$\preceq_M$.
+$\preceq_M$. \jmh{should we scope to output events rather than say "canonical commitments", 
+to focus the reader's attention? Also maybe we should clarify above that the dependency
+on canonical commitments is about what goes into Excluded on an output event.}
 
 \begin{theorem}[Guard Tightening]
 \label{thm:guard-tightening}
@@ -1564,7 +1577,7 @@ Let $\Spec_1$ guard $\Spec_2$.
 When the KVS answers each command in turn, as in state-machine replication,
 $\sqsubseteq$ is the log's prefix order, and the consensus log is a tight guard.
 When the KVS reports only its state and $A$ and $B$ commute, $[A,B]$ and
-$[B,A]$ cover each other and fail antisymmetry.  The prefix order keeps them
+$[B,A]$ cover each other and hence $\sqsubseteq$ fails antisymmetry.  The prefix order keeps them
 apart, so it makes the log a sufficient guard but not a necessary one.
 Tightening means identifying such values, as a log that orders only
 non-commuting commands does (Generalized Paxos~\cite{lamport2005generalized},
