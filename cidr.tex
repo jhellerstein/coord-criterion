@@ -280,14 +280,17 @@ sequential runs (\S\ref{sec:distributed-execution}).  Complete CAP
 that can keep every permitted output both available and consistent during a
 partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directly.
 
-\paragraph{Coordination is for \commitment.} What of coordination?  A \commitment isolates the contract a coordination
-mechanism achieves, apart from how it achieves it: locks, barriers,
-and other mechanisms all enforce \commitments.  Our criterion identifies exactly
-the \commitments a spec's outputs require, independent of mechanism.
-In a composition of specs, coordination is \emph{tight}
-when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  Guard Tightening shows how to order the upstream's outputs to achieve it.  In state-machine replication, for example, the consensus log
-makes every \commitment; the replicated store needs none, so any coordination it employs is overhead
-(\S\ref{sec:composition}).
+\paragraph{Coordination is for \commitment.} What of coordination?  A
+\commitment isolates the contract a coordination mechanism achieves, apart from
+how it achieves it: locks, barriers, and other mechanisms all enforce
+\commitments.  Our criterion identifies exactly the \commitments a spec's
+outputs require, independent of mechanism. In a composition of specs,
+coordination is \emph{tight} when an upstream stage makes \commitments that are
+sufficient, so later stages need none, and necessary, so it makes no more than
+the composition needs.  Guard Tightening shows how to order the upstream's
+outputs to achieve it.  In state-machine replication, for example, the consensus
+log makes every \commitment; the replicated store needs none, so any
+coordination it employs is overhead (\S\ref{sec:composition}).
 
 \paragraph{Contributions.}
 We make contributions in four categories:
@@ -306,10 +309,11 @@ We make contributions in four categories:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
 \noindent
-\emph{3. Constructive results for coordination.} We define \commitments,
-        the underlying contracts that coordination mechanisms can enforce,
-        and identify exactly the \commitments a non-monotone spec requires.
-        Specs compose by equijoin.  Coordination is tight when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  Guard Tightening shows how to order the upstream's outputs to achieve it.
+\emph{3. Constructive results for coordination.} We define \commitments, the
+        underlying contracts that coordination mechanisms can enforce, and
+        identify exactly the \commitments a non-monotone spec requires. Specs
+        compose by equijoin.  Specs compose by equijoin, and Guard Tightening
+        shows how to order an upstream stage's outputs to achieve tight coordination.
 
 \noindent
 \emph{4. A map of the literature.} Highly Available Transactions, Invariant
@@ -659,7 +663,7 @@ $(ab\cdot,\bot)$ and $(aba,a)$ have the \emph{common \indesc} $aba$, an input
 that \inrel both of their inputs, but no \emph{common \outnoun}: no output at
 $aba$ \outrel both $\bot$ and $a$.
 
-Common \outnouns give us a row-level notion of consistency.  Rows with a common
+This leads to a row-level definition of (in)consistency.  Rows with a common
 \outnoun at $j$ are \emph{row-consistent at} $j$, and \emph{row-inconsistent
 at} $j$ otherwise.  \Commitment-free runs that emit their outputs can be
 reconciled at $j$ exactly when the rows are row-consistent there, so row
