@@ -80,6 +80,10 @@
 % Pointer to the long version (proofs and extended material).
 \newcommand{\extended}{the full paper~\cite{hellerstein2026completecalmfull}}
 \newcommand{\fullproof}{Complete proof in the full paper~\cite{hellerstein2026completecalmfull}.}
+% Review-round tags: \rv{n} marks a fix for reviewer issue n
+% (drafts/cidr-review-round1.md).  Silent unless \showrvtrue.  Remove after the round.
+\newif\ifshowrv \showrvfalse
+\newcommand{\rv}[1]{\ifshowrv\textsuperscript{\textcolor{magenta}{\textbf{R#1}}}\fi}
 % \proofinfull: a one-line proof with tighter vertical space than the class's
 % proof environment (topsep 2pt instead of 6pt plus 6pt); same label and QED.
 \makeatletter
@@ -168,9 +172,9 @@ programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.
 
 \color{black}\cxtag{2}{N/M}We provide a simple formalism that unifies the literature and
-offers new results.  A minimalist \emph{\spectype} (spec) is a possibility table containing, for
+offers new results.  An \emph{\spectype} (spec) is a possibility table containing, for
 each input, every output a system may produce, with partial orders on inputs and
-outputs.  Its runs are \emph{consistent} when they are confluent as input grows.
+outputs.  Its runs (event sequences)\rv{7} are \emph{consistent} when they are confluent as input grows.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: the runs are consistent exactly when the function is
 monotone.  \emph{Complete CALM}
@@ -184,7 +188,7 @@ unified framework says exactly
 what coordination a spec needs, and when.  A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
-A composition of specs has \emph{tight coordination} when an upstream stage makes \commitments that are sufficient, so later stages need none, and necessary, so it makes no more than the composition needs.  We show how to order the upstream's outputs to achieve it, explaining designs such
+A composition of specs has \emph{tight coordination} when an upstream stage makes every \commitment the composition needs (sufficient), so later stages need none, and no others (necessary).\rv{8}  We show how to order the upstream's outputs to achieve it, explaining designs such
 as consensus logs in front of a replicated store.
 \end{abstract}
 
@@ -267,7 +271,7 @@ properly placed.\cxbar{7}{0.4 0.4 1}{e}
 moves on, and possibilities are lost to us. Sometimes possibilities disappear
 because we must decide among them. A
 decision is fateful when it rules out a possibility that no remaining alternative
-can cover. When must a system make a fateful decision?
+subsumes.\rv{6} When must a system make a fateful decision?
 
 \color{blue!75!black}\cxtag{9}{B/M}\cxbar{9}{0.4 0.4 1}{s}We ground the problem in a simple model of \emph{\spectype[s]}, or \emph{specs}
 for short, independent of any language, protocol, or placement. The designer of
@@ -278,7 +282,7 @@ with a permitted output. The design includes the input domain $I$ and output dom
 with partial orders that help capture the spec's semantics.  On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
-means that  $u$ \emph{\outrel} $o$ by subsuming (i.e., covering) all spec-relevant information in
+means that  $u$ \emph{\outrel} $o$ by subsuming\rv{6} all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
 a spec to be faithful.\cxbar{9}{0.4 0.4 1}{e}
 
@@ -288,7 +292,7 @@ extending that input are lost.  When the system decides among possibilities, it
 makes a controlled decision to remove rows.  The decision is fateful if some
 removed output has no remaining output that \outrel it.
 Choosing between two candidates in a leader election is fateful: nothing
-remaining covers the loser's possibility of a win.  So is closing the polls early,
+remaining subsumes\rv{6} the loser's possibility of a win.  So is closing the polls early,
 ruling out every row with a late ballot.  We call a fateful decision a
 \emph{\commitment}.\cxbar{10}{0.4 0.4 1}{e}
 
@@ -300,9 +304,10 @@ Despite its simplicity, our model supports not only application invariants, but 
 
 \paragraph{Consistency and the CALM criterion.}
 \color{black}\cxtag{12}{N/M}\cxbar{12}{0.4 0.4 1}{s}The model provides clean definitions for the two sides of CALM: Consistency
-and Monotonicity.  Our Consistency definition is general: the runs of a spec are
-\emph{consistent} when they are \emph{confluent} at every input that extends theirs, so that states reached along
-different paths can be brought to a common state.  Applied to different specs,
+and Monotonicity.  Our Consistency definition is general: a spec's runs
+(sequences of input and output events) are \emph{consistent} when they are
+\emph{confluent}: at any input extending all of theirs, they can still reach a
+common state.\rv{7}  Applied to different specs,
 this one definition captures classical consistency models, from eventual consistency of replicated data
 through linearizability, serializability and other isolation levels.
 It also captures consistency of application specs.\cxbar{12}{0.4 0.4 1}{e}
@@ -334,9 +339,9 @@ partition.  The Gilbert--Lynch CAP Theorem~\cite{gilbert2002cap} follows directl
 how it achieves it: locks, barriers, and other mechanisms all enforce
 \commitments.  Our criterion identifies exactly the \commitments a spec's
 outputs require, independent of mechanism. In a composition of specs,
-coordination is \emph{tight} when an upstream stage makes \commitments that are
-sufficient, so later stages need none, and necessary, so it makes no more than
-the composition needs.  Guard Tightening shows how to order the upstream's
+coordination is \emph{tight} when an upstream stage makes every \commitment the
+composition needs (sufficient), so later stages need none, and no others
+(necessary).\rv{8}  Guard Tightening shows how to order the upstream's
 outputs to achieve it.  In state-machine replication, for example, the consensus
 log makes every \commitment; the replicated store needs none, so any
 coordination it employs is overhead (\S\ref{sec:composition}).\cxbar{16}{0.4 0.4 1}{e}
@@ -360,8 +365,7 @@ coordination it employs is overhead (\S\ref{sec:composition}).\cxbar{16}{0.4 0.4
 \color{black}\noindent
 \cxtag{20}{N/M}\cxbar{20}{0.4 0.4 1}{s}\emph{3. Constructive results for coordination.} We define \commitments, the
         underlying contracts that coordination mechanisms can enforce, and
-        identify exactly the \commitments a non-monotone spec requires. Specs
-        compose by equijoin.  Specs compose by equijoin, and Guard Tightening
+        identify exactly the \commitments a non-monotone spec requires.\rv{1}  Specs compose by equijoin, and Guard Tightening
         shows how to order an upstream stage's outputs to achieve tight coordination.\cxbar{20}{0.4 0.4 1}{e}
 
 \color{black}\noindent
@@ -603,8 +607,7 @@ $o$.\cxbar{39}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{40}{N/M}\cxbar{40}{0.4 0.4 1}{s}So $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  Possibilities
 can also be removed deliberately.  Closing the polls in panel~(d) rules out
-$aba$ and $abb$, and no remaining row covers them: this is the fateful
-decision of the introduction.\cxbar{40}{0.4 0.4 1}{e}
+$aba$ and $abb$, and no remaining row \outrel them.\rv{5}\cxbar{40}{0.4 0.4 1}{e}
 
 \color{black}\begin{definition}[\Commitment]
 \label{def:commitment}
@@ -629,8 +632,7 @@ and then emits $o$:
 \end{equation}
 If $o$ is not legal at $(i,R)$, the event first removes the rows whose outputs
 do not \outrelbase $o$; this removal is $o$'s \emph{canonical \commitment} $x_o$,
-after which $o$ is legal.  In a functional table each input has only one row,
-so $x_o$ rules out those rows' inputs.\cxbar{43}{0.4 0.4 1}{e}
+after which $o$ is legal.\rv{14}\cxbar{43}{0.4 0.4 1}{e}
 \end{definition}
 
 \color{black}\cxtag{44}{N/M}\cxbar{44}{0.4 0.4 1}{s}An output event thus always emits a legal output, and applies a \commitment
@@ -677,7 +679,7 @@ leads to another determined state with that output.\cxbar{44}{0.4 0.4 1}{e}
 \color{black}\cxtag{45}{N/M}\cxbar{45}{0.4 0.4 1}{s}Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order $\OutputOrd$: it defines a new spec in which all outputs are incomparable.
 Under this order (called the \emph{equality order}), no output \outrel both
-$\bot$ and a future winner, so it is not legal at $ab\cdot$, and emitting it applies
+$\bot$ and a future winner, so $\bot$\rv{14} is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.  That change in the output
 order is Functional CALM in miniature: the spec is monotone under the original
 order, so later outputs \outrelbase every earlier one; under the equality order
@@ -690,7 +692,7 @@ a registrar that, when it emits $\bot$ at $ab\cdot$, also closes the polls,
 removing the still-possible rows $aba$ and $abb$ and keeping the current input
 unchanged.  The output was already legal; every output still possible
 \outrelpast $\bot$.  After the event, the upper fiber is determined at
-$\{\bot\}$.  Closing the polls was the registrar's own fateful decision.
+$\{\bot\}$.  Closing the polls was the registrar's own choice.\rv{5}
 Section~\ref{sec:systems} models such choices; a spec itself has only input and
 output events.\cxbar{46}{0.4 0.4 1}{e}
 
@@ -818,8 +820,8 @@ run applies a \commitment.
 
 \color{black}\begin{proof}[Proof sketch]
 \cxtag{63}{N/M}\cxbar{63}{0.4 0.4 1}{s}First assume the runs are consistent, and suppose some output event applies
-$x_o$, removing a row $(k,x)$.  A run from the state before that event that
-instead takes $\mathsf{input}(k)$ and emits $x$ shares no row at $k$ with it,
+$x_o$, removing a row $(k,y)$.\rv{3}  A run from the state before that event that
+instead takes $\mathsf{input}(k)$ and emits $y$ shares no row at $k$ with it,
 so by Proposition~\ref{prop:confluence} the two are not confluent at $k$, a
 contradiction.  Now assume no output event applies a \commitment.  Every output
 is then legal where it is emitted, so the rows the runs keep at their current
@@ -903,7 +905,7 @@ outputs; the \spectype is \emph{nondeterministic} when some fiber does.  A
 functional \spectype is the special case $\fiber{i}=\{f(i)\}$.\cxbar{71}{0.4 0.4 1}{e}
 \end{definition}
 
-\color{black}\cxtag{72}{N/M}\cxbar{72}{0.4 0.4 1}{s}Specification nondeterminism describes permitted results, not a strategy's method of choosing
+\color{black}\cxtag{72}{N/M}\cxbar{72}{0.4 0.4 1}{s}Specification nondeterminism describes permitted results, not how a system chooses\rv{14}
 among them, and does not by itself imply a \commitment. Specification states and input events
 (\S\ref{sec:framework-brief}) apply unchanged to relational tables.\cxbar{72}{0.4 0.4 1}{e}
 
@@ -1052,15 +1054,15 @@ removes others, is that removal a \commitment?  The output event itself is uncha
 $\mathsf{output}(o)$ emits $o$ and keeps the rows whose outputs \outrelbase $o$,
 ending at $(i,R[\mathrm{out}\OutputGe o])$ (Equation~\ref{eq:output-action}).\cxbar{88}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{89}{N/M}\cxbar{89}{0.4 0.4 1}{s}However, removing a row $(k,x)$ does not always lose the information in its output.  If
-some output $u\in R(k)$ \outrel both $x$ and $o$, the row $(k,u)$ is kept, and
-a later output $u$ reports everything $x$ would have.  We separate the removed
+\color{black}\cxtag{89}{N/M}\cxbar{89}{0.4 0.4 1}{s}However, removing a row $(k,y)$\rv{3} does not always lose the information in its output.  If
+some output $u\in R(k)$ \outrel both $y$ and $o$, the row $(k,u)$ is kept, and
+a later output $u$ reports everything $y$ would have.  We separate the removed
 rows accordingly.\cxbar{89}{0.4 0.4 1}{e}
 
 \color{black}\begin{definition}[Output subsumption, nondeterministic legality]
 \label{def:subsumed-excluded}
-\cxtag{90}{N/S}At a state $(i,R)$ with $o\in R(i)$, let $(k,x)\in R$ be a row with
-$o\not\OutputOrd x$.  It is \emph{subsumed} when it is confluent with $(i,o)$ at $k$ in $R$, and \emph{excluded} otherwise; $\Subsumed_o$
+\cxtag{90}{N/S}At a state $(i,R)$ with $o\in R(i)$, let $(k,y)\in R$ be a row with
+$o\not\OutputOrd y$.  It is \emph{subsumed} when some $u\in R(k)$\rv{4} \outrel both $y$ and $o$, and \emph{excluded} otherwise; $\Subsumed_o$
 and $\Excluded_o$ are the sets of such rows.  The \emph{canonical \commitment}
 $x_o$ removes $\Excluded_o$, and $o$ is \emph{legal} when $\Excluded_o$ is
 empty.
@@ -1068,10 +1070,10 @@ empty.
 
 \color{black}\cxtag{91}{N/M}\cxbar{91}{0.4 0.4 1}{s}The output event first applies $x_o$ and then removes $\Subsumed_o$, and only
 the first removal is a \commitment.  No row of $\Excluded_o$ has a remaining row
-$(k,w)$ with $x\OutputOrd w$: such a $w$ either \outrel $o$ or is itself
-subsumed, and either way $(k,x)$ would be subsumed.  So $x_o$ is a \commitment
+$(k,w)$ with $y\OutputOrd w$: such a $w$ either \outrel $o$ or is itself
+subsumed, and either way $(k,y)$ would be subsumed.  So $x_o$ is a \commitment
 in the sense of Definition~\ref{def:commitment}.  In a functional table no
-other row shares an input with $(k,x)$, so every removed row is excluded, and
+other row shares an input with $(k,y)$, so every removed row is excluded, and
 legality and $x_o$ are as in Definitions~\ref{def:exposable}
 and~\ref{def:output-event}.  If $x_o$ removes every row at $k$, it rules out the
 input $k$; otherwise it rules out only the excluded outputs at $k$.\cxbar{91}{0.4 0.4 1}{e}
@@ -1268,7 +1270,8 @@ choose to apply \commitments this way, independent of inputs or outputs.  When
 a \commitment event precedes an output event, the output event has less left to
 remove.\cxbar{111}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{112}{N/M}\cxbar{112}{0.4 0.4 1}{s}A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ and a
+\color{black}\cxtag{112}{N/M}\cxbar{112}{0.4 0.4 1}{s}A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ (the \commitments it may apply, such
+as the 2PL \commitments below)\rv{9} and a
 possibly nondeterministic \emph{strategy} per participant that picks its next output,
 \commitment, or send event, applying only
 \commitments from $\mathcal B$.  The full paper gives these definitions formally.
@@ -1417,16 +1420,15 @@ therefore continue to one state at $j$, which is Partition Consistency.
 
 \color{black}\cxtag{135}{N/M}\cxbar{135}{0.4 0.4 1}{s}For $E=P$, a spec escapes CAP exactly when Lifted Monotonicity holds; the canonical system then needs no \commitment. \Commitments and availability can still coexist when each \commitment is made by a single participant, as the election's voters show.\cxbar{135}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{136}{N/M}\cxbar{136}{0.4 0.4 1}{s}Return to the election of Section~\ref{sec:election-story}.  That discussion
-centered on the spec for vote collection, as performed by the registrar; here
-we consider the spec for the voters, which the registrar observes.  Each
+\color{black}\cxtag{136}{N/M}\cxbar{136}{0.4 0.4 1}{s}Return to the election of Section~\ref{sec:election-story}, now with the spec
+for the voters, which the registrar observes.\rv{11}  Each
 voter's ballot is a row of $E$, and the sets of ballots the registrar may
 observe are implicit outputs in $P\setminus E$.  A voter's choice between $a$
 and $b$ is a \commitment: voting $a$ rules out every set of ballots in which it
 votes $b$.  But it is a single-voter \commitment involving no communication, so
 the voter can make it and emit its ballot during a partition.  Ballots on
 different sides never conflict, since each is cast by a different voter (the
-full paper formalizes this placement as a \emph{deployment}~\extended), so every set of ballots an observer may collect is consistent.\cxbar{136}{0.4 0.4 1}{e}
+full paper formalizes this placement as a \emph{deployment}~\cite{hellerstein2026completecalmfull}\rv{2}), so every set of ballots an observer may collect is consistent.\cxbar{136}{0.4 0.4 1}{e}
 
 \color{black}\cxtag{137}{N/M}\cxbar{137}{0.4 0.4 1}{s}A partition does not change the intrinsic \commitments a spec needs; it
 prevents separated participants from jointly enforcing them through
@@ -1438,8 +1440,8 @@ anyway, sacrificing Partition Consistency.\cxbar{137}{0.4 0.4 1}{e}
 \color{black}\cxtag{138}{N/M}\cxbar{138}{0.4 0.4 1}{s}Gilbert and Lynch's theorem is a case of Complete CAP in which Lifted
 Monotonicity for $E$ fails.  We show the failure for the register example, then
 extend the conclusion from the canonical system to every system.  Linearizability
-respects real-time order~\cite{herlihy1990linearizability}, so suppose the write
-finishes before the read begins.  Every linearization then puts the write
+respects real-time order~\cite{herlihy1990linearizability}, so, unlike the
+overlapping requests above,\rv{10} suppose the write finishes before the read begins.  Every linearization then puts the write
 first, and the read must return $v$.  But each of $p$ and $q$ sees only its own
 request, and Availability requires $p$ to acknowledge the write and $q$ to
 answer $v_0$.  These two rows are not confluent at the input with both
@@ -1609,14 +1611,14 @@ $\preceq_M$.\cxbar{156}{0.4 0.4 1}{e}
 \proofinfull
 
 \color{black}\cxtag{158}{N/M}\cxbar{158}{0.4 0.4 1}{s}When the KVS answers each command in turn, as in state-machine replication,
-$\sqsubseteq$ is the prefix order, and the consensus log is a tight guard.
+$\sqsubseteq$ is the log's prefix order, and the consensus log is a tight guard.
 When the KVS reports only its state and $A$ and $B$ commute, $[A,B]$ and
 $[B,A]$ cover each other and fail antisymmetry.  The prefix order keeps them
 apart, so it makes the log a sufficient guard but not a necessary one.
 Tightening means identifying such values, as a log that orders only
 non-commuting commands does (Generalized Paxos~\cite{lamport2005generalized},
 EPaxos~\cite{moraru2013epaxos}).  Without greatest elements, no order on $M$
-may make $\Spec_1$ a tight guard~\extended.\cxbar{158}{0.4 0.4 1}{e}
+may make $\Spec_1$ a tight guard~\cite{hellerstein2026completecalmfull}.\rv{2}\cxbar{158}{0.4 0.4 1}{e}
 
 \paragraph{Composite CALM.}
 \label{sec:composite-calm}
@@ -1629,7 +1631,7 @@ contradict it.  Behind a counter capped at $9$, it only ever answers
 \textsf{false}, which is monotone under any order: the counter is a sufficient guard
 (Proposition~\ref{prop:guard-test}), and since the counter is monotone,
 neither stage needs a \commitment.  The full paper extends these results to
-longer pipelines and acyclic graphs of stages~\extended.\cxbar{159}{0.4 0.4 1}{e}
+longer pipelines and acyclic graphs of stages~\cite{hellerstein2026completecalmfull}.\rv{2}\cxbar{159}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Mappings and Related Work}
@@ -1645,8 +1647,7 @@ obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
 and applications to classical distributed-computing problems: registers, consensus,
 leader election, snapshots, queues, and search structures.\cxbar{160}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{161}{N/M}\cxbar{161}{0.4 0.4 1}{s}Three patterns of non-monotonicity recur in the mappings below and in
-coordinated systems generally.  In each, an output settles something the input
+\color{black}\cxtag{161}{N/M}\cxbar{161}{0.4 0.4 1}{s}Three patterns of non-monotonicity recur in this literature.  In each, an output settles something the input
 has not:
 % outputs that order concurrent events,
 % as serial schedules, total-order broadcast, and Lost Update do;
@@ -1719,8 +1720,8 @@ $q$ is monotone on the states $s$ can reach.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
 test: a later removal grows $R$ and shrinks the answer.  The composite is then
-not monotone, and since the semilattice stage needs no \commitment, the semilattice
-stage is not a sufficient guard (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
+not monotone, and since the semilattice stage needs no \commitment, it\rv{14}
+is not a sufficient guard (Corollary~\ref{cor:upstream-commitments}): the \commitment falls
 on the query.  An answer that exposes an element as present blocks its removal
 before it arrives, the third pattern above.  The two-phase set does not enforce the block: it accepts the
 removal, and the answer is contradicted.  The CRDT's join is one
@@ -1847,7 +1848,7 @@ within spec from another execution.  Modeling the automaton as a system, with
 its choices as \commitment events, captures the executions precisely: the
 automaton is confluent exactly when its \commitments never remove every row
 its canonical runs could still agree on.  The full paper gives both
-constructions~\extended.
+constructions~\cite{hellerstein2026completecalmfull}.\rv{2}
 Model checkers can refute
 consistency on bounded inputs~\cite{newcombe2015aws}, and mechanized
 proofs~\cite{hawblitzel2015ironfleet} can show, by the standard obligations of
