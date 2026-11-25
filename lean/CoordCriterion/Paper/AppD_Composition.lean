@@ -167,48 +167,43 @@ theorem «app:composition/joint-monotone» {I M O : Type} [PO I] [instM : PO M] 
       fun sp1 sp2 e e' h => Joint.reorder_seq sp1 sp2 e e' h,
       fun h h1 h2 => Joint.seq_liftedMono_reencode h h1 h2⟩⟩
 
-/-- "The reach of case (3).  Let `f : I → M` and `g : M → O` be functions with
-`g(f(·))` monotone.  One candidate order on `M` places `a` below `b`
-when `g(a) ≼ g(b)`.  This relation is reflexive and transitive, and it makes
-`g` monotone by construction and `f` monotone because `g(f(·))` is.  But it
-can place two distinct values each below the other, so it is an order only
-when no such pair exists, in particular when `g` maps distinct values to
-distinct values.  Then case (3) applies.  Case (3) need not apply in general.  Let `I` be the chain `x ⊑ y ⊑ z`,
-`M = {p,q}`, `f(x) = f(z) = p`, `f(y) = q`, and `g` constant.  The composite is
-constant, hence monotone.  Under any order on `M`, monotonicity of `f` gives
-`p ≼_M q ≼_M p`, so `p = q`, a contradiction.  Recall the legal-output test
-for tables of functions: `f(i)` is a legal output at `σ(i)` exactly when
-`f(i) ≼_M f(k)` for every `k ⪰ i`.  So the upstream cannot emit under the
-empty basis at one of the canonical states of `x` and `y`.  The stages can be repaired only by merging
-`p` and `q` into one intermediate value."  Lean: `Joint.preorder_factorization` (the
-reflexive, transitive relation, which exists exactly when `g ∘ f` is
-monotone); `Joint.injective_characterization` (for one-to-one `g`, stated for
-Lifted Monotonicity of the tables, with the pulled-back partial order
-`Joint.pullPO`); `Joint.graph_canon_exposable_iff` (the legal-output test);
-`Joint.no_order_counterexample` (`I = Joint.C3`, `M = Joint.Mid`; the
-empty-basis upstream stalls at some canonical state); `Joint.merge_needed`
-(any re-encoding `e` of `M`, into any partially ordered set, that makes the
-upstream `e ∘ f` monotone has `e(p) = e(q)`). -/
+/-- "The reach of case (3).  Suppose each `P₂(m)` has a greatest element `t(m)`
+and `P₂ ∘ P₁` satisfies Lifted Monotonicity.  Order `M` by `⊑` (Section
+`sec:tight-coordination`), which is reflexive, since each `P₂(m)` is directed,
+and transitive.  `𝒮₂` satisfies Lifted Monotonicity under it by the definition
+of `⊑`.  For `𝒮₁`, … `𝒮₁` satisfies Lifted Monotonicity, and case (3) applies.
+For functions `f : I → M` and `g : M → O` with `g(f(·))` monotone, `⊑` places
+`a` below `b` when `g(a) ≼ g(b)`.  Without greatest answers, case (3) can fail.
+In the gap example of Section `sec:tight-coordination` the composite satisfies
+Lifted Monotonicity.  Under any order on `M` for which `𝒮₂` satisfies Lifted
+Monotonicity, `𝒮₁` is a sufficient guard (Proposition `prop:guard-test`), so
+the rows `(lo,z)` and `(hi,n₀)` are not confluent at `hi` (Appendix
+`app:tight`), and `𝒮₁` does not satisfy Lifted Monotonicity."  Lean:
+`Tight.jointMono_dleOrder`; for functions, `Joint.factor_characterization` (the
+order pulled back through `g`, `Joint.pullPO`, is `⊑` by `Tight.graph_dle_iff`);
+`Tight.Gap.no_joint_order`.  The legal-output test for functions, now stated
+with the boolean toggle, is `Joint.graph_canon_exposable_iff`. -/
 theorem «app:composition/reach» {I M O : Type} [PO I] [PO O] :
-    (∀ {f : I → M} {g : M → O}, Monotone (g ∘ f) ↔ ∃ le : M → M → Prop, (∀ a, le a a) ∧
-      (∀ a b c, le a b → le b c → le a c) ∧ (∀ x y, x ≼ y → le (f x) (f y)) ∧
-      ∀ a b, le a b → g a ≼ g b) ∧
-    (∀ {f : I → M} {g : M → O}, (∀ a b, g a = g b → a = b) →
-      ((graph (g ∘ f)).LiftedMono ↔ ∃ inst : PO M,
+    (∀ {instM : PO M} (sp : @Spec I M _ instM) (sk : @Spec M O instM _)
+        (htop : ∀ m, ∃ t, Tight.HasTop sk.P m t),
+        (Comp.seq sp sk).LiftedMono →
+        let inst := Tight.dleOrder sk.P (Tight.dle_refl_of_top htop)
+        @Spec.LiftedMono I M _ inst (Joint.underOut inst sp) ∧
+          @Spec.LiftedMono M O inst _ (Joint.underIn inst sk)) ∧
+    (∀ [PO M] {f : I → M} {g : M → O}, (graph (g ∘ f)).LiftedMono ↔ ∃ inst : PO M,
         @Spec.LiftedMono I M _ inst (@graph I M _ inst f) ∧
-        @Spec.LiftedMono M O inst _ (@graph M O inst _ g))) ∧
+        @Spec.LiftedMono M O inst _ (@graph M O inst _ g)) ∧
     (∀ (inst : PO M) (f : I → M) (i : I),
       @Exposable I M _ inst _ (@canon I M _ inst (@graph I M _ inst f) i) (f i) ↔
         ∀ k, i ≼ k → @PO.le M inst (f i) (f k)) ∧
-    ((∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
-      (∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ¬ (graph Joint.fz).LiftedMono) ∧
-      ∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ∃ i, ∀ o τ,
-        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output o) τ) ∧
-    ∀ {M' : Type} (inst : PO M') [@PO.Antisymm M' inst] (e : Joint.Mid → M'),
-      @Monotone Joint.C3 M' _ inst (e ∘ Joint.fz) → e .p = e .q :=
-  ⟨Joint.preorder_factorization, fun hg => Joint.injective_characterization hg,
-    fun inst f i => @Joint.graph_canon_exposable_iff I M _ inst f i, Joint.no_order_counterexample,
-    fun inst _ e h => Joint.merge_needed inst e h⟩
+    ((Comp.seq Tight.Gap.up Tight.Gap.down).LiftedMono ∧
+      ∀ inst : PO Tight.Gap.Mid, ¬ (@Spec.LiftedMono Tight.Gap.Lv Tight.Gap.Mid _ inst
+          (@Joint.underOut Tight.Gap.Lv Tight.Gap.Mid _ Tight.Gap.midPO inst Tight.Gap.up) ∧
+        @Spec.LiftedMono Tight.Gap.Mid Nat inst _
+          (@Joint.underIn Tight.Gap.Mid Nat _ Tight.Gap.midPO inst Tight.Gap.down))) :=
+  ⟨fun sp sk htop h => Tight.jointMono_dleOrder sp sk htop h,
+    Joint.factor_characterization,
+    fun inst f i => @Joint.graph_canon_exposable_iff I M _ inst f i, Tight.Gap.no_joint_order⟩
 
 /-- "The capped counter of Section `sec:composite-calm` is an instance of case
 (2).  Let `𝒮₁` be the functional spec induced by `c(n) = min(n,9)` on

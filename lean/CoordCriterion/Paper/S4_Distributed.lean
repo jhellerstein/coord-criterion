@@ -786,8 +786,9 @@ it.  (2) By part (1), the condition says some row at `k` lies in every `R_r`.
 First assume the runs are confluent at `k`.  A common state at `k` has a row at
 `k`, and since rows are never added, that row lies in every `R_r`.  Now assume
 `(k,u)` lies in every `R_r`.  Then `input(k)`, `output(u)`, and a commitment
-event that removes every other row bring each run to the state whose only row
-is `(k,u)`, so the runs are confluent at `k`."  (The final event is a commitment:
+event that removes every row except `(k,u)` and the rows at `k` with outputs
+equivalent to `u` bring each run to the same state, so the runs are confluent
+at `k`."  (The final event is a commitment:
 after `output(u)` every other row at `k` extends `u` and differs from it, so
 none is extended by `(k,u)`; this is checked in Lean, not stated in the
 sketch.)

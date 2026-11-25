@@ -144,23 +144,28 @@ leaves the composite table unchanged, whatever the orders on $M$ and $M'$,
 since a join through $e(m)$ is a join through $e'(e(m))=m$.
 \end{proof}
 
-\paragraph{The reach of case (3).}  Let $f:I\to M$ and $g:M\to O$ be
-functions with $g(f(\cdot))$ monotone.  One candidate order on $M$ places $a$
-below $b$ when $g(a)\OutputOrd g(b)$.  This relation is reflexive and
-transitive, and it makes $g$ monotone by construction and $f$ monotone
-because $g(f(\cdot))$ is.  But it can place two distinct values each below
-the other, so it is an order only when no such pair exists, in particular
-when $g$ maps distinct values to distinct values.  Then case (3) applies.
+\paragraph{The reach of case (3).}  Suppose each $P_2(m)$ has a greatest
+element $t(m)$ and $P_2\circ P_1$ satisfies Lifted Monotonicity.  Order $M$ by
+$\sqsubseteq$ (Section~\ref{sec:tight-coordination}), which is reflexive,
+since each $P_2(m)$ is directed, and transitive.  $\Spec_2$ satisfies Lifted
+Monotonicity under it by the definition of $\sqsubseteq$.  For $\Spec_1$, let
+$i\InputOrd j$ and let $X\subseteq P_1(i)$ be finite.  The answers $t(x)$ for
+$x\in X$ are outputs of the composite at $i$, so Lifted Monotonicity of the
+composite gives a row $(j,u)$ of $P_2\circ P_1$ with every $t(x)\OutputOrd u$,
+and $u\in P_2(m')$ for some $m'\in P_1(j)$.  Every finite set of outputs in
+$P_2(x)$ lies below $t(x)$, and so below $u$, so $x\sqsubseteq m'$ for every
+$x\in X$: $\Spec_1$ satisfies Lifted Monotonicity, and case (3) applies.  For
+functions $f:I\to M$ and $g:M\to O$ with $g(f(\cdot))$ monotone, $\sqsubseteq$
+places $a$ below $b$ when $g(a)\OutputOrd g(b)$.
 
-Case (3) need not apply in general.  Let $I$ be the chain $x\InputOrd
-y\InputOrd z$, $M=\{p,q\}$, $f(x)=f(z)=p$, $f(y)=q$, and $g$ constant.  The
-composite is constant, hence monotone.  Under any order on $M$, monotonicity
-of $f$ gives $p\preceq_M q\preceq_M p$, so $p=q$, a contradiction.  Recall the
-legal-output test for tables of functions: $f(i)$ is a legal output at
-$\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every $k\InputGe i$.  So the
-upstream cannot emit under the empty basis at one of the canonical states of
-$x$ and $y$.  The stages can be repaired only by merging $p$ and $q$ into one
-intermediate value.
+Without greatest answers, case (3) can fail.  In the gap example of
+Section~\ref{sec:tight-coordination} the composite satisfies Lifted
+Monotonicity.  Under any order on $M$ for which $\Spec_2$ satisfies Lifted
+Monotonicity, $\Spec_1$ is a sufficient guard
+(Proposition~\ref{prop:guard-test}), so the rows $(\mathit{lo},z)$ and
+$(\mathit{hi},n_0)$ are not confluent at $\mathit{hi}$
+(Appendix~\ref{app:tight}), and $\Spec_1$ does not satisfy Lifted
+Monotonicity.
 
 The capped counter of Section~\ref{sec:composite-calm} is an instance of case
 (2).  Let $\mathcal S_1$ be the functional spec induced by $c(n)=\min(n,9)$ on
@@ -176,9 +181,11 @@ $\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
 
 The boolean toggle is an instance of case (3).  Let $I$, $M$, and $O$ be the
 booleans with $\mathit{false}$ below $\mathit{true}$, and let both stages be
-negation.  At $i=\mathit{false}$ the first stage would emit $\mathit{true}$,
-which is not below its output $\mathit{false}$ at the larger input, so by the
-legal-output test above it cannot emit there under the empty basis.  Under the
+negation.  For a function $f$, the output $f(i)$ is a legal output at
+$\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every $k\InputGe i$.  At
+$i=\mathit{false}$ the first stage would emit $\mathit{true}$, which is not
+below its output $\mathit{false}$ at the larger input, so it cannot emit there
+under the empty basis.  Under the
 reversed order on $M$, negation is monotone in both stages, and by case (3)
 the composite is the identity in either order.
 
@@ -191,10 +198,9 @@ state of $\mathcal S_1$ neither $x$ nor $y$ is a legal output.  Under the
 empty basis an output event emits only a legal output, and no \commitment
 event is possible (Definition~\ref{def:run-under-basis}).  There is no other
 input to receive.  So every run of $\mathcal S_1$ under the empty basis stays at the canonical
-state and emits nothing, and $\mathcal S_2$ receives nothing.  Renaming $x,y$
-to $\mathit{lo}\preceq\mathit{hi}$ makes $\mathcal S_1$ satisfy Lifted
-Monotonicity, since $\mathit{hi}$ subsumes $\mathit{lo}$.  By case (3) the
-composite is unchanged.
+state and emits nothing, and $\mathcal S_2$ receives nothing.  Ordering $x$
+and $y$ as equivalent, as $\sqsubseteq$ does, makes $\mathcal S_1$ satisfy
+Lifted Monotonicity, and by case (3) the composite is unchanged.
 
 \subsection{Sufficient guards}
 

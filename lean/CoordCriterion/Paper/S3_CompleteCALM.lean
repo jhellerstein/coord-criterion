@@ -134,7 +134,7 @@ theorem «sec:ambiguity-story/transactions-fail» :
 
 /-- **Def. `def:relational-specification`** (I/O specification).
 "`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
-`(O,≼)` are partially ordered sets.  `P` is the specification's *table of
+`(O,≼)` are ordered sets.  `P` is the specification's *table of
 possibilities* and is total on `I`; a row `(i,o) ∈ P` is a possible
 input/output pair.  As in Section `sec:functional-specifications`, the fiber
 at `i` is `P(i) = {o ∈ O : (i,o) ∈ P}`, and it may contain several outputs.  A functional

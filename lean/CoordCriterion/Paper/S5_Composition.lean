@@ -330,8 +330,8 @@ when it is contained in `⊑` on the outputs of `𝒮₁`.  (2) If `𝒮₁` is 
 sufficient guard for `𝒮₂`, every commitment the composite needs is a canonical
 commitment under `⊑`.  If each `P₂(m)` has a greatest element, as when `𝒮₂` is
 functional, this holds without that assumption, and the converse holds too.
-So if `⊑` is an order (reflexive, antisymmetric, transitive), ordering `M` by
-it makes `𝒮₁` a tight guard."  (CIDR states (2) without its first sentence.)
+So ordering `M` by `⊑` makes `𝒮₁` a tight
+guard."  (CIDR states (2) without its first sentence.)
 A canonical commitment removing `(k,x)` at `σ_{P₁}(i)` corresponds to a pair
 not confluent at `k` (`Tight.excluded_canon_iff`).  Lean: (1)
 `Tight.proper_iff_le_dle`, for any order on `M` (other orders:
@@ -431,7 +431,7 @@ theorem «sec:tight-coordination/commuting-log» :
   Tight.Log.commuting
 
 open Tight Tight.Log Comp Guard in
-/-- "Tightening means identifying values that cover each other, as a log that
+/-- "Ordering the log by `⊑` treats such values as equivalent, as a log that
 orders only non-commuting commands does (Generalized Paxos, EPaxos)."  Lean, for the two commuting increments of the commuting
 log: `Tight.Log.partial_order_log`, a log that records only which commands it
 has logged, behind a store answering with their number, is a tight guard
@@ -601,18 +601,27 @@ theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
   exact ⟨h, («sec:composite-calm/complete-calm» sp1 sp2).1.2 h,
     («sec:composite-calm/complete-calm» sp1 sp2).2 h⟩
 
-/-- "The three cases do not cover every monotone composite (Appendix
-`app:composition`).  When no case applies, some stage may have to issue a commitment even though the composite is monotone."  Lean: `Joint.no_order_counterexample`
-(`I` is the chain `Joint.C3`, `M = Joint.Mid`): under every partial order on
-`M` the composite is Lifted-Monotone, the upstream is not (so case (3) fails,
-and with it (1) and (2)), and its empty-basis system cannot emit at some
-canonical state.  The appendix treatment is `«app:composition/reach»`. -/
+/-- "With greatest answers, the three cases cover every monotone composite: if
+each `P₂(m)` has a greatest element, ordering `M` by `⊑` puts it in case (3)
+(Appendix `app:composition`).  Without greatest answers, the cases can fail to
+cover a monotone composite: in the gap example of Section
+`sec:tight-coordination`, no order on `M` makes both stages monotone."  Lean:
+`Tight.jointMono_dleOrder` (`inst` is `⊑` as an order, `Tight.dleOrder`;
+`Joint.underOut`/`Joint.underIn` are the stages with `M` ordered by it) and
+`Tight.Gap.no_joint_order`. -/
 theorem «sec:composite-calm/reach» :
-    (∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
-      (∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ¬ (graph Joint.fz).LiftedMono) ∧
-      ∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ∃ i, ∀ o τ,
-        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output o) τ :=
-  Joint.no_order_counterexample
+    (∀ {I M O : Type} [PO I] [PO O] {instM : PO M} (sp : @Spec I M _ instM)
+        (sk : @Spec M O instM _) (htop : ∀ m, ∃ t, Tight.HasTop sk.P m t),
+        (Comp.seq sp sk).LiftedMono →
+        let inst := Tight.dleOrder sk.P (Tight.dle_refl_of_top htop)
+        @Spec.LiftedMono I M _ inst (Joint.underOut inst sp) ∧
+          @Spec.LiftedMono M O inst _ (Joint.underIn inst sk)) ∧
+    ((Comp.seq Tight.Gap.up Tight.Gap.down).LiftedMono ∧
+      ∀ inst : PO Tight.Gap.Mid, ¬ (@Spec.LiftedMono Tight.Gap.Lv Tight.Gap.Mid _ inst
+          (@Joint.underOut Tight.Gap.Lv Tight.Gap.Mid _ Tight.Gap.midPO inst Tight.Gap.up) ∧
+        @Spec.LiftedMono Tight.Gap.Mid Nat inst _
+          (@Joint.underIn Tight.Gap.Mid Nat _ Tight.Gap.midPO inst Tight.Gap.down))) :=
+  ⟨fun sp sk htop h => Tight.jointMono_dleOrder sp sk htop h, Tight.Gap.no_joint_order⟩
 
 /-! ## Intersection (`sec:intersection`) -/
 

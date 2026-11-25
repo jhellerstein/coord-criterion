@@ -70,13 +70,17 @@ theorem «fig:election-frames/a» :
 
 **Def. `def:functional-specification`** (Functional I/O specification,
 total).  "A *functional I/O specification* is a tuple `Spec = (I, ≼, O, ≼, P)`,
-where `(I,≼)` and `(O,≼)` are partially ordered input and output types, and
+where `(I,≼)` and `(O,≼)` are ordered input and output types, and
 `P ⊆ I × O` is its *possibility relation*: a typed relation with schema
 `(in, out)` in which every input appears in at least one row (`P` is *total* on
 `I`) and at most one (a functional dependency):
 `(i,o) ∈ P ∧ (i,o') ∈ P ⟹ o = o'`."
 
-Lean: the orders are the `PO` instances, `Spec I O` bundles `P` with
+And, after the definition: "When we say *order*, we mean a *preorder*: a
+reflexive, transitive relation.  Unlike a partial order, a preorder need not be
+antisymmetric, so two distinct values may each be below the other, as two
+paraphrases of one answer are."  Lean: the orders are the `PO` instances, which
+are preorders (antisymmetry is the separate mixin `PO.Antisymm`), `Spec I O` bundles `P` with
 totality, and `Spec.Functional` is the functional dependency. -/
 abbrev «def:functional-specification» (I O : Type) [PO I] [PO O] :=
   { sp : Spec I O // sp.Functional }

@@ -197,9 +197,8 @@ Let $\Spec_1$ guard $\Spec_2$.
         the composite needs is a canonical \commitment under $\sqsubseteq$.
         If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
         functional, this holds without that assumption, and the converse
-        holds too.  So if $\sqsubseteq$ is an
-        order (reflexive, antisymmetric, transitive), ordering $M$ by it makes
-        $\Spec_1$ a tight guard.
+        holds too.  So ordering $M$ by $\sqsubseteq$ makes $\Spec_1$ a tight
+        guard.
 \end{enumerate}
 \end{theorem}
 
@@ -211,9 +210,10 @@ $y\in P_2(x)$ have extensions in $P_2(m')$, which is directed, so some
 $u\in P_2(m')$ \outrel both, and $(i,o)$ and $(k,y)$ are confluent at $k$ in
 the composite.  With
 greatest answers $t\in P_2(m)$ and $s\in P_2(x)$, a common extension of $t$
-and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  When
-$\sqsubseteq$ is an order, (1) makes $\Spec_1$ a sufficient guard under it,
-and its canonical \commitments are then exactly the composite's.  Full proof in
+and $s$ in the composite comes from some $m'$ with $m,x\sqsubseteq m'$.  With
+greatest answers, $\sqsubseteq$ is reflexive and transitive, so (1) makes
+$\Spec_1$ a sufficient guard under it, and its canonical \commitments are then
+exactly the composite's.  Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
@@ -232,12 +232,12 @@ state-machine replication, $\sqsubseteq$ is the prefix order, and the
 consensus log is a tight guard: execution is monotone and reflects the prefix
 order, so every \commitment the log makes is one the store's clients can
 observe (Appendix~\ref{app:tight}).  When the store reports only its state and
-$A$ and $B$ commute, $[A,B]$ and $[B,A]$ cover each other and fail
-antisymmetry.  The prefix order keeps them apart: $(\{A\},[A])$ and
+$A$ and $B$ commute, $[A,B]$ and $[B,A]$ cover each other.  The prefix order
+keeps them apart: $(\{A\},[A])$ and
 $(\{A,B\},[B,A])$ are not confluent at $\{A,B\}$ under the prefix order but
 confluent at $\{A,B\}$ under $\sqsubseteq$.  So the commuting log is a
-sufficient guard but not a necessary one.  Tightening means identifying
-values that cover each other, as a log that orders only non-commuting
+sufficient guard but not a necessary one.  Ordering the log by $\sqsubseteq$
+treats such values as equivalent, as a log that orders only non-commuting
 commands does (Generalized Paxos~\cite{lamport2005generalized},
 EPaxos~\cite{moraru2013epaxos}).  Reversing the order
 on $M$ in the boolean toggle below is reordering by $\sqsubseteq$.  Without
@@ -327,8 +327,12 @@ its table does not depend on the order on $M$.  The lemma then applies under
 the different order.  Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-The three cases do not cover every monotone composite
-(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a \commitment even though the composite is monotone.
+With greatest answers, the three cases cover every monotone composite: if each
+$P_2(m)$ has a greatest element, ordering $M$ by $\sqsubseteq$ puts it in
+case~(3) (Appendix~\ref{app:composition}).  Without greatest answers, the
+cases can fail to cover a monotone composite: in the gap example of
+Section~\ref{sec:tight-coordination}, no order on $M$ makes both stages
+monotone.
 
 \subsection{Intersection}
 \label{sec:intersection}

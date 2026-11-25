@@ -432,7 +432,7 @@ File `Paper/S5_Composition.lean`; paper source `paper/composition.tex`.
 | `«sec:tight-coordination/consensus-log»` | theorem | "When the store answers each command in turn, as in state-machine replication, `⊑` is the prefix order, and the consensus log is a tight guard: |
 | `«sec:tight-coordination/cover-each-other»` | theorem | "When the store reports only its state and `A` and `B` commute, `[A,B]` and `[B,A]` cover each other." Lean: |
 | `«sec:tight-coordination/commuting-log»` | theorem | "When the store reports only its state and `A` and `B` commute, `[A,B]` and `[B,A]` cover each other. |
-| `«sec:tight-coordination/partial-order-log»` | theorem | "Tightening means identifying values that cover each other, as a log that orders only non-commuting commands does (Generalized Paxos, EPaxos)." Lean, for the… |
+| `«sec:tight-coordination/partial-order-log»` | theorem | "Ordering the log by `⊑` treats such values as equivalent, as a log that orders only non-commuting commands does (Generalized Paxos, EPaxos)." Lean, for the… |
 | `«sec:tight-coordination/gap»` | theorem | "Without greatest answers, a gap can remain. |
 | `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
@@ -442,7 +442,7 @@ File `Paper/S5_Composition.lean`; paper source `paper/composition.tex`.
 | `«sec:composite-calm/output-orders»` | theorem | "Under the usual boolean order, as in LVars, `false` is only a lower bound, and the test is monotone." And, from the second case: |
 | `«sec:composite-calm/cancellation»` | theorem | "Third, a different order on `M` can make two non-monotone stages monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
-| `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
+| `«sec:composite-calm/reach»` | theorem | "With greatest answers, the three cases cover every monotone composite: |
 | `«def:intersection»` | theorem | **Definition `def:intersection`** (Intersection): |
 | `«sec:intersection/not-closed»` | theorem | "Intersection does not preserve Lifted Monotonicity. |
 | `«prop:intersection-bound»` | theorem | **Proposition `prop:intersection-bound`** (Intersection under a monotone bound): |

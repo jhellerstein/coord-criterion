@@ -125,7 +125,7 @@ compared or combined, which leaves developers guessing.
 
 We provide a simple formalism that unifies the literature and
 offers new results.  An \emph{\spectype} (spec) is a possibility table containing, for
-each input, every output a system may produce, with partial orders on inputs and
+each input, every output a system may produce, with orders on inputs and
 outputs.  Its runs (event sequences)\rv{7} are \emph{consistent} when they are confluent as input grows.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: the runs are consistent exactly when the function is
@@ -230,7 +230,7 @@ a spec provides a \emph{possibility relation} $P\subseteq I\times O$: a virtual
 table that may be infinite, like a mathematical function. Each row in this table
 is a possibility observable from the outside: it pairs the input received so far
 with a permitted output. The design includes the input domain $I$ and output domain $O$,
-with partial orders that help capture the spec's semantics.  On inputs, the order
+with orders that help capture the spec's semantics.  On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming\rv{6} all spec-relevant information in
@@ -449,13 +449,18 @@ To avoid ambiguity, we state this precisely.
 \label{def:functional-specification}
 A \emph{functional \spectype} is a tuple
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$,
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are ordered input and
 output types, and $P\subseteq I\times O$ is its \emph{possibility relation}:
 a typed relation with schema $(\mathrm{in},\mathrm{out})$ in which every
 input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
 (a functional dependency).  The unique output paired with $i$ induces a
 function $f:I\to O$.
 \end{definition}
+
+When we say \emph{order}, we mean a \emph{preorder}: a reflexive, transitive
+relation.  Unlike a partial order, a preorder need not be antisymmetric, so
+two distinct values may each be below the other, as two paraphrases of one
+answer are.
 
 The two orders require thoughtful design.
 Inputs grow as ballots arrive: $i\InputOrd j$, read ``$j$ \emph{\inrel} $i$'', means that
@@ -853,7 +858,7 @@ output nondeterminism.
 \label{def:relational-specification}
 An \emph{\spectype} is
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$,
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  The
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are ordered sets.  The
 relation $P$ is the spec's \emph{possibility relation} and is total
 on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
@@ -1567,9 +1572,8 @@ Let $\Spec_1$ guard $\Spec_2$.
         $\Spec_1$.
   \item If each $P_2(m)$ has a greatest element, as when $\Spec_2$ is
         functional, the \commitments the composite needs are exactly the
-        canonical \commitments under $\sqsubseteq$.  So if $\sqsubseteq$ is an
-        order (reflexive, antisymmetric, transitive), ordering $M$ by it makes
-        $\Spec_1$ a tight guard.
+        canonical \commitments under $\sqsubseteq$.  So ordering $M$ by
+        $\sqsubseteq$ makes $\Spec_1$ a tight guard.
 \end{enumerate}
 \end{theorem}
 \proofinfull
@@ -1577,11 +1581,10 @@ Let $\Spec_1$ guard $\Spec_2$.
 When the KVS answers each command in turn, as in state-machine replication,
 $\sqsubseteq$ is the log's prefix order, and the consensus log is a tight guard.
 When the KVS reports only its state and $A$ and $B$ commute, $[A,B]$ and
-$[B,A]$ cover each other and hence $\sqsubseteq$ fails antisymmetry.  The prefix order keeps them
-apart, so it makes the log a sufficient guard but not a necessary one.
-Tightening means identifying such values, as a log that orders only
-non-commuting commands does (Generalized Paxos~\cite{lamport2005generalized},
-EPaxos~\cite{moraru2013epaxos}).  Without greatest elements, no order on $M$
+$[B,A]$ cover each other.  The prefix order keeps them apart, so it makes the
+log a sufficient guard but not a necessary one.  A log that orders only
+non-commuting commands treats them as equivalent (Generalized
+Paxos~\cite{lamport2005generalized}, EPaxos~\cite{moraru2013epaxos}).  Without greatest elements, no order on $M$
 may make $\Spec_1$ a tight guard~\cite{hellerstein2026completecalmfull}.\rv{2}
 
 \paragraph{Composite CALM.}
@@ -1594,7 +1597,8 @@ answers must be final, so that its output order is equality, cannot emit
 contradict it.  Behind a counter capped at $9$, it only ever answers
 \textsf{false}, which is monotone under any order: the counter is a sufficient guard
 (Proposition~\ref{prop:guard-test}), and since the counter is monotone,
-neither stage needs a \commitment.  The full paper extends these results to
+neither stage needs a \commitment.  With greatest answers, ordering $M$ by
+$\sqsubseteq$ makes both stages monotone whenever the composite is.  The full paper extends these results to
 longer pipelines and acyclic graphs of stages~\cite{hellerstein2026completecalmfull}.\rv{2}
 
 % ======================================================================
