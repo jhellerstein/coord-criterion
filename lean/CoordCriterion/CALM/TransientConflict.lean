@@ -52,13 +52,17 @@ instance : PO In where
   le a b := inLe a b = true
   refl a := by cases a <;> rfl
   trans {a b c} h1 h2 := by cases a <;> cases b <;> cases c <;> simp_all [inLe]
-  antisymm {a b} h1 h2 := by cases a <;> cases b <;> simp_all [inLe]
+
+instance : PO.Antisymm In where
+  antisymm {a b} h1 h2 := by dsimp only [PO.le] at *; cases a <;> cases b <;> simp_all [inLe]
 
 instance : PO Out where
   le a b := outLe a b = true
   refl a := by cases a <;> rfl
   trans {a b c} h1 h2 := by cases a <;> cases b <;> cases c <;> simp_all [outLe]
-  antisymm {a b} h1 h2 := by cases a <;> cases b <;> simp_all [outLe]
+
+instance : PO.Antisymm Out where
+  antisymm {a b} h1 h2 := by dsimp only [PO.le] at *; cases a <;> cases b <;> simp_all [outLe]
 
 instance (a b : In) : Decidable (a ≼ b) := inferInstanceAs (Decidable (inLe a b = true))
 instance (a b : Out) : Decidable (a ≼ b) := inferInstanceAs (Decidable (outLe a b = true))

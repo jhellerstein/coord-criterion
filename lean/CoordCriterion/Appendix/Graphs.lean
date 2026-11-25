@@ -278,7 +278,10 @@ instance : PO Bit where
     · rcases h2 with h | rfl
       · exact absurd h (by decide)
       · exact Or.inr rfl
+
+instance : PO.Antisymm Bit where
   antisymm := by
+    dsimp only [PO.le]
     intro a b h1 h2
     cases a <;> cases b <;> simp_all
 

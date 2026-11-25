@@ -239,6 +239,8 @@ instance : PO (Hist α) where
         have h2a := h23.2.1 a b hab h2b
         exact h12.2.1 a b ((h23.2.2 a b h2a h2b).1 hab) hb,
      fun a b ha hb => (h23.2.2 a b (h12.1 a ha) (h12.1 b hb)).trans (h12.2.2 a b ha hb)⟩
+
+instance : PO.Antisymm (Hist α) where
   antisymm {h h'} h1 h2 := by
     have em : h.mem = h'.mem := funext fun a => propext ⟨h1.1 a, h2.1 a⟩
     have eh : h.hb = h'.hb := funext fun a => funext fun b => propext
@@ -260,6 +262,8 @@ instance : PO (SMap α) where
   le ρ ρ' := ∀ r s, ρ.f r = some s → ρ'.f r = some s
   refl _ _ _ h := h
   trans h1 h2 r s h := h2 r s (h1 r s h)
+
+instance : PO.Antisymm (SMap α) where
   antisymm {ρ ρ'} h1 h2 := by
     have : ρ.f = ρ'.f := by
       funext r

@@ -201,14 +201,14 @@ theorem «app:composition/reach» {I M O : Type} [PO I] [PO O] :
       @Exposable I M _ inst _ (@canon I M _ inst (@graph I M _ inst f) i) (f i) ↔
         ∀ k, i ≼ k → @PO.le M inst (f i) (f k)) ∧
     ((∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
-      (∀ _inst : PO Joint.Mid, ¬ (graph Joint.fz).LiftedMono) ∧
-      ∀ _inst : PO Joint.Mid, ∃ i, ∀ o τ,
+      (∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ¬ (graph Joint.fz).LiftedMono) ∧
+      ∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ∃ i, ∀ o τ,
         ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output o) τ) ∧
-    ∀ {M' : Type} (inst : PO M') (e : Joint.Mid → M'),
+    ∀ {M' : Type} (inst : PO M') [@PO.Antisymm M' inst] (e : Joint.Mid → M'),
       @Monotone Joint.C3 M' _ inst (e ∘ Joint.fz) → e .p = e .q :=
   ⟨Joint.preorder_factorization, fun hg => Joint.injective_characterization hg,
     fun inst f i => @Joint.graph_canon_exposable_iff I M _ inst f i, Joint.no_order_counterexample,
-    fun inst e h => Joint.merge_needed inst e h⟩
+    fun inst _ e h => Joint.merge_needed inst e h⟩
 
 /-- "The capped counter of Section `sec:composite-calm` is an instance of case
 (2).  Let `𝒮₁` be the functional spec induced by `c(n) = min(n,9)` on

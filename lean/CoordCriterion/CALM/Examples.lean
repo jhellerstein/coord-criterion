@@ -54,6 +54,8 @@ instance (n : Nat) : PO (PMap n) where
   le m m' := ∀ p v, m p = some v → m' p = some v
   refl _ _ _ h := h
   trans h1 h2 p v h := h2 p v (h1 p v h)
+
+instance (n : Nat) : PO.Antisymm (PMap n) where
   antisymm {a b} h1 h2 := by
     funext p
     cases ha : a p with
@@ -256,6 +258,8 @@ instance : PO In4 where
   trans := by
     intro x y z h1 h2
     rcases h1 with rfl | rfl <;> rcases h2 with rfl | rfl <;> simp
+
+instance : PO.Antisymm In4 where
   antisymm := by
     intro x y h1 h2
     rcases h1 with rfl | rfl
@@ -343,6 +347,8 @@ instance : PO Pt where
   le _ _ := True
   refl _ := trivial
   trans _ _ := trivial
+
+instance : PO.Antisymm Pt where
   antisymm {a b} _ _ := by cases a; cases b; rfl
 
 instance : PO Two where
@@ -351,7 +357,10 @@ instance : PO Two where
   trans := by
     intro x y z h1 h2
     cases x <;> cases y <;> cases z <;> simp_all
+
+instance : PO.Antisymm Two where
   antisymm := by
+    dsimp only [PO.le]
     intro x y h1 h2
     cases x <;> cases y <;> simp_all
 
@@ -414,6 +423,8 @@ instance : PO Ballots where
   le := bLe
   refl _ := ⟨Or.inr rfl, Or.inr rfl, Or.inr rfl⟩
   trans h1 h2 := ⟨oleq_trans h1.1 h2.1, oleq_trans h1.2.1 h2.2.1, oleq_trans h1.2.2 h2.2.2⟩
+
+instance : PO.Antisymm Ballots where
   antisymm {a b} h1 h2 := by
     cases a; cases b
     simp only [Ballots.mk.injEq]
@@ -434,6 +445,8 @@ instance : PO Res where
     rcases h1 with rfl | rfl
     · exact Or.inl rfl
     · exact h2
+
+instance : PO.Antisymm Res where
   antisymm := by
     intro a b h1 h2
     rcases h1 with rfl | rfl
@@ -448,6 +461,8 @@ instance : PO ResE where
   le a b := a = b
   refl _ := rfl
   trans h1 h2 := h1.trans h2
+
+instance : PO.Antisymm ResE where
   antisymm h _ := h
 
 def cnt (c : Cand) (i : Ballots) : Nat :=
@@ -612,7 +627,9 @@ instance : PO F5 where
   le := F5.sub
   refl s := by cases s <;> decide
   trans := by intro s t w; cases s <;> cases t <;> cases w <;> decide
-  antisymm := by intro s t; cases s <;> cases t <;> decide
+
+instance : PO.Antisymm F5 where
+  antisymm := by dsimp only [PO.le]; intro s t; cases s <;> cases t <;> decide
 
 instance (s t : F5) : Decidable (s ≼ t) := inferInstanceAs (Decidable (F5.sub s t))
 
@@ -657,6 +674,8 @@ instance (T : Type) : PO (Sched T) where
   le s t := s.txs.Sublist t.txs
   refl s := List.Sublist.refl s.txs
   trans h1 h2 := h1.trans h2
+
+instance (T : Type) : PO.Antisymm (Sched T) where
   antisymm {s t} h1 h2 := by
     have := h1.eq_of_length_le h2.length_le
     cases s; cases t; simp only at this; subst this; rfl
@@ -716,6 +735,8 @@ instance (F : Type) : PO (PSet F) where
   le s t := ∀ x, s.mem x → t.mem x
   refl _ _ h := h
   trans h1 h2 x h := h2 x (h1 x h)
+
+instance (F : Type) : PO.Antisymm (PSet F) where
   antisymm {s t} h1 h2 := by
     have : s.mem = t.mem := funext fun x => propext ⟨h1 x, h2 x⟩
     cases s; cases t; simp only at this; subst this; rfl

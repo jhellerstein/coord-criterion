@@ -350,6 +350,8 @@ instance : PO TOut where
   le a b := a = b
   refl _ := rfl
   trans h1 h2 := h1.trans h2
+
+instance : PO.Antisymm TOut where
   antisymm h _ := h
 
 def spec : Spec Unit TOut where
@@ -462,7 +464,10 @@ instance : PO Src where
   refl a := by cases a <;> rfl
   trans {a b c} h1 h2 := by
     cases a <;> cases b <;> cases c <;> simp_all [Src.leb]
+
+instance : PO.Antisymm Src where
   antisymm {a b} h1 h2 := by
+    dsimp only [PO.le] at *
     cases a <;> cases b <;> simp_all [Src.leb]
 
 instance (a b : Src) : Decidable (a ≼ b) := inferInstanceAs (Decidable (a.leb b = true))
@@ -491,7 +496,10 @@ instance : PO RS where
   le := RS.sub
   refl _ := ⟨id, id, id, id⟩
   trans h1 h2 := ⟨h2.1 ∘ h1.1, h2.2.1 ∘ h1.2.1, h2.2.2.1 ∘ h1.2.2.1, h2.2.2.2 ∘ h1.2.2.2⟩
+
+instance : PO.Antisymm RS where
   antisymm {x y} h1 h2 := by
+    dsimp only [PO.le] at *
     obtain ⟨a, b, c, d⟩ := x; obtain ⟨e, f, g, k⟩ := y
     cases a <;> cases b <;> cases c <;> cases d <;> cases e <;> cases f <;> cases g <;>
       cases k <;> simp_all [RS.sub]

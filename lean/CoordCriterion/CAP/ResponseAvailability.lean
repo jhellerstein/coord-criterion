@@ -939,7 +939,9 @@ instance : PO In2 where
   le x y := In2.leB x y = true
   refl x := by cases x <;> rfl
   trans := by intro x y z; cases x <;> cases y <;> cases z <;> decide
-  antisymm := by intro x y; cases x <;> cases y <;> decide
+
+instance : PO.Antisymm In2 where
+  antisymm := by dsimp only [PO.le]; intro x y; cases x <;> cases y <;> decide
 
 instance (x y : In2) : Decidable (x ≼ y) := inferInstanceAs (Decidable (In2.leB x y = true))
 
@@ -958,7 +960,9 @@ instance : PO O3 where
   le x y := O3.leB x y = true
   refl x := by cases x <;> rfl
   trans := by intro x y z; cases x <;> cases y <;> cases z <;> decide
-  antisymm := by intro x y; cases x <;> cases y <;> decide
+
+instance : PO.Antisymm O3 where
+  antisymm := by dsimp only [PO.le]; intro x y; cases x <;> cases y <;> decide
 
 instance (x y : O3) : Decidable (x ≼ y) := inferInstanceAs (Decidable (O3.leB x y = true))
 
@@ -1032,7 +1036,9 @@ instance : PO I5 where
   le x y := I5.leB x y = true
   refl x := by cases x <;> rfl
   trans := by intro x y z; cases x <;> cases y <;> cases z <;> decide
-  antisymm := by intro x y; cases x <;> cases y <;> decide
+
+instance : PO.Antisymm I5 where
+  antisymm := by dsimp only [PO.le]; intro x y; cases x <;> cases y <;> decide
 
 instance (x y : I5) : Decidable (x ≼ y) := inferInstanceAs (Decidable (I5.leB x y = true))
 
@@ -1054,7 +1060,9 @@ instance : PO O8 where
   le x y := O8.leB x y = true
   refl x := by cases x <;> rfl
   trans := by intro x y z; cases x <;> cases y <;> cases z <;> decide
-  antisymm := by intro x y; cases x <;> cases y <;> decide
+
+instance : PO.Antisymm O8 where
+  antisymm := by dsimp only [PO.le]; intro x y; cases x <;> cases y <;> decide
 
 instance (x y : O8) : Decidable (x ≼ y) := inferInstanceAs (Decidable (O8.leB x y = true))
 
@@ -1300,6 +1308,8 @@ instance : PO Win where
   le a b := a = b
   refl _ := rfl
   trans h1 h2 := h1.trans h2
+
+instance : PO.Antisymm Win where
   antisymm h _ := h
 
 /-- A ballot slot grows from "not yet received" to a fixed ballot. -/
@@ -1325,6 +1335,8 @@ instance : PO Ballots where
   le u v := OExt u.b1 v.b1 ∧ OExt u.b2 v.b2 ∧ OExt u.b3 v.b3
   refl _ := ⟨Or.inr rfl, Or.inr rfl, Or.inr rfl⟩
   trans h1 h2 := ⟨oext_trans h1.1 h2.1, oext_trans h1.2.1 h2.2.1, oext_trans h1.2.2 h2.2.2⟩
+
+instance : PO.Antisymm Ballots where
   antisymm := by
     intro u v h1 h2
     cases u with

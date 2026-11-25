@@ -63,6 +63,8 @@ instance : PO (PTd W) where
     have a2 := h2 p
     revert a1 a2
     cases x.t p <;> cases y.t p <;> cases z.t p <;> simp [OLe] <;> exact PO.trans
+
+instance [∀ p, PO.Antisymm (W p)] : PO.Antisymm (PTd W) where
   antisymm {x y} h1 h2 := by
     have : x.t = y.t := by
       funext p
@@ -299,7 +301,9 @@ instance : PO Tri where
   le x y := x = y ∨ y = .t
   refl _ := Or.inl rfl
   trans {x y z} h1 h2 := by cases x <;> cases y <;> cases z <;> simp_all
-  antisymm {x y} h1 h2 := by cases x <;> cases y <;> simp_all
+
+instance : PO.Antisymm Tri where
+  antisymm {x y} h1 h2 := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all
 
 def triV : (p : Fin 2) → One → Tri → Prop := fun _ _ _ => True
 

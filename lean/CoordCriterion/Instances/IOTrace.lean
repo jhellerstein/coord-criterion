@@ -88,6 +88,8 @@ instance Wd.instPO {A : Type} (p : A → Prop) : PO (Wd p) where
   le a b := a.val <+: b.val
   refl a := List.prefix_refl a.val
   trans h1 h2 := List.IsPrefix.trans h1 h2
+
+instance {A : Type} (p : A → Prop) : PO.Antisymm (Wd p) where
   antisymm {_ _} h1 h2 := Wd.ext (List.IsPrefix.eq_of_length h1
     (Nat.le_antisymm (List.IsPrefix.length_le h1) (List.IsPrefix.length_le h2)))
 

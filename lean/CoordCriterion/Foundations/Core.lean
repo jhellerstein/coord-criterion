@@ -4,7 +4,7 @@
 # Core definitions (Sections 2–3, Appendix A)
 
 Supports `paper/functional-calm.tex`, `paper/complete-calm.tex` and the
-notation of `paper/app-notation.tex`: partial orders (`PO`), ordered
+notation of `paper/app-notation.tex`: orders (`PO`, preorders), ordered
 specifications (`Spec`) and tables, states `(i, R)` (`State`), input/output
 events and their transition relation (`Event`, `Step`, `Exec`, `Reach`), the
 canonical state `σ_P(i)` (`canon`), exposability, Functional / Relational /
@@ -23,14 +23,25 @@ namespace CC
 
 universe u
 
-/-- A partial order.  `le a b` reads "`b` extends `a`". -/
+/-- An order: a preorder, i.e. a reflexive and transitive relation (not
+necessarily antisymmetric).  `le a b` reads "`b` extends `a`". -/
 class PO (α : Type u) where
   le : α → α → Prop
   refl : ∀ a, le a a
   trans : ∀ {a b c}, le a b → le b c → le a c
-  antisymm : ∀ {a b}, le a b → le b a → a = b
 
 infix:50 " ≼ " => PO.le
+
+/-- Antisymmetry of an order (making it a partial order).  The general theory
+never assumes it; concrete orders whose own proofs need it supply an
+instance. -/
+class PO.Antisymm (α : Type u) [PO α] : Prop where
+  antisymm : ∀ {a b : α}, a ≼ b → b ≼ a → a = b
+
+/-- Antisymmetry, for orders with a `PO.Antisymm` instance. -/
+theorem PO.antisymm {α : Type u} [PO α] [PO.Antisymm α] {a b : α}
+    (h₁ : a ≼ b) (h₂ : b ≼ a) : a = b :=
+  PO.Antisymm.antisymm h₁ h₂
 
 /-- A table: a set of rows `(i, o)`. -/
 abbrev Table (I O : Type) := I → O → Prop

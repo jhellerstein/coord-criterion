@@ -127,18 +127,18 @@ theorem commonExpansion_of_realized (φ : I → J) {S : Spec J O} {T : Spec I O}
   obtain ⟨q, hq, rfl⟩ := List.mem_map.1 hr
   exact PO.trans (hall _ (List.mem_map_of_mem hq)) huu'
 
-theorem CofinalAlong.inj {φ : I → J} {S : Spec J O} {T : Spec I O}
+theorem CofinalAlong.inj [PO.Antisymm I] {φ : I → J} {S : Spec J O} {T : Spec I O}
     (h : CofinalAlong φ S T) {a b : I} (e : φ a = φ b) : a = b :=
   PO.antisymm ((h.emb a b).2 (e ▸ PO.refl _)) ((h.emb b a).2 (e ▸ PO.refl _))
 
 /-- Rows of `S` at images are rows of `T`. -/
-theorem CofinalAlong.real' {φ : I → J} {S : Spec J O} {T : Spec I O}
+theorem CofinalAlong.real' [PO.Antisymm I] {φ : I → J} {S : Spec J O} {T : Spec I O}
     (h : CofinalAlong φ S T) (i : I) (o : O) (ho : S.P (φ i) o) : T.P i o := by
   obtain ⟨i', e, h'⟩ := h.real _ o ho
   exact h.inj e ▸ h'
 
 /-- `S.LiftedMono → T.LiftedMono` along a cofinal map. -/
-theorem liftedMono_of_cofinalAlong {φ : I → J} {S : Spec J O} {T : Spec I O}
+theorem liftedMono_of_cofinalAlong [PO.Antisymm I] {φ : I → J} {S : Spec J O} {T : Spec I O}
     (h : CofinalAlong φ S T) (hS : S.LiftedMono) : T.LiftedMono :=
   (liftedMono_iff_commonExpansion T).2 <|
     commonExpansion_of_dominated φ (fun a b => (h.emb a b).1) h.real' h.dom
@@ -154,7 +154,7 @@ theorem liftedMono_of_cofinalAlong' {φ : I → J} {S : Spec J O} {T : Spec I O}
 /-- **Cofinality along an order embedding.**  If `S` is cofinal in `T`
 along `φ`, then `S` satisfies Lifted Monotonicity iff `T` does, and `S` is
 consistent iff `T` is. -/
-theorem liftedMono_iff_of_cofinalAlong {φ : I → J} {S : Spec J O} {T : Spec I O}
+theorem liftedMono_iff_of_cofinalAlong [PO.Antisymm I] {φ : I → J} {S : Spec J O} {T : Spec I O}
     (h : CofinalAlong φ S T) :
     (S.LiftedMono ↔ T.LiftedMono) ∧ (S.Consistent ↔ T.Consistent) := by
   have e : S.LiftedMono ↔ T.LiftedMono :=
@@ -177,12 +177,15 @@ row of `T` is dominated by a row of `P` at the same input, then `S`
 satisfies Lifted Monotonicity iff `T` does. -/
 theorem liftedMono_iff_of_cofinal {S T : Spec I O} (h : Cofinal S T) :
     S.LiftedMono ↔ T.LiftedMono :=
-  (liftedMono_iff_of_cofinalAlong h.along).1
+  ⟨fun hS => (liftedMono_iff_commonExpansion T).2 <|
+      commonExpansion_of_dominated id (fun _ _ h => h) h.real h.dom
+        ((liftedMono_iff_commonExpansion S).1 hS),
+    liftedMono_of_cofinalAlong' h.along⟩
 
 /-- The same for consistency (via Complete CALM). -/
 theorem consistent_iff_of_cofinal {S T : Spec I O} (h : Cofinal S T) :
-    S.Consistent ↔ T.Consistent :=
-  (liftedMono_iff_of_cofinalAlong h.along).2
+    S.Consistent ↔ T.Consistent := by
+  rw [complete_calm, complete_calm]; exact liftedMono_iff_of_cofinal h
 
 /-- The common-extension form of the cofinality lemma. -/
 theorem commonExpansion_iff_of_cofinal {S T : Spec I O} (h : Cofinal S T) :

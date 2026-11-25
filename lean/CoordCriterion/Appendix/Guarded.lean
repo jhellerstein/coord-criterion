@@ -108,6 +108,8 @@ instance subPO (D : M → Prop) : PO {m // D m} where
   le x y := x.1 ≼ y.1
   refl x := PO.refl x.1
   trans h h' := PO.trans h h'
+
+instance [PO.Antisymm M] (D : M → Prop) : PO.Antisymm {m // D m} where
   antisymm h h' := Subtype.ext (PO.antisymm h h')
 
 /-- `𝒮` read as a specification on the inputs in `D`. -/
@@ -2008,7 +2010,9 @@ instance : PO Lvl where
   le a b := a = .lo ∨ b = .hi
   refl a := by cases a <;> simp
   trans := by intro a b c h1 h2; cases a <;> cases b <;> cases c <;> simp_all
-  antisymm := by intro a b h1 h2; cases a <;> cases b <;> simp_all
+
+instance : PO.Antisymm Lvl where
+  antisymm := by dsimp only [PO.le]; intro a b h1 h2; cases a <;> cases b <;> simp_all
 
 /-- `x ↦ lo`, `y ↦ hi`: monotone, since `Two` is discrete. -/
 def fLvl : Two → Lvl
@@ -2172,6 +2176,8 @@ instance (K α : Type) : PO (PK K α) where
   le p q := ∀ k, p.get k ≼ q.get k
   refl p _ := PO.refl _
   trans h h' k := PO.trans (h k) (h' k)
+
+instance (K α : Type) : PO.Antisymm (PK K α) where
   antisymm := by
     rintro ⟨p⟩ ⟨q⟩ h h'
     congr; funext k; exact PO.antisymm (h k) (h' k)

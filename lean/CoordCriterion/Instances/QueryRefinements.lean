@@ -88,6 +88,8 @@ instance {F : Type} (a : Adm F) : PO (ExtInp a) where
     by_cases hJ : J.set.mem f
     · exact h₁.2 f hJ hI
     · exact a.anti h₁.1 (h₂.2 f hK hJ)
+
+instance {F : Type} (a : Adm F) : PO.Antisymm (ExtInp a) where
   antisymm {I K} h₁ h₂ := by
     have : I.set = K.set := PO.antisymm h₁.1 h₂.1
     cases I; cases K; cases this; rfl
@@ -620,6 +622,8 @@ instance : PO AllInp where
   le i j := i.mem = j.mem ∧ i.view ≼ j.view
   refl _ := ⟨rfl, PO.refl _⟩
   trans h₁ h₂ := ⟨h₁.1.trans h₂.1, PO.trans h₁.2 h₂.2⟩
+
+instance : PO.Antisymm AllInp where
   antisymm {i j} h₁ h₂ := by
     cases i with
     | mk m v s =>

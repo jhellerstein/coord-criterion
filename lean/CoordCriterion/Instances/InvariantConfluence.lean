@@ -55,6 +55,8 @@ instance (V : Type) : PO (St V) where
   le s u := ∀ v, s v → u v
   refl _ _ h := h
   trans h₁ h₂ v h := h₂ v (h₁ v h)
+
+instance (V : Type) : PO.Antisymm (St V) where
   antisymm h₁ h₂ := funext fun v => propext ⟨h₁ v, h₂ v⟩
 
 theorem St.le_def {V : Type} (s u : St V) : (s ≼ u) = (∀ v, s v → u v) := rfl
@@ -169,6 +171,8 @@ instance : PO (Hist Tx) where
   le := Hist.le
   refl := Hist.le_refl
   trans := Hist.le_trans
+
+instance : PO.Antisymm (Hist Tx) where
   antisymm := Hist.le_antisymm
 
 theorem Hist.po_le {a b : Hist Tx} : (a ≼ b) = a.le b := rfl
@@ -465,6 +469,8 @@ instance (M : Model V Tx) : PO (Inp M) where
   le a b := a.1 ≼ b.1
   refl a := PO.refl a.1
   trans h₁ h₂ := PO.trans h₁ h₂
+
+instance (M : Model V Tx) : PO.Antisymm (Inp M) where
   antisymm h₁ h₂ := Subtype.ext (PO.antisymm h₁ h₂)
 
 theorem Inp.le_def {M : Model V Tx} (a b : Inp M) : (a ≼ b) = (a.1 ≼ b.1) := rfl

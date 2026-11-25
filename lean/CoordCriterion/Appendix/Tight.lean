@@ -357,21 +357,20 @@ theorem dle_refl_of_top {P₂ : Table M O} (htop : ∀ m, ∃ t, HasTop P₂ m t
   obtain ⟨t, ht⟩ := htop m
   exact ⟨t, ht.1, fun x hx => ht.2 x (hX x hx)⟩
 
-/-- `⊑` as an order on `M`, when it is reflexive and antisymmetric. -/
-def dleOrder (P₂ : Table M O) (hr : ∀ m, dle P₂ m m)
-    (ha : ∀ a b, dle P₂ a b → dle P₂ b a → a = b) : PO M where
+/-- `⊑` as an order (preorder) on `M`, when it is reflexive; it is always
+transitive (`dle_trans`). -/
+def dleOrder (P₂ : Table M O) (hr : ∀ m, dle P₂ m m) : PO M where
   le := dle P₂
   refl := hr
   trans := dle_trans
-  antisymm := ha _ _
 
 /-- **Ordering `M` by `⊑` gives a tight guard.**  If each `P₂(m)` has a
-greatest element and `⊑` is antisymmetric (so an order), then with `M` ordered
-by `⊑` the upstream is a sufficient and a necessary guard. -/
+greatest element, `⊑` is reflexive (`dle_refl_of_top`) and transitive, so an
+order, and with `M` ordered by `⊑` the upstream is a sufficient and a necessary
+guard. -/
 theorem tightGuard_dleOrder {instM : PO M} (sp : @Spec I M _ instM) (sk : @Spec M O instM _)
-    (htop : ∀ m, ∃ t, HasTop sk.P m t)
-    (ha : ∀ a b, dle sk.P a b → dle sk.P b a → a = b) :
-    let inst := dleOrder sk.P (dle_refl_of_top htop) ha
+    (htop : ∀ m, ∃ t, HasTop sk.P m t) :
+    let inst := dleOrder sk.P (dle_refl_of_top htop)
     @Proper I M O _ inst _ (underOut inst sp) (underIn inst sk) ∧
       @Tight I M O _ inst _ (underOut inst sp) (underIn inst sk) := by
   intro inst
@@ -473,7 +472,9 @@ instance : PO Req where
   le x y := Req.leb x y = true
   refl x := by cases x <;> rfl
   trans {x y z} h h' := by cases x <;> cases y <;> cases z <;> simp_all [Req.leb]
-  antisymm {x y} h h' := by cases x <;> cases y <;> simp_all [Req.leb]
+
+instance : PO.Antisymm Req where
+  antisymm {x y} h h' := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all [Req.leb]
 
 @[simp] theorem Req.le_iff {x y : Req} : x ≼ y ↔ Req.leb x y = true := Iff.rfl
 
@@ -495,7 +496,9 @@ instance : PO L where
   le x y := L.leb x y = true
   refl x := by cases x <;> rfl
   trans {x y z} h h' := by cases x <;> cases y <;> cases z <;> simp_all [L.leb]
-  antisymm {x y} h h' := by cases x <;> cases y <;> simp_all [L.leb]
+
+instance : PO.Antisymm L where
+  antisymm {x y} h h' := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all [L.leb]
 
 @[simp] theorem L.le_iff {x y : L} : x ≼ y ↔ L.leb x y = true := Iff.rfl
 
@@ -616,7 +619,9 @@ instance : PO Lv where
   le x y := x = .lo ∨ y = .hi
   refl x := by cases x <;> simp
   trans {x y z} h h' := by cases x <;> cases y <;> cases z <;> simp_all
-  antisymm {x y} h h' := by cases x <;> cases y <;> simp_all
+
+instance : PO.Antisymm Lv where
+  antisymm {x y} h h' := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all
 
 /-- Intermediate values: `z`, or `n k` for a count `k`. -/
 inductive Mid where
@@ -628,6 +633,8 @@ instance midPO : PO Mid where
   le x y := x = y
   refl _ := rfl
   trans h h' := h.trans h'
+
+instance : PO.Antisymm Mid where
   antisymm h _ := h
 
 /-- At `lo` the upstream emits `z`; at `hi`, any `n k`. -/

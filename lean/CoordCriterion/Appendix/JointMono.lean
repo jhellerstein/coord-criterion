@@ -135,6 +135,8 @@ instance instPONat : PO Nat where
   le a b := a ≤ b
   refl := Nat.le_refl
   trans := Nat.le_trans
+
+instance : PO.Antisymm Nat where
   antisymm := Nat.le_antisymm
 
 open Dist (B2)
@@ -306,6 +308,8 @@ instance (U : Type) : PO (PSet U) where
   le X Y := ∀ u, X.mem u → Y.mem u
   refl _ _ h := h
   trans h1 h2 u h := h2 u (h1 u h)
+
+instance (U : Type) : PO.Antisymm (PSet U) where
   antisymm h1 h2 := PSet.ext' fun u => ⟨h1 u, h2 u⟩
 
 /-- The reversed order. -/
@@ -316,6 +320,8 @@ instance {α : Type} [PO α] : PO (Rev α) where
   le a b := b.val ≼ a.val
   refl a := PO.refl a.val
   trans h1 h2 := PO.trans h2 h1
+
+instance {α : Type} [PO α] [PO.Antisymm α] : PO.Antisymm (Rev α) where
   antisymm {a b} h1 h2 := by
     cases a; cases b
     exact congrArg Rev.mk (PO.antisymm h2 h1)
@@ -392,7 +398,9 @@ instance boolPO : PO Bool where
   le a b := a = true → b = true
   refl _ h := h
   trans h1 h2 h := h2 (h1 h)
-  antisymm {a b} h1 h2 := by cases a <;> cases b <;> simp_all
+
+instance : PO.Antisymm Bool where
+  antisymm {a b} h1 h2 := by dsimp only [PO.le] at *; cases a <;> cases b <;> simp_all
 
 theorem not_not_monotone : ¬ Monotone not :=
   fun h => Bool.noConfusion (h false true (fun _ => rfl) rfl)
@@ -556,28 +564,44 @@ theorem preorder_factorization {f : I → M} {g : M → O} :
   · rintro ⟨le, _, _, hf, hg⟩ x y hxy
     exact hg _ _ (hf x y hxy)
 
-/-- The order on `M` pulled back through an injective `g`. -/
-@[reducible] def pullPO (g : M → O) (hg : ∀ a b, g a = g b → a = b) : PO M where
+/-- The order on `M` pulled back through `g`: `a ≼ b :↔ g a ≼ g b`. -/
+@[reducible] def pullPO (g : M → O) : PO M where
   le a b := g a ≼ g b
   refl a := PO.refl (g a)
   trans h h' := PO.trans h h'
-  antisymm h h' := hg _ _ (PO.antisymm h h')
 
-/-- **Injective downstream.**  If `g` is injective, the composite `graph (g ∘ f)`
-is Lifted-Monotone iff some partial order on `M` makes both stages
-Lifted-Monotone. -/
-theorem injective_characterization {f : I → M} {g : M → O} (hg : ∀ a b, g a = g b → a = b) :
+/-- The pulled-back order is antisymmetric when `g` is injective and `O`'s
+order is antisymmetric. -/
+theorem pullPO_antisymm [PO.Antisymm O] (g : M → O) (hg : ∀ a b, g a = g b → a = b) :
+    @PO.Antisymm M (pullPO g) :=
+  @PO.Antisymm.mk M (pullPO g) fun h h' => hg _ _ (PO.antisymm h h')
+
+/-- **Functional stages.**  The composite `graph (g ∘ f)` is Lifted-Monotone iff
+some order on `M` makes both stages Lifted-Monotone (the order pulled back
+through `g`). -/
+theorem factor_characterization {f : I → M} {g : M → O} :
     (graph (g ∘ f)).LiftedMono ↔ ∃ inst : PO M,
       @Spec.LiftedMono I M _ inst (@graph I M _ inst f) ∧
       @Spec.LiftedMono M O inst _ (@graph M O inst _ g) := by
   constructor
   · intro h
     have hm := (graph_liftedMono_iff _).1 h
-    refine ⟨pullPO g hg, (@graph_liftedMono_iff I M _ (pullPO g hg) f).2 hm,
-      (@graph_liftedMono_iff M O (pullPO g hg) _ g).2 fun _ _ h => h⟩
+    refine ⟨pullPO g, (@graph_liftedMono_iff I M _ (pullPO g) f).2 hm,
+      (@graph_liftedMono_iff M O (pullPO g) _ g).2 fun _ _ h => h⟩
   · rintro ⟨inst, h1, h2⟩
     exact (graph_liftedMono_iff _).2 (@functional_composition I M O _ inst _ f g
       ((@graph_liftedMono_iff I M _ inst f).1 h1) ((@graph_liftedMono_iff M O inst _ g).1 h2))
+
+/-- **Injective downstream.**  If `g` is injective, the composite `graph (g ∘ f)`
+is Lifted-Monotone iff some order on `M` makes both stages Lifted-Monotone.
+(Since orders are preorders, injectivity is not needed: this is
+`factor_characterization`; for antisymmetric `O`, the order can be taken
+antisymmetric, `pullPO_antisymm`.) -/
+theorem injective_characterization {f : I → M} {g : M → O} (_hg : ∀ a b, g a = g b → a = b) :
+    (graph (g ∘ f)).LiftedMono ↔ ∃ inst : PO M,
+      @Spec.LiftedMono I M _ inst (@graph I M _ inst f) ∧
+      @Spec.LiftedMono M O inst _ (@graph M O inst _ g) :=
+  factor_characterization
 
 end Char
 
@@ -597,6 +621,8 @@ instance : PO C3 where
   le x y := x.rk ≤ y.rk
   refl _ := Nat.le_refl _
   trans := Nat.le_trans
+
+instance : PO.Antisymm C3 where
   antisymm {x y} h h' := by
     have e : x.rk = y.rk := Nat.le_antisymm h h'
     cases x <;> cases y <;> first | rfl | (simp [C3.rk] at e)
@@ -615,18 +641,19 @@ def fz : C3 → Mid
 /-- The constant downstream. -/
 def gz : Mid → Pt := fun _ => .pt
 
-theorem no_order_monotone (inst : PO Mid) : ¬ @Monotone C3 Mid _ inst fz := by
+theorem no_order_monotone (inst : PO Mid) [@PO.Antisymm Mid inst] :
+    ¬ @Monotone C3 Mid _ inst fz := by
   intro h
   have h1 : @PO.le Mid inst Mid.p Mid.q := h .a .b (show (0 : Nat) ≤ 1 by decide)
   have h2 : @PO.le Mid inst Mid.q Mid.p := h .b .c (show (1 : Nat) ≤ 2 by decide)
-  exact absurd (@PO.antisymm Mid inst _ _ h1 h2) (by decide)
+  exact absurd (@PO.antisymm Mid inst _ _ _ h1 h2) (by decide)
 
 /-- **Repair only by merging.**  Any re-encoding `e : Mid → M'` of the middle,
 into any partially ordered `M'`, under which the upstream `e ∘ fz` is monotone
 merges `fz a = p` and `fz b = q`. -/
-theorem merge_needed {M' : Type} (inst : PO M') (e : Mid → M')
+theorem merge_needed {M' : Type} (inst : PO M') [@PO.Antisymm M' inst] (e : Mid → M')
     (h : @Monotone C3 M' _ inst (e ∘ fz)) : e .p = e .q :=
-  @PO.antisymm M' inst _ _ (h .a .b (show (0 : Nat) ≤ 1 by decide))
+  @PO.antisymm M' inst _ _ _ (h .a .b (show (0 : Nat) ≤ 1 by decide))
     (h .b .c (show (1 : Nat) ≤ 2 by decide))
 
 /-- **No order on the middle makes both stages monotone.**  The composite
@@ -636,11 +663,11 @@ Monotonicity (`fz a = fz c ≠ fz b` with `a ≼ b ≼ c` would force `p = q`), 
 its empty-basis system stalls at some canonical state. -/
 theorem no_order_counterexample :
     (∀ _inst : PO Mid, (seq (graph fz) (graph gz)).LiftedMono) ∧
-    (∀ _inst : PO Mid, ¬ (graph fz).LiftedMono) ∧
-    ∀ _inst : PO Mid, ∃ i, ∀ o τ,
+    (∀ (_inst : PO Mid) [PO.Antisymm Mid], ¬ (graph fz).LiftedMono) ∧
+    ∀ (_inst : PO Mid) [PO.Antisymm Mid], ∃ i, ∀ o τ,
       ¬ SysStep (fun _ => False) (canon (graph fz) i) (.output o) τ := by
-  refine ⟨fun inst => ?_, fun inst h => no_order_monotone inst ((graph_liftedMono_iff _).1 h),
-    fun inst => ?_⟩
+  refine ⟨fun inst => ?_, fun inst _ h => no_order_monotone inst ((graph_liftedMono_iff _).1 h),
+    fun inst _ => ?_⟩
   · rw [seq_graph]
     exact (graph_liftedMono_iff _).2 fun _ _ _ => trivial
   · exact Classical.byContradiction fun hn => no_order_monotone inst

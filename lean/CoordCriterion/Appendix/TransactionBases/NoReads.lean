@@ -58,6 +58,8 @@ instance instPOFinSet (α : Type) : PO (FinSet α) where
   le a b := ∀ x, a.1 x → b.1 x
   refl _ _ h := h
   trans h1 h2 x hx := h2 x (h1 x hx)
+
+instance (α : Type) : PO.Antisymm (FinSet α) where
   antisymm h1 h2 := Subtype.ext (funext fun x => propext ⟨h1 x, h2 x⟩)
 
 /-- The finite set of the elements of a duplicate-free list. -/
@@ -94,6 +96,8 @@ instance instPOOutcome (T : Type) : PO (Outcome T) where
   trans h1 h2 :=
     ⟨fun t h => h2.1 t (h1.1 t h), fun t h => h2.2.1 t (h1.2.1 t h),
      fun a b da db => (h2.2.2 a b (h1.2.1 a da) (h1.2.1 b db)).trans (h1.2.2 a b da db)⟩
+
+instance (T : Type) : PO.Antisymm (Outcome T) where
   antisymm {o o'} h1 h2 := by
     apply Outcome.ext'
     · funext t; exact propext ⟨h1.1 t, h2.1 t⟩

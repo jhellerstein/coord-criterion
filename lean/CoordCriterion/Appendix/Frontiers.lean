@@ -163,8 +163,9 @@ def FiniteSet (B : O → Prop) : Prop := ∃ L : List O, ∀ o, B o ↔ o ∈ L
 /-- Maximal elements of a set. -/
 def maxOf (B : O → Prop) : O → Prop := fun m => B m ∧ ∀ o, B o → m ≼ o → o = m
 
-/-- In a finite list, every element lies below a maximal element. -/
-theorem list_max_above : ∀ (L : List O) (o : O), o ∈ L →
+/-- In a finite list, every element lies below a maximal element (for an
+antisymmetric order on `O`). -/
+theorem list_max_above [PO.Antisymm O] : ∀ (L : List O) (o : O), o ∈ L →
     ∃ m, m ∈ L ∧ o ≼ m ∧ ∀ x, x ∈ L → m ≼ x → x = m
   | [], _, h => absurd h (List.not_mem_nil)
   | a :: L, o, ho => by
@@ -202,7 +203,7 @@ theorem list_max_above : ∀ (L : List O) (o : O), o ∈ L →
           · exact absurd hmx hma
           · exact hmax x hx hmx
 
-theorem finite_max_above {B : O → Prop} (hB : FiniteSet B) {o : O} (ho : B o) :
+theorem finite_max_above [PO.Antisymm O] {B : O → Prop} (hB : FiniteSet B) {o : O} (ho : B o) :
     ∃ m, maxOf B m ∧ o ≼ m := by
   obtain ⟨L, hL⟩ := hB
   obtain ⟨m, hm, hom, hmax⟩ := list_max_above L o ((hL o).1 ho)
@@ -215,15 +216,15 @@ theorem pruned_sub (X : Table I O) (i : I) : ∀ o, pruned X i o → hull X i o 
   fun _ h => h.1
 
 /-- `M(i) ≡_H X̂(i)` when `X̂(i)` is finite. -/
-theorem pruned_equiv (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) (i : I) :
+theorem pruned_equiv [PO.Antisymm O] (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) (i : I) :
     HoareLe (hull X i) (pruned X i) ∧ HoareLe (pruned X i) (hull X i) :=
   ⟨fun _ ho => finite_max_above (hfin i) ho, HoareLe.of_sub (pruned_sub X i)⟩
 
-theorem pruned_relaxation (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) :
+theorem pruned_relaxation [PO.Antisymm O] (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) :
     Relaxation X (pruned X) :=
   fun i => (hull_relaxation X i).trans (pruned_equiv X hfin i).1
 
-theorem pruned_relMono (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) :
+theorem pruned_relMono [PO.Antisymm O] (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) :
     HRelMono (pruned X) :=
   fun i k h => ((pruned_equiv X hfin i).2.trans (hull_relMono X i k h)).trans
     (pruned_equiv X hfin k).1
@@ -239,7 +240,7 @@ theorem pruned_least (X : Table I O) (i : I) (Y : O → Prop)
   exact this ▸ hy
 
 /-- Uniqueness of the smallest such subset. -/
-theorem pruned_unique (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) (i : I)
+theorem pruned_unique [PO.Antisymm O] (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) (i : I)
     (Z : O → Prop) (hZ : ∀ o, Z o → hull X i o) (hZcov : HoareLe (hull X i) Z)
     (hZmin : ∀ Y : O → Prop, (∀ o, Y o → hull X i o) → HoareLe (hull X i) Y →
       ∀ o, Z o → Y o) :
@@ -247,11 +248,13 @@ theorem pruned_unique (X : Table I O) (hfin : ∀ i, FiniteSet (hull X i)) (i : 
   fun o => ⟨hZmin _ (pruned_sub X i) (pruned_equiv X hfin i).1 o,
     pruned_least X i Z hZ hZcov o⟩
 
-/-- **Theorem `thm:monotone-hull`** (Remembered-output frontier), bundled. -/
+/-- **Theorem `thm:monotone-hull`** (Remembered-output frontier), bundled.  The
+finite pruning clause assumes the order on `O` antisymmetric: in a preorder a
+finite set need not have maximal elements in the sense of `maxOf`. -/
 theorem monotone_hull (X : Table I O) :
     (Relaxation X (hull X) ∧ HRelMono (hull X)) ∧
     (∀ A, Relaxation X A → HRelMono A → ∀ i, HoareLe (hull X i) (A i)) ∧
-    ((∀ i, FiniteSet (hull X i)) →
+    (∀ [PO.Antisymm O], (∀ i, FiniteSet (hull X i)) →
       (∀ i, HoareLe (hull X i) (pruned X i) ∧ HoareLe (pruned X i) (hull X i)) ∧
       HRelMono (pruned X) ∧
       (∀ i, (∀ o, pruned X i o → hull X i o) ∧ HoareLe (hull X i) (pruned X i) ∧
@@ -284,6 +287,8 @@ instance : PO (HClass O) where
   le A B := ∀ o, A.D o → B.D o
   refl _ _ h := h
   trans h1 h2 o h := h2 o (h1 o h)
+
+instance : PO.Antisymm (HClass O) where
   antisymm := by
     intro A B h1 h2
     have hD : A.D = B.D := funext fun o => propext ⟨h1 o, h2 o⟩
@@ -333,7 +338,9 @@ instance : PO LIn where
   le := LIn.le
   refl x := by cases x <;> trivial
   trans {x y z} h1 h2 := by cases x <;> cases y <;> cases z <;> simp_all [LIn.le]
-  antisymm {x y} h1 h2 := by cases x <;> cases y <;> simp_all [LIn.le]
+
+instance : PO.Antisymm LIn where
+  antisymm {x y} h1 h2 := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all [LIn.le]
 
 /-- `o_a`, `o_b`, `o_{a⇝b}`; Eq. `lookup-output-dominance`. -/
 inductive LOut | a | b | ab
@@ -344,7 +351,9 @@ instance : PO LOut where
   le := LOut.le
   refl x := Or.inl rfl
   trans {x y z} h1 h2 := by cases x <;> cases y <;> cases z <;> simp_all [LOut.le]
-  antisymm {x y} h1 h2 := by cases x <;> cases y <;> simp_all [LOut.le]
+
+instance : PO.Antisymm LOut where
+  antisymm {x y} h1 h2 := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all [LOut.le]
 
 end Lookup
 
@@ -495,6 +504,8 @@ instance (Rs : Restructuring K P) : PO Rs.Hist where
   trans := by
     rintro a b c ⟨t, h1⟩ ⟨t', h2⟩
     exact ⟨t ++ t', by rw [← List.append_assoc, h1, h2]⟩
+
+instance (Rs : Restructuring K P) : PO.Antisymm Rs.Hist where
   antisymm := by
     rintro a b ⟨t, h⟩ ⟨t', h'⟩
     have hl := congrArg List.length h
@@ -537,6 +548,8 @@ instance : PO (ClaimSet K P) where
   le A B := ∀ k p, A.mem k p → B.mem k p
   refl _ _ _ h := h
   trans h1 h2 k p h := h2 k p (h1 k p h)
+
+instance : PO.Antisymm (ClaimSet K P) where
   antisymm := by
     intro A B h1 h2
     have : A.mem = B.mem := funext fun k => funext fun p => propext ⟨h1 k p, h2 k p⟩
@@ -568,6 +581,8 @@ instance (α : Type) : PO (Disc α) where
   le a b := a = b
   refl _ := rfl
   trans h1 h2 := h1.trans h2
+
+instance (α : Type) : PO.Antisymm (Disc α) where
   antisymm h _ := h
 
 /-- Eq. `forwarding-hull`: if each fiber `X(g)` consists of claims valid at
@@ -589,6 +604,8 @@ instance : PO One where
   le _ _ := True
   refl _ := trivial
   trans _ _ := trivial
+
+instance : PO.Antisymm One where
   antisymm {a b} _ _ := by cases a; cases b; rfl
 
 

@@ -92,6 +92,8 @@ instance instPODReport (Ev : Type) : PO (DReport Ev) where
     · have hya := h2.2.2 a b (h1.1 b hb) hab
       have hy : y.lt a b := (h2.2.1 a b hya (h1.1 b hb)).2 hab
       exact h1.2.2 a b hb hy
+
+instance (Ev : Type) : PO.Antisymm (DReport Ev) where
   antisymm {x y} h1 h2 :=
     DReport.ext' (funext fun a => propext ⟨h1.1 a, h2.1 a⟩)
       (funext fun a => funext fun b => propext ⟨fun h => DReport.lt_of_le h1 h,
@@ -847,6 +849,8 @@ instance instPOFlat (α : Type) : PO (Flat α) where
     rcases h1 with h1 | rfl
     · exact Or.inl h1
     · exact h2
+
+instance (α : Type) : PO.Antisymm (Flat α) where
   antisymm {x y} h1 h2 := by
     rcases h1 with h1 | h1
     · rcases h2 with h2 | h2

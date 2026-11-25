@@ -175,6 +175,8 @@ instance : PO (SInp reps lam) where
   le a b := a.1 ≼ b.1
   refl a := PO.refl a.1
   trans h₁ h₂ := PO.trans h₁ h₂
+
+instance : PO.Antisymm (SInp reps lam) where
   antisymm h₁ h₂ := Subtype.ext (PO.antisymm h₁ h₂)
 
 theorem isRead_sub {a b : Hist Ev} (hab : a ≼ b) {e c n : Nat} (h : IsRead a e c n) :

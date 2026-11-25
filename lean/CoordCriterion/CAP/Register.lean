@@ -127,6 +127,8 @@ instance : PO Hist where
     (∀ a b, h.prec a b → h'.prec a b)
   refl _ := ⟨fun _ _ h => h, fun _ _ h => h⟩
   trans h1 h2 := ⟨fun a op h => h2.1 a op (h1.1 a op h), fun a b h => h2.2 a b (h1.2 a b h)⟩
+
+instance : PO.Antisymm Hist where
   antisymm h1 h2 := Hist.ext' (optFun_ext h1.1 h2.1)
     (funext fun a => funext fun b => propext ⟨h1.2 a b, h2.2 a b⟩)
 
@@ -146,6 +148,8 @@ instance : PO RMap where
   le ρ ρ' := ∀ a r, ρ.f a = some r → ρ'.f a = some r
   refl _ := fun _ _ h => h
   trans h1 h2 := fun a r h => h2 a r (h1 a r h)
+
+instance : PO.Antisymm RMap where
   antisymm h1 h2 := RMap.ext' (optFun_ext h1 h2)
 
 /-- A linearization of `h`: positions injective on the operations of `h` and

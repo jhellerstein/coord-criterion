@@ -640,6 +640,8 @@ instance : PO V3 where
     rcases h2 with rfl | h2
     · exact h1
     · exact Or.inr h2
+
+instance : PO.Antisymm V3 where
   antisymm := by
     intro a b h1 h2
     rcases h1 with h1 | h1

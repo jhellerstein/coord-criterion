@@ -32,6 +32,8 @@ instance : PO Stage where
   le a b := a.n ≤ b.n
   refl _ := Nat.le_refl _
   trans h₁ h₂ := Nat.le_trans h₁ h₂
+
+instance : PO.Antisymm Stage where
   antisymm {a b} h₁ h₂ := by
     cases a; cases b; simp only [Stage.mk.injEq]; exact Nat.le_antisymm h₁ h₂
 

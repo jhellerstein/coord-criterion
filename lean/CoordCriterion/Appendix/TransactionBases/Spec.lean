@@ -69,6 +69,8 @@ instance instPOSeq (K : Type) : PO (Seq K) where
     · have e := h1.2 h
       have hb : b.req = true := by rw [e]; exact h
       rw [h2.2 hb, e]
+
+instance (K : Type) : PO.Antisymm (Seq K) where
   antisymm {a b} h1 h2 := by
     obtain ⟨l1, e1⟩ := h1.1
     obtain ⟨l2, e2⟩ := h2.1
@@ -100,6 +102,8 @@ instance instPOInp (T K : Type) : PO (Inp T K) where
   le i j := (∀ t, i.txs.1 t → j.txs.1 t) ∧ ∀ t, i.tx t ≼ j.tx t
   refl i := ⟨fun _ h => h, fun t => PO.refl (i.tx t)⟩
   trans h1 h2 := ⟨fun t h => h2.1 t (h1.1 t h), fun t => PO.trans (h1.2 t) (h2.2 t)⟩
+
+instance (T K : Type) : PO.Antisymm (Inp T K) where
   antisymm h1 h2 :=
     Inp.ext' (PO.antisymm (α := FinSet T) h1.1 h2.1) (funext fun t => PO.antisymm (h1.2 t) (h2.2 t))
 
@@ -198,6 +202,8 @@ instance instPOROut (T K : Type) : PO (ROut T K) where
   le := ROut.le
   refl r := ⟨PO.refl r.o, fun _ _ _ h => h⟩
   trans h1 h2 := ⟨PO.trans h1.1 h2.1, fun a n v h => h2.2 a n v (h1.2 a n v h)⟩
+
+instance (T K : Type) : PO.Antisymm (ROut T K) where
   antisymm {r r'} h1 h2 := by
     apply ROut.ext' (PO.antisymm h1.1 h2.1)
     funext a n

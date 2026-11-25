@@ -145,6 +145,8 @@ instance : PO (Seq E) where
   le a b := ∃ v, b.ev = a.ev ++ v
   refl a := ⟨[], (List.append_nil _).symm⟩
   trans := fun ⟨v, hv⟩ ⟨u, hu⟩ => ⟨v ++ u, by rw [hu, hv, List.append_assoc]⟩
+
+instance : PO.Antisymm (Seq E) where
   antisymm := by
     intro ⟨a⟩ ⟨b⟩ ⟨v, hv⟩ ⟨u, hu⟩
     simp only at hv hu
@@ -224,6 +226,8 @@ instance (M : Machine Q E O) [ReachAntisymm M] : PO (RState M) where
   le := RLe
   refl a := ⟨[], .nil _⟩
   trans := fun ⟨v, hv⟩ ⟨u, hu⟩ => ⟨_, runs_append hv hu⟩
+
+instance (M : Machine Q E O) [ReachAntisymm M] : PO.Antisymm (RState M) where
   antisymm {a b} h1 h2 := by
     have := ReachAntisymm.antisymm a b h1 h2
     cases a; cases b

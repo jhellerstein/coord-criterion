@@ -109,6 +109,8 @@ instance instPOAuth (Ep Vt Dc : Type) : PO (Auth Ep Vt Dc) where
     rintro a b c ⟨⟨t1, h1⟩, v1, d1⟩ ⟨⟨t2, h2⟩, v2, d2⟩
     exact ⟨⟨t1 ++ t2, by rw [h2, h1, List.append_assoc]⟩,
       fun v h => v2 v (v1 v h), fun d h => d2 d (d1 d h)⟩
+
+instance (Ep Vt Dc : Type) : PO.Antisymm (Auth Ep Vt Dc) where
   antisymm := by
     rintro ⟨E, V, D⟩ ⟨E', V', D'⟩ ⟨⟨t1, h1⟩, v1, d1⟩ ⟨⟨t2, h2⟩, v2, d2⟩
     have hE : E = E' := prefix_antisymm h1 h2
@@ -165,6 +167,8 @@ instance instPOPMap (P V : Type) : PO (PMap P V) where
   le m m' := ∀ p a, m.f p = some a → m'.f p = some a
   refl _ _ _ h := h
   trans h1 h2 p a h := h2 p a (h1 p a h)
+
+instance (P V : Type) : PO.Antisymm (PMap P V) where
   antisymm := by
     rintro ⟨f⟩ ⟨g⟩ h1 h2
     congr
@@ -189,6 +193,8 @@ instance instPOKInput (P Val : Type) : PO (KInput P Val) where
   le a b := ∀ x, a.1.1 x → b.1.1 x
   refl _ _ h := h
   trans h1 h2 x hx := h2 x (h1 x hx)
+
+instance (P Val : Type) : PO.Antisymm (KInput P Val) where
   antisymm {a b} h1 h2 := by
     apply Subtype.ext; apply Subtype.ext
     exact funext fun x => propext ⟨h1 x, h2 x⟩
@@ -563,6 +569,8 @@ instance instPOHist (Ev : Type) : PO (Hist Ev) where
        have h2a := B.2.1 a b h2b hab
        exact A.2.1 a b hb ((B.2.2 a b h2a h2b).2 hab),
      fun a b ha hb => (A.2.2 a b ha hb).trans (B.2.2 a b (A.1 a ha) (A.1 b hb))⟩
+
+instance (Ev : Type) : PO.Antisymm (Hist Ev) where
   antisymm {h h'} A B := by
     apply Hist.ext'
     · exact Subtype.ext (funext fun x => propext ⟨A.1 x, B.1 x⟩)
@@ -582,6 +590,8 @@ instance instPOESet (Ev : Type) : PO (ESet Ev) where
   le a b := ∀ x, a.mem x → b.mem x
   refl _ _ h := h
   trans h1 h2 x hx := h2 x (h1 x hx)
+
+instance (Ev : Type) : PO.Antisymm (ESet Ev) where
   antisymm := by
     rintro ⟨a⟩ ⟨b⟩ h1 h2
     congr; funext x; exact propext ⟨h1 x, h2 x⟩
@@ -635,6 +645,8 @@ instance instPOEqd (α : Type) : PO (Eqd α) where
   le a b := a = b
   refl _ := rfl
   trans h1 h2 := h1.trans h2
+
+instance (α : Type) : PO.Antisymm (Eqd α) where
   antisymm h _ := h
 
 /-- The complete-history specification: output `h` at `h`. -/

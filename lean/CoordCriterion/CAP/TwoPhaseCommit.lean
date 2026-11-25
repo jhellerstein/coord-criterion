@@ -60,6 +60,8 @@ instance (n : Nat) : PO (Votes n) where
     · rcases h₂ p with h' | h'
       · exact Or.inl (h.trans h')
       · exact Or.inr (h.trans h')
+
+instance (n : Nat) : PO.Antisymm (Votes n) where
   antisymm {v w} h₁ h₂ := funext fun p => by
     rcases h₁ p with h | h
     · rcases h₂ p with h' | h'
@@ -79,6 +81,8 @@ instance : PO Decision where
     rcases h₁ with rfl | rfl
     · exact Or.inl rfl
     · exact h₂
+
+instance : PO.Antisymm Decision where
   antisymm {a b} h₁ h₂ := by
     rcases h₁ with rfl | h
     · rcases h₂ with h | h <;> exact h.symm
@@ -306,6 +310,8 @@ instance : PO Approval where
     rcases h₁ with rfl | rfl
     · exact Or.inl rfl
     · exact h₂
+
+instance : PO.Antisymm Approval where
   antisymm {a b} h₁ h₂ := by
     rcases h₁ with rfl | h
     · rcases h₂ with h | h <;> exact h.symm

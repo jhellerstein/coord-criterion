@@ -57,6 +57,8 @@ instance instPOProp : PO Prop where
   le p q := p → q
   refl _ h := h
   trans h₁ h₂ x := h₂ (h₁ x)
+
+instance : PO.Antisymm Prop where
   antisymm h₁ h₂ := propext ⟨h₁, h₂⟩
 
 /-- A type with the discrete order. -/
@@ -67,6 +69,8 @@ instance (α : Type) : PO (Disc α) where
   le a b := a = b
   refl _ := rfl
   trans h h' := h.trans h'
+
+instance (α : Type) : PO.Antisymm (Disc α) where
   antisymm h _ := h
 
 /-- Finite sets, ordered by inclusion. -/
@@ -76,6 +80,8 @@ instance (P : Type) : PO (FSet P) where
   le U V := ∀ x, U.1 x → V.1 x
   refl _ _ h := h
   trans h₁ h₂ x h := h₂ x (h₁ x h)
+
+instance (P : Type) : PO.Antisymm (FSet P) where
   antisymm h₁ h₂ := Subtype.ext (funext fun x => propext ⟨h₁ x, h₂ x⟩)
 
 def FSet.ofList {P : Type} (l : List P) : FSet P := ⟨fun x => x ∈ l, l, fun _ => Iff.rfl⟩
@@ -93,7 +99,7 @@ class JSL (D : Type) [PO D] where
   le_r : ∀ a b, b ≼ join a b
   lub : ∀ {a b c}, a ≼ c → b ≼ c → join a b ≼ c
 
-theorem JSL.join_eq_right {D : Type} [PO D] [JSL D] {a b : D} (h : a ≼ b) : JSL.join a b = b :=
+theorem JSL.join_eq_right {D : Type} [PO D] [PO.Antisymm D] [JSL D] {a b : D} (h : a ≼ b) : JSL.join a b = b :=
   PO.antisymm (JSL.lub h (PO.refl b)) (JSL.le_r a b)
 
 /-- Sets with union. -/
@@ -129,9 +135,11 @@ structure CAI (D : Type) where
   trans {x y z} h₁ h₂ := by
     show m.merge x z = z
     rw [← h₂, ← m.assoc, h₁]
-  antisymm {x y} h₁ h₂ := by
-    have h₂' : m.merge y x = x := h₂
-    rw [← h₂', m.comm]; exact h₁
+
+/-- The order induced by a merge is antisymmetric. -/
+theorem CAI.antisymm {D : Type} (m : CAI D) {x y : D} (h₁ : m.merge x y = y)
+    (h₂ : m.merge y x = x) : x = y := by
+  rw [← h₂, m.comm]; exact h₁
 
 /-- The merge is the join of the induced order. -/
 @[reducible] def CAI.jsl {D : Type} (m : CAI D) : @JSL D m.po :=
@@ -150,7 +158,7 @@ theorem cai_semilattice {D : Type} (m : CAI D) :
     let le := fun x y => m.merge x y = y
     (∀ x, le x x) ∧ (∀ x y z, le x y → le y z → le x z) ∧ (∀ x y, le x y → le y x → x = y) ∧
       ∀ a b, le a (m.merge a b) ∧ le b (m.merge a b) ∧ ∀ c, le a c → le b c → le (m.merge a b) c :=
-  ⟨m.po.refl, fun _ _ _ => m.po.trans, fun _ _ => m.po.antisymm,
+  ⟨m.po.refl, fun _ _ _ => m.po.trans, fun _ _ => m.antisymm,
     fun a b => ⟨@JSL.le_l D m.po m.jsl a b, @JSL.le_r D m.po m.jsl a b,
       fun _ => @JSL.lub D m.po m.jsl _ _ _⟩⟩
 
@@ -184,7 +192,7 @@ theorem bigJoin_lub (s0 : D) : ∀ l : List D, IsLUB s0 (· ∈ l) (bigJoin s0 l
         (ih.2 c h0 fun y hy => hc y (List.mem_cons_of_mem _ hy))
 
 omit [JSL D] in
-theorem lub_unique {s0 : D} {U : D → Prop} {d d' : D} (h : IsLUB s0 U d) (h' : IsLUB s0 U d') :
+theorem lub_unique [PO.Antisymm D] {s0 : D} {U : D → Prop} {d d' : D} (h : IsLUB s0 U d) (h' : IsLUB s0 U d') :
     d = d' :=
   PO.antisymm (h.2 d' h'.1.1 h'.1.2) (h'.2 d h.1.1 h.1.2)
 
@@ -201,10 +209,10 @@ noncomputable def st (s0 : D) (U : FSet D) : D := Classical.choose (exists_lub s
 theorem st_lub (s0 : D) (U : FSet D) : IsLUB s0 U.1 (st s0 U) :=
   Classical.choose_spec (exists_lub s0 U)
 
-theorem st_eq {s0 : D} {U : FSet D} {d : D} (h : IsLUB s0 U.1 d) : st s0 U = d :=
+theorem st_eq [PO.Antisymm D] {s0 : D} {U : FSet D} {d : D} (h : IsLUB s0 U.1 d) : st s0 U = d :=
   lub_unique (st_lub s0 U) h
 
-theorem st_ofList (s0 : D) (l : List D) : st s0 (FSet.ofList l) = bigJoin s0 l :=
+theorem st_ofList [PO.Antisymm D] (s0 : D) (l : List D) : st s0 (FSet.ofList l) = bigJoin s0 l :=
   st_eq (bigJoin_lub s0 l)
 
 /-- `U ⊆ V` implies `s(U) ⊑ s(V)`: the state specification is monotone. -/
@@ -212,7 +220,7 @@ theorem st_mono (s0 : D) : Monotone (st s0 : FSet D → D) := fun U V hUV =>
   (st_lub s0 U).2 _ (st_lub s0 V).1.1 fun x hx => (st_lub s0 V).1.2 x (hUV x hx)
 
 /-- `s(U₁) ⊔ s(U₂) = s(U₁ ∪ U₂)`. -/
-theorem st_union (s0 : D) (U₁ U₂ : FSet D) :
+theorem st_union [PO.Antisymm D] (s0 : D) (U₁ U₂ : FSet D) :
     JSL.join (st s0 U₁) (st s0 U₂) = st s0 (U₁.union U₂) := by
   symm
   apply st_eq
@@ -230,8 +238,15 @@ theorem st_union (s0 : D) (U₁ U₂ : FSet D) :
 theorem st_union_least (s0 : D) (U₁ U₂ : FSet D) :
     (st s0 U₁ ≼ st s0 (U₁.union U₂) ∧ st s0 U₂ ≼ st s0 (U₁.union U₂)) ∧
       ∀ c, st s0 U₁ ≼ c → st s0 U₂ ≼ c → st s0 (U₁.union U₂) ≼ c := by
-  rw [← st_union]
-  exact ⟨⟨JSL.le_l _ _, JSL.le_r _ _⟩, fun _ h₁ h₂ => JSL.lub h₁ h₂⟩
+  have h₁ := st_lub s0 U₁
+  have h₂ := st_lub s0 U₂
+  have h := st_lub s0 (U₁.union U₂)
+  refine ⟨⟨h₁.2 _ h.1.1 fun x hx => h.1.2 x (Or.inl hx),
+    h₂.2 _ h.1.1 fun x hx => h.1.2 x (Or.inr hx)⟩, fun c hc₁ hc₂ => ?_⟩
+  refine h.2 c (PO.trans h₁.1.1 hc₁) fun x hx => ?_
+  rcases hx with hx | hx
+  · exact PO.trans (h₁.1.2 x hx) hc₁
+  · exact PO.trans (h₂.1.2 x hx) hc₂
 
 /-- The CRDT state as a (monotone, hence consistent) functional specification. -/
 theorem crdt_state_consistent (s0 : D) : (graph (st s0 : FSet D → D)).Consistent :=
@@ -267,7 +282,7 @@ theorem crdt_query_of_mono (s0 : D) {q : D → Y} (hq : Monotone q) :
 
 /-- "`q` need only be monotone on reachable states": `q ∘ s` is monotone iff
 `q` is monotone between reachable states `s(U) ⊑ s(V)`. -/
-theorem crdt_query_mono_iff_reachable (s0 : D) (q : D → Y) :
+theorem crdt_query_mono_iff_reachable [PO.Antisymm D] (s0 : D) (q : D → Y) :
     Monotone (fun U : FSet D => q (st s0 U)) ↔
       ∀ U V : FSet D, st s0 U ≼ st s0 V → q (st s0 U) ≼ q (st s0 V) := by
   constructor
@@ -296,7 +311,9 @@ instance : PO B2 where
   le := B2.le
   refl a := by cases a <;> simp [B2.le]
   trans {a b c} h h' := by cases a <;> cases b <;> cases c <;> simp_all [B2.le]
-  antisymm {a b} h h' := by cases a <;> cases b <;> simp_all [B2.le]
+
+instance : PO.Antisymm B2 where
+  antisymm {a b} h h' := by dsimp only [PO.le] at *; cases a <;> cases b <;> simp_all [B2.le]
 
 def B2.or : B2 → B2 → B2
   | .ff, b => b
@@ -350,7 +367,9 @@ instance : PO Y5 where
   le x y := Y5.le x y = true
   refl x := by cases x <;> rfl
   trans {x y z} h h' := by cases x <;> cases y <;> cases z <;> simp_all [Y5.le]
-  antisymm {x y} h h' := by cases x <;> cases y <;> simp_all [Y5.le]
+
+instance : PO.Antisymm Y5 where
+  antisymm {x y} h h' := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all [Y5.le]
 
 /-- The observation: which components are set. -/
 def qY : B2 × B2 → Y5
@@ -495,7 +514,10 @@ instance : PO LWW where
   le := LWW.le
   refl a := Or.inr ⟨rfl, Nat.le_refl _⟩
   trans {a b c} h h' := by unfold LWW.le at *; omega
+
+instance : PO.Antisymm LWW where
   antisymm {a b} h h' := by
+    dsimp only [PO.le] at *
     unfold LWW.le at *
     cases a; cases b; simp only at *
     have : _ := And.intro h h'
@@ -762,6 +784,8 @@ instance (α : Type) : PO (Pfx α) where
   trans := by
     rintro a b c ⟨t, ht⟩ ⟨t', ht'⟩
     exact ⟨t ++ t', by rw [ht', ht, List.append_assoc]⟩
+
+instance (α : Type) : PO.Antisymm (Pfx α) where
   antisymm := by
     rintro ⟨a⟩ ⟨b⟩ ⟨t, ht⟩ ⟨t', ht'⟩
     simp only at ht ht'
@@ -875,6 +899,8 @@ instance (α : Type) : PO (Facts α) where
   le a b := ∀ x, a.has x → b.has x
   refl _ _ h := h
   trans h h' x hx := h' x (h x hx)
+
+instance (α : Type) : PO.Antisymm (Facts α) where
   antisymm := by
     rintro ⟨a⟩ ⟨b⟩ h h'
     have : a = b := funext fun x => propext ⟨h x, h' x⟩

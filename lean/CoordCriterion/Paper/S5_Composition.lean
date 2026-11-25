@@ -349,15 +349,14 @@ theorem «thm:guard-tightening» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec 
     ((∀ m, Joint.Img sp m → ∃ t, Tight.HasTop sk.P m t) →
       ∀ i m k x, sp.P i m → sp.P k x → (Tight.Conf sp.P (Tight.dle sk.P) i m k x ↔
         ∃ o y, sk.P m o ∧ sk.P x y ∧ Tight.Conf (Comp.seq sp sk).P PO.le i o k y)) ∧
-    (∀ (htop : ∀ m, ∃ t, Tight.HasTop sk.P m t)
-       (ha : ∀ a b, Tight.dle sk.P a b → Tight.dle sk.P b a → a = b),
-      let inst := Tight.dleOrder sk.P (Tight.dle_refl_of_top htop) ha
+    (∀ (htop : ∀ m, ∃ t, Tight.HasTop sk.P m t),
+      let inst := Tight.dleOrder sk.P (Tight.dle_refl_of_top htop)
       @Guard.Proper I M O _ inst _ (Joint.underOut inst sp) (Joint.underIn inst sk) ∧
         @Tight.Tight I M O _ inst _ (Joint.underOut inst sp) (Joint.underIn inst sk)) :=
   ⟨Tight.proper_iff_le_dle sp sk,
    fun hP _ _ _ _ _ _ hi hk hm hx hc => Tight.dleConf_of_compConf hP hi hk hm hx hc,
    fun htop _ _ _ _ hi hk => Tight.dleConf_iff_compConf_top htop hi hk,
-   fun htop ha => Tight.tightGuard_dleOrder sp sk htop ha⟩
+   fun htop => Tight.tightGuard_dleOrder sp sk htop⟩
 
 /-- After Theorem `thm:guard-tightening`: "A greatest element of `P₂(m)` is one
 answer to `m` that extends every other.  A functional downstream has one
@@ -610,8 +609,8 @@ and with it (1) and (2)), and its empty-basis system cannot emit at some
 canonical state.  The appendix treatment is `«app:composition/reach»`. -/
 theorem «sec:composite-calm/reach» :
     (∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
-      (∀ _inst : PO Joint.Mid, ¬ (graph Joint.fz).LiftedMono) ∧
-      ∀ _inst : PO Joint.Mid, ∃ i, ∀ o τ,
+      (∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ¬ (graph Joint.fz).LiftedMono) ∧
+      ∀ (_inst : PO Joint.Mid) [PO.Antisymm Joint.Mid], ∃ i, ∀ o τ,
         ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output o) τ :=
   Joint.no_order_counterexample
 

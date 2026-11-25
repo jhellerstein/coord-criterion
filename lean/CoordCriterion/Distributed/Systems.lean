@@ -629,6 +629,8 @@ instance : PO U1 where
   le _ _ := True
   refl _ := trivial
   trans _ _ := trivial
+
+instance : PO.Antisymm U1 where
   antisymm := fun {a b} _ _ => by cases a; cases b; rfl
 
 theorem u1_eq (a b : U1) : a = b := by cases a; cases b; rfl
@@ -640,6 +642,8 @@ instance : PO B2 where
   le a b := a = b
   refl _ := rfl
   trans h1 h2 := h1.trans h2
+
+instance : PO.Antisymm B2 where
   antisymm h _ := h
 
 /-- One input with two incomparable outputs. -/

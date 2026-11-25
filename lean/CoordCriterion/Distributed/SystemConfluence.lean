@@ -233,7 +233,7 @@ noncomputable def keepOnly (k : I) (u : O) (hu : sp.P k u) : Commitment sp where
 /-- From any state with current input below `k` and the row `(k,u)`,
 `input(k)`, `output(u)`, and, if other rows remain, the commitment event
 `apply(keepOnly k u)` reach `single k u`. -/
-theorem reach_single {σ : State sp} {k : I} {u : O} (hu : sp.P k u)
+theorem reach_single [PO.Antisymm O] {σ : State sp} {k : I} {u : O} (hu : sp.P k u)
     (hk : σ.cur ≼ k) (hku : σ.R k u) :
     ∃ es : List (SEvent sp), SysExec (fun _ => True) σ es (single k u hu) := by
   let τ1 : State sp :=
@@ -277,10 +277,21 @@ def SysConfluentAt (fam : List (State sp)) (k : I) : Prop :=
   ∃ τ : State sp, τ.cur = k ∧ ∀ σ ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
     SysExec B σ es τ
 
+/-- The forward direction of `sysConfluentAt_iff`, for any order: a common
+state at `k` leaves a row at `k` that survives in every member. -/
+theorem SysConfluentAt.survivor {fam : List (State sp)} {k : I} (h : SysConfluentAt fam k) :
+    ∃ u, sp.P k u ∧ ∀ σ ∈ fam, σ.R k u := by
+  obtain ⟨τ, hτ, hall⟩ := h
+  obtain ⟨u, hu⟩ := τ.hasCur
+  rw [hτ] at hu
+  refine ⟨u, τ.sub _ _ hu, fun σ hσ => ?_⟩
+  obtain ⟨B, es, hx⟩ := hall σ hσ
+  exact hx.sub k u hu
+
 /-- **Survivor test for runs under bases.**  States with current inputs below
 `k` are confluent at `k`, by continuations that may apply any commitments,
 iff some row at `k` survives in every one of them. -/
-theorem sysConfluentAt_iff (fam : List (State sp)) (k : I) (hk : ∀ σ ∈ fam, σ.cur ≼ k) :
+theorem sysConfluentAt_iff [PO.Antisymm O] (fam : List (State sp)) (k : I) (hk : ∀ σ ∈ fam, σ.cur ≼ k) :
     SysConfluentAt fam k ↔ ∃ u, sp.P k u ∧ ∀ σ ∈ fam, σ.R k u := by
   constructor
   · rintro ⟨τ, hτ, hall⟩
@@ -300,7 +311,7 @@ canonical run has the same current input; (1) `R_r = R̂_r \ Δ(ρ_r)`; (2) at a
 common input extension `k`, the runs are confluent, by continuations that may
 apply any commitments, iff some row at `k` lies in every `R̂_r` and in no
 `Δ(ρ_r)`. -/
-theorem system_confluence {m : Nat} (B : Fin m → CommitmentBasis sp) (i : Fin m → I)
+theorem system_confluence [PO.Antisymm O] {m : Nat} (B : Fin m → CommitmentBasis sp) (i : Fin m → I)
     (es : Fin m → List (SEvent sp)) (ρ ρh : Fin m → State sp)
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (hcan : ∀ r, Exec (canon sp (i r)) ((es r).filterMap SEvent.erase) (ρh r)) :
@@ -334,7 +345,7 @@ section cut
 variable {D : Type} {n : Nat}
 
 /-- `CAP.LRun` form of `reach_single`, with no receive. -/
-theorem lrun_single {σ : State sp} {k : I} {u : O} (hu : sp.P k u)
+theorem lrun_single [PO.Antisymm O] {σ : State sp} {k : I} {u : O} (hu : sp.P k u)
     (hk : σ.cur ≼ k) (hku : σ.R k u) :
     ∃ l : List (CAP.LEv sp D n), CAP.LRun σ l (single k u hu) ∧ ∀ q k j d, CAP.LEv.recv q k j d ∉ l := by
   let τ1 : State sp :=
@@ -381,7 +392,7 @@ cut.**  A consistent cut whose participants' current inputs lie below `k` is
 confluent at `k` (some well-formed continuation, whose events may apply any
 commitments, brings every participant to one state at `k`) iff some row at `k`
 survives in every participant's table. -/
-theorem confluentCut_iff {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
+theorem confluentCut_iff [PO.Antisymm O] {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
     (hwf : CAP.WF init H) (hcut : CAP.IsCut H c) {k : I}
     (hk : ∀ p σ, CAP.LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ k) :
     CAP.ConfluentCut init H c k ↔
@@ -420,7 +431,7 @@ is a run under the full basis (`Deploy.toS`); its canonical run is the
 erasure.  The cut is confluent at `k` iff some row at `k` lies in every
 participant's canonical table and was removed by no commitment event of any
 participant run. -/
-theorem cut_confluence {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
+theorem cut_confluence [PO.Antisymm O] {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
     (hwf : CAP.WF init H) (hcut : CAP.IsCut H c) {k : I}
     (hk : ∀ p σ, CAP.LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ k)
     (ρh : Fin n → State sp)
@@ -499,7 +510,7 @@ such row. -/
 theorem commitment_conflict_of_system_confluence {c : Commitment sp} {σ σc σ' τ0 τ : State sp}
     {k : I} {x : O} {B' : CommitmentBasis sp}
     (happ : c.app σ = some σc) (hx : σ.R k x) (hnx : ¬ σc.R k x)
-    (hsub : ∀ k w, σ'.R k w → σc.R k w) (hk : σ'.cur ≼ k)
+    (hsub : ∀ k w, σ'.R k w → σc.R k w) (_hk : σ'.cur ≼ k)
     (h2 : SysExec B' τ0 [.input k, .output x] τ) :
     ¬ SysConfluentAt [σ', τ] k := by
   have hτk : ∀ w, τ.R k w → x ≼ w := by
@@ -514,27 +525,8 @@ theorem commitment_conflict_of_system_confluence {c : Commitment sp} {σ σc σ'
           obtain ⟨_, _, hR⟩ := step_output_iff.1 hst
           rw [hR] at hw
           exact hw.2
-  have hτc : τ.cur = k := by
-    cases h2 with
-    | cons s1 h3 =>
-      cases h3 with
-      | cons s2 h4 =>
-        cases h4
-        cases s1 with
-        | input hst1 =>
-          cases s2 with
-          | output hst2 _ =>
-            obtain ⟨_, hc1, _⟩ := CAP.step_input_inv hst1
-            obtain ⟨_, hc2, _⟩ := step_output_iff.1 hst2
-            rw [hc2, hc1]
   intro hconf
-  have hfam : ∀ ρ ∈ [σ', τ], ρ.cur ≼ k := by
-    intro ρ hρ
-    simp only [List.mem_cons, List.not_mem_nil, or_false] at hρ
-    rcases hρ with rfl | rfl
-    · exact hk
-    · rw [hτc]; exact PO.refl k
-  obtain ⟨w, _, hall⟩ := (sysConfluentAt_iff [σ', τ] k hfam).1 hconf
+  obtain ⟨w, _, hall⟩ := hconf.survivor
   have h1 := hall σ' (by simp)
   have h2' := hall τ (by simp)
   exact c.unsubsumed σ σc happ k x w hx hnx (hsub k w h1) (hτk w h2')

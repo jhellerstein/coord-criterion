@@ -60,6 +60,8 @@ instance : PO (RHist G) where
   refl i := ⟨PO.refl _, fun _ _ _ _ => Iff.rfl⟩
   trans {i j k} hij hjk := ⟨PO.trans hij.1 hjk.1, fun a b ha hb =>
     (hjk.2 a b (hij.1.1 a ha) (hij.1.1 b hb)).trans (hij.2 a b ha hb)⟩
+
+instance : PO.Antisymm (RHist G) where
   antisymm {i j} hij hji := by
     have eh : i.h = j.h := PO.antisymm hij.1 hji.1
     have er : i.rt = j.rt := funext fun a => funext fun b => propext

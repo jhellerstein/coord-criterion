@@ -321,7 +321,10 @@ instance : PO Ord3 where
     intro x y z h1 h2
     unfold Ord3.le at *
     rcases h1 with rfl | rfl <;> rcases h2 with rfl | rfl <;> simp
+
+instance : PO.Antisymm Ord3 where
   antisymm := by
+    dsimp only [PO.le]
     intro x y h1 h2
     unfold Ord3.le at *
     cases x <;> cases y <;> simp_all
@@ -459,6 +462,8 @@ instance : PO Two where
   le := fun a b => a = b
   refl := fun _ => rfl
   trans := fun h1 h2 => h1.trans h2
+
+instance : PO.Antisymm Two where
   antisymm := fun h _ => h
 
 /-- One input, both outputs permitted. -/

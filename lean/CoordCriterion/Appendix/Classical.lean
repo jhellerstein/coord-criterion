@@ -267,6 +267,8 @@ instance instPOCount : PO Count where
   le a b := a.n ≤ b.n
   refl _ := Nat.le_refl _
   trans h1 h2 := Nat.le_trans h1 h2
+
+instance : PO.Antisymm Count where
   antisymm := by
     rintro ⟨a⟩ ⟨b⟩ h1 h2
     have : a = b := Nat.le_antisymm h1 h2
@@ -305,6 +307,8 @@ instance instPOSeq (α : Type) : PO (Seq α) where
   le a b := a.l <+: b.l
   refl a := List.prefix_refl a.l
   trans h1 h2 := List.IsPrefix.trans h1 h2
+
+instance (α : Type) : PO.Antisymm (Seq α) where
   antisymm := by
     rintro ⟨a⟩ ⟨b⟩ h1 h2
     have : a = b := h1.eq_of_length (Nat.le_antisymm h1.length_le h2.length_le)
@@ -970,6 +974,8 @@ instance instPOChainHist (Ev : Type) : PO (ChainHist Ev) where
   le a b := a.h ≼ b.h
   refl a := PO.refl a.h
   trans h1 h2 := PO.trans h1 h2
+
+instance (Ev : Type) : PO.Antisymm (ChainHist Ev) where
   antisymm := by
     rintro ⟨a, ha⟩ ⟨b, hb⟩ h1 h2
     have : a = b := PO.antisymm h1 h2

@@ -56,13 +56,17 @@ instance : PO Q4 where
   le := Q4.le
   refl x := by cases x <;> trivial
   trans {x y z} h h' := by cases x <;> cases y <;> cases z <;> simp_all [Q4.le]
-  antisymm {x y} h h' := by cases x <;> cases y <;> simp_all [Q4.le]
+
+instance : PO.Antisymm Q4 where
+  antisymm {x y} h h' := by dsimp only [PO.le] at *; cases x <;> cases y <;> simp_all [Q4.le]
 
 /-- The one-point input domain. -/
 instance : PO Unit where
   le _ _ := True
   refl _ := trivial
   trans _ _ := trivial
+
+instance : PO.Antisymm Unit where
   antisymm {a b} _ _ := by cases a; cases b; rfl
 
 /-- First specification: the fiber `{a, b, c}`. -/

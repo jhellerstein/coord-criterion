@@ -401,7 +401,7 @@ theorem «sec:crdt-instance/state-function» {D : Type} [PO D] [Inst.JSL D] (s0 
 
 /-- Sec. `sec:crdt-instance`: "Then `U ⊆ V` implies `s(U) ⊑ s(V)`, and
 `s(U₁) ⊔ s(U₂) = s(U₁ ∪ U₂)` is the least state extending both." -/
-theorem «sec:crdt-instance/state-monotone» {D : Type} [PO D] [Inst.JSL D] (s0 : D) :
+theorem «sec:crdt-instance/state-monotone» {D : Type} [PO D] [PO.Antisymm D] [Inst.JSL D] (s0 : D) :
     Monotone (Inst.st s0 : Inst.FSet D → D) ∧
       (∀ U₁ U₂ : Inst.FSet D, Inst.JSL.join (Inst.st s0 U₁) (Inst.st s0 U₂) = Inst.st s0 (U₁.union U₂)) ∧
       ∀ U₁ U₂ : Inst.FSet D,
@@ -424,7 +424,7 @@ states `s(U) ⊑ s(V)`; (3) not required: on the two-point lattice with
 theorem «sec:crdt-instance/query-monotone-on-reachable» :
     (∀ {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D) {q : D → Y},
         Monotone q → Monotone (fun U : Inst.FSet D => q (Inst.st s0 U))) ∧
-      (∀ {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D) (q : D → Y),
+      (∀ {D Y : Type} [PO D] [PO.Antisymm D] [Inst.JSL D] [PO Y] (s0 : D) (q : D → Y),
         Monotone (fun U : Inst.FSet D => q (Inst.st s0 U)) ↔
           ∀ U V : Inst.FSet D, Inst.st s0 U ≼ Inst.st s0 V → q (Inst.st s0 U) ≼ q (Inst.st s0 V)) ∧
       (¬ Monotone Inst.B2.neg ∧ Monotone (fun U : Inst.FSet Inst.B2 => Inst.B2.neg (Inst.st Inst.B2.tt U))) :=

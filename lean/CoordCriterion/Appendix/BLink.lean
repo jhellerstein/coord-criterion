@@ -107,6 +107,8 @@ instance (Rs : SRestr S K P) : PO Rs.Hist where
   trans := by
     rintro a b c ⟨t, h1⟩ ⟨t', h2⟩
     exact ⟨t ++ t', by rw [← List.append_assoc, h1, h2]⟩
+
+instance (Rs : SRestr S K P) : PO.Antisymm Rs.Hist where
   antisymm := by
     rintro a b ⟨t, h⟩ ⟨t', h'⟩
     have hl := congrArg List.length h

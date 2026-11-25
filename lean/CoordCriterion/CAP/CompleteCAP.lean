@@ -381,7 +381,10 @@ instance : PO Tri where
     intro x y z h1 h2
     unfold Tri.le at *
     rcases h1 with rfl | rfl <;> rcases h2 with rfl | rfl <;> simp
+
+instance : PO.Antisymm Tri where
   antisymm := by
+    dsimp only [PO.le]
     intro x y h1 h2
     unfold Tri.le at *
     cases x <;> cases y <;> simp_all
@@ -390,6 +393,8 @@ instance : PO Unit where
   le := fun _ _ => True
   refl := fun _ => trivial
   trans := fun _ _ => trivial
+
+instance : PO.Antisymm Unit where
   antisymm := fun {a b} _ _ => by cases a; cases b; rfl
 
 /-- One input, fiber `{a, b, top}`. -/

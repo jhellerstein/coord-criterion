@@ -43,6 +43,8 @@ instance instPOProd {α β : Type} [PO α] [PO β] : PO (α × β) where
   le p q := p.1 ≼ q.1 ∧ p.2 ≼ q.2
   refl _ := ⟨PO.refl _, PO.refl _⟩
   trans h h' := ⟨PO.trans h.1 h'.1, PO.trans h.2 h'.2⟩
+
+instance {α β : Type} [PO α] [PO.Antisymm α] [PO β] [PO.Antisymm β] : PO.Antisymm (α × β) where
   antisymm h h' := Prod.ext (PO.antisymm h.1 h'.1) (PO.antisymm h.2 h'.2)
 
 theorem prod_le_iff {α β : Type} [PO α] [PO β] {p q : α × β} :
@@ -257,6 +259,8 @@ instance : PO Pt where
   le _ _ := True
   refl _ := trivial
   trans _ _ := trivial
+
+instance : PO.Antisymm Pt where
   antisymm {a b} _ _ := by cases a; cases b; rfl
 
 /-- Two incomparable points (discrete order). -/
@@ -268,6 +272,8 @@ instance : PO Two where
   le a b := a = b
   refl _ := rfl
   trans h h' := h.trans h'
+
+instance : PO.Antisymm Two where
   antisymm h _ := h
 
 /-- A non-monotone upstream: one input, fiber `{x, y}` of incomparable outputs. -/
@@ -297,7 +303,10 @@ instance : PO M3 where
     intro x y z h1 h2
     unfold M3.le at *
     rcases h1 with rfl | rfl <;> rcases h2 with rfl | rfl <;> simp
+
+instance : PO.Antisymm M3 where
   antisymm := by
+    dsimp only [PO.le]
     intro x y h1 h2
     unfold M3.le at *
     cases x <;> cases y <;> simp_all
@@ -309,6 +318,8 @@ instance {α β : Type} [PO α] (T : Table α β) : PO (Dom T) where
   le x y := x.1 ≼ y.1
   refl x := PO.refl x.1
   trans h h' := PO.trans h h'
+
+instance {α β : Type} [PO α] [PO.Antisymm α] (T : Table α β) : PO.Antisymm (Dom T) where
   antisymm h h' := Subtype.ext (PO.antisymm h h')
 
 /-- A table read as a specification on its own input domain. -/
