@@ -380,6 +380,31 @@ theorem tightGuard_dleOrder {instM : PO M} (sp : @Spec I M _ instM) (sk : @Spec 
   exact ⟨hP, (@tight_iff I M O _ inst _ (underOut inst sp) (underIn inst sk) hP
     (fun m _ => htop m)).2 (fun _ _ _ _ => Iff.rfl)⟩
 
+/-- **Joint monotonicity with greatest answers.**  If each `P₂(m)` has a
+greatest element and the composite is Lifted-Monotone, then ordering `M` by
+`⊑` makes both stages Lifted-Monotone: case (3) of the jointly monotone
+composites covers every such composite, functional or not. -/
+theorem jointMono_dleOrder {instM : PO M} (sp : @Spec I M _ instM) (sk : @Spec M O instM _)
+    (htop : ∀ m, ∃ t, HasTop sk.P m t) (hC : (seq sp sk).LiftedMono) :
+    let inst := dleOrder sk.P (dle_refl_of_top htop)
+    @Spec.LiftedMono I M _ inst (underOut inst sp) ∧
+      @Spec.LiftedMono M O inst _ (underIn inst sk) := by
+  dsimp only
+  refine ⟨?_, fun m m' h => h⟩
+  intro i j hij X hX hXi
+  classical
+  let top : M → O := fun m => Classical.choose (htop m)
+  have htopP : ∀ m, HasTop sk.P m (top m) := fun m => Classical.choose_spec (htop m)
+  obtain ⟨u, ⟨m', hm', hu⟩, hall⟩ := hC i j hij (X.map top) (by simpa using hX)
+    (by
+      intro y hy
+      obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hy
+      exact ⟨x, hXi x hx, (htopP x).1⟩)
+  refine ⟨m', hm', fun x hx => ?_⟩
+  intro Z _ hZ
+  exact ⟨u, hu, fun z hz => PO.trans ((htopP x).2 z (hZ z hz))
+    (hall (top x) (List.mem_map.2 ⟨x, hx, rfl⟩))⟩
+
 end DleOrder
 
 /-! ### Tight guards: two sufficient conditions for necessity -/
@@ -712,6 +737,21 @@ theorem gap :
   intro hT
   obtain ⟨o, y, _, _, hc⟩ := hT _ _ _ _ (conf_of_dleConf hproper hdle)
   exact (liftedMono_iff_noConf _).1 hlm _ _ _ _ hc
+
+/-- **Without greatest answers, no order on `M` makes both stages
+Lifted-Monotone.**  The composite is Lifted-Monotone, yet under every
+preorder on `Mid` the upstream fails Lifted Monotonicity or the downstream
+does (it already fails on the upstream's outputs). -/
+theorem no_joint_order :
+    (seq up down).LiftedMono ∧
+      ∀ inst : PO Mid, ¬ (@Spec.LiftedMono Lv Mid _ inst (@underOut Lv Mid _ midPO inst up) ∧
+        @Spec.LiftedMono Mid Nat inst _ (@underIn Mid Nat _ midPO inst down)) := by
+  obtain ⟨_, _, hall, hC, _⟩ := gap
+  refine ⟨hC, fun inst ⟨h1, h2⟩ => ?_⟩
+  have hP := @Guard.proper_of_ce Lv Mid Nat _ inst _ (@underOut Lv Mid _ midPO inst up)
+    (@underIn Mid Nat _ midPO inst down)
+    ((@liftedMono_iff_commonExpansion Mid Nat inst _ _).1 h2)
+  exact (@liftedMono_iff_noConf Lv Mid _ inst _).1 h1 _ _ _ _ (hall inst hP)
 
 end Gap
 
