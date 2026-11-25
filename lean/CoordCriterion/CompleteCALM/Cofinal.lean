@@ -16,8 +16,10 @@ Then `S` satisfies Lifted Monotonicity iff `T` does, and (by Complete CALM)
 common-extension form, and each direction uses both conditions.  No extra
 hypothesis is needed.  (Over the same inputs totality plays no role: the
 upper bound of a family of rows is an input of both specifications.  The
-Lean proof goes through `CofinalAlong id`, which reads the bound's preimage
-off a row of `P` and so cites `S.total`.)
+converse direction goes through `CofinalAlong id`, which reads the bound's
+preimage off a row of `P` and so cites `S.total`.)  The general
+`CofinalAlong φ` results assume the order on `I` antisymmetric
+(`[PO.Antisymm I]`): an order embedding of preorders need not be injective.
 
 When the inputs differ, `CofinalAlong φ S T` compares `T` over inputs `I`
 with `S` over inputs `J` along a map `φ : I → J`:

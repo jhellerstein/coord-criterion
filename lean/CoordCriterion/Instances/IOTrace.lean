@@ -906,11 +906,7 @@ theorem sys_consistent_iff : Guard.SysConsistent (SysRun (M := M)) ↔ Confluent
         obtain ⟨⟨l, h1, h2⟩, _⟩ := hL2 q hq
         rw [matches_cur h1 h2]
         exact hj q.1 (hL1 ▸ List.mem_map_of_mem hq))
-    obtain ⟨u, _, hsurv⟩ := (Dist.sysConfluentAt_iff (L.map Prod.snd) j (fun σ hσ => by
-        obtain ⟨q, hq, rfl⟩ := List.mem_map.1 hσ
-        obtain ⟨⟨l, h1, h2⟩, _⟩ := hL2 q hq
-        rw [matches_cur h1 h2]
-        exact hj q.1 (hL1 ▸ List.mem_map_of_mem hq))).1 ⟨τ, hτ, hall⟩
+    obtain ⟨u, _, hsurv⟩ := Dist.SysConfluentAt.survivor (fam := L.map Prod.snd) ⟨τ, hτ, hall⟩
     refine ⟨u, fun e he => ?_⟩
     rw [← hL1] at he
     obtain ⟨q, hq, rfl⟩ := List.mem_map.1 he
@@ -942,7 +938,7 @@ theorem sys_consistent_iff : Guard.SysConsistent (SysRun (M := M)) ↔ Confluent
       exact ⟨hm.2.2 j u hlive, live_row hm.1 hlive⟩
     by_cases hne : ∃ σ, σ ∈ fam
     · obtain ⟨σ0, hσ0⟩ := hne
-      exact (Dist.sysConfluentAt_iff fam j hj).2
+      exact (Dist.sysConfluentAt_iff fam j hj fun σ _ => Dist.eqClosed_of_antisymm σ).2
         ⟨u, (hrow σ0 hσ0).2, fun σ hσ => (hrow σ hσ).1⟩
     · exact ⟨canon (spec M) j, rfl, fun σ hσ => absurd ⟨σ, hσ⟩ hne⟩
 

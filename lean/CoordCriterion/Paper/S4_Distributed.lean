@@ -768,7 +768,7 @@ Lean: the family is indexed by `Fin m`; run `r` is under basis `B r` from
 `ρh r`.  The first conjunct says the canonical run ends at the same current
 input; the second is (1); the third is (2), with continuations under any
 bases `B'`. -/
-theorem «prop:system-confluence» [PO.Antisymm O] {sp : Spec I O} {m : Nat} (B : Fin m → CommitmentBasis sp)
+theorem «prop:system-confluence» {sp : Spec I O} {m : Nat} (B : Fin m → CommitmentBasis sp)
     (i : Fin m → I) (es : Fin m → List (SEvent sp)) (ρ ρh : Fin m → State sp)
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (hcan : ∀ r, Exec (canon sp (i r)) ((es r).filterMap SEvent.erase) (ρh r)) :
@@ -792,15 +792,18 @@ after `output(u)` every other row at `k` extends `u` and differs from it, so
 none is extended by `(k,u)`; this is checked in Lean, not stated in the
 sketch.)
 
-Lean: the Survivor test for states reached under any bases (no assumption that
-they are runs): states whose current inputs lie below `k` reach a common state
+Lean: the Survivor test for states reached under any bases, assuming only that
+their rows at each input are closed under equivalent permitted outputs
+(`Dist.EqClosed`, true of every state of a run under a basis,
+`Dist.sysExec_eqClosed_canon`, and of every state when the output order is
+antisymmetric): states whose current inputs lie below `k` reach a common state
 at `k`, by events under any bases, iff some row at `k` survives in all of them.
 The common state is `Dist.single k u`, reached with the commitment
 `Dist.keepOnly k u` (`Dist.reach_single`). -/
-theorem «prop:system-confluence/survivor» [PO.Antisymm O] {sp : Spec I O} (fam : List (State sp)) (k : I)
-    (hk : ∀ σ ∈ fam, σ.cur ≼ k) :
+theorem «prop:system-confluence/survivor» {sp : Spec I O} (fam : List (State sp)) (k : I)
+    (hk : ∀ σ ∈ fam, σ.cur ≼ k) (hcl : ∀ σ ∈ fam, Dist.EqClosed σ) :
     Dist.SysConfluentAt fam k ↔ ∃ u, sp.P k u ∧ ∀ σ ∈ fam, σ.R k u :=
-  Dist.sysConfluentAt_iff fam k hk
+  Dist.sysConfluentAt_iff fam k hk hcl
 
 /-- §`sec:commitment-conflict`, after Prop. `prop:system-confluence`: "The
 same test applies to a consistent cut of a history, with one run per
@@ -815,7 +818,7 @@ well-formed history whose current inputs lie below `k` is confluent at `k`
 table and was removed by no commitment event of that participant's run
 (each participant run read as a run under the full basis, `Deploy.toS`).  The
 continuation built adds receive-free events at each participant. -/
-theorem «prop:system-confluence/cut» [PO.Antisymm O] {sp : Spec I O} {D : Type} {n : Nat}
+theorem «prop:system-confluence/cut» {sp : Spec I O} {D : Type} {n : Nat}
     {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
     (hwf : CAP.WF init H) (hcut : CAP.IsCut H c) {k : I}
     (hk : ∀ p σ, CAP.LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ k)

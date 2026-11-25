@@ -106,13 +106,13 @@ Lean: (1) is `Dist.table_decomp` (by induction on the run, via
 larger (rows at `k` other than `u` need only not lie below `u`), and
 `Dist.reach_single`, which reaches `Dist.single k u` from any state at an input
 below `k` that contains `(k,u)`, under the full basis. -/
-theorem «proof:prop:system-confluence» [PO.Antisymm O] {sp : Spec I O} :
+theorem «proof:prop:system-confluence» {sp : Spec I O} :
     (∀ {B : CommitmentBasis sp} {σ ρ ρh : State sp} {es : List (SEvent sp)},
       SysExec B σ es ρ → Exec σ (es.filterMap SEvent.erase) ρh →
         ∀ k u, ρ.R k u ↔ ρh.R k u ∧ ¬ Dist.Removed B σ es k u) ∧
-    (∀ {σ : State sp} {k : I} {u : O} (hu : sp.P k u), σ.cur ≼ k → σ.R k u →
+    (∀ {σ : State sp} {k : I} {u : O} (hu : sp.P k u), Dist.EqClosed σ → σ.cur ≼ k → σ.R k u →
       ∃ es : List (SEvent sp), SysExec (fun _ => True) σ es (Dist.single k u hu)) :=
-  ⟨fun h hc => Dist.table_decomp h hc, fun hu hk hku => Dist.reach_single hu hk hku⟩
+  ⟨fun h hc => Dist.table_decomp h hc, fun hu hcl hk hku => Dist.reach_single hu hcl hk hku⟩
 
 /-- Proof of Prop. `prop:commitment-conflict`.  The two
 clauses of `CommitmentContradictsAt` are the proof's two cases: an accepted

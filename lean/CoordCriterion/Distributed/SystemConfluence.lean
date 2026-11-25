@@ -12,9 +12,11 @@ table minus the rows that the system's own commitment events removed
 (`table_decomp`).  Confluence of runs under any bases, by continuations that
 may apply any commitments, is the Survivor test for those tables
 (`sysConfluentAt_iff`): some row at `k` survives in every final table.  The
-backward direction reaches the state whose only row is `(k,u)`, by
+backward direction reaches the state `single k u` whose rows are `(k,u)` and
+its equivalents (just `(k,u)` for an antisymmetric output order), by
 `input(k)`, `output(u)`, and the commitment `keepOnly k u` that removes every
-other row.
+other row.  Since orders are preorders, this uses that run states are
+`EqClosed`: a commitment never separates equivalent outputs at one input.
 
 * `Removed`             — a commitment event of the run removed the row.
 * `table_decomp`        — `R = R̂ \ Δ`.
@@ -185,56 +187,147 @@ theorem table_decomp {B : CommitmentBasis sp} {σ ρ ρh : State sp} {es : List 
   · rintro ⟨h1, h2⟩; exact ⟨h1, fun h => h2 (Or.inr h)⟩
   · rintro ⟨h1, h2⟩; exact ⟨h1, fun h => h.elim id h2⟩
 
-/-! ### The state whose only row is `(k,u)` -/
+/-! ### Rows closed under equivalent outputs
 
-/-- The state `(k, {(k,u)})`. -/
+Orders are preorders, so two outputs may each extend the other.  A commitment
+cannot remove a row `(k,x)` while keeping a row `(k,w)` with `x ≼ w`; so in
+every state reached from a canonical state, the rows at each input are closed
+under equivalent permitted outputs (`EqClosed`).  For an antisymmetric output
+order this holds of every state (`eqClosed_of_antisymm`). -/
+
+/-- The rows at each input are closed under equivalent permitted outputs. -/
+def EqClosed (σ : State sp) : Prop :=
+  ∀ k x y, σ.R k x → sp.P k y → x ≼ y → y ≼ x → σ.R k y
+
+theorem eqClosed_of_antisymm [PO.Antisymm O] (σ : State sp) : EqClosed σ :=
+  fun _ _ _ hx _ h1 h2 => PO.antisymm h1 h2 ▸ hx
+
+theorem canon_eqClosed (i : I) : EqClosed (canon sp i) :=
+  fun _ _ _ hx hy _ _ => ⟨hy, hx.2⟩
+
+theorem step_eqClosed {σ τ : State sp} {e : Event I O} (h : Step σ e τ) (hσ : EqClosed σ) :
+    EqClosed τ := by
+  cases h with
+  | input _ _ _ _ hR =>
+    intro k x y hx hy h1 h2
+    rw [hR] at hx ⊢
+    exact ⟨hσ k x y hx.1 hy h1 h2, hx.2⟩
+  | output _ _ _ _ hR =>
+    intro k x y hx hy h1 h2
+    rw [hR] at hx ⊢
+    exact ⟨hσ k x y hx.1 hy h1 h2, PO.trans hx.2 h1⟩
+
+theorem commitment_eqClosed (c : Commitment sp) {σ τ : State sp} (h : c.app σ = some τ)
+    (hσ : EqClosed σ) : EqClosed τ := by
+  intro k x y hx hy h1 h2
+  exact Classical.byContradiction fun hn =>
+    c.unsubsumed σ τ h k y x (hσ k x y (c.sub σ τ h k x hx) hy h1 h2) hn hx h2
+
+theorem applySeq_eqClosed {γ : List (Commitment sp)} {σ τ : State sp} (h : ApplySeq γ σ τ)
+    (hσ : EqClosed σ) : EqClosed τ := by
+  induction h with
+  | nil => exact hσ
+  | cons ha _ ih => exact ih (commitment_eqClosed _ ha hσ)
+
+theorem sysStep_eqClosed {B : CommitmentBasis sp} {σ τ : State sp} {e : SEvent sp}
+    (h : SysStep B σ e τ) (hσ : EqClosed σ) : EqClosed τ := by
+  cases h with
+  | input hs => exact step_eqClosed hs hσ
+  | output hs _ => exact step_eqClosed hs hσ
+  | commitment _ _ ha => exact applySeq_eqClosed ha hσ
+
+theorem sysExec_eqClosed {B : CommitmentBasis sp} {σ τ : State sp} {es : List (SEvent sp)}
+    (h : SysExec B σ es τ) (hσ : EqClosed σ) : EqClosed τ := by
+  induction h with
+  | nil => exact hσ
+  | cons hs _ ih => exact ih (sysStep_eqClosed hs hσ)
+
+/-- Every state of a run under a basis has `EqClosed` rows. -/
+theorem sysExec_eqClosed_canon {B : CommitmentBasis sp} {i : I} {τ : State sp}
+    {es : List (SEvent sp)} (h : SysExec B (canon sp i) es τ) : EqClosed τ :=
+  sysExec_eqClosed h (canon_eqClosed i)
+
+/-! ### The state whose only rows are `(k,u)` and its equivalents -/
+
+/-- The state at `k` whose rows are the permitted `(k,x)` with `x` equivalent
+to `u`.  For an antisymmetric output order this is `(k, {(k,u)})`
+(`single_R_iff`). -/
 def single (k : I) (u : O) (hu : sp.P k u) : State sp where
   cur := k
-  R := fun k' x => k' = k ∧ x = u
-  sub := fun _ _ h => by rw [h.1, h.2]; exact hu
-  hasCur := ⟨u, rfl, rfl⟩
+  R := fun k' x => k' = k ∧ sp.P k x ∧ u ≼ x ∧ x ≼ u
+  sub := fun _ _ h => by rw [h.1]; exact h.2.1
+  hasCur := ⟨u, rfl, hu, PO.refl u, PO.refl u⟩
   above := fun _ _ h => by rw [h.1]; exact PO.refl k
 
-/-- The commitment that keeps only the row `(k,u)`.  It is defined at states
-with current input `k` and the row `(k,u)`, in which no other row at `k` is
-extended by `u`, and which have some other row. -/
+theorem single_R_iff [PO.Antisymm O] {k : I} {u : O} (hu : sp.P k u) (k' : I) (x : O) :
+    (single k u hu).R k' x ↔ k' = k ∧ x = u := by
+  constructor
+  · rintro ⟨h1, _, h3, h4⟩; exact ⟨h1, PO.antisymm h4 h3⟩
+  · rintro ⟨rfl, rfl⟩; exact ⟨rfl, hu, PO.refl _, PO.refl _⟩
+
+/-- The domain of `keepOnly k u`: current input `k`, the row `(k,u)` and every
+permitted equivalent of it, no row at `k` below `u` other than equivalents of
+`u`, and some row outside `single k u`. -/
+def KeepCond (k : I) (u : O) (hu : sp.P k u) (σ : State sp) : Prop :=
+  σ.cur = k ∧ σ.R k u ∧ (∀ x, σ.R k x → x ≼ u → u ≼ x) ∧
+    (∀ x, sp.P k x → u ≼ x → x ≼ u → σ.R k x) ∧ ∃ k' x, σ.R k' x ∧ ¬ (single k u hu).R k' x
+
+/-- The commitment that keeps only the rows of `single k u` (the row `(k,u)`
+and its equivalents).  It is defined on `KeepCond k u`. -/
 noncomputable def keepOnly (k : I) (u : O) (hu : sp.P k u) : Commitment sp where
-  app σ := if _h : (σ.cur = k ∧ σ.R k u ∧ (∀ x, σ.R k x → x ≼ u → x = u) ∧
-      ∃ k' x, σ.R k' x ∧ ¬ (k' = k ∧ x = u)) then some (single k u hu) else none
+  app σ := if _h : KeepCond k u hu σ then some (single k u hu) else none
   cur_eq σ τ h := by
-    by_cases hc : (σ.cur = k ∧ σ.R k u ∧ (∀ x, σ.R k x → x ≼ u → x = u) ∧
-        ∃ k' x, σ.R k' x ∧ ¬ (k' = k ∧ x = u))
+    by_cases hc : KeepCond k u hu σ
     · rw [dite_eq_left_of_eq_true (eq_true hc)] at h; cases h; exact hc.1.symm
     · rw [dite_eq_right_of_eq_false (eq_false hc)] at h; cases h
   sub σ τ h := by
-    by_cases hc : (σ.cur = k ∧ σ.R k u ∧ (∀ x, σ.R k x → x ≼ u → x = u) ∧
-        ∃ k' x, σ.R k' x ∧ ¬ (k' = k ∧ x = u))
+    by_cases hc : KeepCond k u hu σ
     · rw [dite_eq_left_of_eq_true (eq_true hc)] at h; cases h
-      intro k' x hx
-      obtain ⟨rfl, rfl⟩ := hx
-      exact hc.2.1
+      rintro k' x ⟨rfl, hx, h1, h2⟩
+      exact hc.2.2.2.1 x hx h1 h2
     · rw [dite_eq_right_of_eq_false (eq_false hc)] at h; cases h
   removes σ τ h := by
-    by_cases hc : (σ.cur = k ∧ σ.R k u ∧ (∀ x, σ.R k x → x ≼ u → x = u) ∧
-        ∃ k' x, σ.R k' x ∧ ¬ (k' = k ∧ x = u))
+    by_cases hc : KeepCond k u hu σ
     · rw [dite_eq_left_of_eq_true (eq_true hc)] at h; cases h
-      obtain ⟨k', x, h1, h2⟩ := hc.2.2.2
-      exact ⟨k', x, h1, h2⟩
+      exact hc.2.2.2.2
     · rw [dite_eq_right_of_eq_false (eq_false hc)] at h; cases h
   unsubsumed σ τ h := by
-    by_cases hc : (σ.cur = k ∧ σ.R k u ∧ (∀ x, σ.R k x → x ≼ u → x = u) ∧
-        ∃ k' x, σ.R k' x ∧ ¬ (k' = k ∧ x = u))
+    by_cases hc : KeepCond k u hu σ
     · rw [dite_eq_left_of_eq_true (eq_true hc)] at h; cases h
-      intro k' x w hx hnx hw hxw
-      obtain ⟨rfl, rfl⟩ := hw
-      exact hnx ⟨rfl, hc.2.2.1 x hx hxw⟩
+      rintro k' x w hx hnx ⟨rfl, _, hw1, hw2⟩ hxw
+      have hxu : x ≼ u := PO.trans hxw hw2
+      exact hnx ⟨rfl, σ.sub _ _ hx, hc.2.2.1 x hx hxu, hxu⟩
     · rw [dite_eq_right_of_eq_false (eq_false hc)] at h; cases h
 
-/-- From any state with current input below `k` and the row `(k,u)`,
-`input(k)`, `output(u)`, and, if other rows remain, the commitment event
-`apply(keepOnly k u)` reach `single k u`. -/
-theorem reach_single [PO.Antisymm O] {σ : State sp} {k : I} {u : O} (hu : sp.P k u)
-    (hk : σ.cur ≼ k) (hku : σ.R k u) :
+/-- After `input(k)` and `output(u)` from an `EqClosed` state `σ` below `k`
+with the row `(k,u)`: either `keepOnly k u` applies and yields `single k u`, or
+the state already is `single k u`. -/
+theorem after_input_output {σ : State sp} {k : I} {u : O} (hu : sp.P k u)
+    (hcl : EqClosed σ) (hku : σ.R k u) (τ2 : State sp) (hc : τ2.cur = k)
+    (hτ2 : ∀ k' x, τ2.R k' x ↔ (σ.R k' x ∧ k ≼ k') ∧ u ≼ x) :
+    (keepOnly k u hu).app τ2 = some (single k u hu) ∨ τ2 = single k u hu := by
+  by_cases hrest : ∃ k' x, τ2.R k' x ∧ ¬ (single k u hu).R k' x
+  · left
+    have hcond : KeepCond k u hu τ2 :=
+      ⟨hc, (hτ2 k u).2 ⟨⟨hku, PO.refl k⟩, PO.refl u⟩,
+        fun x hx _ => ((hτ2 k x).1 hx).2,
+        fun x hx h1 h2 => (hτ2 k x).2 ⟨⟨hcl k u x hku hx h1 h2, PO.refl k⟩, h1⟩, hrest⟩
+    exact dite_eq_left_of_eq_true (eq_true hcond)
+  · right
+    refine State.ext' hc ?_
+    funext k' x
+    apply propext
+    constructor
+    · intro h
+      exact Classical.byContradiction fun hn => hrest ⟨k', x, h, hn⟩
+    · rintro ⟨rfl, hx, h1, h2⟩
+      exact (hτ2 k' x).2 ⟨⟨hcl k' u x hku hx h1 h2, PO.refl k'⟩, h1⟩
+
+/-- From any `EqClosed` state with current input below `k` and the row
+`(k,u)`, `input(k)`, `output(u)`, and, if other rows remain, the commitment
+event `apply(keepOnly k u)` reach `single k u`. -/
+theorem reach_single {σ : State sp} {k : I} {u : O} (hu : sp.P k u) (hcl : EqClosed σ)
+    (_hk : σ.cur ≼ k) (hku : σ.R k u) :
     ∃ es : List (SEvent sp), SysExec (fun _ => True) σ es (single k u hu) := by
   let τ1 : State sp :=
     { cur := k
@@ -246,28 +339,12 @@ theorem reach_single [PO.Antisymm O] {σ : State sp} {k : I} {u : O} (hu : sp.P 
   have ho : τ1.R τ1.cur u := ⟨hku, PO.refl k⟩
   let τ2 := outState τ1 u ho
   have s2 : Step τ1 (.output u) τ2 := step_output_outState ho
-  have hτ2 : ∀ k' x, τ2.R k' x ↔ (σ.R k' x ∧ k ≼ k') ∧ u ≼ x := fun _ _ => Iff.rfl
   have e12 : SysExec (fun _ => True) σ [.input k, .output u] τ2 :=
     .cons (.input s1) (.cons (.output s2 (Or.inr trivial)) (.nil _))
-  by_cases hrest : ∃ k' x, τ2.R k' x ∧ ¬ (k' = k ∧ x = u)
-  · have happ : (keepOnly k u hu).app τ2 = some (single k u hu) := by
-      have hcond : τ2.cur = k ∧ τ2.R k u ∧ (∀ x, τ2.R k x → x ≼ u → x = u) ∧
-          ∃ k' x, τ2.R k' x ∧ ¬ (k' = k ∧ x = u) :=
-        ⟨rfl, (hτ2 k u).2 ⟨⟨hku, PO.refl k⟩, PO.refl u⟩,
-          fun x hx hxu => PO.antisymm hxu ((hτ2 k x).1 hx).2, hrest⟩
-      exact dite_eq_left_of_eq_true (eq_true hcond)
-    exact ⟨_, SysExec.append e12 (.cons (.commitment (fun _ _ => trivial) (List.cons_ne_nil _ _)
+  rcases after_input_output hu hcl hku τ2 rfl (fun _ _ => Iff.rfl) with happ | heq
+  · exact ⟨_, SysExec.append e12 (.cons (.commitment (fun _ _ => trivial) (List.cons_ne_nil _ _)
       (.cons happ (.nil _))) (.nil _))⟩
-  · have heq : τ2 = single k u hu := by
-      refine State.ext' rfl ?_
-      funext k' x
-      apply propext
-      constructor
-      · intro h
-        exact Classical.byContradiction fun hn => hrest ⟨k', x, h, hn⟩
-      · rintro ⟨rfl, rfl⟩
-        exact (hτ2 k' x).2 ⟨⟨hku, PO.refl k'⟩, PO.refl x⟩
-    exact ⟨_, heq ▸ e12⟩
+  · exact ⟨_, heq ▸ e12⟩
 
 /-! ### The Survivor test for runs under bases -/
 
@@ -288,21 +365,19 @@ theorem SysConfluentAt.survivor {fam : List (State sp)} {k : I} (h : SysConfluen
   obtain ⟨B, es, hx⟩ := hall σ hσ
   exact hx.sub k u hu
 
-/-- **Survivor test for runs under bases.**  States with current inputs below
-`k` are confluent at `k`, by continuations that may apply any commitments,
-iff some row at `k` survives in every one of them. -/
-theorem sysConfluentAt_iff [PO.Antisymm O] (fam : List (State sp)) (k : I) (hk : ∀ σ ∈ fam, σ.cur ≼ k) :
+/-- **Survivor test for runs under bases.**  `EqClosed` states (every state of
+a run under a basis, `sysExec_eqClosed_canon`; every state at all for an
+antisymmetric output order, `eqClosed_of_antisymm`) with current inputs below
+`k` are confluent at `k`, by continuations that may apply any commitments, iff
+some row at `k` survives in every one of them. -/
+theorem sysConfluentAt_iff (fam : List (State sp)) (k : I) (hk : ∀ σ ∈ fam, σ.cur ≼ k)
+    (hcl : ∀ σ ∈ fam, EqClosed σ) :
     SysConfluentAt fam k ↔ ∃ u, sp.P k u ∧ ∀ σ ∈ fam, σ.R k u := by
   constructor
-  · rintro ⟨τ, hτ, hall⟩
-    obtain ⟨u, hu⟩ := τ.hasCur
-    rw [hτ] at hu
-    refine ⟨u, τ.sub _ _ hu, fun σ hσ => ?_⟩
-    obtain ⟨B, es, hx⟩ := hall σ hσ
-    exact hx.sub k u hu
+  · exact SysConfluentAt.survivor
   · rintro ⟨u, hu, hall⟩
     refine ⟨single k u hu, rfl, fun σ hσ => ?_⟩
-    obtain ⟨es, hx⟩ := reach_single hu (hk σ hσ) (hall σ hσ)
+    obtain ⟨es, hx⟩ := reach_single hu (hcl σ hσ) (hk σ hσ) (hall σ hσ)
     exact ⟨_, es, hx⟩
 
 /-- **Prop. `prop:system-confluence`.**  Runs `ρ r` under bases `B r` from
@@ -311,7 +386,7 @@ canonical run has the same current input; (1) `R_r = R̂_r \ Δ(ρ_r)`; (2) at a
 common input extension `k`, the runs are confluent, by continuations that may
 apply any commitments, iff some row at `k` lies in every `R̂_r` and in no
 `Δ(ρ_r)`. -/
-theorem system_confluence [PO.Antisymm O] {m : Nat} (B : Fin m → CommitmentBasis sp) (i : Fin m → I)
+theorem system_confluence {m : Nat} (B : Fin m → CommitmentBasis sp) (i : Fin m → I)
     (es : Fin m → List (SEvent sp)) (ρ ρh : Fin m → State sp)
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (hcan : ∀ r, Exec (canon sp (i r)) ((es r).filterMap SEvent.erase) (ρh r)) :
@@ -327,7 +402,8 @@ theorem system_confluence [PO.Antisymm O] {m : Nat} (B : Fin m → CommitmentBas
   · obtain ⟨_, ρ', _, _, hx, hc, _⟩ := canonical_equivalent (hrun r)
     rw [exec_det (hcan r) hx]; exact hc
   · have h := sysConfluentAt_iff (List.ofFn ρ) k (by
-      intro σ hσ; obtain ⟨r, rfl⟩ := List.mem_ofFn.1 hσ; exact hk r)
+      intro σ hσ; obtain ⟨r, rfl⟩ := List.mem_ofFn.1 hσ; exact hk r) (by
+      intro σ hσ; obtain ⟨r, rfl⟩ := List.mem_ofFn.1 hσ; exact sysExec_eqClosed_canon (hrun r))
     constructor
     · rintro ⟨τ, hτ, hall⟩
       obtain ⟨u, hu, hall'⟩ := h.1 ⟨τ, hτ, fun σ hσ => by
@@ -344,9 +420,29 @@ section cut
 
 variable {D : Type} {n : Nat}
 
+theorem capApplySeq_eqClosed : ∀ (γ : List (CAP.Commitment sp)) (σ τ : State sp),
+    CAP.applySeq σ γ = some τ → EqClosed σ → EqClosed τ
+  | [], σ, τ, h, hσ => by simp [CAP.applySeq] at h; subst h; exact hσ
+  | c :: cs, σ, τ, h, hσ => by
+    simp only [CAP.applySeq] at h
+    split at h
+    · rename_i τ1 h1
+      exact capApplySeq_eqClosed cs τ1 τ h (commitment_eqClosed (ofCAP c) h1 hσ)
+    · cases h
+
+theorem lrun_eqClosed {σ τ : State sp} {l : List (CAP.LEv sp D n)} (h : CAP.LRun σ l τ)
+    (hσ : EqClosed σ) : EqClosed τ := by
+  induction h with
+  | nil => exact hσ
+  | inp hs _ ih => exact ih (step_eqClosed hs hσ)
+  | out hs _ ih => exact ih (step_eqClosed hs hσ)
+  | commitment _ ha _ ih => exact ih (capApplySeq_eqClosed _ _ _ ha hσ)
+  | send _ ih => exact ih hσ
+  | recv _ ih => exact ih hσ
+
 /-- `CAP.LRun` form of `reach_single`, with no receive. -/
-theorem lrun_single [PO.Antisymm O] {σ : State sp} {k : I} {u : O} (hu : sp.P k u)
-    (hk : σ.cur ≼ k) (hku : σ.R k u) :
+theorem lrun_single {σ : State sp} {k : I} {u : O} (hu : sp.P k u) (hcl : EqClosed σ)
+    (_hk : σ.cur ≼ k) (hku : σ.R k u) :
     ∃ l : List (CAP.LEv sp D n), CAP.LRun σ l (single k u hu) ∧ ∀ q k j d, CAP.LEv.recv q k j d ∉ l := by
   let τ1 : State sp :=
     { cur := k
@@ -358,15 +454,8 @@ theorem lrun_single [PO.Antisymm O] {σ : State sp} {k : I} {u : O} (hu : sp.P k
   have ho : τ1.R τ1.cur u := ⟨hku, PO.refl k⟩
   let τ2 := outState τ1 u ho
   have s2 : Step τ1 (.output u) τ2 := step_output_outState ho
-  have hτ2 : ∀ k' x, τ2.R k' x ↔ (σ.R k' x ∧ k ≼ k') ∧ u ≼ x := fun _ _ => Iff.rfl
-  by_cases hrest : ∃ k' x, τ2.R k' x ∧ ¬ (k' = k ∧ x = u)
-  · have happ : (keepOnly k u hu).app τ2 = some (single k u hu) := by
-      have hcond : τ2.cur = k ∧ τ2.R k u ∧ (∀ x, τ2.R k x → x ≼ u → x = u) ∧
-          ∃ k' x, τ2.R k' x ∧ ¬ (k' = k ∧ x = u) :=
-        ⟨rfl, (hτ2 k u).2 ⟨⟨hku, PO.refl k⟩, PO.refl u⟩,
-          fun x hx hxu => PO.antisymm hxu ((hτ2 k x).1 hx).2, hrest⟩
-      exact dite_eq_left_of_eq_true (eq_true hcond)
-    have hc : CAP.applySeq τ2 [toCAP (keepOnly k u hu)] = some (single k u hu) := by
+  rcases after_input_output hu hcl hku τ2 rfl (fun _ _ => Iff.rfl) with happ | heq
+  · have hc : CAP.applySeq τ2 [toCAP (keepOnly k u hu)] = some (single k u hu) := by
       show (match (keepOnly k u hu).app τ2 with
         | some τ => CAP.applySeq τ [] | none => none) = _
       rw [happ]; rfl
@@ -374,16 +463,7 @@ theorem lrun_single [PO.Antisymm O] {σ : State sp} {k : I} {u : O} (hu : sp.P k
       .inp s1 (.out s2 (.commitment (List.cons_ne_nil _ _) hc (.nil _))), ?_⟩
     intro q k j d h
     simp at h
-  · have heq : τ2 = single k u hu := by
-      refine State.ext' rfl ?_
-      funext k' x
-      apply propext
-      constructor
-      · intro h
-        exact Classical.byContradiction fun hn => hrest ⟨k', x, h, hn⟩
-      · rintro ⟨rfl, rfl⟩
-        exact (hτ2 k' x).2 ⟨⟨hku, PO.refl k'⟩, PO.refl x⟩
-    refine ⟨[.inp k, .out u], heq ▸ .inp s1 (.out s2 (.nil _)), ?_⟩
+  · refine ⟨[.inp k, .out u], heq ▸ .inp s1 (.out s2 (.nil _)), ?_⟩
     intro q k j d h
     simp at h
 
@@ -392,7 +472,7 @@ cut.**  A consistent cut whose participants' current inputs lie below `k` is
 confluent at `k` (some well-formed continuation, whose events may apply any
 commitments, brings every participant to one state at `k`) iff some row at `k`
 survives in every participant's table. -/
-theorem confluentCut_iff [PO.Antisymm O] {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
+theorem confluentCut_iff {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
     (hwf : CAP.WF init H) (hcut : CAP.IsCut H c) {k : I}
     (hk : ∀ p σ, CAP.LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ k) :
     CAP.ConfluentCut init H c k ↔
@@ -417,7 +497,8 @@ theorem confluentCut_iff [PO.Antisymm O] {init : Fin n → I} {H : CAP.History s
       fun p => Classical.choose_spec (hX p)
     have hL : ∀ p, ∃ l : List (CAP.LEv sp D n), CAP.LRun (σs p) l (single k u hu) ∧
         ∀ q k j d, CAP.LEv.recv q k j d ∉ l :=
-      fun p => lrun_single hu (hk p _ (hσs p)) (hall p _ (hσs p))
+      fun p => lrun_single hu (lrun_eqClosed (hσs p) (canon_eqClosed _)) (hk p _ (hσs p))
+        (hall p _ (hσs p))
     let ext := fun p => Classical.choose (hL p)
     have hext' : ∀ p, _ := fun p => Classical.choose_spec (hL p)
     have hext : CAP.Extends H c (fun q => (H q).take (c q) ++ ext q) ext := fun _ => rfl
@@ -431,7 +512,7 @@ is a run under the full basis (`Deploy.toS`); its canonical run is the
 erasure.  The cut is confluent at `k` iff some row at `k` lies in every
 participant's canonical table and was removed by no commitment event of any
 participant run. -/
-theorem cut_confluence [PO.Antisymm O] {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
+theorem cut_confluence {init : Fin n → I} {H : CAP.History sp D n} {c : Fin n → Nat}
     (hwf : CAP.WF init H) (hcut : CAP.IsCut H c) {k : I}
     (hk : ∀ p σ, CAP.LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ k)
     (ρh : Fin n → State sp)
@@ -602,7 +683,7 @@ theorem registrar_silent :
       rcases hσ with rfl | rfl
       · exact CALM.bab_le_baba
       · exact PO.refl _
-    refine (sysConfluentAt_iff [ρ, τ] CALM.baba hk).2 ⟨.win .a, CALM.winner_baba.symm, ?_⟩
+    refine (sysConfluentAt_iff [ρ, τ] CALM.baba hk fun σ _ => eqClosed_of_antisymm σ).2 ⟨.win .a, CALM.winner_baba.symm, ?_⟩
     intro σ hσ
     simp only [List.mem_cons, List.not_mem_nil, or_false] at hσ
     rcases hσ with rfl | rfl
