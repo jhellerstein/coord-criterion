@@ -228,10 +228,12 @@ is a possibility observable from the outside: it pairs the input received so far
 with a permitted output. The design includes the input domain $I$ and output domain $O$,
 with partial orders that help capture the spec's semantics.  On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
-from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
+from the environment.  An input may be a finite instance, as in a database; the
+order says only that it could still grow.  Declaring it complete, by an
+end-of-input marker or a barrier, rules out its extensions: a \commitment, like
+closing the polls.  On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
-$o$. These are both application-specific notions that must be captured well for
-a spec to be faithful.
+$o$.
 
 As a system runs, possibilities narrow: the spec's table loses rows.  When new
 input arrives, the world has moved on, and rows that cannot be reached by
