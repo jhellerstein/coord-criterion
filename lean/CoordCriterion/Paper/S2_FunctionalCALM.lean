@@ -76,10 +76,10 @@ where `(I,≼)` and `(O,≼)` are ordered input and output types, and
 `I`) and at most one (a functional dependency):
 `(i,o) ∈ P ∧ (i,o') ∈ P ⟹ o = o'`."
 
-And, after the definition: "When we say *order*, we mean a *preorder*: a
-reflexive, transitive relation.  Unlike a partial order, a preorder need not be
-antisymmetric, so two distinct values may each be below the other, as two
-paraphrases of one answer are."  Lean: the orders are the `PO` instances, which
+And, after the definition: "Our examples use partial orders, but the results do
+not need antisymmetry: when we say *order*, we mean a *preorder*, a reflexive,
+transitive relation in which two distinct values may each be below the other,
+as two paraphrases of one answer are."  Lean: the orders are the `PO` instances, which
 are preorders (antisymmetry is the separate mixin `PO.Antisymm`), `Spec I O` bundles `P` with
 totality, and `Spec.Functional` is the functional dependency. -/
 abbrev «def:functional-specification» (I O : Type) [PO I] [PO O] :=

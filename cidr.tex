@@ -125,7 +125,7 @@ compared or combined, which leaves developers guessing.
 
 We provide a simple formalism that unifies the literature and
 offers new results.  An \emph{\spectype} (spec) is a possibility table containing, for
-each input, every output a system may produce, with orders on inputs and
+each input, every output a system may produce, with partial orders on inputs and
 outputs.  Its runs (event sequences)\rv{7} are \emph{consistent} when they are confluent as input grows.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: the runs are consistent exactly when the function is
@@ -230,7 +230,7 @@ a spec provides a \emph{possibility relation} $P\subseteq I\times O$: a virtual
 table that may be infinite, like a mathematical function. Each row in this table
 is a possibility observable from the outside: it pairs the input received so far
 with a permitted output. The design includes the input domain $I$ and output domain $O$,
-with orders that help capture the spec's semantics.  On inputs, the order
+with partial orders that help capture the spec's semantics.  On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming\rv{6} all spec-relevant information in
@@ -457,10 +457,10 @@ input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
 function $f:I\to O$.
 \end{definition}
 
-When we say \emph{order}, we mean a \emph{preorder}: a reflexive, transitive
-relation.  Unlike a partial order, a preorder need not be antisymmetric, so
-two distinct values may each be below the other, as two paraphrases of one
-answer are.
+Our examples use partial orders, but the results do not need antisymmetry:
+when we say \emph{order}, we mean a \emph{preorder}, a reflexive, transitive
+relation in which two distinct values may each be below the other, as two
+paraphrases of one answer are.
 
 The two orders require thoughtful design.
 Inputs grow as ballots arrive: $i\InputOrd j$, read ``$j$ \emph{\inrel} $i$'', means that
