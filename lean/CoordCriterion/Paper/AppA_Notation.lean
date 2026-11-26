@@ -452,8 +452,8 @@ abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (E : Table I O)
     (Sys : CAP.System sp D) : Prop :=
   CAP.AvailabilityFor E Sys
 
-/-- *canonical system for `E`* — participants follow canonical runs and emit
-only outputs of `E` (Section `sec:complete-cap`).  Lean: `CAP.respSystem E`. -/
+/-- *canonical system for `E`* — participants follow canonical runs and may
+emit any output of `E` their state permits (Section `sec:complete-cap`).  Lean: `CAP.respSystem E`. -/
 noncomputable abbrev «app:notation/canonical-system» (sp : Spec I O) (D : Type)
     (E : Table I O) : CAP.System sp D :=
   CAP.respSystem E

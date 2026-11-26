@@ -305,7 +305,7 @@ theorem «def:partition-consistency/at-cuts» (Sys : System sp D) :
 /-! ### The canonical system for `E` -/
 
 /-- "The *canonical system for `E`* is the system whose participants follow
-canonical runs and emit only outputs of `E`."
+canonical runs and may emit any output of `E` their state permits."
 
 Lean: `respSystem E`.  Its basis is the canonical basis (`kc u`, the
 canonical commitment of each output), it allows no commitment event

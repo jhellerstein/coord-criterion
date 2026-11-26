@@ -378,7 +378,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `paper/distributed.tex`.
 | `«def:partition-consistency»` | abbrev | **Def. |
 | `«def:partition-consistency/unfolded»` | theorem | Def. |
 | `«def:partition-consistency/at-cuts»` | theorem | Def. |
-| `«sec:complete-cap/canonical-system»` | abbrev | "The *canonical system for `E`* is the system whose participants follow canonical runs and emit only outputs of `E`." Lean: |
+| `«sec:complete-cap/canonical-system»` | abbrev | "The *canonical system for `E`* is the system whose participants follow canonical runs and may emit any output of `E` their state permits." Lean: |
 | `«sec:complete-cap/canonical-system-canonical»` | theorem | The canonical system for `E` "follow[s] canonical runs": |
 | `«def:lm-for-A»` | abbrev | **Def. |
 | `«def:escapes-cap»` | abbrev | **Def. |
@@ -585,7 +585,7 @@ File `Paper/AppA_Notation.lean`; paper source `paper/app-notation.tex`.
 | `«app:notation/explicit-relation»` | abbrev | *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs participants actually emit (Def. |
 | `«app:notation/same-side-continuation»` | abbrev | *same-side continuation for `p`* — extends a partitioned history with events on `p`'s side alone, with no new input and no message from another side (Def. |
 | `«app:notation/availability»` | abbrev | *Availability for `E`* — each participant can emit every output in `R(i) ∩ E(i)` in a same-side continuation (Def. |
-| `«app:notation/canonical-system»` | abbrev | *canonical system for `E`* — participants follow canonical runs and emit only outputs of `E` (Section `sec:complete-cap`). |
+| `«app:notation/canonical-system»` | abbrev | *canonical system for `E`* — participants follow canonical runs and may emit any output of `E` their state permits (Section `sec:complete-cap`). |
 | `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a common input extension `j` has a common output extension in `P(j)` (Def. |
 | `«app:notation/escapes-cap»` | abbrev | *escapes CAP for `E`* — the canonical system for `E` has Availability for `E` and Partition Consistency (Def. |
 | `«app:notation/emitted-rows»` | abbrev | *emitted rows* — the pairs `(i,o)` such that a run emits `o` at current input `i` (Def. |

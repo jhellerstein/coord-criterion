@@ -636,7 +636,7 @@ leads to another determined state with that output.
 \end{figure}
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
-changes only the output order $\OutputOrd$: it defines a new spec in which all outputs are incomparable.
+changes only the output order $\OutputOrd$: it defines a new spec in which distinct outputs are incomparable.
 Under this order (called the \emph{equality order}), no output \outrel both
 $\bot$ and a future winner, so $\bot$ is not legal at $ab\cdot$, and emitting it applies
 $x_\bot$, which removes $(aba,a)$ and $(abb,b)$.  That change in the output
@@ -770,7 +770,7 @@ every run to the same state, so the runs are confluent at $j$.  \fullproof
 Consistency thus ensures that runs never diverge irreparably: there is no
 ``split brain''.  Whatever events a finite collection of runs contains, at any common extension of their current inputs, some state is reachable by every run
 and contradicts none of their outputs.  Consistency is a safety property of the spec's runs:
-it describes no protocol and promises no delivery or termination.  With the survivor test, consistency comes down to legality:
+it describes no protocol and guarantees no delivery or termination.  With the survivor test, consistency comes down to legality:
 
 \begin{lemma}[Confluence and legality]
 \label{lem:confluence-legality}
@@ -1120,7 +1120,7 @@ systems and relate their runs to canonical runs; Complete CAP follows.
 
 Until now, runs have been independent: each state changes only through that
 run's input and output events.  We now place one such run at each participant in
-a finite set $\mathcal N$.  Participant $p$ starts in the canonical state
+a finite set $\mathcal N$ of any size.  Participant $p$ starts in the canonical state
 $\sigma_P(i_p)$ and still changes its state only through its own specification
 events.  The new ingredient is communication.  Besides learning input directly
 from the environment, a participant can learn cumulative input from another
@@ -1144,8 +1144,8 @@ A \emph{distributed history} $H$ is a finite set of \emph{history events}, each
 an occurrence at one participant of a specification event, $\mathsf{send}(m)$,
 or $\mathsf{receive}(m)$.  Each participant's events are totally ordered, every
 receive has a matching send at another participant, and each participant $p$'s
-specification events, in order, form a run from $\sigma_P(i_p)$.  A
-\emph{consistent cut} $C$ is a set of history events closed under
+specification events, in order, form a run from $\sigma_P(i_p)$; no event
+happens before itself.  A \emph{consistent cut} $C$ is a set of history events closed under
 happens-before: whenever $C$ contains an event, it contains every event that
 happens before it~\cite{lamport1978time,chandy1985distributed}.
 \end{definition}
@@ -1268,8 +1268,8 @@ The converse of the lemma is not true because systems can choose to do less
 than canonical runs allow.  Systems may constrain their runs arbitrarily, and
 their remainder tables may lack rows that their canonical runs keep.  So a spec's runs
 can be consistent while a system's runs are not.  The registrar is an example: after closing the polls at $ab\cdot$, it cannot
-accept the late ballot $aba$.  Under the original output order, a canonical run
-can emit $\bot$, accept $aba$, and emit $a$.
+receive the input $aba$.  Under the original output order, a canonical run
+can emit $\bot$, receive $aba$, and emit $a$.
 
 The CALM and CAP criteria are
 about specs and their canonical runs. A system with no \commitment events
@@ -1343,7 +1343,7 @@ participants' current inputs.
 \end{definition}
 
 The \emph{canonical system for $E$} is the system whose participants follow
-canonical runs and emit only outputs of $E$.
+canonical runs and may emit any output of $E$ their state permits.
 
 \begin{definition}[Escaping CAP]
 \label{def:escapes-cap}
@@ -1652,7 +1652,7 @@ operations~\cite{li2025coordinationfree}. In our terms, they study the case of s
 inclusion and arbitrary partially ordered outputs, in an operational model of
 replicated objects.
 
-Baccaert and Ketsman were the first to consider nondeterministic specs in a
+Baccaert and Ketsman consider nondeterministic specs in a
 CALM context, including leader election~\cite{baccaert2023dcbq,baccaert2026spectrum}, which
 chooses one candidate among competing ones, the second pattern above.
 They keep the relational transducer setting, with a small extension that models
@@ -1685,8 +1685,9 @@ $q$ is monotone on the states $s$ can reach.  For example, a two-phase
 set~\cite{shapiro2011crdt} records additions and removals in separate add-only
 sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
 test: a later removal grows $R$ and shrinks the answer.
-The composite is then not monotone, so by
-Corollary~\ref{cor:upstream-commitments} the \commitment falls on the query. An
+The composite is then not monotone; since the semilattice stage needs no
+\commitment, Corollary~\ref{cor:upstream-commitments} puts the \commitment on
+the query. An
 answer that exposes an element as present blocks its removal before it arrives,
 the third pattern above.  The two-phase set does not enforce the block: it
 accepts the removal, and the answer is contradicted.  Complete CALM asks for
@@ -1863,7 +1864,7 @@ payoffs~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2010bo
 That validation, combined with query processing intuition, suggested the answer
 to the CALM question: coordination of any kind is required if and only if the
 system's declarative specification is non-monotone. Ameloot et al.\ proved it
-for relational languages~\cite{ameloot2013relational}.
+for relational transducers~\cite{ameloot2013relational}.
 
   % B. From programs to specs (the paragraph you said needed rewording):
 This paper raises the abstraction level yet further: from logic programs to simple
