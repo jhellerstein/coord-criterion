@@ -94,8 +94,9 @@
 }
 
 \begin{abstract}
-When does a concurrent system intrinsically need coordination?  Too little
-coordination produces heisenbugs; too much adds latency and sacrifices
+Coordination is often the dominant cost in concurrent systems. When is it
+intrinsically needed? Too little
+produces heisenbugs; too much adds latency and sacrifices
 availability.  CALM, CAP, and CRDTs each answer the question for one class of
 programs, consistency models, or design patterns, in formalisms that cannot be
 compared or combined, which leaves developers guessing.
@@ -103,7 +104,7 @@ compared or combined, which leaves developers guessing.
 We provide a simple formalism that unifies the literature and
 offers new results.  A \spectype (spec) is a \emph{possibility table} containing, for
 each input, every output a system may produce, with partial orders on inputs and
-outputs.  Its runs (event sequences) are \emph{consistent} when they are confluent as input grows.
+outputs.  Its runs are \emph{consistent} when they are confluent as input grows.
 \emph{Functional CALM} generalizes the CALM Theorem from Datalog to any function
 between ordered domains: the runs are consistent exactly when the function is
 monotone.  \emph{Complete CALM}
@@ -118,7 +119,9 @@ unified framework offers constructive results on both sides: it says exactly
 what coordination a spec needs, and when.  A non-monotone
 spec's outputs drive irrevocable \emph{\commitments} that are required for consistency,
 enforceable by coordination mechanisms like locks, atomics, or consensus.
-A composition of specs has \emph{tight coordination} when an upstream stage makes every \commitment the composition needs (sufficient), so later stages need none, and no others (necessary).  We show how to order the upstream's outputs to achieve it, explaining designs such
+A composition of specs has \emph{tight coordination} when the \commitments of an upstream stage
+are necessary and sufficient for later stages.
+We show how to order the upstream's outputs to achieve it, explaining designs such
 as consensus logs in front of a replicated store.
 \end{abstract}
 
